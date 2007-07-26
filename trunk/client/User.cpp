@@ -331,11 +331,11 @@ const tstring OnlineUser::getText(uint8_t col) const {
 		case COLUMN_TAG: return Text::toT(identity.getTag());
 		case COLUMN_CONNECTION: return Text::toT(identity.getConnection());
 		case COLUMN_IP: {
-			tstring ip = Text::toT(identity.getIp());
-			tstring country = ip.empty() ? Util::emptyStringT : Util::getIpCountry(ip);
+			string ip = identity.getIp();
+			string country = ip.empty() ? Util::emptyString : Util::getIpCountry(ip);
 			if (!country.empty())
-				ip = country + _T(" (") + ip + _T(")");
-			return ip;
+				ip = country + " (" + ip + ")";
+			return Text::toT(ip);
 		}
 		case COLUMN_EMAIL: return Text::toT(identity.getEmail());
 		case COLUMN_VERSION: return Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT"));

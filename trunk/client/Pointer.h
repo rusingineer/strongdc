@@ -45,7 +45,7 @@ protected:
 	PointerBase() throw() : ref(0) { }
 	
 	virtual ~PointerBase() throw() {
-		dcassert(!ref);
+		//dcassert(!ref);
 	}
 
 private:

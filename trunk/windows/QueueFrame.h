@@ -208,50 +208,26 @@ private:
 	class QueueItemInfo : public FastAlloc<QueueItemInfo> {
 	public:
 
-		struct Display : public FastAlloc<Display> {
-			tstring columns[COLUMN_LAST];
-		};
-
-		enum {
-			MASK_TARGET = 1 << COLUMN_TARGET,
-			MASK_STATUS = 1 << COLUMN_STATUS,
-			MASK_SEGMENTS = 1 << COLUMN_SEGMENTS,
-			MASK_SIZE = 1 << COLUMN_SIZE,
-			MASK_DOWNLOADED = 1 << COLUMN_DOWNLOADED,
-			MASK_PRIORITY = 1 << COLUMN_PRIORITY,
-			MASK_USERS = 1 << COLUMN_USERS,
-			MASK_PATH = 1 << COLUMN_PATH,
-			MASK_ERRORS = 1 << COLUMN_ERRORS,
-			MASK_ADDED = 1 << COLUMN_ADDED,
-			MASK_TTH = 1 << COLUMN_TTH,
-			MASK_TYPE = 1 << COLUMN_TYPE
-		};
-
-		QueueItemInfo(const QueueItem* aQI) : qi(aQI), updateMask((uint32_t)-1), display(0)	{
+		QueueItemInfo(const QueueItem* aQI) : qi(aQI)	{
 			const_cast<QueueItem*>(qi)->inc();
 		}
 
 		~QueueItemInfo() { 
 			const_cast<QueueItem*>(qi)->dec();
-			delete display;
 		}
-
-		void update();
 
 		void remove() { QueueManager::getInstance()->remove(getTarget()); }
 
 		// TypedListViewCtrl functions
-		inline const TCHAR* getText(int col) {
-			dcassert(col >= 0 && col < COLUMN_LAST);
-			return getDisplay()->columns[col].c_str();
-		}
+		const tstring getText(int col) const;
+
 		static int compareItems(const QueueItemInfo* a, const QueueItemInfo* b, int col) {
 			switch(col) {
 				case COLUMN_SIZE: case COLUMN_EXACT_SIZE: return compare(a->getSize(), b->getSize());
 				case COLUMN_PRIORITY: return compare((int)a->getPriority(), (int)b->getPriority());
 				case COLUMN_DOWNLOADED: return compare(a->getDownloadedBytes(), b->getDownloadedBytes());
 				case COLUMN_ADDED: return compare(a->getAdded(), b->getAdded());
-				default: return lstrcmpi(const_cast<QueueItemInfo*>(a)->getDisplay()->columns[col].c_str(), const_cast<QueueItemInfo*>(b)->getDisplay()->columns[col].c_str());
+				default: return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 			}
 		}
 		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}
@@ -259,14 +235,6 @@ private:
 		const QueueItem* getQueueItem() const { return qi; }
 		const FileChunksInfo::Ptr getChunksInfo() const { return qi->getChunksInfo(); }
 		const string getPath() const { return Util::getFilePath(getTarget()); }
-
-		const Display* getDisplay() {
-			if(!display) {
-				display = new Display;
-				update();
-			}
-			return display;
-		}
 
 		bool isSet(Flags::MaskType aFlag) const { return (qi->getFlags() & aFlag) == aFlag; }
 
@@ -283,10 +251,7 @@ private:
 
 		bool getAutoPriority() const { return qi->getAutoPriority(); }
 
-		uint32_t updateMask;
-	
 	private:
-		Display* display;
 		const QueueItem* qi;
 
 		QueueItemInfo(const QueueItemInfo&);

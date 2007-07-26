@@ -375,7 +375,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				str += Text::fromUtf8(name, *(aClient->getEncoding()));
 				str += '|';
 
-				sr->decRef();
+				sr->dec();
 			}
 			
 			if(str.size() > 0)
@@ -394,12 +394,12 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				for(SearchResult::Iter i = l.begin(); i != l.end(); ++i) {
 					SearchResult* sr = *i;
 					udp.writeTo(ip, port, sr->toSR(*aClient));
-					sr->decRef();
+					sr->dec();
 				}
 			} catch(...) {
 				for(SearchResult::Iter i = l.begin(); i != l.end(); ++i) {
 					SearchResult* sr = *i;
-					sr->decRef();
+					sr->dec();
 				}
 				dcdebug("Search caught error\n");
 			}

@@ -175,12 +175,18 @@ LRESULT WaitingUsersFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	if(usingUserMenu) {
 		UserPtr User = getSelectedUser();
 		if(User) {
-			QueueManager::getInstance()->addList(User, QueueItem::FLAG_CLIENT_VIEW);
+			try {
+				QueueManager::getInstance()->addList(User, QueueItem::FLAG_CLIENT_VIEW);
+			} catch(const Exception&) {
+			}
 		}
 	} else {
 		int i = -1;
 		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			QueueManager::getInstance()->addList(((UploadQueueItem*)ctrlList.getItemData(i))->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+			try {
+				QueueManager::getInstance()->addList(((UploadQueueItem*)ctrlList.getItemData(i))->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+			} catch(const Exception&) {
+			}
 		}
 	}
 	return 0;

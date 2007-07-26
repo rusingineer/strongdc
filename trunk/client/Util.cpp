@@ -230,15 +230,15 @@ void Util::initialize() {
 		// This product includes GeoIP data created by MaxMind, available from http://maxmind.com/
 		// Updates at http://www.maxmind.com/app/geoip_country
 		string file = Util::getConfigPath() + "GeoIpCountryWhois.csv";
-		tstring data = Text::toT(File(file, File::READ, File::OPEN).read());
+		string data = File(file, File::READ, File::OPEN).read();
 
-		const TCHAR* start = data.c_str();
-		tstring::size_type linestart = 0;
-		tstring::size_type comma1 = 0;
-		tstring::size_type comma2 = 0;
-		tstring::size_type comma3 = 0;
-		tstring::size_type comma4 = 0;
-		tstring::size_type lineend = 0;
+		const char* start = data.c_str();
+		string::size_type linestart = 0;
+		string::size_type comma1 = 0;
+		string::size_type comma2 = 0;
+		string::size_type comma3 = 0;
+		string::size_type comma4 = 0;
+		string::size_type lineend = 0;
 		CountryIter last = countries.end();
 		uint32_t startIP = 0;
 		uint32_t endIP = 0, endIPprev = 0;
@@ -253,13 +253,13 @@ void Util::initialize() {
 			comma4 = data.find(_T(','), comma3 + 1);
 			if(comma4 == string::npos) break;
 			lineend = data.find(_T('\n'), comma4);
-			if(lineend == tstring::npos) break;
+			if(lineend == string::npos) break;
 
 			startIP = Util::toUInt32(start + comma2 + 2);
 			endIP = Util::toUInt32(start + comma3 + 2);
-			uint32_t* country = (uint32_t*)(start + comma4 + 2);
+			uint16_t* country = (uint16_t*)(start + comma4 + 2);
 			if((startIP-1) != endIPprev)
-				last = countries.insert(last, make_pair((startIP-1), (uint32_t)16191));
+				last = countries.insert(last, make_pair((startIP-1), (uint16_t)16191));
 			last = countries.insert(last, make_pair(endIP, *country));
 
 			endIPprev = endIP;
@@ -1010,14 +1010,14 @@ uint32_t Util::rand() {
 	for exemple: it returns "PT", whitch standards for "Portugal"
 	more info: http://www.maxmind.com/app/csv
 */
-tstring Util::getIpCountry (const tstring& IP) {
+string Util::getIpCountry (const string& IP) {
 	if (BOOLSETTING(GET_USER_COUNTRY)) {
 		dcassert(count(IP.begin(), IP.end(), _T('.')) == 3);
 
 		//e.g IP 23.24.25.26 : w=23, x=24, y=25, z=26
-		tstring::size_type a = IP.find(_T('.'));
-		tstring::size_type b = IP.find(_T('.'), a+1);
-		tstring::size_type c = IP.find(_T('.'), b+2);
+		string::size_type a = IP.find(_T('.'));
+		string::size_type b = IP.find(_T('.'), a+1);
+		string::size_type c = IP.find(_T('.'), b+2);
 
 		uint32_t ipnum = (Util::toUInt32(IP.c_str()) << 24) | 
 			(Util::toUInt32(IP.c_str() + a + 1) << 16) | 
@@ -1027,11 +1027,11 @@ tstring Util::getIpCountry (const tstring& IP) {
 		CountryList::const_iterator i = countries.lower_bound(ipnum);
 
 		if(i != countries.end()) {
-			return tstring((TCHAR*)&(i->second), 2);
+			return string((char*)&(i->second), 2);
 		}
 	}
 
-	return Util::emptyStringT; //if doesn't returned anything already, something is wrong...
+	return Util::emptyString; //if doesn't returned anything already, something is wrong...
 }
 
 string Util::formatMessage(const string& nick, const string& message) {

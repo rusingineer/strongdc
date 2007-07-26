@@ -3,7 +3,7 @@
 * fixed many crashes
 * fixed displaying connection type string
 * fixed passive searches for unicode nicknames (THX PPK for report)
-* another userlist memory optimization
+* a lot of memory/CPU optimization
 * added real upload queue (idea from Possum mod)
 * fixed Invalid request when AntiFrag downloading was disabled
 * removed old-styled connection types
@@ -11,6 +11,8 @@
 * added "Malware MSIU32" to crash libraries
 * garbage command is not sent in DC++ emulation mode
 * optimized vtables
+* fixed user menu in mainchat
+* added root "All" to upload queue frame to display all files of all users
 
 
 	-- StrongDC++ 2.04 --

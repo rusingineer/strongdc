@@ -1,3 +1,10 @@
+** svn313
+	fixed flags in search window
+	reverted to string for country codes
+	saved memory for large filelists and queue window
+	removed SearchInfo instance and everything moved to SearchResult
+	fixed crashes #3857 and #3645
+
 ** svn312
 	try to fix numerous crashes in Identity
 	fixed another remote exploit (crash #3762)

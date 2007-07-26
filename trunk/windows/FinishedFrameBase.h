@@ -244,10 +244,11 @@ public:
 					pShellMenu->AppendMenu(MF_SEPARATOR);
 
 					UINT idCommand = shellMenu.ShowContextMenu(m_hWnd, pt);
-					if(idCommand != 0)
+					if(idCommand != 0) {
 						PostMessage(WM_COMMAND, idCommand);
 
-					bShellMenuShown = true;
+						bShellMenuShown = true;
+					}
 				}
 			}
 
@@ -274,7 +275,10 @@ public:
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 			FinishedItem *ii = ctrlList.getItemData(i);
 			if(ii->getUser()->isOnline()) {
-				QueueManager::getInstance()->addList(ii->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+				try {
+					QueueManager::getInstance()->addList(ii->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+				} catch(const Exception&) {
+				}
 			} else {
 				addStatusLine(TSTRING(USER_OFFLINE));
 			}
