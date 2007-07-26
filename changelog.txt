@@ -3,7 +3,7 @@
 * opravena spousta pádù
 * opraveno zobrazování typu pøipojení
 * opraveno pasivní vyhledávání s pøezdívkami v unikódu (THX PPK za nahlášení)
-* další optimalizace pamìti pro seznam uživatelù
+* velká optimalizace pamìti a procesoru
 * pøidána opravdová fronta na sloty (nápad z Possum modu)
 * opravena hláška "Invalid request", pokud bylo vypnuto antifragmentaèní stahování
 * odstranìny staré typy pøipojení
@@ -11,6 +11,8 @@
 * pøidán "Malware MSIU32" do seznamu aplikací zpùsobujících pád StrongDC++
 * pøíkaz bordelu není odesílán pøi zaplé emulaci DC++
 * optimalizovány tabulky virtuálních funkcí
+* opraveno uživatelské menu v hlavním chatu
+* pøidána položka "Vše" do okna fronty na odesílání pro zobrazení všech souborù od všech uživatelù
 
 
 	-- StrongDC++ 2.04 --

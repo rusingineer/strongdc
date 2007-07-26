@@ -181,17 +181,17 @@ public:
 	}
 	
 	LRESULT onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		ctrlResults.forEachSelectedT(SearchInfo::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
+		ctrlResults.forEachSelectedT(SearchResult::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
 		return 0;
 	}
 
 	LRESULT onViewAsText(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		ctrlResults.forEachSelected(&SearchInfo::view);
+		ctrlResults.forEachSelected(&SearchResult::view);
 		return 0;
 	}
 
 	LRESULT onDownloadWhole(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		ctrlResults.forEachSelectedT(SearchInfo::DownloadWhole(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
+		ctrlResults.forEachSelectedT(SearchResult::DownloadWhole(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
 		return 0;
 	}
 	
@@ -244,7 +244,7 @@ public:
 	LRESULT onPause(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		if(bPaused == true) {
 			bPaused = false;
-			for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
+			for(SearchResult::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
 				PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)(*i));
 			}
 			PausedResults.clear();
@@ -257,15 +257,11 @@ public:
 		return 0;
 	}
 	
-private:
-	class SearchInfo;
-
-public:
-	typedef TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS, TTHValue, TTHValue::PtrHash, TTHValue::PtrHash> SearchInfoList;
-	SearchInfoList& getUserList() { return ctrlResults; }
+	typedef TypedTreeListViewCtrl<SearchResult, IDC_RESULTS, TTHValue, TTHValue::PtrHash, TTHValue::PtrHash> SearchResultList;
+	SearchResultList& getUserList() { return ctrlResults; }
 
 private:
-	enum {
+	/*enum {
 		COLUMN_FIRST,
 		COLUMN_FILENAME = COLUMN_FIRST,
 		COLUMN_HITS,
@@ -282,7 +278,7 @@ private:
 		COLUMN_TTH,
 		COLUMN_LAST
 	};
-
+*/
 	enum Images {
 		IMAGE_UNKOWN,
 		IMAGE_SLOW,
@@ -299,7 +295,7 @@ private:
 		LESS,
 		NOT_EQUAL
 	};
-
+/*
 	class SearchInfo : public UserInfoBase {
 	public:
 		typedef SearchInfo* Ptr;
@@ -308,8 +304,16 @@ private:
 
 		SearchInfo::List subItems;
 
-		SearchInfo(SearchResult* aSR) : sr(aSR), collapsed(true), main(NULL) { 
-			sr->incRef(); /*update()*/;
+		SearchInfo(SearchResult* aSR) : sr(aSR), collapsed(true), main(NULL), flagImage(0) { 
+			sr->incRef();
+
+			if (!sr->getIP().empty()) {
+ 				// Only attempt to grab a country mapping if we actually have an IP address
+				string tmpCountry = Util::getIpCountry(sr->getIP());
+ 				if(!tmpCountry.empty()) {
+ 					flagImage = WinUtil::getFlagImage(tmpCountry.c_str());
+ 				}
+			}			
 		}
 		~SearchInfo() {
 			sr->decRef(); 
@@ -393,17 +397,15 @@ private:
  						return _T("N/A");
  					}		
 				case COLUMN_IP: {
-					tstring ip = Text::toT(sr->getIP());
- 					//flagimage = 0;
+					string ip = sr->getIP();
  					if (!ip.empty()) {
  						// Only attempt to grab a country mapping if we actually have an IP address
- 						tstring tmpCountry = Util::getIpCountry(ip);
+ 						string tmpCountry = Util::getIpCountry(ip);
  						if(!tmpCountry.empty()) {
- 							ip = tmpCountry + _T(" (") + ip + _T(")");
- 							//flagimage = WinUtil::getFlagImage(Text::fromT(tmpCountry).c_str());
- 						}
+ 							ip = tmpCountry + " (" + ip + ")";
+  						}
  					}
- 					return ip;
+					return Text::toT(ip);
 				}
 				case COLUMN_TTH: return sr->getType() == SearchResult::TYPE_FILE ? Text::toT(sr->getTTH().toBase32()) : Util::emptyStringT;
 				default: return Util::emptyStringT;
@@ -460,29 +462,14 @@ private:
 			return image;
 		}
 
-		/*void update();*/
-		
 		SearchInfo* createMainItem() { return this; }
 		const TTHValue& getGroupingString() const { return sr->getTTH(); }
-		void updateMainItem() {
-			//if(!main->subItems.empty()) {
-			//	TCHAR buf[256];
-			//	snwprintf(buf, sizeof(buf), _T("%d %s"), main->subItems.size() + 1, CTSTRING(USERS));
-			//	main->columns[COLUMN_HITS] = buf;
-			//	
-			//	//if(total == 1)
-			//	//	main->columns[COLUMN_SIZE] = columns[COLUMN_SIZE];
-			//} else {
-			//	main->columns[COLUMN_HITS] = Util::emptyStringT;
-			//}
-		}
+		void updateMainItem() {	}
 
-		//tstring columns[COLUMN_LAST];
-		SearchResult* sr;
-				
-		GETSET(uint8_t, flagimage, FlagImage);
+		GETSET(uint8_t, flagImage, FlagImage);
+	SearchResult* sr;
 	};
-
+*/
 	struct HubInfo : public FastAlloc<HubInfo> {
 		HubInfo(const tstring& aUrl, const tstring& aName, bool aOp) : url(aUrl),
 			name(aName), op(aOp) { }
@@ -553,7 +540,7 @@ private:
 	bool showUI;
 
 	CImageList images;
-	SearchInfoList ctrlResults;
+	SearchResultList ctrlResults;
 	TypedListViewCtrl<HubInfo, IDC_HUB> ctrlHubs;
 
 	OMenu grantMenu;
@@ -565,7 +552,7 @@ private:
 	TStringList search;
 	StringList targets;
 	StringList wholeTargets;
-	SearchInfo::List PausedResults;
+	SearchResult::List PausedResults;
 
 	CEdit ctrlFilter;
 	CComboBox ctrlFilterSel;
@@ -620,9 +607,9 @@ private:
 	void onHubAdded(HubInfo* info);
 	void onHubChanged(HubInfo* info);
 	void onHubRemoved(HubInfo* info);
-	bool matchFilter(SearchInfo* si, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
+	bool matchFilter(SearchResult* sr, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
 	bool parseFilter(FilterModes& mode, int64_t& size);
-	void updateSearchList(SearchInfo* si = NULL);
+	void updateSearchList(SearchResult* sr = NULL);
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 

@@ -27,7 +27,7 @@
 		<String Name="All4UsersOffline">Ani jeden ze 4 uživatelů není připojen</String>
 		<String Name="AllDownloadSlotsTaken">Všechny sloty pro stahování obsazeny</String>
 		<String Name="AllFileSlotsTaken">Všechny sloty na soubory obsazeny</String>
-		<String Name="AllUsersOffline">Ani jeden z %d není připojen</String>
+		<String Name="AllUsersOffline">Ani jeden z %d uživatelů není připojen</String>
 		<String Name="AlternatesSend">Hledám TTH alternativy pro: </String>
 		<String Name="AntiPassiveSearch">-- Varování --
 -- Jste v aktivním módu, ale máte zapnuto pasivní vyhledávání. --

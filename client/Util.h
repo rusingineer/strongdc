@@ -291,9 +291,6 @@ public:
 	static uint32_t toUInt32(const char* c) {
 		return (uint32_t)strtoul(c, NULL, 10);
 	}
-	static uint32_t toUInt32(const wchar_t* c) {
-		return (uint32_t)wcstoul(c, NULL, 10);
-	}
 
 	static double toDouble(const string& aString) {
 		// Work-around for atof and locales...
@@ -460,7 +457,7 @@ public:
 	static int stricmp(const wstring& a, const wstring& b) { return stricmp(a.c_str(), b.c_str()); }
 	static int strnicmp(const wstring& a, const wstring& b, size_t n) { return strnicmp(a.c_str(), b.c_str(), n); }
 
-	static tstring getIpCountry (const tstring& IP);
+	static string getIpCountry (const string& IP);
 
 	static bool getAway() { return away; }
 	static void setAway(bool aAway);
@@ -491,7 +488,7 @@ private:
 	static string awayMsg;
 	static time_t awayTime;
 	
-	typedef map<uint32_t, uint32_t> CountryList;
+	typedef map<uint32_t, uint16_t> CountryList;
 	typedef CountryList::iterator CountryIter;
 
 	static CountryList countries;

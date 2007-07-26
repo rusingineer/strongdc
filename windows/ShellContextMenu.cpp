@@ -61,7 +61,9 @@ void CShellContextMenu::SetPath(const tstring& strPath)
 
 	// now we need the relative pidl
 	IShellFolder* psfFolder = NULL;
-	psfDesktop->ParseDisplayName (NULL, 0, (LPOLESTR)const_cast<TCHAR*>(strPath.c_str()), NULL, &pidl, NULL);
+	HRESULT res = psfDesktop->ParseDisplayName (NULL, 0, (LPOLESTR)const_cast<TCHAR*>(strPath.c_str()), NULL, &pidl, NULL);
+	if(res != S_OK) return;
+
 	LPITEMIDLIST pidlItem = NULL;
 	MySHBindToParent(pidl, IID_IShellFolder, (LPVOID*)&psfFolder, (LPCITEMIDLIST*)&pidlItem);
 
@@ -164,6 +166,8 @@ void CShellContextMenu::FreePIDLArray(LPITEMIDLIST* pidlArray)
 // and returns that interface
 bool CShellContextMenu::GetContextMenu(LPVOID* ppContextMenu, int& iMenuType)
 {
+	if(m_pidlArray == NULL) return false;
+
 	*ppContextMenu = NULL;
 	LPCONTEXTMENU icm1 = NULL;
 

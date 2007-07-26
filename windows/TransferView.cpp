@@ -785,13 +785,13 @@ void TransferView::on(DownloadManagerListener::Starting, const Download* aDownlo
 	ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
 	ui->setMultiSource(aDownload->isSet(Download::FLAG_MULTI_CHUNK));
 	
-	tstring ip = Text::toT(aDownload->getUserConnection().getRemoteIp());
-	tstring country = Util::getIpCountry(ip);
+	string ip = aDownload->getUserConnection().getRemoteIp();
+	string country = Util::getIpCountry(ip);
 	if(country.empty()) {
-		ui->setIP(ip);
+		ui->setIP(Text::toT(ip));
 	} else {
-		ui->flagImage = WinUtil::getFlagImage(Text::fromT(country).c_str());
-		ui->setIP(country + _T(" (") + ip + _T(")"));
+		ui->flagImage = WinUtil::getFlagImage(country.c_str());
+		ui->setIP(Text::toT(country + " (" + ip + ")"));
 	}
 	if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		ui->file = _T("TTH: ") + ui->file;
@@ -874,13 +874,13 @@ void TransferView::on(DownloadManagerListener::Failed, const Download* aDownload
 	ui->setSize(aDownload->getSize());
 	ui->setFile(Text::toT(aDownload->getTarget()));
 
-	tstring ip = Text::toT(aDownload->getUserConnection().getRemoteIp());
-	tstring country = Util::getIpCountry(ip);
+	string ip = aDownload->getUserConnection().getRemoteIp();
+	string country = Util::getIpCountry(ip);
 	if(country.empty()) {
-		ui->setIP(ip);
+		ui->setIP(Text::toT(ip));
 	} else {
-		ui->flagImage = WinUtil::getFlagImage(Text::fromT(country).c_str());
-		ui->setIP(country + _T(" (") + ip + _T(")"));
+		ui->flagImage = WinUtil::getFlagImage(country.c_str());
+		ui->setIP(Text::toT(country + " (" + ip + ")"));
 	}
 	if(BOOLSETTING(POPUP_DOWNLOAD_FAILED)) {
 		MainFrame::getMainFrame()->ShowBalloonTip((
@@ -918,17 +918,14 @@ void TransferView::on(UploadManagerListener::Starting, const Upload* aUpload) {
 		ui->setStatusString(TSTRING(UPLOAD_STARTING));
 	}
 
-	tstring ip = Text::toT(aUpload->getUserConnection().getRemoteIp());
-	tstring country = Util::getIpCountry(ip);
+	string ip = aUpload->getUserConnection().getRemoteIp();
+	string country = Util::getIpCountry(ip);
 	if(country.empty()) {
-		ui->setIP(ip);
+		ui->setIP(Text::toT(ip));
 	} else {
-		ui->flagImage = WinUtil::getFlagImage(Text::fromT(country).c_str());
-		ui->setIP(country + _T(" (") + ip + _T(")"));
+		ui->flagImage = WinUtil::getFlagImage(country.c_str());
+		ui->setIP(Text::toT(country + " (" + ip + ")"));
 	}
-	/*if(aUpload->isSet(Upload::FLAG_TTH_LEAVES)) {
-		ui->file = _T("TTH: ") + ui->file;
-	}*/
 
 	speak(UPDATE_ITEM, ui);
 }
