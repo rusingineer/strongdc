@@ -142,7 +142,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			int i = -1;
 			bool bCustomMenu = false;
 			const ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
-			bool main = ii->subItems.size() > 1;
+			bool main = ii->main && ctrlTransfers.findChildren(ii->getGroupingString()).size() > 1;
 
 			if(!main && (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 				const ItemInfo* itemI = ctrlTransfers.getItemData(i);
@@ -250,7 +250,7 @@ LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 }
 
 void TransferView::ItemInfo::removeAll() {
-	if(subItems.size() <= 1) {
+	if(_wtoi(columns[COLUMN_USER].c_str()) <= 1) {
 		QueueManager::getInstance()->removeSource(user, QueueItem::Source::FLAG_REMOVED);
 	} else {
 		if(!BOOLSETTING(CONFIRM_DELETE) || ::MessageBox(0, _T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
@@ -463,7 +463,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 			return 0;
 
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
-		if(/*!i->multiSource || */i->subItems.size() <= 1) {
+// &todo		if(/*!i->multiSource || */i->subItems.size() <= 1) {
 			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
 				case 0:
 					i->pm();
@@ -478,7 +478,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 					i->addFav();
 					break;
 			}
-		}
+//		}
 	}
 	return 0;
 }
@@ -493,12 +493,6 @@ int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, u
 	}
 
 	switch(col) {
-		case COLUMN_USER:
-			{
-				if(a->subItems.size() == b->subItems.size())
-					return lstrcmpi(a->columns[COLUMN_USER].c_str(), b->columns[COLUMN_USER].c_str());
-				return compare(a->subItems.size(), b->subItems.size());						
-			}
 		case COLUMN_STATUS: return 0;
 		case COLUMN_TIMELEFT: return compare(a->timeLeft, b->timeLeft);
 		case COLUMN_SPEED: return compare(a->speed, b->speed);
@@ -531,8 +525,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			if(ui->download) {
 				bool found = false;
 				for(ItemInfoList::TreeMap::const_iterator k = ctrlTransfers.mainItems.begin(); k != ctrlTransfers.mainItems.end(); ++k) {
-					ItemInfo* l = (*k).second;
-					for(ItemInfo::Iter j = l->subItems.begin(); j != l->subItems.end(); j++) {
+					for(vector<ItemInfo*>::const_iterator j = (*k).second.children.begin(); j != (*k).second.children.end(); j++) {
 						ItemInfo* ii = *j;
 						if(*ui == *ii) {
 							ctrlTransfers.removeGroupedItem(ii);
@@ -558,8 +551,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			if(ui->download) {
 				bool found = false;
 				for(ItemInfoList::TreeMap::const_iterator k = ctrlTransfers.mainItems.begin(); k != ctrlTransfers.mainItems.end(); ++k) {
-					ItemInfo* l = (*k).second;
-					for(ItemInfo::Iter j = l->subItems.begin(); j != l->subItems.end(); j++) {
+					for(vector<ItemInfo*>::const_iterator j = (*k).second.children.begin(); j != (*k).second.children.end(); j++) {
 						ItemInfo* ii = *j;
 						if(*ui == *ii) {
 							ii->update(*ui);
@@ -713,7 +705,7 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	if(ui.updateMask & UpdateInfo::MASK_IP) {
 		flagImage = ui.flagImage;
 		columns[COLUMN_IP] = ui.IP;
-		if(main && main->subItems.size() == 1) {
+		if(main && _wtoi(columns[COLUMN_USER].c_str()) == 1) {
 			main->flagImage = flagImage;
 			main->columns[COLUMN_IP] = ui.IP;
 		}
@@ -1046,7 +1038,7 @@ void TransferView::CollapseAll() {
 
 void TransferView::ExpandAll() {
 	for(ItemInfoList::TreeMap::const_iterator i = ctrlTransfers.mainItems.begin(); i != ctrlTransfers.mainItems.end(); ++i) {
-		ItemInfo* l = (*i).second;
+		ItemInfo* l = (*i).second.parent;
 		if(l->collapsed) {
 			ctrlTransfers.Expand(l, ctrlTransfers.findItem(l));
 		}
@@ -1058,7 +1050,9 @@ LRESULT TransferView::onConnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		const ItemInfo* ii = ctrlTransfers.getItemData(i);
 		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
-		for(ItemInfo::Iter j = ii->subItems.begin(); j != ii->subItems.end(); ++j) {
+
+		const vector<ItemInfo*>& children = ctrlTransfers.findChildren(ii->getGroupingString());
+		for(vector<ItemInfo*>::const_iterator j = children.begin(); j != children.end(); ++j) {
 			int h = ctrlTransfers.findItem(*j);
 			if(h != -1)
 				ctrlTransfers.SetItemText(h, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
@@ -1073,7 +1067,9 @@ LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		const ItemInfo* ii = ctrlTransfers.getItemData(i);
 		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(DISCONNECTED));
-		for(ItemInfo::Iter j = ii->subItems.begin(); j != ii->subItems.end(); ++j) {
+		
+		const vector<ItemInfo*>& children = ctrlTransfers.findChildren(ii->getGroupingString());
+		for(vector<ItemInfo*>::const_iterator j = children.begin(); j != children.end(); ++j) {
 			int h = ctrlTransfers.findItem(*j);
 			if(h != -1)
 				ctrlTransfers.SetItemText(h, COLUMN_STATUS, CTSTRING(DISCONNECTED));
@@ -1128,7 +1124,8 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 	size_t totalSpeed = 0;	double ratio = 0; uint8_t segs = 0;
 	ItemInfo* l = NULL;
 
-	for(ItemInfo::Iter k = main->subItems.begin(); k != main->subItems.end(); ++k) {
+	const vector<ItemInfo*>& children = ctrlTransfers.findChildren(main->getGroupingString());
+	for(vector<ItemInfo*>::const_iterator k = children.begin(); k != children.end(); ++k) {
 		l = *k;
 		if(l->status == ItemInfo::STATUS_RUNNING/* && main->Target == l->Target*/) {
 			segs++;
@@ -1164,7 +1161,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		main->columns[COLUMN_TIMELEFT] = Util::emptyStringT;
 		main->columns[COLUMN_SPEED] = Util::emptyStringT;
 		main->columns[COLUMN_RATIO] = Util::emptyStringT;
-		if(main->multiSource && main->subItems.size() > 1)
+		if(main->multiSource && children.size() > 1)
 			main->columns[COLUMN_HUB] = _T("0 ") + TSTRING(NUMBER_OF_SEGMENTS);
 		
 		return true;
@@ -1213,7 +1210,7 @@ bool TransferView::mainItemTick(ItemInfo* main, bool smallUpdate) {
 		}
 		main->size = fileSize;
 		
-		if(main->subItems.size() > 1) {
+		if(children.size() > 1) {
 			TCHAR buf[64];
 			snwprintf(buf, sizeof(buf), _T("%d %s"), segs, CTSTRING(NUMBER_OF_SEGMENTS));
 

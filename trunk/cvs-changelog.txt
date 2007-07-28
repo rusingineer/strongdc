@@ -1,3 +1,8 @@
+** svn314
+	normalized TypedTreeListView to save some memory for subitems
+	hopefully fixed unicode nicks sorting (speed must be improved)
+	hopefully fixed memory problems with SearchResult
+
 ** svn313
 	fixed flags in search window
 	reverted to string for country codes
