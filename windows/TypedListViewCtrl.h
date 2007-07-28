@@ -271,7 +271,7 @@ public:
 			mid = (low + high) / 2;
 			b = getItemData(mid);
 			comp = T::compareItems(a, b, static_cast<uint8_t>(sortColumn));
-			
+
 			if(!sortAscending)
 				comp = -comp;
 
@@ -593,7 +593,7 @@ private:
 };
 
 // Copyright (C) 2005-2007 Big Muscle, StrongDC++
-template<class T, int ctrlId, class key = tstring, class hashFunc = noCaseStringHash, class equalKey = noCaseStringEq>
+template<class T, int ctrlId, class key, class hashFunc, class equalKey>
 class TypedTreeListViewCtrl : public TypedListViewCtrl<T, ctrlId> 
 {
 public:
@@ -601,12 +601,15 @@ public:
 	TypedTreeListViewCtrl() { }
 	~TypedTreeListViewCtrl() { states.Destroy(); }
 
-	typedef TypedTreeListViewCtrl<T, ctrlId> thisClass;
+	typedef TypedTreeListViewCtrl<T, ctrlId, key, hashFunc, equalKey> thisClass;
 	typedef TypedListViewCtrl<T, ctrlId> baseClass;
 	
-	//typedef vector<T*> subItemsList;
-	//typedef pair<T*, subItemsList> treePair;
-	typedef HASH_MAP<key*, T*, hashFunc, equalKey> TreeMap;
+	struct TreePair {
+		T* parent;
+		vector<T*> children;
+	};
+
+	typedef HASH_MAP<key*, TreePair, hashFunc, equalKey> TreeMap;
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -651,22 +654,28 @@ public:
 	} 
 
 	void Collapse(T* mainItem, size_t itemPos) {
-		for(T::Iter i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
+		SetRedraw(false);
+		const vector<T*>& children = findChildren(mainItem->getGroupingString());
+		for(vector<T*>::const_iterator i = children.begin(); i != children.end(); i++) {
 			deleteItem(*i);
 		}
 		mainItem->collapsed = true;
 		SetItemState(itemPos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+		SetRedraw(true);
 	}
 
 	void Expand(T* mainItem, size_t itemPos) {
-		if(mainItem->subItems.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
+		SetRedraw(false);
+		const vector<T*>& children = findChildren(mainItem->getGroupingString());
+		if(children.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
 			mainItem->collapsed = false;
-			for(T::Iter i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
+			for(vector<T*>::const_iterator i = children.begin(); i != children.end(); i++) {
 				insertSubItem(*i, itemPos + 1);
 			}
 			SetItemState(itemPos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 			resort();
 		}
+		SetRedraw(true);
 	}
 
 	void insertSubItem(const T* item, int idx) {
@@ -685,20 +694,34 @@ public:
 
 	inline T* findMainItem(const key& groupingString) const {
 		TreeMap::const_iterator i = mainItems.find(const_cast<key*>(&groupingString));
-		return i != mainItems.end() ? (*i).second : NULL;
+		return i != mainItems.end() ? (*i).second.parent : NULL;
+	}
+
+	static const vector<T*> emptyVector;
+	inline const vector<T*>& findChildren(const key& groupingString) const {
+		TreeMap::const_iterator i = mainItems.find(const_cast<key*>(&groupingString));
+		return i != mainItems.end() ? (*i).second.children : emptyVector;
+	}
+
+	inline TreePair* findTreePair(const key& groupingString) {
+		TreeMap::iterator i = mainItems.find(const_cast<key*>(&groupingString));
+		return i != mainItems.end() ? &((*i).second) : NULL;
 	}
 
 	void insertGroupedItem(T* item, bool autoExpand, bool extra = false) {
 		T* mainItem = NULL;
+		TreePair* tp = NULL;
 		
 		if(!extra)
-			mainItem = findMainItem(item->getGroupingString());
+			tp = findTreePair(item->getGroupingString());
 
 		int pos = -1;
 
-		if(mainItem == NULL) {
+		if(tp == NULL) {
 			mainItem = item->createMainItem();
-			mainItems.insert(make_pair(const_cast<key*>(&mainItem->getGroupingString()), mainItem));
+
+			TreePair newTP = { mainItem };
+			tp = &(mainItems.insert(make_pair(const_cast<key*>(&mainItem->getGroupingString()), newTP)).first->second);
 
 			mainItem->main = NULL; // ensure that mainItem of this item is really NULL
 			pos = insertItem(getSortPos(mainItem), mainItem, mainItem->imageIndex());
@@ -709,15 +732,17 @@ public:
 				uniqueMainItem = false;
 				return;
 			}
-		} else 
+		} else {
+			mainItem = tp->parent;
 			pos = findItem(mainItem);
+		}
 
-		mainItem->subItems.push_back(item);
+		tp->children.push_back(item);
 		item->main = mainItem;
-		item->updateMainItem();
+		item->updateMainItem(tp->children);
 
 		if(pos != -1) {
-			size_t totalSubItems = mainItem->subItems.size();
+			size_t totalSubItems = tp->children.size();
 			if(totalSubItems == (size_t)(uniqueMainItem ? 2 : 1)) {
 				if(autoExpand){
 					SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
@@ -734,11 +759,12 @@ public:
 	}
 
 	void removeMainItem(T* mainItem) {
-		for(T::List::iterator i = mainItem->subItems.begin(); i != mainItem->subItems.end(); i++) {
+		TreePair* tp = findTreePair(mainItem->getGroupingString());
+		for(vector<T*>::iterator i = tp->children.begin(); i != tp->children.end(); i++) {
 			deleteItem(*i);
-			delete *i;
+			(*i)->deleteSelf();
 		}
-		mainItem->subItems.clear();
+		tp->children.clear();
 		//dcassert(mainItems.find(const_cast<key*>(&mainItem->getGroupingString())) != mainItems.end());
 		mainItems.erase(const_cast<key*>(&mainItem->getGroupingString()));
 	}
@@ -748,30 +774,32 @@ public:
 			removeMainItem(item);
 		} else {
 			T* main = item->main;
-			T::List::iterator n = find(main->subItems.begin(), main->subItems.end(), item);
-			if(n != main->subItems.end()) {
-				main->subItems.erase(n);
+			TreePair* tp = findTreePair(main->getGroupingString());
+
+			vector<T*>::iterator n = find(tp->children.begin(), tp->children.end(), item);
+			if(n != tp->children.end()) {
+				tp->children.erase(n);
 			}
 			if(uniqueMainItem) {
-				if(main->subItems.size() == 1) {
+				if(tp->children.size() == 1) {
 					if(!main->collapsed) {
 						main->collapsed = true;
-						deleteItem(main->subItems.front());
+						deleteItem(tp->children.front());
 					}
 					SetItemState(findItem(main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
-				} else if(main->subItems.empty()) {
+				} else if(tp->children.empty()) {
 					removeMainItem(main);
 					deleteItem(main);
 					item->main = NULL;
-					delete main;
+					main->deleteSelf();
 				}
 			} else {
-				if(main->subItems.empty()) {
+				if(tp->children.empty()) {
 					SetItemState(findItem(main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 				}
 			}
 			if(item->main) {
-				item->updateMainItem();
+				item->updateMainItem(tp->children);
 				updateItem(item->main);
 			}
 		}
@@ -779,24 +807,23 @@ public:
 		deleteItem(item);
 
 		if(removeFromMemory)
-			delete item;
+			item->deleteSelf();
 	}
 
 	void deleteAllItems() {
 		// HACK: ugly hack but at least it doesn't crash and there's no memory leak
 		for(TreeMap::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
-			T* ti = (*i).second;
-			for(T::List::iterator j = ti->subItems.begin(); j != ti->subItems.end(); j++) {
+			T* ti = (*i).second.parent;
+			for(vector<T*>::iterator j = (*i).second.children.begin(); j != (*i).second.children.end(); j++) {
 				deleteItem(*j);
-				delete *j;
+				(*j)->deleteSelf();
 			}
 			deleteItem(ti);
-			delete ti;
+			ti->deleteSelf();
 		}
 		for(int i = 0; i < GetItemCount(); i++) {
 			T* si = getItemData(i);
-			dcassert(si->subItems.empty());
-			delete si;
+			si->deleteSelf();
 		}
 
  		mainItems.clear();
@@ -911,6 +938,9 @@ private:
 		return T::compareItems(a, b, col);
 	}
 };
+
+template<class T, int ctrlId, class key, class hashFunc, class equalKey>
+const vector<T*> TypedTreeListViewCtrl<T, ctrlId, key, hashFunc, equalKey>::emptyVector;
 
 #endif // !defined(TYPED_LIST_VIEW_CTRL_H)
 

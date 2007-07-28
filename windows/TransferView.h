@@ -145,7 +145,7 @@ public:
 private:
 	class ItemInfo;	
 public:
-	typedef TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS> ItemInfoList;
+	typedef TypedTreeListViewCtrl<ItemInfo, IDC_TRANSFERS, tstring, noCaseStringHash, noCaseStringEq> ItemInfoList;
 	ItemInfoList& getUserList() { return ctrlTransfers; }
 private:
 	enum {
@@ -178,11 +178,6 @@ private:
 	struct UpdateInfo;
 	class ItemInfo : public UserInfoBase {
 	public:
-		typedef vector<ItemInfo*> List;
-		typedef List::const_iterator Iter;
-
-		ItemInfo::List subItems;
-
 		enum Status {
 			STATUS_RUNNING,
 			STATUS_WAITING,
@@ -240,9 +235,9 @@ private:
 			return h;
 		}
 		const tstring& getGroupingString() const { return Target; }
-		void updateMainItem() {
-			if(main->subItems.size() == 1) {
-				ItemInfo* i = main->subItems.front();
+		void updateMainItem(vector<ItemInfo*>& children) {
+			if(children.size() == 1) {
+				ItemInfo* i = children.front();
 				main->user = i->user;
 				main->flagImage = i->flagImage;
 				main->columns[COLUMN_USER] = Text::toT(main->user->getFirstNick());
@@ -250,12 +245,14 @@ private:
 				main->columns[COLUMN_IP] = i->columns[COLUMN_IP];
 			} else {
 				TCHAR buf[256];
-				snwprintf(buf, sizeof(buf), _T("%d %s"), main->subItems.size(), CTSTRING(USERS));
+				snwprintf(buf, sizeof(buf), _T("%d %s"), children.size(), CTSTRING(USERS));
 
 				main->columns[COLUMN_USER] = buf;
 				main->columns[COLUMN_IP] = Util::emptyStringT;
 			}
 		}
+
+		inline void deleteSelf() { delete this; }
 	};
 
 	struct UpdateInfo : public Task {

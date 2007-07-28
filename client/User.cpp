@@ -311,7 +311,7 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 				return 1;
 		}
 		// workaround for faster hub loading
-		return lstrcmpiA(a->identity.getNick().c_str(), b->identity.getNick().c_str());
+		// lstrcmpiA(a->identity.getNick().c_str(), b->identity.getNick().c_str());
 	}
 	switch(col) {
 		case COLUMN_SHARED:

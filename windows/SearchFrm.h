@@ -181,7 +181,7 @@ public:
 	}
 	
 	LRESULT onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		ctrlResults.forEachSelectedT(SearchResult::Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
+		ctrlResults.forEachSelectedT(Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
 		return 0;
 	}
 
@@ -191,7 +191,7 @@ public:
 	}
 
 	LRESULT onDownloadWhole(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		ctrlResults.forEachSelectedT(SearchResult::DownloadWhole(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
+		ctrlResults.forEachSelectedT(DownloadWhole(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
 		return 0;
 	}
 	
@@ -261,24 +261,7 @@ public:
 	SearchResultList& getUserList() { return ctrlResults; }
 
 private:
-	/*enum {
-		COLUMN_FIRST,
-		COLUMN_FILENAME = COLUMN_FIRST,
-		COLUMN_HITS,
-		COLUMN_NICK,
-		COLUMN_TYPE,
-		COLUMN_SIZE,
-		COLUMN_PATH,
-		COLUMN_SLOTS,
-		COLUMN_CONNECTION,
-		COLUMN_HUB,
-		COLUMN_EXACT_SIZE,
-		COLUMN_UPLOAD,
-		COLUMN_IP,		
-		COLUMN_TTH,
-		COLUMN_LAST
-	};
-*/
+
 	enum Images {
 		IMAGE_UNKOWN,
 		IMAGE_SLOW,
@@ -295,181 +278,33 @@ private:
 		LESS,
 		NOT_EQUAL
 	};
-/*
-	class SearchInfo : public UserInfoBase {
-	public:
-		typedef SearchInfo* Ptr;
-		typedef vector<Ptr> List;
-		typedef List::const_iterator Iter;
 
-		SearchInfo::List subItems;
-
-		SearchInfo(SearchResult* aSR) : sr(aSR), collapsed(true), main(NULL), flagImage(0) { 
-			sr->incRef();
-
-			if (!sr->getIP().empty()) {
- 				// Only attempt to grab a country mapping if we actually have an IP address
-				string tmpCountry = Util::getIpCountry(sr->getIP());
- 				if(!tmpCountry.empty()) {
- 					flagImage = WinUtil::getFlagImage(tmpCountry.c_str());
- 				}
-			}			
-		}
-		~SearchInfo() {
-			sr->decRef(); 
-		}
-
-		const UserPtr& getUser() const { return sr->getUser(); }
-
-		bool collapsed;
-		SearchInfo* main;
-
-		void getList();
-		void browseList();
-
-		void view();
-		struct Download {
-			Download(const tstring& aTarget) : tgt(aTarget) { }
-			void operator()(SearchInfo* si);
-			const tstring& tgt;
-		};
-		struct DownloadWhole {
-			DownloadWhole(const tstring& aTarget) : tgt(aTarget) { }
-			void operator()(SearchInfo* si);
-			const tstring& tgt;
-		};
-		struct DownloadTarget {
-			DownloadTarget(const tstring& aTarget) : tgt(aTarget) { }
-			void operator()(SearchInfo* si);
-			const tstring& tgt;
-		};
-		struct CheckTTH {
-			CheckTTH() : op(true), firstHubs(true), hasTTH(false), firstTTH(true) { }
-			void operator()(SearchInfo* si);
-			bool firstHubs;
-			StringList hubs;
-			bool op;
-			bool hasTTH;
-			bool firstTTH;
-			tstring tth;
-		};
-        
-		inline const tstring getText(uint8_t col) const {
-			switch(col) {
-				case COLUMN_FILENAME:
-					if(sr->getType() == SearchResult::TYPE_FILE) {
-    					if(sr->getFile().rfind(_T('\\')) == tstring::npos) {
-    						return Text::toT(sr->getFile());
-    					} else {
-	    					return Text::toT(Util::getFileName(sr->getFile()));
-						}      
-					} else {
-						return Text::toT(sr->getFileName());
-					}
-				case COLUMN_HITS: return subItems.empty() ? Util::emptyStringT : Util::toStringW(subItems.size() + 1) + _T(' ') + TSTRING(USERS);
-				case COLUMN_NICK: return Text::toT(sr->getUser()->getFirstNick());
-				case COLUMN_TYPE:
-					if(sr->getType() == SearchResult::TYPE_FILE) {
-						tstring type = Text::toT(Util::getFileExt(Text::fromT(getText(COLUMN_FILENAME))));
-						if(!type.empty() && type[0] == _T('.'))
-							type.erase(0, 1);
-						return type;
-					} else {
-						return TSTRING(DIRECTORY);
-					}
-				case COLUMN_SIZE: return sr->getSize() > 0 ? Util::formatBytesW(sr->getSize()) : Util::emptyStringT;
-				case COLUMN_PATH:
-					if(sr->getType() == SearchResult::TYPE_FILE) {
-						return Text::toT(Util::getFilePath(sr->getFile()));
-					} else {
-						return Text::toT(sr->getFile());
-					}
-				case COLUMN_SLOTS: return Text::toT(sr->getSlotString());
-				case COLUMN_CONNECTION: return Text::toT(ClientManager::getInstance()->getConnection(sr->getUser()->getCID()));
-				case COLUMN_HUB: return Text::toT(sr->getHubName());
-				case COLUMN_EXACT_SIZE: return sr->getSize() > 0 ? Util::formatExactSize(sr->getSize()) : Util::emptyStringT;
-				case COLUMN_UPLOAD:
-					if (sr->getUser()->getLastDownloadSpeed() > 0) {
- 						return Util::toStringW(sr->getUser()->getLastDownloadSpeed()) + _T(" kB/s");
- 					} else if(getUser()->isSet(User::FIREBALL)) {
- 						return _T(">=100 kB/s");
- 					} else {
- 						return _T("N/A");
- 					}		
-				case COLUMN_IP: {
-					string ip = sr->getIP();
- 					if (!ip.empty()) {
- 						// Only attempt to grab a country mapping if we actually have an IP address
- 						string tmpCountry = Util::getIpCountry(ip);
- 						if(!tmpCountry.empty()) {
- 							ip = tmpCountry + " (" + ip + ")";
-  						}
- 					}
-					return Text::toT(ip);
-				}
-				case COLUMN_TTH: return sr->getType() == SearchResult::TYPE_FILE ? Text::toT(sr->getTTH().toBase32()) : Util::emptyStringT;
-				default: return Util::emptyStringT;
-			}
-		}
-
-		static int compareItems(const SearchInfo* a, const SearchInfo* b, uint8_t col) {
-			if(!a->sr || !b->sr)
-				return 0;
-
-			switch(col) {
-				case COLUMN_TYPE: 
-					if(a->sr->getType() == b->sr->getType())
-						return lstrcmpi(a->getText(COLUMN_TYPE).c_str(), b->getText(COLUMN_TYPE).c_str());
-					else
-						return(a->sr->getType() == SearchResult::TYPE_DIRECTORY) ? -1 : 1;
-				case COLUMN_HITS: return compare(a->subItems.size(), b->subItems.size());
-				case COLUMN_SLOTS: 
-					if(a->sr->getFreeSlots() == b->sr->getFreeSlots())
-						return compare(a->sr->getSlots(), b->sr->getSlots());
-					else
-						return compare(a->sr->getFreeSlots(), b->sr->getFreeSlots());
-				case COLUMN_SIZE:
-				case COLUMN_EXACT_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
-				case COLUMN_UPLOAD: return compare(a->getText(COLUMN_UPLOAD), b->getText(COLUMN_UPLOAD));
-				default: return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
-			}
-		}
-
-		int imageIndex() const {
-			int image = 0;
-			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
-				image = sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(sr->getFile())) : WinUtil::getDirIconIndex();
-			} else {
-				string tmp = ClientManager::getInstance()->getConnection(sr->getUser()->getCID());
-				if( (tmp == "28.8Kbps") ||
-					(tmp == "33.6Kbps") ||
-					(tmp == "56Kbps") ||
-					(tmp == "Modem") ||
-					(tmp == "Satellite") ||
-					(tmp == "Wireless") ||
-					(tmp == "ISDN") ) {
-					image = 1;
-				} else if( (tmp == "Cable") ||
-					(tmp == "DSL") ) {
-					image = 2;
-				} else if( (tmp == "LAN(T1)") ||
-					(tmp == "LAN(T3)") ) {
-					image = 3;
-				}
-				if(sr->getType() == SearchResult::TYPE_FILE)
-					image += 4;
-			}
-			return image;
-		}
-
-		SearchInfo* createMainItem() { return this; }
-		const TTHValue& getGroupingString() const { return sr->getTTH(); }
-		void updateMainItem() {	}
-
-		GETSET(uint8_t, flagImage, FlagImage);
-	SearchResult* sr;
+	struct Download {
+		Download(const tstring& aTarget) : tgt(aTarget) { }
+		void operator()(SearchResult* si);
+		const tstring& tgt;
 	};
-*/
+	struct DownloadWhole {
+		DownloadWhole(const tstring& aTarget) : tgt(aTarget) { }
+		void operator()(SearchResult* si);
+		const tstring& tgt;
+	};
+	struct DownloadTarget {
+		DownloadTarget(const tstring& aTarget) : tgt(aTarget) { }
+		void operator()(SearchResult* si);
+		const tstring& tgt;
+	};
+	struct CheckTTH {
+		CheckTTH() : op(true), firstHubs(true), hasTTH(false), firstTTH(true) { }
+		void operator()(SearchResult* si);
+		bool firstHubs;
+		StringList hubs;
+		bool op;
+		bool hasTTH;
+		bool firstTTH;
+		tstring tth;
+	};
+
 	struct HubInfo : public FastAlloc<HubInfo> {
 		HubInfo(const tstring& aUrl, const tstring& aName, bool aOp) : url(aUrl),
 			name(aName), op(aOp) { }
@@ -607,9 +442,9 @@ private:
 	void onHubAdded(HubInfo* info);
 	void onHubChanged(HubInfo* info);
 	void onHubRemoved(HubInfo* info);
-	bool matchFilter(SearchResult* sr, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
+	bool matchFilter(SearchResult* si, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
 	bool parseFilter(FilterModes& mode, int64_t& size);
-	void updateSearchList(SearchResult* sr = NULL);
+	void updateSearchList(SearchResult* si = NULL);
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 

@@ -37,13 +37,12 @@
 #include "TimerManager.h"
 #include "AdcCommand.h"
 #include "ClientManager.h"
-
 #include "ResourceManager.h"
 
 class SearchManager;
 class SocketException;
 
-class SearchResult : public FastAlloc<SearchResult>, public PointerBase, public UserInfoBase {
+class SearchResult : public FastAlloc<SearchResult>, public UserInfoBase {
 public:	
 
 	enum Types {
@@ -73,16 +72,13 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
 	
-	// temporary until etter optimization
-	SearchResult::List subItems;
-
 	SearchResult(Types aType, int64_t aSize, const string& name, const TTHValue& aTTH);
 
 	SearchResult(const UserPtr& aUser, Types aType, uint8_t aSlots, uint8_t aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
 		const string& ip, TTHValue aTTH, const string& aToken);
 
-	~SearchResult() { }
+	inline void deleteSelf() { decRef(); }
 
 	string getFileName() const;
 	string toSR(const Client& client) const;
@@ -103,42 +99,20 @@ public:
 	const string& getIP() const { return IP; }
 	const string& getToken() const { return token; }
 
-	// SearchInfo
+	void incRef() { Thread::safeInc(ref); }
+	void decRef() { 
+		if(Thread::safeDec(ref) == 0) 
+			delete this; 
+	}
+
 	bool collapsed;
+	size_t hits;
 	SearchResult* main;
 
 	void getList();
 	void browseList();
 
 	void view();
-	struct Download {
-		Download(const tstring& aTarget) : tgt(aTarget) { }
-		Download& operator=( const Download& ) {}
-		void operator()(SearchResult* si);
-		const tstring& tgt;
-	};
-	struct DownloadWhole {
-		DownloadWhole(const tstring& aTarget) : tgt(aTarget) { }
-		DownloadWhole& operator=( const DownloadWhole& ) {}
-		void operator()(SearchResult* si);
-		const tstring& tgt;
-	};
-	struct DownloadTarget {
-		DownloadTarget(const tstring& aTarget) : tgt(aTarget) { }
-		DownloadTarget& operator=( const DownloadTarget& ) {}
-		void operator()(SearchResult* si);
-		const tstring& tgt;
-	};
-	struct CheckTTH {
-		CheckTTH() : op(true), firstHubs(true), hasTTH(false), firstTTH(true) { }
-		void operator()(SearchResult* si);
-		bool firstHubs;
-		StringList hubs;
-		bool op;
-		bool hasTTH;
-		bool firstTTH;
-		tstring tth;
-	};
     
 	const tstring getText(uint8_t col) const {
 		switch(col) {
@@ -152,7 +126,7 @@ public:
 				} else {
 					return Text::toT(getFileName());
 				}
-			case COLUMN_HITS: return subItems.empty() ? Util::emptyStringT : Util::toStringW(subItems.size() + 1) + _T(' ') + TSTRING(USERS);
+			case COLUMN_HITS: return hits == 0 ? Util::emptyStringT : Util::toStringW(hits + 1) + _T(' ') + TSTRING(USERS);
 			case COLUMN_NICK: return Text::toT(getUser()->getFirstNick());
 			case COLUMN_TYPE:
 				if(getType() == SearchResult::TYPE_FILE) {
@@ -199,13 +173,16 @@ public:
 	}
 
 	static int compareItems(const SearchResult* a, const SearchResult* b, uint8_t col) {
+		if(!a || !b)
+			return 0;
+
 		switch(col) {
 			case COLUMN_TYPE: 
 				if(a->getType() == b->getType())
 					return lstrcmpi(a->getText(COLUMN_TYPE).c_str(), b->getText(COLUMN_TYPE).c_str());
 				else
 					return(a->getType() == SearchResult::TYPE_DIRECTORY) ? -1 : 1;
-			case COLUMN_HITS: return compare(a->subItems.size(), b->subItems.size());
+			case COLUMN_HITS: return compare(a->hits, b->hits);
 			case COLUMN_SLOTS: 
 				if(a->getFreeSlots() == b->getFreeSlots())
 					return compare(a->getSlots(), b->getSlots());
@@ -219,9 +196,10 @@ public:
 	}
 
 	int imageIndex() const;
+
 	SearchResult* createMainItem() { return this; }
 	const TTHValue& getGroupingString() const { return getTTH(); }
-	void updateMainItem() {	}
+	void updateMainItem(vector<SearchResult*>& v) { main->hits = v.size(); }
 
 	GETSET(uint8_t, flagImage, FlagImage);
 
@@ -229,6 +207,8 @@ private:
 	friend class SearchManager;
 
 	SearchResult();
+	~SearchResult() { dcdebug("SearchResult 0x%X deleted\n", this); }
+
 	SearchResult(const SearchResult& rhs);
 
 	TTHValue tth;
@@ -245,6 +225,8 @@ private:
 
 	uint8_t slots;
 	uint8_t freeSlots;
+	
+	volatile long ref;
 };
 
 class SearchQueueItem {
