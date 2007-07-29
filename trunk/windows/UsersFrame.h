@@ -105,11 +105,9 @@ private:
 			update(u);
 		}
 
-		const TCHAR* getText(int col) const {
-			return columns[col].c_str();
-		}
+		inline const TCHAR* getText(int col) const { return columns[col].c_str(); }
 
-		static int compareItems(const UserInfo* a, const UserInfo* b, int col) {
+		inline static int compareItems(const UserInfo* a, const UserInfo* b, int col) {
 			return lstrcmpi(a->columns[col].c_str(), b->columns[col].c_str());
 		}
 		

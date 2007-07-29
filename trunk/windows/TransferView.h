@@ -26,6 +26,7 @@
 #include "..\client\DownloadManagerListener.h"
 #include "..\client\UploadManagerListener.h"
 #include "..\client\ConnectionManagerListener.h"
+#include "..\client\QueueManagerListener.h"
 #include "..\client\TaskQueue.h"
 #include "..\client\forward.h"
 #include "..\client\Util.h"
@@ -40,7 +41,7 @@
 #include "SearchFrm.h"
 
 class TransferView : public CWindowImpl<TransferView>, private DownloadManagerListener, 
-	private UploadManagerListener, private ConnectionManagerListener,
+	private UploadManagerListener, private ConnectionManagerListener, private QueueManagerListener,
 	public UserInfoBaseHandler<TransferView>, public UCHandler<TransferView>,
 	private SettingsManagerListener
 {
@@ -152,6 +153,7 @@ private:
 		ADD_ITEM,
 		REMOVE_ITEM,
 		UPDATE_ITEM,
+		UPDATE_PARENT
 	};
 
 	enum {
@@ -182,9 +184,7 @@ private:
 			STATUS_RUNNING,
 			STATUS_WAITING,
 			// special statuses
-			TREE_DOWNLOAD,
-			DOWNLOAD_STARTING,
-			DOWNLOAD_FINISHED,
+			TREE_DOWNLOAD
 		};
 
 		ItemInfo(const UserPtr& u, bool aDownload);
@@ -192,21 +192,26 @@ private:
 		bool download;
 		bool transferFailed;
 		bool collapsed;
-		bool multiSource;		
+		
 		uint8_t flagImage;
-		ItemInfo* main;
+		int16_t running;
+
+		ItemInfo* parent;
 		UserPtr user;
 		Status status;
+		size_t childCount;
+		
 		int64_t pos;
 		int64_t size;
-		int64_t start;
 		int64_t actual;
 		int64_t speed;
 		int64_t timeLeft;
 		uint64_t fileBegin;
-		tstring Target;
+		
+		tstring ip;
+		tstring statusString;
+		tstring target;
 
-		tstring columns[COLUMN_LAST];
 		void update(const UpdateInfo& ui);
 
 		const UserPtr& getUser() const { return user; }
@@ -216,82 +221,93 @@ private:
 
 		double getRatio() const { return (pos > 0) ? (double)actual / (double)pos : 1.0; }
 
-		const TCHAR* getText(uint8_t col) const {
-			return columns[col].c_str();
+		const tstring getText(uint8_t col) const {
+			switch(col) {
+				case COLUMN_USER: return (childCount <= 1) ? Text::toT(user->getFirstNick()) : (Util::toStringW(childCount) + _T(' ') + TSTRING(USERS));
+				case COLUMN_HUB: return (running == -1) ? WinUtil::getHubNames(user).first : (Util::toStringW(running) + _T(' ') + TSTRING(NUMBER_OF_SEGMENTS));
+				case COLUMN_STATUS: return statusString;
+				case COLUMN_TIMELEFT: return (status == STATUS_RUNNING) ? Util::formatSeconds(timeLeft) : Util::emptyStringT;
+				case COLUMN_SPEED: return (status == STATUS_RUNNING) ? (Util::formatBytesW(speed) + _T("/s")) : Util::emptyStringT;
+				case COLUMN_FILE: {
+					tstring file = (status == TREE_DOWNLOAD ? _T("TTH: ") : Util::emptyStringT);
+					file += Util::getFileName(target);
+					return file;
+				}
+				case COLUMN_SIZE: return Util::formatBytesW(size); 
+				case COLUMN_PATH: return Util::getFilePath(target);
+				case COLUMN_IP: return ip;
+				case COLUMN_RATIO: return (status == STATUS_RUNNING) ? Util::toStringW(getRatio()) : Util::emptyStringT;
+				default: return Util::emptyStringT;
+			}
 		}
 
 		static int compareItems(const ItemInfo* a, const ItemInfo* b, uint8_t col);
 
-		uint8_t imageIndex() const { return static_cast<uint8_t>(!download ? IMAGE_UPLOAD : (!main ? IMAGE_DOWNLOAD : IMAGE_SEGMENT)); }
+		uint8_t imageIndex() const { return static_cast<uint8_t>(!download ? IMAGE_UPLOAD : (!parent ? IMAGE_DOWNLOAD : IMAGE_SEGMENT)); }
 
-		ItemInfo* createMainItem() {
+		ItemInfo* createParent() {
 	  		ItemInfo* h = new ItemInfo(user, true);
-			h->Target = Target;
-			h->columns[COLUMN_FILE] = Util::getFileName(h->Target);
-			h->columns[COLUMN_PATH] = Util::getFilePath(h->Target);
-			h->columns[COLUMN_STATUS] = TSTRING(CONNECTING);
-			h->columns[COLUMN_HUB] = _T("0 ") + TSTRING(NUMBER_OF_SEGMENTS);
-
+			h->target = target;
+			h->statusString = TSTRING(CONNECTING);
 			return h;
 		}
-		const tstring& getGroupingString() const { return Target; }
-		void updateMainItem(vector<ItemInfo*>& children) {
-			if(children.size() == 1) {
-				ItemInfo* i = children.front();
-				main->user = i->user;
-				main->flagImage = i->flagImage;
-				main->columns[COLUMN_USER] = Text::toT(main->user->getFirstNick());
-				main->columns[COLUMN_HUB] = WinUtil::getHubNames(main->user).first;
-				main->columns[COLUMN_IP] = i->columns[COLUMN_IP];
-			} else {
-				TCHAR buf[256];
-				snwprintf(buf, sizeof(buf), _T("%d %s"), children.size(), CTSTRING(USERS));
 
-				main->columns[COLUMN_USER] = buf;
-				main->columns[COLUMN_IP] = Util::emptyStringT;
+		void updateParent(vector<ItemInfo*>& children) {
+			parent->childCount = children.size();
+			if(childCount == 1) {
+				ItemInfo* i = children.front();
+				parent->user = i->user;
+				parent->running = -1;
+				parent->flagImage = i->flagImage;
+				parent->ip = i->ip;
+			} else {
+				ip = Util::emptyStringT;
 			}
 		}
+
+		const tstring& getGroupCond() const { return target; }
 
 		inline void deleteSelf() { delete this; }
 	};
 
 	struct UpdateInfo : public Task {
 		enum {
-			MASK_POS = 1 << 0,
-			MASK_SIZE = 1 << 1,
-			MASK_START = 1 << 2,
-			MASK_ACTUAL = 1 << 3,
-			MASK_SPEED = 1 << 4,
-			MASK_FILE = 1 << 5,
-			MASK_STATUS = 1 << 6,
-			MASK_TIMELEFT = 1 << 7,
-			MASK_IP = 1 << 8,
-			MASK_STATUS_STRING = 1 << 9,
-			MASK_COUNTRY = 1 << 10,
-			MASK_SEGMENT = 1 << 11
+			MASK_POS			= 0x01,
+			MASK_SIZE			= 0x02,
+			MASK_ACTUAL			= 0x04,
+			MASK_SPEED			= 0x08,
+			MASK_FILE			= 0x10,
+			MASK_STATUS			= 0x20,
+			MASK_TIMELEFT		= 0x40,
+			MASK_IP				= 0x80,
+			MASK_STATUS_STRING	= 0x100,
+			MASK_SEGMENT		= 0x200
 		};
 
-		bool operator==(const ItemInfo& ii) { return download == ii.download && user == ii.user; }
+		bool operator==(const ItemInfo& ii) const { return download == ii.download && user == ii.user; }
 
-		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), download(isDownload), transferFailed(isTransferFailed), multiSource(false), fileList(false), flagImage(0) { }
+		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), queueItem(NULL), download(isDownload), transferFailed(isTransferFailed), fileList(false), flagImage(0) { }
+		UpdateInfo(QueueItem* qi, bool isDownload, bool isTransferFailed = false) : updateMask(0), queueItem(qi), download(isDownload), transferFailed(isTransferFailed), fileList(false), flagImage(0) { qi->inc(); }
+
+		~UpdateInfo() { if(queueItem) queueItem->dec(); }
 
 		uint32_t updateMask;
 
 		UserPtr user;
+		QueueItem* queueItem;
+
 		bool download;
 		bool transferFailed;
 		bool fileList;
 		uint8_t flagImage;		
-		void setMultiSource(bool aSeg) { multiSource = aSeg; updateMask |= MASK_SEGMENT; }
-		bool multiSource;
+		void setRunning(int16_t aRunning) { running = aRunning; updateMask |= MASK_SEGMENT; }
+		int16_t running;
 		void setStatus(ItemInfo::Status aStatus) { status = aStatus; updateMask |= MASK_STATUS; }
 		ItemInfo::Status status;
 		void setPos(int64_t aPos) { pos = aPos; updateMask |= MASK_POS; }
 		int64_t pos;
 		void setSize(int64_t aSize) { size = aSize; updateMask |= MASK_SIZE; }
 		int64_t size;
-		void setStart(int64_t aStart) { start = aStart; updateMask |= MASK_START; }
-		int64_t start;
 		void setActual(int64_t aActual) { actual = aActual; updateMask |= MASK_ACTUAL; }
 		int64_t actual;
 		void setSpeed(int64_t aSpeed) { speed = aSpeed; updateMask |= MASK_SPEED; }
@@ -300,12 +316,10 @@ private:
 		int64_t timeLeft;
 		void setStatusString(const tstring& aStatusString) { statusString = aStatusString; updateMask |= MASK_STATUS_STRING; }
 		tstring statusString;
-		void setFile(const tstring& aFile) { file = Util::getFileName(aFile); path = Util::getFilePath(aFile); target = aFile; updateMask|= MASK_FILE; }
-		tstring file;
-		tstring path;
-		void setIP(const tstring& aIP) { IP = aIP; updateMask |= MASK_IP; }
+		void setTarget(const tstring& aTarget) { target = aTarget; updateMask |= MASK_FILE; }
+		tstring target;
+		void setIP(const tstring& aIP, uint8_t aFlagImage) { IP = aIP; flagImage = aFlagImage, updateMask |= MASK_IP; }
 		tstring IP;
-		tstring target;		
 	};
 
 	void speak(uint8_t type, UpdateInfo* ui) { tasks.add(type, ui); PostMessage(WM_SPEAKER); }
@@ -340,25 +354,19 @@ private:
 	void on(UploadManagerListener::Tick, const UploadList& aUpload) throw();
 	void on(UploadManagerListener::Complete, const Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getSourceFile(), false); }
 
+	void on(QueueManagerListener::StatusUpdated, const QueueItem*) throw();
+	void on(QueueManagerListener::Removed, const QueueItem*) throw();
+	void on(QueueManagerListener::Finished, const QueueItem*, const string&, int64_t) throw();
+
 	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 
 	void onTransferComplete(const Transfer* aTransfer, bool isUpload, const string& aFileName, bool isTree);
 
 	void CollapseAll();
 	void ExpandAll();
-	bool mainItemTick(ItemInfo* main, bool);
 
-	void setMainItem(ItemInfo* i) {
-		if(i->main != NULL) {
-			ItemInfo* h = i->main;		
-			if(h->Target != i->Target) {
-				ctrlTransfers.removeGroupedItem(i, false);
-				ctrlTransfers.insertGroupedItem(i, false);
-			}
-		} else {
-			i->main = ctrlTransfers.findMainItem(i->Target);
-		}
-	}
+	ItemInfo* findItem(const UpdateInfo& ui);
+	void updateItem(int ii, uint32_t updateMask);
 };
 
 #endif // !defined(TRANSFER_VIEW_H)

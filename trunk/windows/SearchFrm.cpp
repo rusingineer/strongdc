@@ -532,14 +532,14 @@ void SearchFrame::Download::operator()(SearchResult* sr) {
 			QueueManager::getInstance()->add(target, sr->getSize(), 
 				sr->getTTH(), sr->getUser());
 			
-			// @todo const vector<SearchInfo*>& children = ctrlResults.findChildren(const_cast<TTHValue*>(&sr->getGroupingString()));
-			//for(SearchInfo::Iter i = children.begin(); i != children.end(); i++) {
-			//	SearchInfo* j = *i;
-			//	try {
-			//		QueueManager::getInstance()->add(Text::fromT(tgt + sr->getText(SearchResult::COLUMN_FILENAME)), j->getSize(), j->getTTH(), j->getUser());
-			//	} catch(const Exception&) {
-			//	}
-			//}
+			const vector<SearchResult*>& children = sf->getUserList().findChildren(sr->getGroupCond());
+			for(SearchResult::Iter i = children.begin(); i != children.end(); i++) {
+				SearchResult* j = *i;
+				try {
+					QueueManager::getInstance()->add(Text::fromT(tgt + sr->getText(SearchResult::COLUMN_FILENAME)), j->getSize(), j->getTTH(), j->getUser());
+				} catch(const Exception&) {
+				}
+			}
 			if(WinUtil::isShift())
 				QueueManager::getInstance()->setPriority(target, QueueItem::HIGHEST);
 		} else {
@@ -635,14 +635,14 @@ LRESULT SearchFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 			tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY));
 			if(WinUtil::browseDirectory(target, m_hWnd)) {
 				WinUtil::addLastDir(target);
-				ctrlResults.forEachSelectedT(Download(target));
+				ctrlResults.forEachSelectedT(Download(target, this));
 			}
 		}
 	} else {
 		tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY));
 		if(WinUtil::browseDirectory(target, m_hWnd)) {
 			WinUtil::addLastDir(target);
-			ctrlResults.forEachSelectedT(Download(target));
+			ctrlResults.forEachSelectedT(Download(target, this));
 		}
 	}
 	return 0;
@@ -662,7 +662,7 @@ LRESULT SearchFrame::onDownloadTarget(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 	size_t newId = (size_t)wID - IDC_DOWNLOAD_TARGET;
 
 	if(newId < WinUtil::lastDirs.size()) {
-		ctrlResults.forEachSelectedT(Download(WinUtil::lastDirs[newId]));
+		ctrlResults.forEachSelectedT(Download(WinUtil::lastDirs[newId], this));
 	} else {
 		dcassert((newId - WinUtil::lastDirs.size()) < targets.size());
 		ctrlResults.forEachSelectedT(DownloadTarget(Text::toT(targets[newId - WinUtil::lastDirs.size()])));
@@ -682,7 +682,7 @@ LRESULT SearchFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND
 
 	StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 	if(newId < spl.size()) {
-		ctrlResults.forEachSelectedT(Download(Text::toT(spl[newId].first)));
+		ctrlResults.forEachSelectedT(Download(Text::toT(spl[newId].first), this));
 	} else {
 		dcassert((newId - spl.size()) < targets.size());
 		ctrlResults.forEachSelectedT(DownloadTarget(Text::toT(targets[newId - spl.size()])));
@@ -708,7 +708,7 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 		if (item->ptAction.x < rect.left)
 			return 0;
 
-		ctrlResults.forEachSelectedT(Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
+		ctrlResults.forEachSelectedT(Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY)), this));
 	}
 	return 0;
 }
@@ -1037,13 +1037,13 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			SearchResult* sr = (SearchResult*)lParam;
             // Check previous search results for dupes
 			if(!sr->getText(SearchResult::COLUMN_TTH).empty() && useGrouping) {
-				SearchResultList::TreePair* tp = ctrlResults.findTreePair(sr->getTTH());
-				if(tp) {
-					if((sr->getUser()->getCID() == tp->parent->getUser()->getCID()) && (sr->getFile() == tp->parent->getFile())) {	 	
+				SearchResultList::ParentPair* pp = ctrlResults.findParentPair(sr->getTTH());
+				if(pp) {
+					if((sr->getUser()->getCID() == pp->parent->getUser()->getCID()) && (sr->getFile() == pp->parent->getFile())) {	 	
 						sr->deleteSelf();
 						return 0;	 	
 					} 	
-					for(vector<SearchResult*>::const_iterator k = tp->children.begin(); k != tp->children.end(); k++){	 	
+					for(vector<SearchResult*>::const_iterator k = pp->children.begin(); k != pp->children.end(); k++){	 	
 						if((sr->getUser()->getCID() == (*k)->getUser()->getCID()) && (sr->getFile() == (*k)->getFile())) {	 	
 							sr->deleteSelf();
 							return 0;	 	
@@ -1051,7 +1051,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 					}	 	
 				}
 			} else {
-				for(SearchResultList::TreeMap::const_iterator s = ctrlResults.mainItems.begin(); s != ctrlResults.mainItems.end(); ++s) {
+				for(SearchResultList::ParentMap::const_iterator s = ctrlResults.parents.begin(); s != ctrlResults.parents.end(); ++s) {
 	                SearchResult* sr2 = (*s).second.parent;
 					if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
 						sr->deleteSelf();
@@ -1069,9 +1069,9 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				if(!sr->getText(SearchResult::COLUMN_TTH).empty() && useGrouping) {
 					ctrlResults.insertGroupedItem(sr, expandSR);
 				} else {
-					SearchResultList::TreePair tp = { sr, SearchResultList::emptyVector };
+					SearchResultList::ParentPair pp = { sr, SearchResultList::emptyVector };
 					ctrlResults.insertItem(sr, sr->imageIndex());
-					ctrlResults.mainItems.insert(make_pair(const_cast<TTHValue*>(&sr->getTTH()), tp));
+					ctrlResults.parents.insert(make_pair(const_cast<TTHValue*>(&sr->getTTH()), pp));
 				}
 
 				if(!filter.empty())
@@ -1564,14 +1564,14 @@ void SearchFrame::updateSearchList(SearchResult* sr) {
 		ctrlResults.SetRedraw(FALSE);
 		ctrlResults.DeleteAllItems();
 
-		for(SearchResultList::TreeMap::const_iterator i = ctrlResults.mainItems.begin(); i != ctrlResults.mainItems.end(); ++i) {
+		for(SearchResultList::ParentMap::const_iterator i = ctrlResults.parents.begin(); i != ctrlResults.parents.end(); ++i) {
 			SearchResult* sr = (*i).second.parent;
 			sr->collapsed = true;
 			if(matchFilter(sr, sel, doSizeCompare, mode, size)) {
 				dcassert(ctrlResults.findItem(sr) == -1);
 				int k = ctrlResults.insertItem(sr, sr->imageIndex());
 
-				const vector<SearchResult*>& children = ctrlResults.findChildren(sr->getGroupingString());
+				const vector<SearchResult*>& children = ctrlResults.findChildren(sr->getGroupCond());
 				if(!children.empty()) {
 					if(sr->collapsed) {
 						ctrlResults.SetItemState(k, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);	
@@ -1625,7 +1625,7 @@ SearchResult::SearchResult(const UserPtr& aUser, Types aType, uint8_t aSlots, ui
 	const string& ip, TTHValue aTTH, const string& aToken) :
 file(aFile), hubName(aHubName), user(aUser),
 	size(aSize), type(aType), slots(aSlots), freeSlots(aFreeSlots), IP(ip),
-	tth(aTTH), token(aToken), collapsed(true), main(NULL), flagImage(0), hits(0), ref(1)
+	tth(aTTH), token(aToken), collapsed(true), parent(NULL), flagImage(0), hits(0), ref(1)
 {
 	if (!ip.empty()) {
 		// Only attempt to grab a country mapping if we actually have an IP address
