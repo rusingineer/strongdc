@@ -514,25 +514,6 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 
 	{
 		Lock l(cs);
-		const QueueItem::UserMap& um = userQueue.getRunning();
-
-		for(QueueItem::UserIter j = um.begin(); j != um.end(); ++j) {
-			QueueItem* q = j->second;
-			if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-				dcassert(q->getCurrentDownload() != NULL);
-				q->setDownloadedBytes(q->getCurrentDownload()->getPos());
-			}
-			if(q->getAutoPriority()) {
-				QueueItem::Priority p1 = q->getPriority();
-				if(p1 != QueueItem::PAUSED) {
-					QueueItem::Priority p2 = q->calculateAutoPriority();
-					if(p1 != p2)
-						setPriority(q->getTarget(), p2);
-				}
-			}
-		}
-		if(!um.empty())
-			setDirty();
 
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {
 			// We keep 30 recent searches to avoid duplicate searches
@@ -874,7 +855,7 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 	}
 }
 
-bool QueueManager::getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList, bool& aSegmented) throw() {
+bool QueueManager::getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList) throw() {
     Lock l(cs);
     QueueItem* qi = userQueue.getNextAll(aUser);
 	if(qi == NULL)
@@ -884,7 +865,6 @@ bool QueueManager::getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& 
 	aSize = qi->getSize();
 	aFlags = qi->getFlags();
 	aFileList = qi->isSet(QueueItem::FLAG_USER_LIST) || qi->isSet(QueueItem::FLAG_TESTSUR);
-	aSegmented = qi->isSet(QueueItem::FLAG_MULTI_SOURCE);
 
 	return true;
 }
@@ -1693,17 +1673,25 @@ void QueueManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	if(dirty && ((lastSave + 10000) < aTick)) {
 		saveQueue();
 	}
-	if(BOOLSETTING(REALTIME_QUEUE_UPDATE) && (Speaker<QueueManagerListener>::listeners.size() > 1)) {
-		Lock l(cs);
-		QueueItem::List um = getRunningFiles();
-		for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
-			QueueItem* q = *j;
-			if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-				dcassert(q->getCurrentDownload() != NULL);
-				q->setDownloadedBytes(q->getCurrentDownload()->getPos());
-			}
-			fire(QueueManagerListener::StatusUpdated(), q);
+
+	Lock l(cs);
+
+	QueueItem::List um = getRunningFiles();
+	for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
+		QueueItem* q = *j;
+		if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+			dcassert(q->getCurrentDownload() != NULL);
+			q->setDownloadedBytes(q->getCurrentDownload()->getPos());
 		}
+		if(q->getAutoPriority()) {
+			QueueItem::Priority p1 = q->getPriority();
+			if(p1 != QueueItem::PAUSED) {
+				QueueItem::Priority p2 = q->calculateAutoPriority();
+				if(p1 != p2)
+					setPriority(q->getTarget(), p2);
+			}
+		}
+		fire(QueueManagerListener::StatusUpdated(), q);
 	}
 }
 

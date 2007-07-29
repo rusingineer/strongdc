@@ -1,3 +1,7 @@
+** svn315
+	fixed doubleclick in TransferView
+	optimized TransferView code
+
 ** svn314
 	normalized TypedTreeListView to save some memory for subitems
 	hopefully fixed unicode nicks sorting (speed must be improved)

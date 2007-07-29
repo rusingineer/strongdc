@@ -51,7 +51,7 @@ public:
 
 	int64_t getAvgSpeed() const { return milliSeconds > 0 ? (chunkSize * ((int64_t)1000) / milliSeconds) : 0; }
 
-	inline const tstring getText(uint8_t col) const {
+	const tstring getText(uint8_t col) const {
 		dcassert(col >= 0 && col < COLUMN_LAST);
 		switch(col) {
 			case COLUMN_FILE: return Text::toT(Util::getFileName(getTarget()));

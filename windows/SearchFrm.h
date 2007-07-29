@@ -181,7 +181,7 @@ public:
 	}
 	
 	LRESULT onDownload(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		ctrlResults.forEachSelectedT(Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY))));
+		ctrlResults.forEachSelectedT(Download(Text::toT(SETTING(DOWNLOAD_DIRECTORY)), this));
 		return 0;
 	}
 
@@ -280,9 +280,10 @@ private:
 	};
 
 	struct Download {
-		Download(const tstring& aTarget) : tgt(aTarget) { }
+		Download(const tstring& aTarget, SearchFrame* aSf) : tgt(aTarget), sf(aSf) { }
 		void operator()(SearchResult* si);
 		const tstring& tgt;
+		SearchFrame* sf;
 	};
 	struct DownloadWhole {
 		DownloadWhole(const tstring& aTarget) : tgt(aTarget) { }
@@ -309,10 +310,10 @@ private:
 		HubInfo(const tstring& aUrl, const tstring& aName, bool aOp) : url(aUrl),
 			name(aName), op(aOp) { }
 
-		const TCHAR* getText(uint8_t col) const {
+		inline const TCHAR* getText(uint8_t col) const {
 			return (col == 0) ? name.c_str() : Util::emptyStringT.c_str();
 		}
-		static int compareItems(const HubInfo* a, const HubInfo* b, uint8_t col) {
+		inline static int compareItems(const HubInfo* a, const HubInfo* b, uint8_t col) {
 			return (col == 0) ? lstrcmpi(a->name.c_str(), b->name.c_str()) : 0;
 		}
 		uint8_t imageIndex() const { return 0; }

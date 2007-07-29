@@ -118,8 +118,8 @@ public:
 		return 1;
 	}
 
-	inline void setText(LVITEMW& i, const tstring text) { lstrcpyn(i.pszText, text.c_str(), i.cchTextMax); }
-	inline void setText(LVITEMW& i, const wchar_t* text) { i.pszText = const_cast<TCHAR*>(text); }
+	inline void setText(LVITEM& i, const tstring text) { lstrcpyn(i.pszText, text.c_str(), i.cchTextMax); }
+	inline void setText(LVITEM& i, const TCHAR* text) { i.pszText = const_cast<TCHAR*>(text); }
 
 	LRESULT onGetDispInfo(int /* idCtrl */, LPNMHDR pnmh, BOOL& /* bHandled */) {
 		NMLVDISPINFO* di = (NMLVDISPINFO*)pnmh;
@@ -604,12 +604,12 @@ public:
 	typedef TypedTreeListViewCtrl<T, ctrlId, key, hashFunc, equalKey> thisClass;
 	typedef TypedListViewCtrl<T, ctrlId> baseClass;
 	
-	struct TreePair {
+	struct ParentPair {
 		T* parent;
 		vector<T*> children;
 	};
 
-	typedef HASH_MAP<key*, TreePair, hashFunc, equalKey> TreeMap;
+	typedef HASH_MAP<key*, ParentPair, hashFunc, equalKey> ParentMap;
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)
@@ -653,24 +653,24 @@ public:
 		return 0;
 	} 
 
-	void Collapse(T* mainItem, size_t itemPos) {
+	void Collapse(T* parent, size_t itemPos) {
 		SetRedraw(false);
-		const vector<T*>& children = findChildren(mainItem->getGroupingString());
+		const vector<T*>& children = findChildren(parent->getGroupCond());
 		for(vector<T*>::const_iterator i = children.begin(); i != children.end(); i++) {
 			deleteItem(*i);
 		}
-		mainItem->collapsed = true;
+		parent->collapsed = true;
 		SetItemState(itemPos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 		SetRedraw(true);
 	}
 
-	void Expand(T* mainItem, size_t itemPos) {
+	void Expand(T* parent, size_t itemPos) {
 		SetRedraw(false);
-		const vector<T*>& children = findChildren(mainItem->getGroupingString());
-		if(children.size() > (size_t)(uniqueMainItem ? 1 : 0)) {
-			mainItem->collapsed = false;
+		const vector<T*>& children = findChildren(parent->getGroupCond());
+		if(children.size() > (size_t)(uniqueParent ? 1 : 0)) {
+			parent->collapsed = false;
 			for(vector<T*>::const_iterator i = children.begin(); i != children.end(); i++) {
-				insertSubItem(*i, itemPos + 1);
+				insertChild(*i, itemPos + 1);
 			}
 			SetItemState(itemPos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
 			resort();
@@ -678,7 +678,7 @@ public:
 		SetRedraw(true);
 	}
 
-	void insertSubItem(const T* item, int idx) {
+	void insertChild(const T* item, int idx) {
 		LV_ITEM lvi;
 		lvi.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE | LVIF_INDENT;
 		lvi.iItem = idx;
@@ -692,115 +692,114 @@ public:
 		InsertItem(&lvi);
 	}
 
-	inline T* findMainItem(const key& groupingString) const {
-		TreeMap::const_iterator i = mainItems.find(const_cast<key*>(&groupingString));
-		return i != mainItems.end() ? (*i).second.parent : NULL;
+	inline T* findParent(const key& groupCond) const {
+		ParentMap::const_iterator i = parents.find(const_cast<key*>(&groupCond));
+		return i != parents.end() ? (*i).second.parent : NULL;
 	}
 
 	static const vector<T*> emptyVector;
-	inline const vector<T*>& findChildren(const key& groupingString) const {
-		TreeMap::const_iterator i = mainItems.find(const_cast<key*>(&groupingString));
-		return i != mainItems.end() ? (*i).second.children : emptyVector;
+	inline const vector<T*>& findChildren(const key& groupCond) const {
+		ParentMap::const_iterator i = parents.find(const_cast<key*>(&groupCond));
+		return i != parents.end() ? (*i).second.children : emptyVector;
 	}
 
-	inline TreePair* findTreePair(const key& groupingString) {
-		TreeMap::iterator i = mainItems.find(const_cast<key*>(&groupingString));
-		return i != mainItems.end() ? &((*i).second) : NULL;
+	inline ParentPair* findParentPair(const key& groupCond) {
+		ParentMap::iterator i = parents.find(const_cast<key*>(&groupCond));
+		return i != parents.end() ? &((*i).second) : NULL;
 	}
 
 	void insertGroupedItem(T* item, bool autoExpand, bool extra = false) {
-		T* mainItem = NULL;
-		TreePair* tp = NULL;
+		T* parent = NULL;
+		ParentPair* pp = NULL;
 		
 		if(!extra)
-			tp = findTreePair(item->getGroupingString());
+			pp = findParentPair(item->getGroupCond());
 
 		int pos = -1;
 
-		if(tp == NULL) {
-			mainItem = item->createMainItem();
+		if(pp == NULL) {
+			parent = item->createParent();
 
-			TreePair newTP = { mainItem };
-			tp = &(mainItems.insert(make_pair(const_cast<key*>(&mainItem->getGroupingString()), newTP)).first->second);
+			ParentPair newPP = { parent };
+			pp = &(parents.insert(make_pair(const_cast<key*>(&parent->getGroupCond()), newPP)).first->second);
 
-			mainItem->main = NULL; // ensure that mainItem of this item is really NULL
-			pos = insertItem(getSortPos(mainItem), mainItem, mainItem->imageIndex());
+			parent->parent = NULL; // ensure that parent of this item is really NULL
+			pos = insertItem(getSortPos(parent), parent, parent->imageIndex());
 
-			if(mainItem != item) {
-				uniqueMainItem = true;
+			if(parent != item) {
+				uniqueParent = true;
 			} else {
-				uniqueMainItem = false;
+				uniqueParent = false;
 				return;
 			}
 		} else {
-			mainItem = tp->parent;
-			pos = findItem(mainItem);
+			parent = pp->parent;
+			pos = findItem(parent);
 		}
 
-		tp->children.push_back(item);
-		item->main = mainItem;
-		item->updateMainItem(tp->children);
+		pp->children.push_back(item);
+		item->parent = parent;
+		item->updateParent(pp->children);
 
 		if(pos != -1) {
-			size_t totalSubItems = tp->children.size();
-			if(totalSubItems == (size_t)(uniqueMainItem ? 2 : 1)) {
+			size_t totalChildren = pp->children.size();
+			if(totalChildren == (size_t)(uniqueParent ? 2 : 1)) {
 				if(autoExpand){
 					SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-					mainItem->collapsed = false;
-					insertSubItem(item, pos + totalSubItems);
+					parent->collapsed = false;
+					insertChild(item, pos + totalChildren);
 				} else {
 					SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 				}
-			} else if(!mainItem->collapsed) {
-				insertSubItem(item, pos + totalSubItems);
+			} else if(!parent->collapsed) {
+				insertChild(item, pos + totalChildren);
 			}
 			updateItem(pos);
 		}
 	}
 
-	void removeMainItem(T* mainItem) {
-		TreePair* tp = findTreePair(mainItem->getGroupingString());
-		for(vector<T*>::iterator i = tp->children.begin(); i != tp->children.end(); i++) {
+	void removeParent(T* parent) {
+		ParentPair* pp = findParentPair(parent->getGroupCond());
+		for(vector<T*>::iterator i = pp->children.begin(); i != pp->children.end(); i++) {
 			deleteItem(*i);
 			(*i)->deleteSelf();
 		}
-		tp->children.clear();
-		//dcassert(mainItems.find(const_cast<key*>(&mainItem->getGroupingString())) != mainItems.end());
-		mainItems.erase(const_cast<key*>(&mainItem->getGroupingString()));
+		pp->children.clear();
+		parents.erase(const_cast<key*>(&parent->getGroupCond()));
 	}
 
 	void removeGroupedItem(T* item, bool removeFromMemory = true) {
-		if(!item->main) {
-			removeMainItem(item);
+		if(!item->parent) {
+			removeParent(item);
 		} else {
-			T* main = item->main;
-			TreePair* tp = findTreePair(main->getGroupingString());
+			T* parent = item->parent;
+			ParentPair* pp = findParentPair(parent->getGroupCond());
 
-			vector<T*>::iterator n = find(tp->children.begin(), tp->children.end(), item);
-			if(n != tp->children.end()) {
-				tp->children.erase(n);
+			vector<T*>::iterator n = find(pp->children.begin(), pp->children.end(), item);
+			if(n != pp->children.end()) {
+				pp->children.erase(n);
 			}
-			if(uniqueMainItem) {
-				if(tp->children.size() == 1) {
-					if(!main->collapsed) {
-						main->collapsed = true;
-						deleteItem(tp->children.front());
+			if(uniqueParent) {
+				if(pp->children.size() == 1) {
+					if(!parent->collapsed) {
+						parent->collapsed = true;
+						deleteItem(pp->children.front());
 					}
-					SetItemState(findItem(main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
-				} else if(tp->children.empty()) {
-					removeMainItem(main);
-					deleteItem(main);
-					item->main = NULL;
-					main->deleteSelf();
+					SetItemState(findItem(parent), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+				} else if(pp->children.empty()) {
+					removeParent(parent);
+					deleteItem(parent);
+					item->parent = NULL;
+					parent->deleteSelf();
 				}
 			} else {
-				if(tp->children.empty()) {
-					SetItemState(findItem(main), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
+				if(pp->children.empty()) {
+					SetItemState(findItem(parent), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 				}
 			}
-			if(item->main) {
-				item->updateMainItem(tp->children);
-				updateItem(item->main);
+			if(item->parent) {
+				item->updateParent(pp->children);
+				updateItem(item->parent);
 			}
 		}
 
@@ -812,7 +811,7 @@ public:
 
 	void deleteAllItems() {
 		// HACK: ugly hack but at least it doesn't crash and there's no memory leak
-		for(TreeMap::iterator i = mainItems.begin(); i != mainItems.end(); i++) {
+		for(ParentMap::iterator i = parents.begin(); i != parents.end(); i++) {
 			T* ti = (*i).second.parent;
 			for(vector<T*>::iterator j = (*i).second.children.begin(); j != (*i).second.children.end(); j++) {
 				deleteItem(*j);
@@ -826,7 +825,7 @@ public:
 			si->deleteSelf();
 		}
 
- 		mainItems.clear();
+ 		parents.clear();
 		DeleteAllItems();
 	}
 
@@ -895,11 +894,11 @@ public:
 		return mid;
 	}
 
-   	TreeMap mainItems;
+   	ParentMap parents;
 
 private:
 	CImageList states;
-	bool uniqueMainItem;
+	bool uniqueParent;
 
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
@@ -917,22 +916,22 @@ private:
 		// Copyright (C) Liny, RevConnect
 
 		// both are children
-		if(a->main && b->main){
+		if(a->parent && b->parent){
 			// different parent
-			if(a->main != b->main)
-				return compareItems(a->main, b->main, col);			
+			if(a->parent != b->parent)
+				return compareItems(a->parent, b->parent, col);			
 		}else{
-			if(a->main == b)
+			if(a->parent == b)
 				return 2;  // a should be displayed below b
 
-			if(b->main == a)
+			if(b->parent == a)
 				return -2; // b should be displayed below a
 
-			if(a->main)
-				return compareItems(a->main, b, col);	
+			if(a->parent)
+				return compareItems(a->parent, b, col);	
 
-			if(b->main)
-				return compareItems(a, b->main, col);	
+			if(b->parent)
+				return compareItems(a, b->parent, col);	
 		}
 
 		return T::compareItems(a, b, col);

@@ -107,7 +107,7 @@ public:
 
 	bool collapsed;
 	size_t hits;
-	SearchResult* main;
+	SearchResult* parent;
 
 	void getList();
 	void browseList();
@@ -197,9 +197,9 @@ public:
 
 	int imageIndex() const;
 
-	SearchResult* createMainItem() { return this; }
-	const TTHValue& getGroupingString() const { return getTTH(); }
-	void updateMainItem(vector<SearchResult*>& v) { main->hits = v.size(); }
+	SearchResult* createParent() { return this; }
+	void updateParent(vector<SearchResult*>& v) { parent->hits = v.size(); }
+	const TTHValue& getGroupCond() const { return getTTH(); }
 
 	GETSET(uint8_t, flagImage, FlagImage);
 

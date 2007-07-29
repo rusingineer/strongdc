@@ -573,7 +573,6 @@ void UploadManager::notifyQueuedUsers() {
 			// let's keep him in the connectingList until he asks for a file
 			UserPtr u = waitingUsers.front().first;
 			clearUserFiles(u);
-
 			
 			dcdebug("Contacting an user: %s\n", u->getFirstNick().c_str());
 			connectingUsers[u] = GET_TICK();
