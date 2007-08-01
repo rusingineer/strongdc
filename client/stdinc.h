@@ -27,7 +27,9 @@
 
 // This enables stlport's debug mode (and slows it down to a crawl...)
 //#define _STLP_DEBUG 1
+//#define _STLP_USE_MALLOC 1
 //#define _STLP_USE_NEWALLOC 1
+//#define _STLP_LEAKS_PEDANTIC 1
 
 // --- Shouldn't have to change anything under here...
 

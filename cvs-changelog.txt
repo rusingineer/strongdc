@@ -1,3 +1,11 @@
+** svn316
+	fixed coloring unicode favorite nicknames
+	nonsegmented files download fix (DC++ SVN)
+	fixed number sorting in TransferView
+	optimized speed in TransferView
+	removed "Real time queue update" option (now it's always on)
+	hopefully fixed sound and popup when download is starting
+
 ** svn315
 	fixed doubleclick in TransferView
 	optimized TransferView code

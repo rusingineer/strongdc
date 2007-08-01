@@ -457,7 +457,6 @@ enum Strings { // @DontAdd
 	PROPERTIES, // "&Properties"
 	PUBLIC_HUBS, // "Public Hubs"
 	PURGE, // "Purge"
-	QUEUE_UPDATING, // "Enable queue updating in real time (use more CPU on large queue!!!)"
 	QUEUED, // "Queued: "
 	QUICK_CONNECT, // "Quick Connect"
 	RATING, // "Rating"

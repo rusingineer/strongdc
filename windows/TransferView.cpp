@@ -276,7 +276,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 		int colIndex = ctrlTransfers.findColumn(cd->iSubItem);
 		cd->clrTextBk = WinUtil::bgColor;
 
-		if((ii->status == ItemInfo::STATUS_RUNNING) && (colIndex == COLUMN_STATUS) ) {
+		if((colIndex == COLUMN_STATUS) && (ii->status == ItemInfo::STATUS_RUNNING || ii->status == ItemInfo::TREE_DOWNLOAD)) {
 			if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				bHandled = FALSE;
 				return 0;
@@ -493,6 +493,16 @@ int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, u
 	}
 
 	switch(col) {
+		case COLUMN_USER: {
+			if(a->childCount == b->childCount)
+				return lstrcmpi(a->getText(COLUMN_USER).c_str(), b->getText(COLUMN_USER).c_str());
+			return compare(a->childCount, b->childCount);						
+		}
+		case COLUMN_HUB: {
+			if(a->running == b->running)
+				return lstrcmpi(a->getText(COLUMN_HUB).c_str(), b->getText(COLUMN_HUB).c_str());
+			return compare(a->running, b->running);						
+		}
 		case COLUMN_STATUS: return 0;
 		case COLUMN_TIMELEFT: return compare(a->timeLeft, b->timeLeft);
 		case COLUMN_SPEED: return compare(a->speed, b->speed);
@@ -502,7 +512,7 @@ int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, u
 	}
 }
 
-TransferView::ItemInfo* TransferView::findItem(const UpdateInfo& ui) {
+TransferView::ItemInfo* TransferView::findItem(const UpdateInfo& ui, int& pos) const {
 	if(ui.download) {
 		for(ItemInfoList::ParentMap::const_iterator k = ctrlTransfers.parents.begin(); k != ctrlTransfers.parents.end(); ++k) {
 			for(vector<ItemInfo*>::const_iterator j = (*k).second.children.begin(); j != (*k).second.children.end(); j++) {
@@ -516,6 +526,7 @@ TransferView::ItemInfo* TransferView::findItem(const UpdateInfo& ui) {
 		for(int j = 0; j < ctrlTransfers.GetItemCount(); ++j) {
 			ItemInfo* ii = ctrlTransfers.getItemData(j);
 			if(ui == *ii) {
+				pos = j;
 				return ii;
 			}
 		}
@@ -542,18 +553,23 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			}
 		} else if(i->first == REMOVE_ITEM) {
 			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
-			ItemInfo* ii = findItem(*ui);
+
+			int pos = -1;
+			ItemInfo* ii = findItem(*ui, pos);
 			if(ii) {
 				if(ui->download) {
 					ctrlTransfers.removeGroupedItem(ii);
 				} else {
-					ctrlTransfers.deleteItem(ii);
+					dcassert(pos != -1);
+					ctrlTransfers.DeleteItem(pos);
 					delete ii;
 				}
 			}
 		} else if(i->first == UPDATE_ITEM) {
 			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
-			ItemInfo* ii = findItem(*ui);
+
+			int pos = -1;
+			ItemInfo* ii = findItem(*ui, pos);
 			if(ii) {
 				ii->update(*ui);
 				if(ui->download) {
@@ -576,7 +592,8 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 						continue;
 					}
 				}
-				updateItem(ctrlTransfers.findItem(ii), ui->updateMask);
+				dcassert(pos != -1);
+				updateItem(pos, ui->updateMask);
 			}
 		} else if(i->first == UPDATE_PARENT) {
 			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
@@ -608,6 +625,15 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 
 				if(parent->status == ItemInfo::STATUS_WAITING && (segs > 0)) {
 					parent->fileBegin = GET_TICK();
+
+					if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+						PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+					if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
+						MainFrame::getMainFrame()->ShowBalloonTip((
+							TSTRING(FILE) + _T(": ")+ Util::getFileName(parent->target) + _T("\n")+
+							TSTRING(USER) + _T(": ") + Text::toT(parent->user->getFirstNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
+					}
 				}
 
 				ui->setSpeed(totalSpeed);
@@ -998,7 +1024,11 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 
 void TransferView::onTransferComplete(const Transfer* aTransfer, bool isUpload, const string& aFileName, bool isTree) {
 	UpdateInfo* ui = new UpdateInfo(aTransfer->getUser(), !isUpload);
-	ui->setStatus(ItemInfo::STATUS_WAITING);
+
+	ui->setStatus(ItemInfo::STATUS_WAITING);	
+	ui->setPos(0);
+	ui->setStatusString(isUpload ? TSTRING(UPLOAD_FINISHED_IDLE) : TSTRING(DOWNLOAD_FINISHED_IDLE));
+
 	if(!isUpload) {
 		if(BOOLSETTING(POPUP_DOWNLOAD_FINISHED) && !isTree) {
 			MainFrame::getMainFrame()->ShowBalloonTip((
@@ -1013,9 +1043,6 @@ void TransferView::onTransferComplete(const Transfer* aTransfer, bool isUpload, 
 		}
 	}
 	
-	ui->setPos(0);
-	ui->setStatusString(isUpload ? TSTRING(UPLOAD_FINISHED_IDLE) : TSTRING(DOWNLOAD_FINISHED_IDLE));
-
 	speak(UPDATE_ITEM, ui);
 }
 
