@@ -108,7 +108,7 @@ const string SettingsManager::settingTags[] =
     "ReservedSlotColor", "IgnoredColor", "FavoriteColor",
 	"NormalColour", "ClientCheckedColour", "FileListCheckedColour",
 	"FireballColor", "ServerColor", "PasiveColor", "OpColor", 
-	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared", "RealTimeQueueUpdate",
+	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared",
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
 	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "AdcDebug",
@@ -447,7 +447,6 @@ SettingsManager::SettingsManager()
 	setDefault(USE_VERTICAL_VIEW, true);
 	setDefault(DISPLAY_CHEATS_IN_MAIN_CHAT, true);	
 	setDefault(SEARCH_TIME, 10);
-	setDefault(REALTIME_QUEUE_UPDATE, true);
 	setDefault(SUPPRESS_MAIN_CHAT, false);
 	
 	// default sounds

@@ -155,7 +155,7 @@ public:
 	}
 private:
 	OutputStream* s;
-	const TreeType& real;
+	TreeType real;
 	TreeType cur;
 	size_t verified;
 	size_t skippingBytes;					// the bytes that will be skipped

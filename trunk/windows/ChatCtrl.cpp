@@ -283,7 +283,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARF
 		const FavoriteUser& pUser = i->second;
 
 		lSearchFrom = 0;
-		sNick = pUser.getNick().c_str();
+		sNick = Text::toT(pUser.getNick()).c_str();
 		sNick.MakeLower();
 
 		while((lMyNickStart = sMsgLower.Find(sNick, lSearchFrom)) >= 0) {

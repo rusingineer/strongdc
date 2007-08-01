@@ -365,7 +365,7 @@ private:
 	void CollapseAll();
 	void ExpandAll();
 
-	ItemInfo* findItem(const UpdateInfo& ui);
+	ItemInfo* findItem(const UpdateInfo& ui, int& pos) const;
 	void updateItem(int ii, uint32_t updateMask);
 };
 

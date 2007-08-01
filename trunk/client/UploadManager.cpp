@@ -462,7 +462,7 @@ void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, 
 	if(u) {
 		fire(UploadManagerListener::Failed(), u, aError);
 
-		dcdebug("UM::onFailed: Removing upload from %s\n", aSource->getUser()->getFirstNick());
+		dcdebug("UM::onFailed: Removing upload from %s\n", aSource->getUser()->getFirstNick().c_str());
 		removeUpload(u);
 	}
 
@@ -513,7 +513,7 @@ int UploadManager::addFailedUpload(const UserPtr& aUser, const string& file, int
 	if(found == false) {
 		UploadQueueItem* uqi = new UploadQueueItem(aUser, file, pos, size, currentTime);
 		if(it == waitingUsers.end()) {
-			dcdebug("Added user %s to upload queue.\n", aUser->getFirstNick());
+			dcdebug("Added user %s to upload queue.\n", aUser->getFirstNick().c_str());
 			UploadQueueItem::List list;
 			list.push_back(uqi);
 			waitingUsers.push_back(make_pair(aUser, list));
@@ -795,7 +795,7 @@ void UploadManager::abortUpload(const string& aFile, bool waiting){
 				Upload* u = (*i);
 
 				if(u->getSourceFile() == aFile){
-					dcdebug("upload %s is not removed\n", aFile);
+					dcdebug("upload %s is not removed\n", aFile.c_str());
 					nowait = false;
 					break;
 				}
@@ -804,7 +804,7 @@ void UploadManager::abortUpload(const string& aFile, bool waiting){
 	}
 	
 	if(!nowait)
-		dcdebug("abort upload timeout %s\n", aFile);
+		dcdebug("abort upload timeout %s\n", aFile.c_str());
 }
 
 /**
