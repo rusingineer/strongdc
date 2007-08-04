@@ -13,6 +13,8 @@
 * optimized vtables
 * fixed user menu in mainchat
 * added root "All" to upload queue frame to display all files of all users
+* updated client profiles (THX Toast)
+* many other fixes - see Developer changelog
 
 
 	-- StrongDC++ 2.04 --

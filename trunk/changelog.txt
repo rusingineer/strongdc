@@ -13,6 +13,8 @@
 * optimalizovány tabulky virtuálních funkcí
 * opraveno uživatelské menu v hlavním chatu
 * pøidána položka "Vše" do okna fronty na odesílání pro zobrazení všech souborù od všech uživatelù
+* aktualizace profilù klientù (THX Toast)
+* spousta dalších oprav - viz Seznam zmìn pro vývojáøe
 
 
 	-- StrongDC++ 2.04 --

@@ -1,3 +1,8 @@
+** svn318
+	fixed updating parent's status text in TransferView
+	fixed "Invalid request" again
+	fixed invalid expanding of subitems in TypedTreeListView
+
 ** svn317
 	fixed updating user on connect (to show the ticked icon)
 	fixed granting slots
