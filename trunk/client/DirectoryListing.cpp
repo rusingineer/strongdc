@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ void DirectoryListing::loadFile(const string& name) throw(Exception) {
 
 class ListLoader : public SimpleXMLReader::CallBack {
 public:
-	ListLoader(DirectoryListing* aList, DirectoryListing::Directory* root, bool aUpdating, const UserPtr& user) : list(aList), cur(root), base("/"), inListing(false), updating(aUpdating), uziv(user) { 
+	ListLoader(DirectoryListing* aList, DirectoryListing::Directory* root, bool aUpdating, const UserPtr& aUser) : list(aList), cur(root), base("/"), inListing(false), updating(aUpdating), user(aUser) { 
 	}
 
 	~ListLoader() { }
@@ -120,7 +120,7 @@ public:
 private:
 	DirectoryListing* list;
 	DirectoryListing::Directory* cur;
-	UserPtr uziv;
+	UserPtr user;
 
 	StringMap params;
 	string base;
@@ -214,7 +214,7 @@ void ListLoader::startTag(const string& name, StringPairList& attribs, bool simp
 		cur->setComplete(true);
 
 		string generator = getAttrib(attribs, sGenerator, 2);
-		ClientManager::getInstance()->setGenerator(uziv, generator);
+		ClientManager::getInstance()->setGenerator(user, generator);
 
 		inListing = true;
 

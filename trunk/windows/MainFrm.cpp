@@ -644,7 +644,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		if(SETTING(INCOMING_CONNECTIONS) != lastConn || SETTING(TCP_PORT) != lastTCP || SETTING(UDP_PORT) != lastUDP || SETTING(TLS_PORT) != lastTLS) {
 			startSocket();
 		}
-		ClientManager::getInstance()->infoUpdated(false);
+		ClientManager::getInstance()->infoUpdated();
 
 		if(BOOLSETTING(SORT_FAVUSERS_FIRST) != lastSortFavUsersFirst)
 			HubFrame::resortUsers();
@@ -848,7 +848,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 				awaybyminimize = true;
 				Util::setAway(true);
 				setAwayButton(true);
-				ClientManager::getInstance()->infoUpdated(false);
+				ClientManager::getInstance()->infoUpdated();
 			}
 		}
 
@@ -868,7 +868,7 @@ LRESULT MainFrame::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL&
 				awaybyminimize = false;
 				Util::setAway(false);
 				setAwayButton(false);
-				ClientManager::getInstance()->infoUpdated(false);
+				ClientManager::getInstance()->infoUpdated();
 			}
 		}
 		if(bIsPM && bTrayIcon == true) {
@@ -1202,10 +1202,7 @@ LRESULT MainFrame::onCloseWindows(WORD , WORD wID, HWND , BOOL& ) {
 }
 
 LRESULT MainFrame::onLimiter(WORD , WORD , HWND, BOOL& ) {
-	if(BOOLSETTING(THROTTLE_ENABLE)) SettingsManager::getInstance()->set(SettingsManager::THROTTLE_ENABLE,false);
-	else SettingsManager::getInstance()->set(SettingsManager::THROTTLE_ENABLE,true);
- 
-	ClientManager::getInstance()->infoUpdated(true);
+	SettingsManager::getInstance()->set(SettingsManager::THROTTLE_ENABLE, !BOOLSETTING(THROTTLE_ENABLE));
 	return 0;
 }
 
@@ -1367,7 +1364,7 @@ LRESULT MainFrame::onAway(WORD , WORD , HWND, BOOL& ) {
 		setAwayButton(true);
 		Util::setAway(true);
 	}
-	ClientManager::getInstance()->infoUpdated(true);
+	ClientManager::getInstance()->infoUpdated();
 	return 0;
 }
 

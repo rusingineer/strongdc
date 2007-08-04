@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,6 @@
 
 #if !defined(CLIENT_H)
 #define CLIENT_H
-
-#if _MSC_VER > 1000
-#pragma once
-#endif
 
 #include "User.h"
 #include "BufferedSocket.h"
@@ -46,7 +42,7 @@ public:
 	virtual void sendUserCmd(const string& aUserCmd) = 0;
 	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) = 0;
 	virtual void password(const string& pwd) = 0;
-	virtual void info() = 0;
+	virtual void info(bool force) = 0;
 	virtual void cheatMessage(const string& aLine) = 0;
 
 	virtual size_t getUserCount() const = 0;

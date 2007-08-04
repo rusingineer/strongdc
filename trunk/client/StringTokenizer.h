@@ -19,10 +19,6 @@
 #ifndef DCPLUSPLUS_CLIENT_STRING_TOKENIZER_H
 #define DCPLUSPLUS_CLIENT_STRING_TOKENIZER_H
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 template<class T>
 class StringTokenizer
 {

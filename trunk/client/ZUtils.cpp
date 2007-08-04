@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ bool ZFilter::operator()(const void* in, size_t& insize, void* out, size_t& outs
 	zs.next_out = (Bytef*)out;
 
 	// Check if there's any use compressing; if not, save some cpu...
-	if(compressing && insize > 0 && outsize > 16 && (totalIn > (64*1024)) && ((static_cast<double>(totalOut) / totalIn) > 0.95)) {
+	if(compressing && insize > 0 && outsize > 16 && (totalIn > (64*1024)) && ((static_cast<double>(totalOut) / totalIn) > 0.97)) {
 		zs.avail_in = 0;
 		zs.avail_out = outsize;
 		if(deflateParams(&zs, 0, Z_DEFAULT_STRATEGY) != Z_OK) {

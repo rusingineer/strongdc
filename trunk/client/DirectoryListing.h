@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,17 +19,13 @@
 #if !defined(DIRECTORY_LISTING_H)
 #define DIRECTORY_LISTING_H
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 #include "User.h"
-#include "QueueItem.h"
 #include "FastAlloc.h"
 
 #include "MerkleTree.h"
 #include "SimpleXML.h"
 #include "Streams.h"
+#include "QueueItem.h"
 
 class ListLoader;
 STANDARD_EXCEPTION(AbortException);

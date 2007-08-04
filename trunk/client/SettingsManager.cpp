@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -302,7 +302,7 @@ SettingsManager::SettingsManager()
 	setDefault(TEXT_FONT, "Tahoma,-11,400,0");
 	setDefault(DROP_MULTISOURCE_ONLY, true);
 	setDefault(DEBUG_COMMANDS, false);
-	setDefault(UPDATE_URL, "http://ghostface.asgards.org/");	
+	setDefault(UPDATE_URL, "http://dcaml.sourceforge.net/files/");	
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
 	setDefault(SEARCH_PASSIVE, false);
@@ -610,9 +610,7 @@ void SettingsManager::load(string const& aFileName)
 			set(LOG_FILE_DOWNLOAD, Util::emptyString);
 			set(LOG_FILE_SYSTEM, Util::emptyString);
 		}
-//#ifdef _DEBUG
-//		set(PRIVATE_ID, CID::generate().toBase32());
-//#endif
+
 		setDefault(UDP_PORT, SETTING(TCP_PORT));
 
 		File::ensureDirectory(SETTING(TLS_TRUSTED_CERTIFICATES_PATH));

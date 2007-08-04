@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,6 +97,8 @@ void AdcHub::putUser(const uint32_t aSID) {
 			return;
 		ou = i->second;
 		users.erase(i);
+
+		availableBytes -= ou->getIdentity().getBytesShared();
 	}
 
 	if(aSID != AdcCommand::HUB_SID)
@@ -111,6 +113,7 @@ void AdcHub::clearUsers() {
 	{
 		Lock l(cs);
 		users.swap(tmp);
+		availableBytes = 0;
 	}
 
 	for(SIDIter i = tmp.begin(); i != tmp.end(); ++i) {
@@ -158,7 +161,13 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 		if(i->length() < 2)
 			continue;
 
-		u->getIdentity().set(i->c_str(), i->substr(2));
+		if(i->substr(0, 2) == "SS") {
+			availableBytes -= u->getIdentity().getBytesShared();
+			u->getIdentity().setBytesShared(i->substr(2));
+			availableBytes += u->getIdentity().getBytesShared();
+		} else {
+			u->getIdentity().set(i->c_str(), i->substr(2));
+		}
 	}
 
 	if(u->getIdentity().isBot()) {
@@ -214,7 +223,7 @@ void AdcHub::handle(AdcCommand::SID, AdcCommand& c) throw() {
 	sid = AdcCommand::toSID(c.getParam(0));
 
 	state = STATE_IDENTIFY;
-	info();
+	info(true);
 }
 
 void AdcHub::handle(AdcCommand::MSG, AdcCommand& c) throw() {
@@ -517,7 +526,7 @@ void AdcHub::password(const string& pwd) {
 	}
 }
 
-void AdcHub::info() {
+void AdcHub::info(bool /*alwaysSend*/) {
 	if(state != STATE_IDENTIFY && state != STATE_NORMAL)
 		return;
 

@@ -776,6 +776,7 @@
 		<String Name="SpecifyServer">Specify a server to connect to</String>
 		<String Name="Speed">Speed</String>
 		<String Name="Status">Status</String>
+		<String Name="StealthMode">Emulate DC++ in this hub</String>
 		<String Name="StoredPasswordSent">Stored password sent...</String>
 		<String Name="StringNotFound">String not found: </String>
 		<String Name="Supports">Supports</String>
