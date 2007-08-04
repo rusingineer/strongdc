@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,10 +55,7 @@ uint64_t TimerManager::getTick() {
 		cycles++;
 	}
 	lastTick = tick;
-
-	uint64_t currentTick = static_cast<uint64_t>(cycles) * (static_cast<uint64_t>(std::numeric_limits<DWORD>::max()) + 1) + tick;
-	//dcassert(currentTick
-	return currentTick;
+	return static_cast<uint64_t>(cycles) * (static_cast<uint64_t>(std::numeric_limits<DWORD>::max()) + 1) + tick;
 #else
 	timeval tv2;
 	gettimeofday(&tv2, NULL);

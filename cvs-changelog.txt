@@ -1,3 +1,16 @@
+** svn317
+	fixed updating user on connect (to show the ticked icon)
+	fixed granting slots
+	fixed client profiles update when changing URL
+	updated client profiles (THX Toast)
+	fixed too often hubname update in TransferView
+	small code cleanup
+	[ADC] fixed hub share amount
+	updated DC++ copyrights to 2007
+	compression is turned off if ratio > 0.97
+	some myinfo antispam stuff
+	checkbox "Emulate DC++ in this hub" is now translatable
+
 ** svn316
 	fixed coloring unicode favorite nicknames
 	nonsegmented files download fix (DC++ SVN)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@
 #include "ZUtils.h"
 
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), supportFlags(0),
-	lastbytesshared(0)
+	lastBytesShared(0), lastUpdate(0)
 {
 }
 
@@ -101,6 +101,7 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 			setMyIdentity(u->getIdentity());
 		}
 	}
+	
 	ClientManager::getInstance()->putOnline(u);
 	return *u;
 }
@@ -128,9 +129,9 @@ void NmdcHub::putUser(const string& aNick) {
 			return;
 		ou = i->second;
 		users.erase(i);
-	}
-	availableBytes -= ou->getIdentity().getBytesShared();
 
+		availableBytes -= ou->getIdentity().getBytesShared();
+	}
 	ClientManager::getInstance()->putOffline(ou);
 	ou->dec();
 }
@@ -574,7 +575,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		i = j+1;
  		if(type == UserCommand::TYPE_SEPARATOR || type == UserCommand::TYPE_CLEAR) {
 			int ctx = Util::toInt(param.substr(i));
-			fire(ClientListener::UserCommand(), this, type, ctx, Util::emptyString, Util::emptyString);
+			fire(ClientListener::HubUserCommand(), this, type, ctx, Util::emptyString, Util::emptyString);
 		} else if(type == UserCommand::TYPE_RAW || type == UserCommand::TYPE_RAW_ONCE) {
 			j = param.find(' ', i);
 			if(j == string::npos)
@@ -587,7 +588,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			string name = unescape(param.substr(i, j-i));
 			i = j+1;
 			string command = unescape(param.substr(i, param.length() - i));
-			fire(ClientListener::UserCommand(), this, type, ctx, name, command);
+			fire(ClientListener::HubUserCommand(), this, type, ctx, name, command);
 		}
 	} else if(cmd == "$Lock") {
 		if(state != STATE_PROTOCOL || aLine.size() < 6) {
@@ -649,7 +650,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 				version();
 				getNickList();
-				myInfo();
+				myInfo(true);
 			}
 
 			fire(ClientListener::UserUpdated(), this, u);
@@ -739,7 +740,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 			// Special...to avoid op's complaining that their count is not correctly
 			// updated when they log in (they'll be counted as registered first...)
-			myInfo();
+			myInfo(false);
 		}
 	} else if(cmd == "$To:") {
 		string::size_type i = param.find("From:");
@@ -843,7 +844,9 @@ void NmdcHub::hubMessage(const string& aMessage) {
 	send(fromUtf8(string(buf)+ escape(aMessage) + "|"));
 }
 
-void NmdcHub::myInfo() {
+void NmdcHub::myInfo(bool alwaysSend) {
+	if(!alwaysSend && lastUpdate + 15000 > GET_TICK()) return; // antispam
+
 	checkstate();
 	
 	reloadSettings(false);
@@ -885,24 +888,24 @@ void NmdcHub::myInfo() {
 		}
 	}
 
-	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
+	dcdebug("Throttle: %d, Limit: %d\n", BOOLSETTING(THROTTLE_ENABLE), SETTING(MAX_UPLOAD_SPEED_LIMIT));
+	if (BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
 		snprintf(tag, sizeof(tag), "%s V:%s,M:%c,H:%s,S:%d,L:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots(), SETTING(MAX_UPLOAD_SPEED_LIMIT));
 	} else {
 		snprintf(tag, sizeof(tag), "%s V:%s,M:%c,H:%s,S:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots());
 	}
 
-	char myinfo[512];
-	snprintf(myinfo, sizeof(myinfo), "$MyINFO $ALL %s %s%s$ $%s%c$%s$", fromUtf8(getCurrentNick()).c_str(),
+	char myInfo[256];
+	snprintf(myInfo, sizeof(myInfo), "$MyINFO $ALL %s %s%s$ $%s%c$%s$", fromUtf8(getCurrentNick()).c_str(),
 		fromUtf8(escape(getCurrentDescription())).c_str(), tag, connection.c_str(), StatusMode, 
 		fromUtf8(escape(SETTING(EMAIL))).c_str());
-	int64_t newbytesshared = ShareManager::getInstance()->getShareSize();
-	if (strcmp(myinfo, lastmyinfo.c_str()) != 0 || newbytesshared < (lastbytesshared - 1048576) || newbytesshared > (lastbytesshared + 1048576)){
-		lastmyinfo = myinfo;
-		lastbytesshared = newbytesshared;
-		tag[0] = NULL;
-		snprintf(tag, sizeof(tag), "%s$|", Util::toString(newbytesshared).c_str());
-		strcat(myinfo, tag);
-		send(myinfo);	
+	int64_t newBytesShared = ShareManager::getInstance()->getShareSize();
+	if (strcmp(myInfo, lastMyInfo.c_str()) != 0 || alwaysSend || (newBytesShared != lastBytesShared && lastUpdate + 15*60*1000 < GET_TICK())) {
+		snprintf(tag, sizeof(tag), "%s%lld$|", myInfo, newBytesShared);
+		send(tag);
+		lastMyInfo = myInfo;
+		lastBytesShared = newBytesShared;
+		lastUpdate = GET_TICK();
 	}
 }
 
@@ -1005,8 +1008,9 @@ void NmdcHub::on(Connected) throw() {
 	Client::on(Connected());
 
 	supportFlags = 0;
-	lastmyinfo.clear();
-	lastbytesshared = 0;
+	lastMyInfo.clear();
+	lastBytesShared = 0;
+	lastUpdate = 0;
 }
 
 void NmdcHub::on(Line, const string& aLine) throw() {

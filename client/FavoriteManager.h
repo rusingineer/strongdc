@@ -28,8 +28,8 @@
 #include "FavoriteUser.h"
 #include "Singleton.h"
 #include "ClientManagerListener.h"
-#include "ClientManager.h"
 #include "FavoriteManagerListener.h"
+#include "ClientManager.h"
 
 class HubEntry {
 public:

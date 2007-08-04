@@ -649,7 +649,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 					ui->queueItem->setAverageSpeed(totalSpeed);
 				}
 
-				uint16_t running = children.size() == 1 ? -1 : segs;
+				int16_t running = children.size() == 1 ? -1 : segs;
 				if(running != parent->running) ui->setRunning(running);
 
 				if(ui->status == ItemInfo::STATUS_RUNNING) {

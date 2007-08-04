@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -684,7 +684,7 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 			if (m_iHighSpeedStartTick > 0) {
 				if ((aTick - m_iHighSpeedStartTick) > 60000) {
 					isFireball = true;
-					ClientManager::getInstance()->infoUpdated(true);
+					ClientManager::getInstance()->infoUpdated();
 					return;
 				}
 			} else {
@@ -699,7 +699,7 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 				(Socket::getTotalUp() > 209715200) && // > 200 MB uploaded
 				(ShareManager::getInstance()->getSharedSize() > 2147483648)) { // > 2 GB shared
 					isFileServer = true;
-					ClientManager::getInstance()->infoUpdated(true);
+					ClientManager::getInstance()->infoUpdated();
 			}
 		}
 	}

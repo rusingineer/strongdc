@@ -20,12 +20,13 @@
 #include "DCPlusPlus.h"
 
 #include "FinishedManager.h"
-#include "FileChunksInfo.h"
-#include "LogManager.h"
-#include "ResourceManager.h"
 #include "FinishedManagerListener.h"
 #include "Download.h"
 #include "Upload.h"
+
+#include "FileChunksInfo.h"
+#include "LogManager.h"
+#include "ResourceManager.h"
 
 FinishedManager::~FinishedManager() throw() {
 	DownloadManager::getInstance()->removeListener(this);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,6 @@
 
 #if !defined(SEARCH_MANAGER_H)
 #define SEARCH_MANAGER_H
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 #include "SettingsManager.h"
 
@@ -207,7 +203,7 @@ private:
 	friend class SearchManager;
 
 	SearchResult();
-	~SearchResult() { dcdebug("SearchResult 0x%X deleted\n", this); }
+	~SearchResult() { }
 
 	SearchResult(const SearchResult& rhs);
 

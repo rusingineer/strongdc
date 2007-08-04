@@ -21,7 +21,7 @@ public:
 	typedef X<11> Message;
 	typedef X<12> StatusMessage;
 	typedef X<13> PrivateMessage;
-	typedef X<14> UserCommand;
+	typedef X<14> HubUserCommand;
 	typedef X<15> HubFull;
 	typedef X<16> NickTaken;
 	typedef X<17> SearchFlood;
@@ -42,7 +42,7 @@ public:
 	virtual void on(Message, const Client*, const OnlineUser&, const string&) throw() { }
 	virtual void on(StatusMessage, const Client*, const string&) throw() { }
 	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw() { }
-	virtual void on(UserCommand, const Client*, int, int, const string&, const string&) throw() { }
+	virtual void on(HubUserCommand, const Client*, int, int, const string&, const string&) throw() { }
 	virtual void on(HubFull, const Client*) throw() { }
 	virtual void on(NickTaken, const Client*) throw() { }
 	virtual void on(SearchFlood, const Client*, const string&) throw() { }

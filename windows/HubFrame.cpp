@@ -709,7 +709,8 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 						}
 						if(samenumbers) {
 							tstring detectString = Util::formatExactSize(u.onlineUser->getIdentity().getBytesShared()) + _T(" - the share size had too many same numbers in it");
-							ClientManager::getInstance()->setFakeList(u.onlineUser->getUser(), Text::fromT(detectString));
+							u.onlineUser->getIdentity().set("BF", "1");
+							u.onlineUser->getIdentity().setCheat(u.onlineUser->getClient(), Text::fromT(detectString), false);
 							
 							TCHAR buf[512];
 							snwprintf(buf, sizeof(buf), _T("*** %s %s - %s"), TSTRING(USER).c_str(), Text::toT(u.onlineUser->getIdentity().getNick()).c_str(), detectString.c_str());
@@ -722,9 +723,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 								CHARFORMAT2 cf;
 								memzero(&cf, sizeof(CHARFORMAT2));
 								cf.cbSize = sizeof(cf);
-								cf.dwReserved = 0;
 								cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
-								cf.dwEffects = 0;
 								cf.crBackColor = SETTING(BACKGROUND_COLOR);
 								cf.crTextColor = SETTING(ERROR_COLOR);							
 								
@@ -870,9 +869,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			CHARFORMAT2 cf;
 			memzero(&cf, sizeof(CHARFORMAT2));
 			cf.cbSize = sizeof(cf);
-			cf.dwReserved = 0;
 			cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
-			cf.dwEffects = 0;
 			cf.crBackColor = SETTING(BACKGROUND_COLOR);
 			cf.crTextColor = SETTING(ERROR_COLOR);
 

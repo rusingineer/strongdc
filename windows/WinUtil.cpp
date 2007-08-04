@@ -905,7 +905,7 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 		if(j > 0) {
 			SettingsManager::getInstance()->set(SettingsManager::SLOTS, j);
 			status = TSTRING(SLOTS_SET);
-			ClientManager::getInstance()->infoUpdated(false);
+			ClientManager::getInstance()->infoUpdated();
 		} else {
 			status = TSTRING(INVALID_NUMBER_OF_SLOTS);
 		}
@@ -928,7 +928,7 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 			Util::setAwayMessage(Text::fromT(param));
 			status = TSTRING(AWAY_MODE_ON) + Text::toT(Util::getAwayMessage());
 		}
-		ClientManager::getInstance()->infoUpdated(true);
+		ClientManager::getInstance()->infoUpdated();
 	} else if(Util::stricmp(cmd.c_str(), _T("g")) == 0) {
 		if(param.empty()) {
 			status = TSTRING(SPECIFY_SEARCH_STRING);

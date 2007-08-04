@@ -778,6 +778,7 @@
 		<String Name="SpecifyServer">Specifikujte server k připojení</String>
 		<String Name="Speed">Rychlost</String>
 		<String Name="Status">Stav</String>
+		<String Name="StealthMode">Emulovat DC++ v tomto hubu</String>		
 		<String Name="StoredPasswordSent">Uložené heslo posláno...</String>
 		<String Name="StringNotFound">Výraz nenalezen: </String>
 		<String Name="Supports">Supports</String>

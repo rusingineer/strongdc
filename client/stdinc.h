@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,6 +59,7 @@
 # pragma warning(disable: 4710) // function not inlined
 # pragma warning(disable: 4503) // decorated name length exceeded, name was truncated
 # pragma warning(disable: 4428) // universal-character-name encountered in source
+# pragma warning(disable: 4201) // nonstadard extension used : nameless struct/union
 
 typedef signed __int8 int8_t;
 typedef signed __int16 int16_t;
@@ -99,6 +100,8 @@ typedef unsigned __int64 uint64_t;
 #include <winsock2.h>
 
 #include <windows.h>
+#include <mmsystem.h>
+
 #include <tchar.h>
 #include <shlobj.h>
 

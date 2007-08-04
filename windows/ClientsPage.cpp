@@ -199,8 +199,11 @@ LRESULT ClientsPage::onReload(WORD , WORD , HWND , BOOL& ) {
 }
 
 LRESULT ClientsPage::onUpdate(WORD , WORD , HWND , BOOL& ) {
+	char buf[MAX_PATH];
+	GetWindowTextA(GetDlgItem(IDC_UPDATE_URL), buf, MAX_PATH);
+
 	::EnableWindow(GetDlgItem(IDC_UPDATE), false);
-	c.downloadFile(SETTING(UPDATE_URL) + "Profiles.xml");
+	c.downloadFile(string(buf) + "Profiles.xml");
 	return 0;
 }
 

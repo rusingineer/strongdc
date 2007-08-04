@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -112,7 +112,6 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 				// Workaround for faulty linux clients...
 				x = param.find(' ');
 				if(x != string::npos) {
-					//setFlag(FLAG_INVALIDKEY);
 					fire(UserConnectionListener::CLock(), this, param.substr(0, x), Util::emptyString);
 	    		} else {
 					fire(UserConnectionListener::CLock(), this, param, Util::emptyString);

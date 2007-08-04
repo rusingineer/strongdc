@@ -775,6 +775,7 @@ enum Strings { // @DontAdd
 	SPECIFY_SERVER, // "Specify a server to connect to"
 	SPEED, // "Speed"
 	STATUS, // "Status"
+	STEALTH_MODE, // "Emulate DC++ in this hub"
 	STORED_PASSWORD_SENT, // "Stored password sent..."
 	STRING_NOT_FOUND, // "String not found: "
 	SUPPORTS, // "Supports"

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,11 +30,11 @@
 #include "ResourceManager.h"
 #include "LogManager.h"
 
-#include "QueueManager.h"
-#include "FinishedManager.h"
-
 #include "AdcHub.h"
 #include "NmdcHub.h"
+
+#include "QueueManager.h"
+#include "FinishedManager.h"
 
 Client* ClientManager::getClient(const string& aHubURL) {
 	Client* c;
@@ -339,15 +339,12 @@ void ClientManager::send(AdcCommand& cmd, const CID& cid) {
 	}
 }
 
-void ClientManager::infoUpdated(bool antispam) {
-	if(GET_TICK() > (quickTick + 10000) || antispam == false) {
-		Lock l(cs);
-		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-			if((*i)->isConnected()) {
-				(*i)->info();
-			}
+void ClientManager::infoUpdated() {
+	Lock l(cs);
+	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+		if((*i)->isConnected()) {
+			(*i)->info(false);
 		}
-		quickTick = GET_TICK();
 	}
 }
 
@@ -504,7 +501,7 @@ void ClientManager::on(TimerManagerListener::Minute, uint64_t /*aTick*/) throw()
 	}
 
 	for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
-		(*j)->info();
+		(*j)->info(false);
 	}
 }
 
@@ -535,7 +532,7 @@ void ClientManager::on(Failed, const Client* client, const string&) throw() {
 	fire(ClientManagerListener::ClientDisconnected(), client);
 }
 
-void ClientManager::on(UserCommand, const Client* client, int aType, int ctx, const string& name, const string& command) throw() { 
+void ClientManager::on(HubUserCommand, const Client* client, int aType, int ctx, const string& name, const string& command) throw() { 
 	if(BOOLSETTING(HUB_USER_COMMANDS)) {
 		if(aType == ::UserCommand::TYPE_CLEAR) {
  			FavoriteManager::getInstance()->removeHubUserCommands(ctx, client->getHubUrl());
@@ -710,15 +707,6 @@ void ClientManager::setCheating(const UserPtr& p, const string& aTestSURString, 
 	ou->getClient().updated(*ou);
 	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))
 		ou->getClient().cheatMessage(report);
-}
-
-void ClientManager::setFakeList(const UserPtr& p, const string& aCheatString) {
-	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(p->getCID());
-	if(i == onlineUsers.end()) return;
-
-	i->second->getIdentity().set("BF", "1");
-	i->second->getIdentity().setCheat(i->second->getClient(), aCheatString, false);
 }
 
 int ClientManager::getMode(const string& aHubUrl) const {

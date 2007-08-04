@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -850,7 +850,7 @@ int ShareManager::run() {
 	}
 
 	if(update) {
-		ClientManager::getInstance()->infoUpdated(false);
+		ClientManager::getInstance()->infoUpdated();
 	}
 	refreshing = 0;
 	return 0;

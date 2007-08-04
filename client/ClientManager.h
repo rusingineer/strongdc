@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,6 @@
 
 #if !defined(CLIENT_MANAGER_H)
 #define CLIENT_MANAGER_H
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 #include "TimerManager.h"
 
@@ -54,7 +50,7 @@ public:
 	
 	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	void search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
-	void infoUpdated(bool antispam);
+	void infoUpdated();
 
 	UserPtr getUser(const string& aNick, const string& aHubUrl) throw();
 	UserPtr getUser(const CID& cid) throw();
@@ -101,18 +97,24 @@ public:
 		c->cheatMessage("*** Info on " + nick + " ***" + "\r\n" + report + "\r\n");
 	}
 
-	void setPkLock(const UserPtr& p, const string& aPk, const string& aLock) {
+	void updateUser(const UserPtr& p) {
 		OnlineUser* ou;
 		{
 			Lock l(cs);
 			OnlineIterC i = onlineUsers.find(p->getCID());
 			if(i == onlineUsers.end()) return;
-			
+
 			ou = i->second;
-			ou->getIdentity().set("PK", aPk);
-			ou->getIdentity().set("LO", aLock);
 		}
-		//ou->getClient().updated(*ou);
+		ou->getClient().updated(*ou);
+	}
+
+	void setPkLock(const UserPtr& p, const string& aPk, const string& aLock) {
+		Lock l(cs);
+		OnlineIterC i = onlineUsers.find(p->getCID());
+		if(i == onlineUsers.end()) return;
+		i->second->getIdentity().set("PK", aPk);
+		i->second->getIdentity().set("LO", aLock);
 	}
 
 	void setSupports(const UserPtr& p, const string& aSupports) {
@@ -175,7 +177,6 @@ public:
 	void connectionTimeout(const UserPtr& p);
 	void checkCheating(const UserPtr& p, DirectoryListing* dl);
 	void setCheating(const UserPtr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
-	void setFakeList(const UserPtr& p, const string& aCheatString);
 
 private:
 	typedef HASH_MAP_X(CID, UserPtr, CID::Hash, equal_to<CID>, less<CID>) UserMap;
@@ -195,19 +196,17 @@ private:
 
 	UserPtr me;
 	
-	uint64_t quickTick;
-	
 	string cachedIp;
 	CID pid;	
 
 	friend class Singleton<ClientManager>;
 
-	ClientManager() : quickTick(GET_TICK()) { 
+	ClientManager() {
 		TimerManager::getInstance()->addListener(this); 
 		SettingsManager::getInstance()->addListener(this);
 	}
 
-	~ClientManager() throw() { 
+	~ClientManager() throw() {
 		SettingsManager::getInstance()->removeListener(this);
 		TimerManager::getInstance()->removeListener(this); 
 	}
@@ -223,7 +222,7 @@ private:
 	void on(UsersUpdated, const Client* c, const UserList&) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
 	void on(Failed, const Client*, const string&) throw();
 	void on(HubUpdated, const Client* c) throw() { fire(ClientManagerListener::ClientUpdated(), c); }
-	void on(UserCommand, const Client*, int, int, const string&, const string&) throw();
+	void on(HubUserCommand, const Client*, int, int, const string&, const string&) throw();
 	void on(NmdcSearch, Client* aClient, const string& aSeeker, int aSearchType, int64_t aSize, 
 		int aFileType, const string& aString, bool) throw();
 	void on(AdcSearch, const Client* c, const AdcCommand& adc, const CID& from) throw();

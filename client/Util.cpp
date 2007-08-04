@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -244,15 +244,15 @@ void Util::initialize() {
 		uint32_t endIP = 0, endIPprev = 0;
 
 		for(;;) {
-			comma1 = data.find(_T(','), linestart);
+			comma1 = data.find(',', linestart);
 			if(comma1 == string::npos) break;
-			comma2 = data.find(_T(','), comma1 + 1);
+			comma2 = data.find(',', comma1 + 1);
 			if(comma2 == string::npos) break;
-			comma3 = data.find(_T(','), comma2 + 1);
+			comma3 = data.find(',', comma2 + 1);
 			if(comma3 == string::npos) break;
-			comma4 = data.find(_T(','), comma3 + 1);
+			comma4 = data.find(',', comma3 + 1);
 			if(comma4 == string::npos) break;
-			lineend = data.find(_T('\n'), comma4);
+			lineend = data.find('\n', comma4);
 			if(lineend == string::npos) break;
 
 			startIP = Util::toUInt32(start + comma2 + 2);

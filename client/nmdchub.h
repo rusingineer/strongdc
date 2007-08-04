@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,6 @@
 
 #if !defined(NMDC_HUB_H)
 #define NMDC_HUB_H
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 #include "TimerManager.h"
 #include "SettingsManager.h"
@@ -50,7 +46,7 @@ public:
 	void sendUserCmd(const string& aUserCmd) throw() { send(fromUtf8(aUserCmd)); }
 	void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	void password(const string& aPass) { send("$MyPass " + fromUtf8(aPass) + "|"); }
-	void info() { myInfo(); }
+	void info(bool force) { myInfo(force); }
 
 	void cheatMessage(const string& aLine) {
 		fire(ClientListener::CheatMessage(), this, unescape(aLine));
@@ -89,8 +85,9 @@ private:
 
 	NickMap users;
 
-	string lastmyinfo;
-	int64_t lastbytesshared;
+	string lastMyInfo;
+	uint64_t lastUpdate;	
+	int64_t lastBytesShared;
 	int supportFlags;
 
 	typedef list<pair<string, uint64_t> > FloodMap;
@@ -121,7 +118,7 @@ private:
 	void getNickList() { send("$GetNickList|"); }
 	void connectToMe(const OnlineUser& aUser);
 	void revConnectToMe(const OnlineUser& aUser);
-	void myInfo();
+	void myInfo(bool alwaysSend);
 	void supports(const StringList& feat);
 	void clearFlooders(uint64_t tick);
 
