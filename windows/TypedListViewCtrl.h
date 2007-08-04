@@ -641,10 +641,12 @@ public:
 			
 			if (pt.x < rect.left) {
 				T* i = getItemData(pos);
-				if(i->collapsed) {
-					Expand(i, pos);
-				} else {
-					Collapse(i, pos);
+				if(i->parent == NULL) {
+					if(i->collapsed) {
+						Expand(i, pos);
+					} else {
+						Collapse(i, pos);
+					}
 				}
 			}
 		}

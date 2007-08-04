@@ -272,7 +272,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 				d->setFlag(Download::FLAG_ANTI_FRAG);
 			}
 
-			d->setStartPos(start);
+			d->setStartPos(std::max<int64_t>(0, start));
 		} else {
 			d->setStartPos(0);
 		}

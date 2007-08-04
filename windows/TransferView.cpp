@@ -584,7 +584,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 						}
 						if(parent->status == ItemInfo::STATUS_WAITING) {
 							parent->statusString = ii->statusString;
-							updateItem(ctrlTransfers.findItem(parent), COLUMN_STATUS);
+							ctrlTransfers.updateItem(ctrlTransfers.findItem(parent), COLUMN_STATUS);
 						}
 						if(!parent->collapsed) {
 							updateItem(ctrlTransfers.findItem(ii), ui->updateMask);
