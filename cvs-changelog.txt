@@ -1,3 +1,11 @@
+** svn320
+	fixed crash #3980/#3985, #3986, #3987/#3988
+	small menu changes for favorite users (DC++ SVN)
+	experimental feature to overlap slow chunks when no free block available
+
+** svn319
+	released 2.05
+
 ** svn318
 	fixed updating parent's status text in TransferView
 	fixed "Invalid request" again

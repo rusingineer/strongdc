@@ -134,12 +134,17 @@ public:
 	/**
      * Release the chunk with start offset
      */
-	void putChunk(int64_t);
+	void putChunk(int64_t, const Download* = NULL);
 
 	/** 
 	 * Specify a Download to a running chunk
 	 */
-	 void setDownload(int64_t, Download*, bool);
+	void setDownload(int64_t, Download*, bool);
+
+	/** 
+	 * Sets download size according to its chunk
+	 */
+	void setDownloadSize(int64_t, Download*, bool);
 
 	/**
      * Convert all unfinished chunks range data to a string, eg. "0 5000 10000 30000 "

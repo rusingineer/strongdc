@@ -1061,7 +1061,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
             }
 			if(!bPaused) {
 				bool resort = false;
-				if((resultsCount++) % 15 == 0) {
+				if(ctrlResults.getSortColumn() == SearchResult::COLUMN_HITS && (resultsCount++) % 15 == 0) {
 					//ctrlResults.SetRedraw(FALSE);
 					resort = true;
 				}
@@ -1220,7 +1220,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 			}		
 
 			prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hubs);
-			checkAdcItems(resultsMenu);
+//			checkAdcItems(resultsMenu);
 //			resultsMenu.InsertSeparatorFirst(Text::toT(sr->getFileName()));
 			copyMenu.InsertSeparatorFirst(TSTRING(USERINFO));
 

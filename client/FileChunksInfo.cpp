@@ -118,7 +118,7 @@ int FileChunksInfo::addChunkPos(int64_t start, int64_t pos, size_t& len)
 	return NORMAL_EXIT;
 }
 
-void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
+void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool reset)
 {
 	Lock l(cs);
 	Chunk::Iter i = running.find(chunk);
@@ -128,8 +128,27 @@ void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
 		return;
 	}
 
-	i->second->download = d;
+	if(reset) {
+		downloadedSize -= (i->second->pos - d->getPos());
+		i->second->pos = d->getPos();
 
+		dcdebug("Setting overlap download: %s\n", d->getUser()->getFirstNick().c_str());
+	}
+
+	i->second->download = d;
+}
+
+void FileChunksInfo::setDownloadSize(int64_t chunk, Download* d, bool noStealth)
+{
+	Lock l(cs);
+	Chunk::Iter i = running.find(chunk);
+
+	if(i == running.end()){
+		dcassert(0);
+		return;
+	}
+
+	d->setPos(i->second->pos);
 	if(noStealth) {
 		d->setSize(min(i->second->end, i->second->pos + min(minChunkSize, fileSize - i->second->pos)));
 		d->setFlag(Download::FLAG_CHUNKED);
@@ -217,8 +236,19 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 		for(Chunk::Iter i = running.begin(); i != running.end(); i++)
 		{
 			chunk = i->second;
-			if(	(chunk->pos == i->first) ||
-				(chunk->download && (chunk->download->getTotal() > 10) && (chunk->download->getAverageSpeed()*5 < _speed))) {
+			if(chunk->pos == i->first) {
+				// overlap pending chunk
+				chunk->overlappedCount++;
+				return i->first;
+			}
+
+			if(	chunk->download && // user's download must be known
+				(GET_TICK() - chunk->download->getStart()) > 5000 && // it must be running for at least 5 seconds
+				(3 * chunk->download->getAverageSpeed() < _speed)) // speed must be at least 3x higher than current chunk's speed
+			{
+				// overlap slow chunk
+				dcdebug("Trying to overlap %I64d download: %s, timeLeft: %I64d\n", i->first, chunk->download->getUser()->getFirstNick().c_str(), GET_TICK() - chunk->download->getLastTick());
+
 				chunk->overlappedCount++;
 				return i->first;
 			}
@@ -261,7 +291,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	return n;
 }
 
-void FileChunksInfo::putChunk(int64_t start)
+void FileChunksInfo::putChunk(int64_t start,  const Download* aDownload)
 {
 	Lock l(cs);
 
@@ -277,7 +307,9 @@ void FileChunksInfo::putChunk(int64_t start)
 
 			if(i->second->overlappedCount){
 				i->second->overlappedCount--;
-				chunk->download = NULL;
+				if(chunk->download == aDownload) {
+					chunk->download = NULL;
+				}
 				return;
 			}
 

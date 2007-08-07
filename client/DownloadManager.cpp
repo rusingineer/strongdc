@@ -416,7 +416,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 
 		try {
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-				file = new SharedFileStream(target, d->getStartPos(), d->getFileSize());
+				file = new SharedFileStream(target, d->getPos(), d->getFileSize());
 			} else {
 				// Let's check if we can find this file in a any .SFV...
 				int trunc = d->isSet(Download::FLAG_RESUME) ? 0 : File::TRUNCATE;
@@ -444,15 +444,19 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 			
 			if(!d->isSet(Download::FLAG_USER_LIST)) {
 				typedef MerkleCheckOutputStream<TigerTree, true> MerkleStream;
-				TigerTree tt(d->getSize());
-				if(d->getTreeValid())
-					tt = d->getTigerTree();
-				else
-					tt.getLeaves().push_back(d->getTTH());				
-
 				if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-					d->setFile(new MerkleStream(tt, d->getFile(), d->getPos(), d));
+					if(d->getTreeValid()) {
+						MerkleStream* stream = new MerkleStream(d->getTigerTree(), d->getFile(), d->getPos(), d);
+						d->setFile(stream);
+						d->setFlag(Download::FLAG_TTH_CHECK);
+					}
 				} else {
+					TigerTree tt(d->getSize());
+					if(d->getTreeValid())
+						tt = d->getTigerTree();
+					else
+						tt.getLeaves().push_back(d->getTTH());	
+
 					int64_t start = 0;
 					int64_t blockLeft = 0;
 					if(d->getPos() > 0) {
@@ -468,6 +472,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 						
 					MerkleStream* stream = new MerkleStream(tt, d->getFile(), start);
 					d->setFile(stream);
+					d->setFlag(Download::FLAG_TTH_CHECK);
 					
 					if(blockLeft > 0) {
 						dcdebug("Starting at %d, got %d bytes to read, block size %d\n", (int)d->getPos(), (int)blockLeft, (int)tt.getBlockSize());
@@ -489,11 +494,10 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 						}					
 					}
 				}
-				d->setFlag(Download::FLAG_TTH_CHECK);
 			}
 				
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-				d->setFile(new ChunkOutputStream<true>(d->getFile(), &d->getTTH(), d->getStartPos()));
+				d->setFile(new ChunkOutputStream<true>(d->getFile(), &d->getTTH(), d->getStartPos(), d->getPos()));
 			} else {
 				((File*)file)->setPos(d->getPos());
 			}

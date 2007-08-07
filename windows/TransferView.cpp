@@ -200,7 +200,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			previewMenu.InsertSeparatorFirst(TSTRING(PREVIEW_MENU));
 				
 			if(!parent) {
-				checkAdcItems(transferMenu);
+//				checkAdcItems(transferMenu);
 				transferMenu.InsertSeparatorFirst(TSTRING(MENU_TRANSFERS));
 				transferMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 				transferMenu.RemoveFirstItem();

@@ -839,9 +839,7 @@ void NmdcHub::revConnectToMe(const OnlineUser& aUser) {
 
 void NmdcHub::hubMessage(const string& aMessage) { 
 	checkstate(); 
-	char buf[256];
-	snprintf(buf, sizeof(buf), "<%s> ", getMyNick().c_str());
-	send(fromUtf8(string(buf)+ escape(aMessage) + "|"));
+	send(fromUtf8( "<" + getMyNick() + "> " + escape(aMessage) + "|" ) );
 }
 
 void NmdcHub::myInfo(bool alwaysSend) {

@@ -762,12 +762,14 @@ public:
 
 	void removeParent(T* parent) {
 		ParentPair* pp = findParentPair(parent->getGroupCond());
-		for(vector<T*>::iterator i = pp->children.begin(); i != pp->children.end(); i++) {
-			deleteItem(*i);
-			(*i)->deleteSelf();
+		if(pp) {
+			for(vector<T*>::iterator i = pp->children.begin(); i != pp->children.end(); i++) {
+				deleteItem(*i);
+				(*i)->deleteSelf();
+			}
+			pp->children.clear();
+			parents.erase(const_cast<key*>(&parent->getGroupCond()));
 		}
-		pp->children.clear();
-		parents.erase(const_cast<key*>(&parent->getGroupCond()));
 	}
 
 	void removeGroupedItem(T* item, bool removeFromMemory = true) {
