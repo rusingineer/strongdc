@@ -39,8 +39,8 @@ class ChunkOutputStream : public OutputStream
 
 public:
 
-	ChunkOutputStream(OutputStream* _os, const TTHValue* tth, int64_t _chunk) 
-		: os(_os), chunk(_chunk), pos(_chunk)
+	ChunkOutputStream(OutputStream* _os, const TTHValue* tth, int64_t _chunk, int64_t _pos) 
+		: os(_os), chunk(_chunk), pos(_pos)
     {
 		fileChunks = FileChunksInfo::Get(tth);
 		if(fileChunks == (FileChunksInfo*)NULL)

@@ -112,32 +112,35 @@ public:
 		return 0;
 	}
 
-	struct ADCOnly {
-		ADCOnly() : adcOnly(true) { }
-		void operator()(UserInfoBase* ui) { if(ui->getUser()->isSet(User::NMDC)) adcOnly = false; }
+	struct UserTraits {
+		UserTraits() : adcOnly(true), favOnly(true), nonFavOnly(true) { }
+		void operator()(UserInfoBase* ui) {
+			if(ui->getUser()->isSet(User::NMDC)) 
+				adcOnly = false;
+			bool fav = FavoriteManager::getInstance()->isFavoriteUser(ui->getUser());
+			if(fav)
+				nonFavOnly = false;
+			if(!fav)
+				favOnly = false;
+		}
 
 		bool adcOnly;
+		bool favOnly;
+		bool nonFavOnly;
 	};
-	void checkAdcItems(CMenu& menu) {
-
-		MENUITEMINFO mii = { 0 };
-		mii.cbSize = sizeof(mii);
-		mii.fMask = MIIM_STATE;
-		if(((T*)this)->getUserList().forEachSelectedT(ADCOnly()).adcOnly) {
-			menu.EnableMenuItem(IDC_BROWSELIST, MFS_ENABLED);
-		} else {
-			menu.EnableMenuItem(IDC_BROWSELIST, MFS_DISABLED);
-		}
-	}
 
 	void appendUserItems(CMenu& menu) {
+		UserTraits traits = ((T*)this)->getUserList().forEachSelectedT(UserTraits()); 
 		menu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
-		menu.AppendMenu(MF_STRING, IDC_BROWSELIST, CTSTRING(BROWSE_FILE_LIST));
+		if(traits.adcOnly)
+			menu.AppendMenu(MF_STRING, IDC_BROWSELIST, CTSTRING(BROWSE_FILE_LIST));
 		menu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
 		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
-		menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
+		if(!traits.favOnly)
+			menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
 		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
-		menu.AppendMenu(MF_STRING, IDC_CONNECT, CTSTRING(CONNECT_FAVUSER_HUB));
+		if(!traits.nonFavOnly)
+			menu.AppendMenu(MF_STRING, IDC_CONNECT, CTSTRING(CONNECT_FAVUSER_HUB));
 		menu.AppendMenu(MF_SEPARATOR);
 		menu.AppendMenu(MF_STRING, IDC_REMOVEALL, CTSTRING(REMOVE_FROM_ALL));
 	}

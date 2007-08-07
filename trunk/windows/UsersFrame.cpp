@@ -88,7 +88,7 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			WinUtil::getContextMenuPos(ctrlUsers, pt);
 		}
 	
-		checkAdcItems(usersMenu);
+//		checkAdcItems(usersMenu);
 		
 		tstring x;
 		if (ctrlUsers.GetSelectedCount() == 1) {

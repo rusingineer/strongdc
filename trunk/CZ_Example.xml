@@ -472,7 +472,7 @@
 		<String Name="RedirectAlreadyConnected">Požadavek k přesměrování na hub, kde už jste připojeni</String>
 		<String Name="RedirectUser">Přesměrovat uživatele</String>
 		<String Name="Refresh">&amp;Obnovit</String>
-		<String Name="RefreshUserList">Obnovit seznam souborů</String>
+		<String Name="RefreshUserList">Obnovit seznam uživatelů</String>
 		<String Name="Reliability">Spolehlivost</String>
 		<String Name="Remove">&amp;Odstranit</String>
 		<String Name="RemoveAll">Odstranit vše</String>

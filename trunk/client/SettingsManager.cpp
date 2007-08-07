@@ -683,7 +683,7 @@ void SettingsManager::save(string const& aFileName) {
 		out.close();
 		File::deleteFile(aFileName);
 		File::renameFile(aFileName + ".tmp", aFileName);
-	} catch(const FileException&) {
+	} catch(...) {
 		// ...
 	}
 }
