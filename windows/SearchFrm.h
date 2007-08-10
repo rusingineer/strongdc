@@ -379,12 +379,6 @@ private:
 	SearchResultList ctrlResults;
 	TypedListViewCtrl<HubInfo, IDC_HUB> ctrlHubs;
 
-	OMenu grantMenu;
-	OMenu resultsMenu;
-	OMenu targetMenu;
-	OMenu targetDirMenu;
-	OMenu copyMenu;
-	
 	TStringList search;
 	StringList targets;
 	StringList wholeTargets;

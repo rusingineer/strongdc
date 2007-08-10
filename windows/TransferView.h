@@ -328,10 +328,6 @@ private:
 	static int columnIndexes[];
 	static int columnSizes[];
 
-	OMenu transferMenu;
-	OMenu segmentedMenu;
-	OMenu usercmdsMenu;
-	OMenu previewMenu;
 	CImageList arrows;
 
 	TaskQueue tasks;

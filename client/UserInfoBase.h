@@ -39,6 +39,7 @@ public:
 	void ungrant();
 	void addFav();
 	void removeAll();
+	void connectFav();
 	
 	virtual const UserPtr& getUser() const = 0;
 

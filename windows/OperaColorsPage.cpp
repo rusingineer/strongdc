@@ -249,6 +249,7 @@ LRESULT OperaColorsPage::onMenubarClicked(WORD /*wNotifyCode*/, WORD wID, HWND /
 }
 LRESULT OperaColorsPage::onClickedProgress(WORD /* wNotifyCode */, WORD wID, HWND /* hWndCtl */, BOOL& /* bHandled */) {
 	odcStyle = IsDlgButtonChecked(IDC_ODC_STYLE) == 1;
+	updateProgress();
 	if (wID == IDC_SETTINGS_DOWNLOAD_BAR_COLOR) {
 		CColorDialog d(crProgressDown, CC_FULLOPEN, *this);
 		color_proc = d.m_cc.lpfnHook;

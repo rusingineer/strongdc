@@ -132,6 +132,12 @@ void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool reset)
 		downloadedSize -= (i->second->pos - d->getPos());
 		i->second->pos = d->getPos();
 
+		if(i->second->overlappedCount) {
+			d->setFlag(Download::FLAG_OVERLAPPED);
+			if(i->second->download) {
+				d->setStart(i->second->download->getStart());
+			}
+		}
 		dcdebug("Setting overlap download: %s\n", d->getUser()->getFirstNick().c_str());
 	}
 
@@ -148,7 +154,8 @@ void FileChunksInfo::setDownloadSize(int64_t chunk, Download* d, bool noStealth)
 		return;
 	}
 
-	d->setPos(i->second->pos);
+	dcassert((i->second->pos - chunk == 0) || i->second->overlappedCount);
+	d->addPos(i->second->pos - chunk, i->second->pos - chunk);
 	if(noStealth) {
 		d->setSize(min(i->second->end, i->second->pos + min(minChunkSize, fileSize - i->second->pos)));
 		d->setFlag(Download::FLAG_CHUNKED);
@@ -243,8 +250,9 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 			}
 
 			if(	chunk->download && // user's download must be known
+				chunk->overlappedCount == 0 && // chunk mustn't be already overlapped
 				(GET_TICK() - chunk->download->getStart()) > 5000 && // it must be running for at least 5 seconds
-				(3 * chunk->download->getAverageSpeed() < _speed)) // speed must be at least 3x higher than current chunk's speed
+				(2 * chunk->download->getAverageSpeed() < _speed)) // speed must be at least 2x higher than current chunk's speed
 			{
 				// overlap slow chunk
 				dcdebug("Trying to overlap %I64d download: %s, timeLeft: %I64d\n", i->first, chunk->download->getUser()->getFirstNick().c_str(), GET_TICK() - chunk->download->getLastTick());
@@ -567,9 +575,9 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
 	if(waiting.empty()){
 		dumpVerifiedBlocks();
 
-		dcassert(verifiedBlocks.size() == 1 && 
-			    verifiedBlocks.begin()->first == 0 &&
-			    verifiedBlocks.begin()->second == (fileSize - 1) / tthBlockSize + 1);
+		dcassert(verifiedBlocks.size() == 1);
+		dcassert(verifiedBlocks.begin()->first == 0);
+		dcassert(verifiedBlocks.begin()->second == (fileSize - 1) / tthBlockSize + 1);
 
         return true;
     }

@@ -199,9 +199,6 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 							delete is;
 							return false;
 						}
-					}else{
-						// Hit this when user readd partial source without partial info
-						//dcassert(0);
 					}
 				}
 			// Share finished file

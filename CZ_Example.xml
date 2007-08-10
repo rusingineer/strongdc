@@ -287,7 +287,7 @@
 		<String Name="LatestVersion">Aktuální verze</String>
 		<String Name="Left">Zbývá</String>
 		<String Name="LeftColor">Barva vlevo</String>
-		<String Name="LibCrash">Aplikace \"%s\" způsobila výjimku ve StrongDC++. Přeinstalujte ji, upgradujte, nebo použijte alternativní produkt.</String>
+		<String Name="LibCrash">Aplikace "%s" způsobila výjimku ve StrongDC++. Přeinstalujte ji, upgradujte, nebo použijte alternativní produkt.</String>
 		<String Name="Limit">Limit</String>
 		<String Name="ListenerFailed">Naslouchání socketu selhalo (musíte restartovat StrongDC++): </String>
 		<String Name="LoadedFileList">Seznam souborů načten.</String>

@@ -72,38 +72,6 @@ LRESULT TransferView::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlTransfers.SetImageList(arrows, LVSIL_SMALL);
 	ctrlTransfers.setSortColumn(COLUMN_USER);
 
-	transferMenu.CreatePopupMenu();
-	appendUserItems(transferMenu);
-	transferMenu.AppendMenu(MF_SEPARATOR);
-	transferMenu.AppendMenu(MF_STRING, IDC_FORCE, CTSTRING(FORCE_ATTEMPT));
-	transferMenu.AppendMenu(MF_SEPARATOR);
-	transferMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
-
-	previewMenu.CreatePopupMenu();
-	previewMenu.AppendMenu(MF_SEPARATOR);
-	usercmdsMenu.CreatePopupMenu();
-
-	transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CTSTRING(PREVIEW_MENU));
-	transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)usercmdsMenu, CTSTRING(SETTINGS_USER_COMMANDS));
-	transferMenu.AppendMenu(MF_SEPARATOR);
-	transferMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CTSTRING(SETCZDC_DISCONNECTING_ENABLE));
-	transferMenu.AppendMenu(MF_SEPARATOR);
-	transferMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(CLOSE_CONNECTION));
-	transferMenu.SetMenuDefaultItem(IDC_PRIVATEMESSAGE);
-
-	segmentedMenu.CreatePopupMenu();
-	segmentedMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
-	segmentedMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CTSTRING(PREVIEW_MENU));
-	segmentedMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CTSTRING(SETCZDC_DISCONNECTING_ENABLE));
-	segmentedMenu.AppendMenu(MF_SEPARATOR);
-	segmentedMenu.AppendMenu(MF_STRING, IDC_CONNECT_ALL, CTSTRING(CONNECT_ALL));
-	segmentedMenu.AppendMenu(MF_STRING, IDC_DISCONNECT_ALL, CTSTRING(DISCONNECT_ALL));
-	segmentedMenu.AppendMenu(MF_SEPARATOR);
-	segmentedMenu.AppendMenu(MF_STRING, IDC_EXPAND_ALL, CTSTRING(EXPAND_ALL));
-	segmentedMenu.AppendMenu(MF_STRING, IDC_COLLAPSE_ALL, CTSTRING(COLLAPSE_ALL));
-	segmentedMenu.AppendMenu(MF_SEPARATOR);
-	segmentedMenu.AppendMenu(MF_STRING, IDC_REMOVEALL, CTSTRING(REMOVE_ALL));
-
 	ConnectionManager::getInstance()->addListener(this);
 	DownloadManager::getInstance()->addListener(this);
 	UploadManager::getInstance()->addListener(this);
@@ -139,85 +107,115 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		if(pt.x == -1 && pt.y == -1) {
 			WinUtil::getContextMenuPos(ctrlTransfers, pt);
 		}
-		
-		if(ctrlTransfers.GetSelectedCount() > 0) {
-			int i = -1;
-			bool bCustomMenu = false;
-			const ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
-			bool parent = !ii->parent && ctrlTransfers.findChildren(ii->getGroupCond()).size() > 1;
 
-			if(!parent && (i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
+		OMenu transferMenu, usercmdsMenu, previewMenu;
+		const ItemInfo* ii = ctrlTransfers.getItemData(ctrlTransfers.GetNextItem(-1, LVNI_SELECTED));
+		bool parent = !ii->parent && ctrlTransfers.findChildren(ii->getGroupCond()).size() > 1;
+
+		transferMenu.CreatePopupMenu();
+		previewMenu.CreatePopupMenu();
+		previewMenu.InsertSeparatorFirst(TSTRING(PREVIEW_MENU));
+
+		if(!parent) {
+			transferMenu.InsertSeparatorFirst(TSTRING(MENU_TRANSFERS));
+			appendUserItems(transferMenu);
+			transferMenu.AppendMenu(MF_SEPARATOR);
+			transferMenu.AppendMenu(MF_STRING, IDC_FORCE, CTSTRING(FORCE_ATTEMPT));
+			transferMenu.AppendMenu(MF_SEPARATOR);
+			transferMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
+
+			usercmdsMenu.CreatePopupMenu();
+
+			transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CTSTRING(PREVIEW_MENU));
+			transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)usercmdsMenu, CTSTRING(SETTINGS_USER_COMMANDS));
+			transferMenu.AppendMenu(MF_SEPARATOR);
+			transferMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CTSTRING(SETCZDC_DISCONNECTING_ENABLE));
+			transferMenu.AppendMenu(MF_SEPARATOR);
+			transferMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(CLOSE_CONNECTION));
+			
+			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
+				case 0:
+		          transferMenu.SetMenuDefaultItem(IDC_PRIVATEMESSAGE);
+		          break;
+				case 1:
+		          transferMenu.SetMenuDefaultItem(IDC_GETLIST);
+		          break;
+				case 2:
+		          transferMenu.SetMenuDefaultItem(IDC_MATCH_QUEUE);
+		          break;
+				case 3:
+		          transferMenu.SetMenuDefaultItem(IDC_GRANTSLOT);
+		          break;
+				case 4:
+		          transferMenu.SetMenuDefaultItem(IDC_ADD_TO_FAVORITES);
+		          break;
+			}
+			
+			int i = -1;
+			if((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 				const ItemInfo* itemI = ctrlTransfers.getItemData(i);
-				bCustomMenu = true;
-	
-				usercmdsMenu.InsertSeparatorFirst(TSTRING(SETTINGS_USER_COMMANDS));
 	
 				if(itemI->user != (UserPtr)NULL)
 					prepareMenu(usercmdsMenu, UserCommand::CONTEXT_CHAT, ClientManager::getInstance()->getHubs(itemI->user->getCID()));
 			}
-			WinUtil::ClearPreviewMenu(previewMenu);
+		} else {
+			transferMenu.InsertSeparatorFirst(TSTRING(SETTINGS_SEGMENT));
+			transferMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
+			transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CTSTRING(PREVIEW_MENU));
+			transferMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CTSTRING(SETCZDC_DISCONNECTING_ENABLE));
+			transferMenu.AppendMenu(MF_SEPARATOR);
+			transferMenu.AppendMenu(MF_STRING, IDC_CONNECT_ALL, CTSTRING(CONNECT_ALL));
+			transferMenu.AppendMenu(MF_STRING, IDC_DISCONNECT_ALL, CTSTRING(DISCONNECT_ALL));
+			transferMenu.AppendMenu(MF_SEPARATOR);
+			transferMenu.AppendMenu(MF_STRING, IDC_EXPAND_ALL, CTSTRING(EXPAND_ALL));
+			transferMenu.AppendMenu(MF_STRING, IDC_COLLAPSE_ALL, CTSTRING(COLLAPSE_ALL));
+			transferMenu.AppendMenu(MF_SEPARATOR);
+			transferMenu.AppendMenu(MF_STRING, IDC_REMOVEALL, CTSTRING(REMOVE_ALL));
+		}
 
-			segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
-			transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
+		transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_UNCHECKED);
 
-			if(ii->download) {
-				transferMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_ENABLED);
-				transferMenu.EnableMenuItem(IDC_MENU_SLOWDISCONNECT, MFS_ENABLED);
-				if(!ii->target.empty()) {
-					string target = Text::fromT(ii->target);
-					string ext = Util::getFileExt(target);
-					if(ext.size()>1) ext = ext.substr(1);
-					PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
+		if(ii->download) {
+			transferMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_ENABLED);
+			transferMenu.EnableMenuItem(IDC_MENU_SLOWDISCONNECT, MFS_ENABLED);
+			if(!ii->target.empty()) {
+				string target = Text::fromT(ii->target);
+				string ext = Util::getFileExt(target);
+				if(ext.size()>1) ext = ext.substr(1);
+				PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
 
-					const QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
+				const QueueItem::StringMap& queue = QueueManager::getInstance()->lockQueue();
 
-					QueueItem::StringIter qi = queue.find(&target);
+				QueueItem::StringIter qi = queue.find(&target);
 
-					bool slowDisconnect = false;
-					if(qi != queue.end())
-						slowDisconnect = qi->second->isSet(QueueItem::FLAG_AUTODROP);
+				bool slowDisconnect = false;
+				if(qi != queue.end())
+					slowDisconnect = qi->second->isSet(QueueItem::FLAG_AUTODROP);
 
-					QueueManager::getInstance()->unlockQueue();
+				QueueManager::getInstance()->unlockQueue();
 
-					if(slowDisconnect) {
-						segmentedMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
-						transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
-					}
+				if(slowDisconnect) {
+					transferMenu.CheckMenuItem(IDC_MENU_SLOWDISCONNECT, MF_BYCOMMAND | MF_CHECKED);
 				}
-			} else {
-				transferMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_DISABLED);
-				transferMenu.EnableMenuItem(IDC_MENU_SLOWDISCONNECT, MFS_DISABLED);
 			}
 
 			if(previewMenu.GetMenuItemCount() > 0) {
-				segmentedMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_ENABLED);
 				transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_ENABLED);
 			} else {
-				segmentedMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
 				transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
 			}
-
-			previewMenu.InsertSeparatorFirst(TSTRING(PREVIEW_MENU));
-				
-			if(!parent) {
-//				checkAdcItems(transferMenu);
-				transferMenu.InsertSeparatorFirst(TSTRING(MENU_TRANSFERS));
-				transferMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-				transferMenu.RemoveFirstItem();
-			} else {
-				segmentedMenu.InsertSeparatorFirst(TSTRING(SETTINGS_SEGMENT));
-				segmentedMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-				segmentedMenu.RemoveFirstItem();
-			}
-
-			if ( bCustomMenu ) {
-				WinUtil::ClearPreviewMenu(usercmdsMenu);
-			}
-			return TRUE; 
+		} else {
+			transferMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MFS_DISABLED);
+			transferMenu.EnableMenuItem(IDC_MENU_SLOWDISCONNECT, MFS_DISABLED);
+			transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
 		}
+
+		transferMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+		return TRUE; 
+	} else {
+		bHandled = FALSE;
+		return FALSE;
 	}
-	bHandled = FALSE;
-	return FALSE; 
 }
 
 void TransferView::runUserCommand(UserCommand& uc) {
@@ -625,6 +623,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 
 				if(parent->status == ItemInfo::STATUS_WAITING && (segs > 0)) {
 					parent->fileBegin = GET_TICK();
+					ui->setStatus(ItemInfo::STATUS_RUNNING);
 
 					if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 						PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
@@ -897,6 +896,9 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		}
 		if(d->isSet(Download::FLAG_CHUNKED)) {
 			statusString += _T("[C]");
+		}
+		if(d->isSet(Download::FLAG_OVERLAPPED)) {
+			statusString += _T("[O]");
 		}
 		if(!statusString.empty()) {
 			statusString += _T(" ");

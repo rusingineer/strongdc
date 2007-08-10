@@ -154,7 +154,7 @@ public:
 	{
 		inc();
 		if(rhs.getCurrentDownload() == NULL)
-			setChunksInfo(rhs.getChunksInfo());
+			setChunksInfo(rhs.chunksInfo);
 	}
 
 	~QueueItem() {
@@ -240,7 +240,8 @@ public:
 	
 	const Download* getCurrentDownload() const { dcassert(!isSet(QueueItem::FLAG_MULTI_SOURCE)); return currentDownload; }
 	void setCurrentDownload(Download* aCurrentDownload) { dcassert(!isSet(QueueItem::FLAG_MULTI_SOURCE)); currentDownload = aCurrentDownload; }
-	FileChunksInfo* getChunksInfo() const { dcassert(isSet(QueueItem::FLAG_MULTI_SOURCE)); return chunksInfo; }
+	
+	FileChunksInfo::Ptr getChunksInfo() const { dcassert(isSet(QueueItem::FLAG_MULTI_SOURCE)); return chunksInfo; }
 	void setChunksInfo(FileChunksInfo* aChunksInfo) { dcassert(isSet(QueueItem::FLAG_MULTI_SOURCE)); aChunksInfo->inc(); chunksInfo = aChunksInfo; }
 
 	string getListName() const {

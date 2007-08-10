@@ -1,3 +1,16 @@
+** svn321
+	hopefully fixed crash #4095
+	hopefully fixed deleting some submenus
+	some menu stuff
+	removed critical section lock in Identity's destructor
+	added finished file TTH checking in debug mode
+	some fixes for slow chunks overlapping
+	added "Trojan.Win32.Agent.bi" to crash libraries
+	added "F-Secure Management Agent" to crash libraries
+	added "F-Secure Antivirus/Internet Security" to crash libraries
+	slow chunk will be overlapped if connecting source is more than 2x faster
+	"Typing notification" string changed to "Typing sound"
+
 ** svn320
 	fixed crash #3980/#3985, #3986, #3987/#3988
 	small menu changes for favorite users (DC++ SVN)

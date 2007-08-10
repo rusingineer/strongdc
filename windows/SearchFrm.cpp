@@ -244,33 +244,6 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 
 	initHubs();
 
-	copyMenu.CreatePopupMenu();
-	targetDirMenu.CreatePopupMenu();
-	targetMenu.CreatePopupMenu();
-	resultsMenu.CreatePopupMenu();
-
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK, CTSTRING(COPY_NICK));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_FILENAME, CTSTRING(FILENAME));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_PATH, CTSTRING(PATH));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_SIZE, CTSTRING(SIZE));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_TTH, CTSTRING(TTH_ROOT));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CTSTRING(COPY_MAGNET_LINK));
-
-	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD, CTSTRING(DOWNLOAD));
-	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetMenu, CTSTRING(DOWNLOAD_TO));
-	resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIR, CTSTRING(DOWNLOAD_WHOLE_DIR));
-	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetDirMenu, CTSTRING(DOWNLOAD_WHOLE_DIR_TO));
-	resultsMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
-	resultsMenu.AppendMenu(MF_SEPARATOR);
-	resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
-	resultsMenu.AppendMenu(MF_STRING, IDC_BITZI_LOOKUP, CTSTRING(BITZI_LOOKUP));
-	resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
-	resultsMenu.AppendMenu(MF_SEPARATOR);
-	appendUserItems(resultsMenu);
-	resultsMenu.AppendMenu(MF_SEPARATOR);
-	resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
-	resultsMenu.SetMenuDefaultItem(IDC_DOWNLOAD);
-
 	UpdateLayout();
 
 	if(!initialString.empty()) {
@@ -1153,12 +1126,37 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 		
 		if(ctrlResults.GetSelectedCount() > 0) {
 
-			while(targetMenu.GetMenuItemCount() > 0) {
-				targetMenu.DeleteMenu(0, MF_BYPOSITION);
-			}
-			while(targetDirMenu.GetMenuItemCount() > 0) {
-				targetDirMenu.DeleteMenu(0, MF_BYPOSITION);
-			}
+			OMenu resultsMenu, targetMenu, targetDirMenu, copyMenu, usercmdsMenu;
+
+			copyMenu.CreatePopupMenu();
+			targetDirMenu.CreatePopupMenu();
+			targetMenu.CreatePopupMenu();
+			resultsMenu.CreatePopupMenu();
+			usercmdsMenu.CreatePopupMenu();
+
+			copyMenu.InsertSeparatorFirst(TSTRING(USERINFO));
+			copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK, CTSTRING(COPY_NICK));
+			copyMenu.AppendMenu(MF_STRING, IDC_COPY_FILENAME, CTSTRING(FILENAME));
+			copyMenu.AppendMenu(MF_STRING, IDC_COPY_PATH, CTSTRING(PATH));
+			copyMenu.AppendMenu(MF_STRING, IDC_COPY_SIZE, CTSTRING(SIZE));
+			copyMenu.AppendMenu(MF_STRING, IDC_COPY_TTH, CTSTRING(TTH_ROOT));
+			copyMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CTSTRING(COPY_MAGNET_LINK));
+
+			resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD, CTSTRING(DOWNLOAD));
+			resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetMenu, CTSTRING(DOWNLOAD_TO));
+			resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIR, CTSTRING(DOWNLOAD_WHOLE_DIR));
+			resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetDirMenu, CTSTRING(DOWNLOAD_WHOLE_DIR_TO));
+			resultsMenu.AppendMenu(MF_STRING, IDC_VIEW_AS_TEXT, CTSTRING(VIEW_AS_TEXT));
+			resultsMenu.AppendMenu(MF_SEPARATOR);
+			resultsMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
+			resultsMenu.AppendMenu(MF_STRING, IDC_BITZI_LOOKUP, CTSTRING(BITZI_LOOKUP));
+			resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
+			resultsMenu.AppendMenu(MF_SEPARATOR);
+			appendUserItems(resultsMenu);
+			resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)usercmdsMenu, CTSTRING(SETTINGS_USER_COMMANDS));
+			resultsMenu.AppendMenu(MF_SEPARATOR);
+			resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
+			resultsMenu.SetMenuDefaultItem(IDC_DOWNLOAD);
 
 			int n = 0;
 
@@ -1219,18 +1217,9 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 				}
 			}		
 
-			prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hubs);
-//			checkAdcItems(resultsMenu);
 //			resultsMenu.InsertSeparatorFirst(Text::toT(sr->getFileName()));
-			copyMenu.InsertSeparatorFirst(TSTRING(USERINFO));
-
+			prepareMenu(usercmdsMenu, UserCommand::CONTEXT_SEARCH, cs.hubs);
 			resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-
-//			resultsMenu.RemoveFirstItem();
-			copyMenu.RemoveFirstItem();
-			targetDirMenu.RemoveFirstItem();
-			targetMenu.RemoveFirstItem();
-			cleanMenu(resultsMenu);
 			return TRUE; 
 		}
 	}

@@ -60,6 +60,7 @@ public:
 		COMMAND_RANGE_HANDLER(IDC_GRANTSLOT, IDC_UNGRANTSLOT, onGrantSlot)
 		COMMAND_ID_HANDLER(IDC_REMOVEALL, onRemoveAll)
 		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
+		COMMAND_ID_HANDLER(IDC_CONNECT, onConnectFav)
 	END_MSG_MAP()
 
 	LRESULT onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -95,6 +96,10 @@ public:
 	}
 	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		((T*)this)->getUserList().forEachSelected(&UserInfoBase::pm);
+		return 0;
+	}
+	LRESULT onConnectFav(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		((T*)this)->getUserList().forEachSelected(&UserInfoBase::connectFav);
 		return 0;
 	}
 	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -144,6 +149,7 @@ public:
 		menu.AppendMenu(MF_SEPARATOR);
 		menu.AppendMenu(MF_STRING, IDC_REMOVEALL, CTSTRING(REMOVE_FROM_ALL));
 	}
+
 };
 
 class FlatTabCtrl;
@@ -212,7 +218,7 @@ public:
 	static HFONT systemFont;
 	static HFONT smallBoldFont;
 	static CMenu mainMenu;
-	static CMenu grantMenu;
+	static CMenuHandle grantMenu;
 	static int dirIconIndex;
 	static int dirMaskedIndex;
 	static TStringList lastDirs;

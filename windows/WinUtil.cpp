@@ -60,7 +60,7 @@ HFONT WinUtil::boldFont = NULL;
 HFONT WinUtil::systemFont = NULL;
 HFONT WinUtil::smallBoldFont = NULL;
 CMenu WinUtil::mainMenu;
-CMenu WinUtil::grantMenu;
+CMenuHandle WinUtil::grantMenu;
 CImageList WinUtil::fileImages;
 CImageList WinUtil::userImages;
 CImageList WinUtil::flagImages;
@@ -288,6 +288,12 @@ void UserInfoBase::addFav() {
 void UserInfoBase::pm() {
 	PrivateFrame::openWindow(getUser());
 }
+void UserInfoBase::connectFav() {
+	string url = FavoriteManager::getInstance()->getUserURL(getUser());
+	if(!url.empty()) {
+		HubFrame::openWindow(Text::toT(url));
+	}
+}
 void UserInfoBase::grant() {
 	UploadManager::getInstance()->reserveSlot(getUser(), 600);
 }
@@ -505,6 +511,7 @@ void WinUtil::init(HWND hWnd) {
 	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
 	
 	grantMenu.CreatePopupMenu();
+//	grantMenu.InsertSeparatorFirst(CTSTRING(GRANT_SLOTS_MENU));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CTSTRING(GRANT_EXTRA_SLOT));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CTSTRING(GRANT_EXTRA_SLOT_HOUR));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CTSTRING(GRANT_EXTRA_SLOT_DAY));

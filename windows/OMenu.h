@@ -25,11 +25,12 @@ struct OMenuItem {
 	typedef vector<OMenuItem*> List;
 	typedef List::iterator Iter;
 
-	bool ownerdrawn;
+	OMenuItem() : ownerdrawn(true), text(), parent(NULL), data(NULL) {}
+
 	tstring text;
 	OMenu* parent;
 	void* data;
-	OMenuItem() : ownerdrawn(true), text(), parent(NULL), data(NULL) {}
+	bool ownerdrawn;
 };
 
 /*
@@ -37,7 +38,7 @@ struct OMenuItem {
  */
 class OMenu : public CMenu {
 public:
-	OMenu();
+	OMenu() : CMenu() { }
 	~OMenu();
 
 	BOOL CreatePopupMenu();

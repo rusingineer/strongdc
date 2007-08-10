@@ -70,6 +70,7 @@ AdcCommand Download::getCommand(bool zlib) const {
 	} else {
 		cmd.addParam("TTH/" + getTTH().toBase32());
 	}
+	dcassert(getPos() != -1);
 	cmd.addParam(Util::toString(getPos()));
 	cmd.addParam(Util::toString(getSize() - getPos()));
 

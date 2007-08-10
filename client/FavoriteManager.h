@@ -194,6 +194,8 @@ public:
 	void setAutoGrant(const UserPtr& aUser, bool grant);
 	void userUpdated(const OnlineUser& info);
 	time_t getLastSeen(const UserPtr& aUser) const;
+	string getUserURL(const UserPtr& aUser) const;
+	
 // Favorite Hubs
 	FavoriteHubEntry::List& getFavoriteHubs() { return favoriteHubs; }
 

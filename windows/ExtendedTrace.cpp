@@ -27,42 +27,47 @@
 #include <DbgHelp.h>
 #include "ExtendedTrace.h"
 
-#define BUFFERSIZE   0x200
+#define BUFFERSIZE		0x200
+#define LIBCOUNT		32
+
+TCHAR* crashLibs[LIBCOUNT][2] = {
+	{ L"Vlsp", L"V-One Smartpass" },
+	{ L"mclsp", L"McAfee AV" },
+	{ L"Niphk", L"Norman AV" },
+	{ L"aslsp", L"Aventail Corporation VPN" },
+	{ L"AXShlEx", L"Alcohol 120%" },
+	{ L"gdlsphlr", L"McAfee" },
+	{ L"mlang", L"IE" },
+	{ L"cslsp", L"McAfee" },
+	{ L"winsflt", L"PureSight Internet Content Filter" },
+	{ L"imslsp", L"ZoneLabs IM Secure" },
+	{ L"apitrap", L"Norton Cleansweep [?]" },
+	{ L"sockspy", L"BitDefender Antivirus" },
+	{ L"imon", L"Eset NOD32" },
+	{ L"KvWspXp(_1)", L"Kingsoft Antivirus" },
+	{ L"nl_lsp", L"NetLimiter" },
+	{ L"OSMIM", L"Marketscore Internet Accelerator" },
+	{ L"opls", L"Opinion Square [malware]" },
+	{ L"PavTrc", L"Panda Anti-Virus" },
+	{ L"pavlsp", L"Panda Anti-Virus" },
+	{ L"AppToPort", L"Wyvern Works  Firewall" },
+	{ L"SpyDll", L"Nice Spy [malware]" },
+	{ L"WBlind", L"Window Blinds" },
+	{ L"UPS10", L"Uniscribe Unicode Script Processor Library" },
+	{ L"SOCKS32", L"Sockscap [?]" },
+	{ L"___j", L"Worm: W32.Maslan.C@mm" },
+	{ L"nvappfilter", L"NVidia nForce Network Access Manager" },
+	{ L"mshp32", L"Worm: W32.Worm.Feebs" },
+	{ L"ProxyFilter", L"Hide My IP 2007" },
+	{ L"msui32", L"Malware MSUI32" },
+	{ L"fsma32", L"F-Secure Management Agent" },
+	{ L"FSLSP", L"F-Secure Antivirus/Internet Security" },
+	{ L"msxq32", L"Trojan.Win32.Agent.bi" }
+};
 
 static void checkBuggyLibrary(PCSTR library) {
-	vector<pair<tstring, tstring>> libraries;
-	libraries.push_back(make_pair(L"Vlsp", L"V-One Smartpass"));
-	libraries.push_back(make_pair(L"mclsp", L"McAfee AV"));
-	libraries.push_back(make_pair(L"Niphk", L"Norman AV"));
-	libraries.push_back(make_pair(L"aslsp", L"Aventail Corporation VPN"));
-	libraries.push_back(make_pair(L"AXShlEx", L"Alcohol 120%"));
-	libraries.push_back(make_pair(L"gdlsphlr", L"McAfee"));
-	libraries.push_back(make_pair(L"mlang", L"IE"));
-	libraries.push_back(make_pair(L"cslsp", L"McAfee"));
-	libraries.push_back(make_pair(L"winsflt", L"PureSight Internet Content Filter"));
-	libraries.push_back(make_pair(L"imslsp", L"ZoneLabs IM Secure"));
-	libraries.push_back(make_pair(L"apitrap", L"Norton Cleansweep [?]"));
-	libraries.push_back(make_pair(L"sockspy", L"BitDefender Antivirus"));
-	libraries.push_back(make_pair(L"imon", L"Eset NOD32"));
-	libraries.push_back(make_pair(L"KvWspXp(_1)", L"Kingsoft Antivirus"));
-	libraries.push_back(make_pair(L"nl_lsp", L"NetLimiter"));
-	libraries.push_back(make_pair(L"OSMIM", L"Marketscore Internet Accelerator"));
-	libraries.push_back(make_pair(L"opls", L"Opinion Square [malware]"));
-	libraries.push_back(make_pair(L"PavTrc", L"Panda Anti-Virus"));
-	libraries.push_back(make_pair(L"pavlsp", L"Panda Anti-Virus"));
-	libraries.push_back(make_pair(L"AppToPort", L"Wyvern Works  Firewall"));
-	libraries.push_back(make_pair(L"SpyDll", L"Nice Spy [malware]"));
-	libraries.push_back(make_pair(L"WBlind", L"Window Blinds"));
-	libraries.push_back(make_pair(L"UPS10", L"Uniscribe Unicode Script Processor Library"));
-	libraries.push_back(make_pair(L"SOCKS32", L"Sockscap [?]"));
-	libraries.push_back(make_pair(L"___j", L"Worm: W32.Maslan.C@mm"));
-	libraries.push_back(make_pair(L"nvappfilter", L"NVidia nForce Network Access Manager"));
-	libraries.push_back(make_pair(L"mshp32", L"Worm: W32.Worm.Feebs"));
-	libraries.push_back(make_pair(L"ProxyFilter", L"Hide My IP 2007"));
-	libraries.push_back(make_pair(L"msui32", L"Malware MSUI32"));
-
-	for(vector<pair<tstring, tstring>>::const_iterator i = libraries.begin(); i != libraries.end(); i++) {
-		string lib = Text::fromT(i->first); tstring app = i->second;
+	for(int i = 0; i < LIBCOUNT; i++) {
+		string lib = Text::fromT(crashLibs[i][0]); tstring app = crashLibs[i][1];
 		if(Util::stricmp(library, lib) == 0) {
 			size_t BUF_SIZE = TSTRING(LIB_CRASH).size() + app.size() + 16;
 			AutoArray<TCHAR> buf(BUF_SIZE);
@@ -147,7 +152,6 @@ BOOL UninitSymInfo() {
 // Initializes the symbol files
 BOOL InitSymInfo( PCSTR lpszInitialSymbolPath )
 {
-
 	SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_FAIL_CRITICAL_ERRORS | SYMOPT_LOAD_LINES );
 	CHAR     lpszSymbolPath[BUFFERSIZE];
 	InitSymbolPath( lpszSymbolPath, lpszInitialSymbolPath );
