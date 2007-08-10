@@ -50,16 +50,17 @@ public:
 		return 0;
 	}
 
-	void prepareMenu(CMenu& menu, int ctx, const string& hubUrl) {
+	void prepareMenu(OMenu& menu, int ctx, const string& hubUrl) {
 		prepareMenu(menu, ctx, StringList(1, hubUrl));
 	}
 
-	void prepareMenu(CMenu& menu, int ctx, const StringList& hubs) {
+	void prepareMenu(OMenu& menu, int ctx, const StringList& hubs) {
 		bool op = false;
 		userCommands = FavoriteManager::getInstance()->getUserCommands(ctx, hubs, op);
 		int n = 0;
 		int m = 0;
-
+		
+		menu.InsertSeparatorFirst(TSTRING(SETTINGS_USER_COMMANDS));
 		menuPos = menu.GetMenuItemCount();
 		if(!userCommands.empty()) {
 			if(op && (ctx != UserCommand::CONTEXT_HUB)) {

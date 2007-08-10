@@ -168,6 +168,16 @@ void FavoriteManager::removeFavoriteUser(const UserPtr& aUser) {
 	}
 }
 
+string FavoriteManager::getUserURL(const UserPtr& aUser) const {
+	Lock l(cs);
+	FavoriteMap::const_iterator i = users.find(aUser->getCID());
+	if(i != users.end()) {
+		const FavoriteUser& fu = i->second;
+		return fu.getUrl();
+	}
+	return Util::emptyString;
+}
+
 void FavoriteManager::addFavorite(const FavoriteHubEntry& aEntry) {
 	FavoriteHubEntry* f;
 

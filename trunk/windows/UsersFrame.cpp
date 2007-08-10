@@ -55,14 +55,6 @@ LRESULT UsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	ctrlUsers.setColumnOrderArray(COLUMN_LAST, columnIndexes);
 	ctrlUsers.setSortColumn(COLUMN_NICK);
 
-	usersMenu.CreatePopupMenu();
-	usersMenu.AppendMenu(MF_STRING, IDC_EDIT, CTSTRING(PROPERTIES));
-	usersMenu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG, CTSTRING(OPEN_USER_LOG));
-	usersMenu.AppendMenu(MF_SEPARATOR);
-	appendUserItems(usersMenu);
-	usersMenu.AppendMenu(MF_SEPARATOR);
-	usersMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
-
 	FavoriteManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
 
@@ -88,7 +80,14 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			WinUtil::getContextMenuPos(ctrlUsers, pt);
 		}
 	
-//		checkAdcItems(usersMenu);
+		OMenu usersMenu;
+		usersMenu.CreatePopupMenu();
+		usersMenu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG, CTSTRING(OPEN_USER_LOG));
+		usersMenu.AppendMenu(MF_SEPARATOR);
+		appendUserItems(usersMenu);
+		usersMenu.AppendMenu(MF_SEPARATOR);
+		usersMenu.AppendMenu(MF_STRING, IDC_EDIT, CTSTRING(PROPERTIES));
+		usersMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 		
 		tstring x;
 		if (ctrlUsers.GetSelectedCount() == 1) {
@@ -97,13 +96,10 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 			x = _T("");
 		}
 
-		if (!x.empty())
-			usersMenu.InsertSeparatorFirst(x);
+		//if (!x.empty())
+		//	usersMenu.InsertSeparatorFirst(x);
 		
 		usersMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-
-		if (!x.empty())
-			usersMenu.RemoveFirstItem();
 
 		return TRUE; 
 	}
@@ -191,19 +187,6 @@ LRESULT UsersFrame::onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 		break;
 	default:
 		bHandled = FALSE;
-	}
-	return 0;
-}
-
-LRESULT UsersFrame::onConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
-	for(int i = 0; i < ctrlUsers.GetItemCount(); ++i) {
-		const UserInfo *ui = ctrlUsers.getItemData(i);
-		FavoriteManager::FavoriteMap favUsers = FavoriteManager::getInstance()->getFavoriteUsers();
-		const FavoriteUser u = favUsers.find(ui->user->getCID())->second;
-		if(u.getUrl().length() > 0)
-		{
-			HubFrame::openWindow(Text::toT(u.getUrl()));
-		}
 	}
 	return 0;
 }

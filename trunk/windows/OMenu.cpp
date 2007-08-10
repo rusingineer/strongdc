@@ -28,8 +28,6 @@
 
 //OMenu::Map OMenu::menus;
 
-OMenu::OMenu() : CMenu() {
-}
 OMenu::~OMenu() {
 	if (::IsMenu(m_hMenu)) {
 		for (int i = 0; i < GetMenuItemCount(); ++i)
@@ -87,8 +85,13 @@ void OMenu::InsertSeparator(UINT uItem, BOOL byPosition, const tstring& caption,
 void OMenu::CheckOwnerDrawn(UINT uItem, BOOL byPosition) {
 	MENUITEMINFO mii = {0};
 	mii.cbSize = sizeof(MENUITEMINFO);
-	mii.fMask = MIIM_TYPE | MIIM_DATA;
+	mii.fMask = MIIM_TYPE | MIIM_DATA | MIIM_SUBMENU;
 	GetMenuItemInfo(uItem, byPosition, &mii);
+
+	if(mii.hSubMenu != NULL) {
+		CMenu::RemoveMenu((UINT)mii.hSubMenu, MF_BYCOMMAND);
+	}
+
 	if (mii.dwItemData != NULL) {
 		OMenuItem* mi = (OMenuItem*)mii.dwItemData;
 		if(mii.fType &= MFT_OWNERDRAW) {

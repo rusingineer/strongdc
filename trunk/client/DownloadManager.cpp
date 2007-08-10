@@ -442,21 +442,12 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 				d->setFile(new BufferedOutputStream<true>(d->getFile()));
 			}
 			
-			if(!d->isSet(Download::FLAG_USER_LIST)) {
+			if(!d->isSet(Download::FLAG_USER_LIST) && d->getTreeValid()) {
 				typedef MerkleCheckOutputStream<TigerTree, true> MerkleStream;
+				TigerTree tt = d->getTigerTree();
 				if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-					if(d->getTreeValid()) {
-						MerkleStream* stream = new MerkleStream(d->getTigerTree(), d->getFile(), d->getPos(), d);
-						d->setFile(stream);
-						d->setFlag(Download::FLAG_TTH_CHECK);
-					}
+					d->setFile(new MerkleStream(tt, d->getFile(), d->getPos(), d));
 				} else {
-					TigerTree tt(d->getSize());
-					if(d->getTreeValid())
-						tt = d->getTigerTree();
-					else
-						tt.getLeaves().push_back(d->getTTH());	
-
 					int64_t start = 0;
 					int64_t blockLeft = 0;
 					if(d->getPos() > 0) {
@@ -469,10 +460,9 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 							blockLeft = d->getPos();
 						}
 					}
-						
+					
 					MerkleStream* stream = new MerkleStream(tt, d->getFile(), start);
 					d->setFile(stream);
-					d->setFlag(Download::FLAG_TTH_CHECK);
 					
 					if(blockLeft > 0) {
 						dcdebug("Starting at %d, got %d bytes to read, block size %d\n", (int)d->getPos(), (int)blockLeft, (int)tt.getBlockSize());
@@ -494,6 +484,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 						}					
 					}
 				}
+				d->setFlag(Download::FLAG_TTH_CHECK);
 			}
 				
 			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
@@ -519,7 +510,9 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	}
 
 	dcassert(d->getPos() != -1);
-	d->setStart(GET_TICK());
+	if(d->getStart() == 0) {
+		d->setStart(GET_TICK());
+	}
 	aSource->setState(UserConnection::STATE_RUNNING);
 
 	fire(DownloadManagerListener::Starting(), d);
@@ -569,6 +562,26 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			UploadManager::getInstance()->abortUpload(d->getTempTarget(), false);
 			abortDownload(d->getTarget(), d);
 
+#ifdef _DEBUG
+			AutoArray<char> buf(512*1024);
+
+			SharedFileStream* f = new SharedFileStream(d->getTempTarget(), 0);
+			TigerTree tth(TigerTree::calcBlockSize(d->getSize(), 1));
+
+			if(d->getSize() > 0) {
+				size_t n = 512*1024;
+				while( (n = f->read(buf, n)) > 0) {
+					tth.update(buf, n);
+					n = 512*1024;
+				}
+			} else {
+				tth.update("", 0);
+			}
+			tth.finalize();
+
+			dcassert(tth.getRoot() == d->getTTH());
+			delete f;
+#endif
 			if(d->getTreeValid()) {
 
 				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());

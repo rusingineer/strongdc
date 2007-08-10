@@ -81,7 +81,7 @@ public:
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
 	Identity(const Identity& rhs) : user(rhs.user), info(rhs.info) { }
 	Identity& operator=(const Identity& rhs) { Lock l1(cs); Lock l2(rhs.cs); user = rhs.user; info = rhs.info; return *this; }
-	~Identity() { Lock l(cs); /* don't allow destroying before all critical sections are left */ }
+	~Identity() { }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Description, "DE")

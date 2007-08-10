@@ -59,10 +59,11 @@ public:
 		NOTIFY_HANDLER(IDC_USERS, LVN_GETDISPINFO, ctrlUsers.onGetDispInfo)
 		NOTIFY_HANDLER(IDC_USERS, LVN_COLUMNCLICK, ctrlUsers.onColumnClick)
 		NOTIFY_HANDLER(IDC_USERS, LVN_GETINFOTIP, ctrlUsers.onInfoTip)
-		NOTIFY_HANDLER(IDC_USERS, NM_DBLCLK, onDoubleClickUsers)	
 		NOTIFY_HANDLER(IDC_USERS, LVN_KEYDOWN, onKeyDownUsers)
+		NOTIFY_HANDLER(IDC_USERS, LVN_ITEMCHANGED, onItemChanged)
+		NOTIFY_HANDLER(IDC_USERS, NM_DBLCLK, onDoubleClickUsers)
 		NOTIFY_HANDLER(IDC_USERS, NM_RETURN, onEnterUsers)
-		NOTIFY_HANDLER(IDC_USERS, LVN_ITEMCHANGED, onItemChanged)		
+		NOTIFY_HANDLER(IDC_USERS, NM_CUSTOMDRAW, onCustomDraw)
 		NOTIFY_HANDLER(IDC_CLIENT, EN_LINK, onClientEnLink)
 		NOTIFY_CODE_HANDLER(TTN_GETDISPINFO, onGetToolTip)
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
@@ -110,14 +111,9 @@ public:
 		COMMAND_ID_HANDLER(IDC_PRIVATEMESSAGE, onPrivateMessage)
 		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
 		COMMAND_ID_HANDLER(IDC_REMOVEALL, onRemoveAll)
-		COMMAND_ID_HANDLER(IDC_GRANTSLOT, onGrantSlot)
-		COMMAND_ID_HANDLER(IDC_GRANTSLOT_HOUR, onGrantSlot)
-		COMMAND_ID_HANDLER(IDC_GRANTSLOT_DAY, onGrantSlot)
-		COMMAND_ID_HANDLER(IDC_GRANTSLOT_WEEK, onGrantSlot)
-		COMMAND_ID_HANDLER(IDC_UNGRANTSLOT, onGrantSlot)
 		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
-		COMMAND_RANGE_HANDLER(IDC_EMOMENU, IDC_EMOMENU + menuItems, onEmoPackChange);
-		NOTIFY_HANDLER(IDC_USERS, NM_CUSTOMDRAW, onCustomDraw)
+		COMMAND_RANGE_HANDLER(IDC_GRANTSLOT, IDC_UNGRANTSLOT, onGrantSlot)
+		COMMAND_RANGE_HANDLER(IDC_EMOMENU, IDC_EMOMENU + menuItems, onEmoPackChange)
 		COMMAND_ID_HANDLER(IDC_COPY_IP, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_NICK_IP, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_ALL, onCopyUserInfo)
@@ -441,12 +437,9 @@ private:
 	CContainedWindow ctrlFilterSelContainer;
 
 	OMenu copyMenu;
-	OMenu copyHubMenu;
-	OMenu grantMenu;
 	OMenu userMenu;
-	OMenu tabMenu;
 	OMenu emoMenu;
-	
+
 	CButton ctrlShowUsers;
 	CButton ctrlEmoticons;
 	ChatCtrl ctrlClient;
@@ -495,7 +488,7 @@ private:
 
 	int hubchatusersplit;
 
-	bool PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu *pMenu);
+	bool PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu& pMenu);
 	string sColumsOrder;
     string sColumsWidth;
     string sColumsVisible;

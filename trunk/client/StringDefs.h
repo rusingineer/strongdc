@@ -286,7 +286,7 @@ enum Strings { // @DontAdd
 	LATEST_VERSION, // "Latest version"
 	LEFT, // "left"
 	LEFT_COLOR, // "Left color"
-	LIB_CRASH, // "Application \"%s\" caused an unhandled exception in StrongDC++. Please uninstall it, upgrade it or use an alternate product."
+	LIB_CRASH, // "Application ""%s"" caused an unhandled exception in StrongDC++. Please uninstall it, upgrade it or use an alternate product."
 	LIMIT, // "Upload Limit"
 	LISTENER_FAILED, // "Listening socket failed (you need to restart StrongDC++): "
 	LOADED_FILE_LIST, // "File list loaded."
@@ -767,7 +767,7 @@ enum Strings { // @DontAdd
 	SOUND_FAKER_FOUND, // "Faker found"
 	SOUND_SOURCE_ADDED, // "Alternate source added"
 	SOUND_TTH_INVALID, // "File is corrupted"
-	SOUND_TYPING_NOTIFY, // "Typing notification"
+	SOUND_TYPING_NOTIFY, // "Typing sound"
 	SOUND_UPLOAD_FINISHED, // "Upload finished"
 	SOURCE_TOO_OLD, // "Remote client does not fully support TTH - cannot download"
 	SOURCE_TYPE, // "Source Type"
@@ -864,6 +864,6 @@ enum Strings { // @DontAdd
 	WINAMP_HELP, // "/winamp - Works with 1.x, 2.x, 5.x (no WinAmp 3 support)\r\n- %[version]	Numerical Version (ex: 2.91)\r\n- %[state]	Playing state (ex: stopped/paused/playing)\r\n- %[title]		Window title from Winamp - if you want to change this for mp3s, Winamp > Pref > Input > MPEG > Title\r\n- %[rawtitle]	Window title from Winamp (if %[title] not working propertly)\r\n- %[percent]	Percentage (ex. 40%)\r\n- %[length]	Length in minutes:seconds (ex: 04:09)\r\n- %[elapsed]	Time elapsed in minutes:seconds (ex. 03:51)\r\n- %[bar]		ASCII progress bar, 10 characters wide no including brackets (ex. [----|-----])\r\n- %[bitrate]	Bitrate (ex. 128kbps)\r\n- %[sample]	Sample frequency (ex. 22kHz)\r\n- %[channels]	Number of channels (ex. stereo / mono)\r\nEmpty = Default String -> winamp(%[version]) %[state](%[title]) stats(%[percent] of %[length] %[bar])"
 	WINAMP_HELP_DESC, // "Winamp Help"
 	YES, // "Yes"
-	ZONEALARM_WARNING, // "ZoneAlarm was detected in your computer.  It is frequently responsible for corrupted downloads and is the cause of many \"rollback inconsistency\" errors.  Please uninstall it and use an alternate product.  "
+	ZONEALARM_WARNING, // "ZoneAlarm was detected in your computer.  It is frequently responsible for corrupted downloads and is the cause of many ""rollback inconsistency"" errors.  Please uninstall it and use an alternate product.  "
 	LAST // @DontAdd
 };
