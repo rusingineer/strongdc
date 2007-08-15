@@ -47,13 +47,13 @@ PropPage::Item LimitPage::items[] = {
 	{ IDC_BW_START_TIME, SettingsManager::BANDWIDTH_LIMIT_START, PropPage::T_INT },
 	{ IDC_BW_END_TIME, SettingsManager::BANDWIDTH_LIMIT_END, PropPage::T_INT },
 	{ IDC_THROTTLE_ENABLE, SettingsManager::THROTTLE_ENABLE, PropPage::T_BOOL },
-	{ IDC_I_DOWN_SPEED, SettingsManager::I_DOWN_SPEED, PropPage::T_INT },
-	{ IDC_TIME_DOWN, SettingsManager::DOWN_TIME, PropPage::T_INT },
-	{ IDC_H_DOWN_SPEED, SettingsManager::H_DOWN_SPEED, PropPage::T_INT },
-	{ IDC_DISCONNECTING_ENABLE, SettingsManager::DISCONNECTING_ENABLE, PropPage::T_BOOL },
+	{ IDC_I_DOWN_SPEED, SettingsManager::DISCONNECT_SPEED, PropPage::T_INT },
+	{ IDC_TIME_DOWN, SettingsManager::DISCONNECT_TIME, PropPage::T_INT },
+	{ IDC_H_DOWN_SPEED, SettingsManager::DISCONNECT_FILE_SPEED, PropPage::T_INT },
+	{ IDC_DISCONNECTING_ENABLE, SettingsManager::AUTODROP_SLOW_SOURCES, PropPage::T_BOOL },
 	{ IDC_SEGMENTED_ONLY, SettingsManager::DROP_MULTISOURCE_ONLY, PropPage::T_BOOL },
-	{ IDC_MIN_FILE_SIZE, SettingsManager::MIN_FILE_SIZE, PropPage::T_INT },
-	{ IDC_REMOVE_IF_BELOW, SettingsManager::DISCONNECT, PropPage::T_INT },
+	{ IDC_MIN_FILE_SIZE, SettingsManager::DISCONNECT_FILESIZE, PropPage::T_INT },
+	{ IDC_REMOVE_IF_BELOW, SettingsManager::REMOVE_SPEED, PropPage::T_INT },
 	{ 0, 0, PropPage::T_END }
 };
 

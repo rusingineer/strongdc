@@ -764,7 +764,7 @@ string ResourceManager::strings[] = {
 "Faker found", 
 "Alternate source added", 
 "File is corrupted", 
-"Typing notification", 
+"Typing sound", 
 "Upload finished", 
 "Remote client does not fully support TTH - cannot download", 
 "Source Type", 

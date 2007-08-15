@@ -1126,15 +1126,15 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 		
 		if(ctrlResults.GetSelectedCount() > 0) {
 
-			OMenu resultsMenu, targetMenu, targetDirMenu, copyMenu, usercmdsMenu;
+			OMenu resultsMenu, targetMenu, targetDirMenu, copyMenu;
+			CheckTTH cs = ctrlResults.forEachSelectedT(CheckTTH());
 
 			copyMenu.CreatePopupMenu();
 			targetDirMenu.CreatePopupMenu();
 			targetMenu.CreatePopupMenu();
 			resultsMenu.CreatePopupMenu();
-			usercmdsMenu.CreatePopupMenu();
 
-			copyMenu.InsertSeparatorFirst(TSTRING(USERINFO));
+			copyMenu.InsertSeparatorFirst(TSTRING(COPY));
 			copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK, CTSTRING(COPY_NICK));
 			copyMenu.AppendMenu(MF_STRING, IDC_COPY_FILENAME, CTSTRING(FILENAME));
 			copyMenu.AppendMenu(MF_STRING, IDC_COPY_PATH, CTSTRING(PATH));
@@ -1153,7 +1153,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 			resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)copyMenu, CTSTRING(COPY));
 			resultsMenu.AppendMenu(MF_SEPARATOR);
 			appendUserItems(resultsMenu);
-			resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)usercmdsMenu, CTSTRING(SETTINGS_USER_COMMANDS));
+			prepareMenu(resultsMenu, UserCommand::CONTEXT_SEARCH, cs.hubs);
 			resultsMenu.AppendMenu(MF_SEPARATOR);
 			resultsMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 			resultsMenu.SetMenuDefaultItem(IDC_DOWNLOAD);
@@ -1180,8 +1180,6 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 					n++;
 				}
 			}
-
-			CheckTTH cs = ctrlResults.forEachSelectedT(CheckTTH());
 
 			if(cs.hasTTH) {
 				targets.clear();
@@ -1218,7 +1216,6 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 			}		
 
 //			resultsMenu.InsertSeparatorFirst(Text::toT(sr->getFileName()));
-			prepareMenu(usercmdsMenu, UserCommand::CONTEXT_SEARCH, cs.hubs);
 			resultsMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			return TRUE; 
 		}

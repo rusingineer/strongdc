@@ -30,7 +30,7 @@
 template<class T>
 class UCHandler {
 public:
-	UCHandler() : menuPos(0) { }
+	UCHandler() { subMenu.CreatePopupMenu(); }
 
 	typedef UCHandler<T> thisClass;
 	BEGIN_MSG_MAP(thisClass)
@@ -60,20 +60,25 @@ public:
 		int n = 0;
 		int m = 0;
 		
-		menu.InsertSeparatorFirst(TSTRING(SETTINGS_USER_COMMANDS));
-		menuPos = menu.GetMenuItemCount();
 		if(!userCommands.empty()) {
+			subMenu.DestroyMenu();
+			subMenu.m_hMenu = NULL;
+			subMenu.CreatePopupMenu();
+
+			menu.AppendMenu(MF_SEPARATOR);
+			menu.AppendMenu(MF_POPUP, (UINT)(HMENU)subMenu, CTSTRING(SETTINGS_USER_COMMANDS));
+
+			subMenu.InsertSeparatorLast(TSTRING(SETTINGS_USER_COMMANDS));
+
 			if(op && (ctx != UserCommand::CONTEXT_HUB)) {
-				menu.AppendMenu(MF_SEPARATOR);
-				menu.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CTSTRING(GET_USER_RESPONSES));
-				menu.AppendMenu(MF_STRING, IDC_REPORT, CTSTRING(REPORT));
-				menu.AppendMenu(MF_STRING, IDC_CHECKLIST, CTSTRING(CHECK_FILELIST));
-				extraItems = 5;
+				subMenu.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CTSTRING(GET_USER_RESPONSES));
+				subMenu.AppendMenu(MF_STRING, IDC_REPORT, CTSTRING(REPORT));
+				subMenu.AppendMenu(MF_STRING, IDC_CHECKLIST, CTSTRING(CHECK_FILELIST));
+				extraItems = 4;
 			} else {
 				extraItems = 1;
 			}
-			menu.AppendMenu(MF_SEPARATOR);
-			CMenuHandle cur = menu.m_hMenu;
+			CMenuHandle cur = subMenu.m_hMenu;
 			for(UserCommand::List::iterator ui = userCommands.begin(); ui != userCommands.end(); ++ui) {
 				UserCommand& uc = *ui;
 				if(uc.getType() == UserCommand::TYPE_SEPARATOR) {
@@ -81,14 +86,16 @@ public:
 					if( (cur.GetMenuItemCount() >= 1) &&
 						!(cur.GetMenuState(cur.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR))
 					{
-						cur.AppendMenu(MF_SEPARATOR);m++;
+						cur.AppendMenu(MF_SEPARATOR);
+						m++;
 					}
 				} else if(uc.getType() == UserCommand::TYPE_RAW || uc.getType() == UserCommand::TYPE_RAW_ONCE) {
-					cur = menu.m_hMenu;
+					cur = subMenu.m_hMenu;
 					StringTokenizer<tstring> t(Text::toT(uc.getName()), _T('\\'));
 					for(TStringIter i = t.getTokens().begin(); i != t.getTokens().end(); ++i) {
 						if(i+1 == t.getTokens().end()) {
-							cur.AppendMenu(MF_STRING, IDC_USER_COMMAND+n, i->c_str());m++;
+							cur.AppendMenu(MF_STRING, IDC_USER_COMMAND+n, i->c_str());
+							m++;
 						} else {
 							bool found = false;
 							TCHAR buf[1024];
@@ -116,16 +123,10 @@ public:
 			}
 		}
 	}
-	void cleanMenu(OMenu& menu) {
-		if(!userCommands.empty()) {
-			for(size_t i = 0; i < userCommands.size()+extraItems; ++i) {
-				menu.DeleteMenu(menuPos, MF_BYPOSITION);
-			}
-		}
-	}
+
 private:
+	OMenu subMenu;
 	UserCommand::List userCommands;
-	int menuPos;
 	int extraItems;
 };
 

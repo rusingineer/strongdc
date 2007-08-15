@@ -1218,10 +1218,7 @@ void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf,
 LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 	tabMenuShown = true;
-	OMenu tabMenu, usercmdsMenu, copyHubMenu;
-
-	usercmdsMenu.CreatePopupMenu();
-	prepareMenu(usercmdsMenu, ::UserCommand::CONTEXT_HUB, client->getHubUrl());
+	OMenu tabMenu, copyHubMenu;
 
 	tabMenu.CreatePopupMenu();
 	tabMenu.InsertSeparatorFirst(Text::toT((client->getHubName() != "") ? (client->getHubName().size() > 50 ? client->getHubName().substr(0, 50) : client->getHubName()) : client->getHubUrl()));	
@@ -1232,8 +1229,7 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 	tabMenu.AppendMenu(MF_STRING, IDC_ADD_AS_FAVORITE, CTSTRING(ADD_TO_FAVORITES));
 	tabMenu.AppendMenu(MF_STRING, ID_FILE_RECONNECT, CTSTRING(MENU_RECONNECT));
 	tabMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyHubMenu, CTSTRING(COPY));
-	tabMenu.AppendMenu(MF_SEPARATOR);
-	tabMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)usercmdsMenu, CTSTRING(SETTINGS_USER_COMMANDS));
+	prepareMenu(tabMenu, ::UserCommand::CONTEXT_HUB, client->getHubUrl());
 	tabMenu.AppendMenu(MF_SEPARATOR);
 	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
 	
@@ -1246,7 +1242,7 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 		tabMenu.EnableMenuItem((UINT)(HMENU)copyHubMenu, MF_GRAYED);
 	else
 		tabMenu.EnableMenuItem((UINT)(HMENU)copyHubMenu, MF_ENABLED);
-
+	
 	tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 	return TRUE;
 }
@@ -1285,10 +1281,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 
 		if(PreparePopupMenu(&ctrlUsers, ChatCtrl::sSelectedUser, Mnu)) {
-			OMenu usercmdsMenu;
-			usercmdsMenu.CreatePopupMenu();
-			prepareMenu(usercmdsMenu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
-			Mnu.AppendMenu(MF_POPUP, (UINT)(HMENU)usercmdsMenu, CTSTRING(SETTINGS_USER_COMMANDS));
+			prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
 			Mnu.AppendMenu(MF_SEPARATOR);
 			Mnu.AppendMenu(MF_STRING, IDC_REFRESH, CTSTRING(REFRESH_USER_LIST));
 			Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
@@ -1296,7 +1289,11 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 	}
 
-	if(reinterpret_cast<HWND>(wParam) == ctrlEmoticons) { 
+	if(reinterpret_cast<HWND>(wParam) == ctrlEmoticons) {
+		if(emoMenu.m_hMenu) {
+			emoMenu.DestroyMenu();
+			emoMenu.m_hMenu = NULL;
+		}
 		emoMenu.CreatePopupMenu();
 		menuItems = 0;
 		emoMenu.InsertSeparatorFirst(_T("Emoticons Pack"));
@@ -1343,19 +1340,13 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 			if(ChatCtrl::sSelectedUser.empty()) {
 				Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 				if(copyMenu != NULL) copyMenu.DestroyMenu();
-				if(Mnu != NULL) Mnu.DestroyMenu();
 				return TRUE;
 			} else {
-				OMenu usercmdsMenu;
-				usercmdsMenu.CreatePopupMenu();
-				prepareMenu(usercmdsMenu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
-				Mnu.AppendMenu(MF_POPUP, (UINT)(HMENU)usercmdsMenu, CTSTRING(SETTINGS_USER_COMMANDS));
+				prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
 				Mnu.AppendMenu(MF_SEPARATOR);
 				Mnu.AppendMenu(MF_STRING, ID_EDIT_CLEAR_ALL, CTSTRING(CLEAR));
 				Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-				cleanMenu(Mnu);
 				if(copyMenu != NULL) copyMenu.DestroyMenu();
-				if(Mnu != NULL) Mnu.DestroyMenu();
 				return TRUE;
 			}
 		}

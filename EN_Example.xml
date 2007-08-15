@@ -768,7 +768,7 @@
 		<String Name="SoundFakerFound">Faker found</String>
 		<String Name="SoundSourceAdded">Alternate source added</String>
 		<String Name="SoundTthInvalid">File is corrupted</String>
-		<String Name="SoundTypingNotify">Typing notification</String>
+		<String Name="SoundTypingNotify">Typing sound</String>
 		<String Name="SoundUploadFinished">Upload finished</String>
 		<String Name="SourceTooOld">Remote client does not fully support TTH - cannot download</String>
 		<String Name="SourceType">Source Type</String>
