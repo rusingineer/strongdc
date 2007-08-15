@@ -86,13 +86,13 @@ const string SettingsManager::settingTags[] =
 	"BoldAuthorsMess", "UploadLimitNormal", "ThrottleEnable", "HubSlots", "DownloadLimitNormal", 
 	"UploadLimitTime", "DownloadLimitTime", "TimeThrottle", "TimeLimitStart", "TimeLimitEnd",
 	"RemoveForbidden", "ProgressTextDown", "ProgressTextUp", "ShowInfoTips", "ExtraDownloadSlots",
-	"MinimizeOnStratup", "ConfirmDelete", "DefaultSearchFreeSlots", 
-	"ExtensionDownTo", "ErrorColor", "ExpandQueue", "TransferSplitSize", "IDownSpeed", "HDownSpeed", "DownTime", 
+	"MinimizeOnStratup", "ConfirmDelete", "DefaultSearchFreeSlots", "SendUnknownCommands",
+	"ExtensionDownTo", "ErrorColor", "ExpandQueue", "TransferSplitSize",
+	"DisconnectSpeed", "DisconnectFileSpeed", "DisconnectTime", "RemoveSpeed",
 	"ProgressOverrideColors", "Progress3DDepth", "ProgressOverrideColors2",
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
-	"DisconnectingEnable", "MinFileSize", "UploadQueueFrameShowTree",
+	"AutoDropSlowSources", "DisconnectFileSize", "UploadQueueFrameShowTree",
 	"SegmentsManual", "NumberOfSegments", "PercentFakeShareTolerated",
-	"SendUnknownCommands", "Disconnect",
 	"AutoUpdateIP", "MaxHashSpeed", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "UseAutoPriorityByDefault", "UseOldSharingUI",
 	"FavShowJoins", "LogStatusMessages", "PMLogLines", "SearchAlternateColour", "SoundsDisabled",
@@ -182,6 +182,7 @@ SettingsManager::SettingsManager()
 	setDefault(BUFFER_SIZE, 64);
 	setDefault(HUBLIST_SERVERS, "http://download.hublist.cz/hublist.xml.bz2;http://hublist.hubtracker.com/hublist.xml.bz2;http://www.cnet.cz/list.txt;http://dchublist.com/hublist.xml.bz2;http://adchublist.com/hublist.xml.bz2");
 	setDefault(DOWNLOAD_SLOTS, 50);
+    setDefault(FILE_SLOTS, 15);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
 	setDefault(LOG_DIRECTORY, Util::getDataPath() + "Logs" PATH_SEPARATOR_STR);
 	setDefault(LOG_UPLOADS, false);
@@ -300,7 +301,6 @@ SettingsManager::SettingsManager()
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);
 	setDefault(TEXT_FONT, "Tahoma,-11,400,0");
-	setDefault(DROP_MULTISOURCE_ONLY, true);
 	setDefault(DEBUG_COMMANDS, false);
 	setDefault(UPDATE_URL, "http://dcaml.sourceforge.net/files/");	
 	setDefault(EXTRA_SLOTS, 3);
@@ -412,13 +412,6 @@ SettingsManager::SettingsManager()
 	setDefault(ERROR_COLOR, RGB(255, 0, 0));
 	setDefault(EXPAND_QUEUE, true);
 	setDefault(TRANSFER_SPLIT_SIZE, 8000);
-	setDefault(I_DOWN_SPEED, 5);
-	setDefault(H_DOWN_SPEED, 10);
-	setDefault(DOWN_TIME, 20);
-	setDefault(DISCONNECTING_ENABLE, false);
-	setDefault(MIN_FILE_SIZE, 10);
-    setDefault(DISCONNECT, 2);
-    setDefault(FILE_SLOTS, 15);
 	setDefault(MENUBAR_TWO_COLORS, true);
 	setDefault(MENUBAR_LEFT_COLOR, RGB(254, 157, 27));
 	setDefault(MENUBAR_RIGHT_COLOR, RGB(194, 78, 7));
@@ -516,6 +509,14 @@ SettingsManager::SettingsManager()
 	setDefault(DOWNCONN_PER_SEC, 2);
 	setDefault(FILTER_ENTER, false);
 	setDefault(ENABLE_REAL_UPLOAD_QUEUE, true);
+
+	setDefault(AUTODROP_SLOW_SOURCES, true);
+	setDefault(DROP_MULTISOURCE_ONLY, true);
+	setDefault(DISCONNECT_SPEED, 5);
+	setDefault(DISCONNECT_FILE_SPEED, 15);
+	setDefault(DISCONNECT_TIME, 40);
+	setDefault(DISCONNECT_FILESIZE, 50);
+    setDefault(REMOVE_SPEED, 2);
 
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

@@ -77,16 +77,10 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		}
 
 		if (!d->isSet(Download::FLAG_USER_LIST)) {
-			// TODO: merge codes for automatic and manual disconnecting
-			if(	(d->getStart() &&  (0 == ((int)(aTick - d->getStart()) / 1000 + 1) % 40)) &&
-				(d->getRunningAverage() < (downloads.size() * 100)) &&
-				(QueueManager::getInstance()->dropSource(d, true))) {
-					d->getUserConnection().disconnect();
-					continue;
-			} else if (d->getSize() > (SETTING(MIN_FILE_SIZE) * 1048576)) {
-				if((d->getRunningAverage() < SETTING(I_DOWN_SPEED) * 1024)) {
-					if(	(((aTick - d->getLastTick())/1000) > (uint32_t)SETTING(DOWN_TIME)) &&
-						(!QueueManager::getInstance()->dropSource(d, false))) {
+			if (d->getSize() > (SETTING(DISCONNECT_FILESIZE) * 1048576)) {
+				if((d->getRunningAverage() < SETTING(DISCONNECT_SPEED) * 1024)) {
+					if(	(((aTick - d->getLastTick())/1000) > (uint32_t)SETTING(DISCONNECT_TIME)) &&
+						(!QueueManager::getInstance()->dropSource(d))) {
 							continue;
 					}
 				} else {
@@ -447,6 +441,21 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 				TigerTree tt = d->getTigerTree();
 				if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 					d->setFile(new MerkleStream(tt, d->getFile(), d->getPos(), d));
+					if(d->isSet(Download::FLAG_OVERLAPPED)) {
+						Lock l(cs);
+						for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); i++) {
+							if(*i != d && (*i)->getStartPos() == d->getStartPos()) {
+								if(((*i)->getFile() != NULL) && ((*i)->getPos() > (*i)->getStartPos())) {
+									try {
+										// flush overlapped chunk to disk
+										(*i)->getFile()->flush();
+									} catch(const Exception&) {
+									}
+								}
+								break;
+							}
+						}
+					}
 				} else {
 					int64_t start = 0;
 					int64_t blockLeft = 0;
@@ -529,16 +538,17 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			dcassert(d->getFile());
 			d->addPos(d->getFile()->write(aData, aLen), aLen);
 		} catch(const ChunkDoneException e) {
-			dcdebug("ChunkDoneException.....\n");
+			dcdebug("ChunkDoneException ... %I64d\n", e.pos);
 
-			if(d->getTreeValid() && e.pos > 0) {
+			if(e.pos > 0 && d->getTreeValid()) {
 				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
-				lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree(), d->getTempTarget());
+				if(!(lpFileDataInfo == (FileChunksInfo*)NULL)){
+					lpFileDataInfo->verifyBlock(e.pos - 1, d->getTigerTree(), d->getTempTarget());
+				}
 			}
 			
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize()){
-				//fire(DownloadManagerListener::Failed(), d, e.getError());
 				aSource->setDownload(NULL);
 				removeDownload(d);
 				QueueManager::getInstance()->putDownload(d, false, false);
@@ -562,6 +572,49 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			UploadManager::getInstance()->abortUpload(d->getTempTarget(), false);
 			abortDownload(d->getTarget(), d);
 
+			if(d->getTreeValid()) {
+
+				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
+				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
+				{
+					dcdebug("Do last verify.....\n");
+					if(!lpFileDataInfo->doLastVerify(d->getTigerTree(), d->getTempTarget())) {
+						dcdebug("last verify failed .....\n");
+
+						if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+							PlaySound(Text::toT(SETTING(SOUND_TTH)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+						failDownload(aSource, Util::emptyString);
+						ClientManager::getInstance()->connect(aSource->getUser(), Util::toString(Util::rand()));		
+						return;
+					}
+				}
+			}
+
+			// RevConnect : For partial file sharing, abort upload first to move file correctly
+			UploadManager::getInstance()->abortUpload(d->getTempTarget());
+			
+			// wait aborting other downloads
+			for(int t = 0; t < 20; t++)
+			{
+				bool aborting = false;
+				{
+					Lock l(cs);
+					
+					for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
+						Download* download = *i;
+						if(download != d && download->getTarget() == d->getTarget()) {
+							download->getUserConnection().disconnect();
+							aborting = true;
+							break;
+						}
+					}
+				}
+				
+				if(!aborting) break;
+				Thread::sleep(250);
+			}
+
 #ifdef _DEBUG
 			AutoArray<char> buf(512*1024);
 
@@ -582,47 +635,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			dcassert(tth.getRoot() == d->getTTH());
 			delete f;
 #endif
-			if(d->getTreeValid()) {
-
-				FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
-				if(!(lpFileDataInfo == (FileChunksInfo*)NULL))
-				{
-					dcdebug("Do last verify.....\n");
-					if(!lpFileDataInfo->doLastVerify(d->getTigerTree(), d->getTempTarget())) {
-						dcdebug("last verify failed .....\n");
-
-						if ((!SETTING(SOUND_TTH).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-							PlaySound(Text::toT(SETTING(SOUND_TTH)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-
-						failDownload(aSource, Util::emptyString);
-						return;
-					}
-				}
-			}
-
-			// RevConnect : For partial file sharing, abort upload first to move file correctly
-			UploadManager::getInstance()->abortUpload(d->getTempTarget());
-			
-			// wait aborting other downloads
-			for(int t = 0; t < 20; t++)
-			{
-				bool aborting = false;
-				{
-					Lock l(cs);
-					
-					for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
-						Download* download = *i;
-						if(download != d && download->getTarget() == d->getTarget()) {
-							download->getUserConnection().disconnect(true);
-							aborting = true;
-							break;
-						}
-					}
-				}
-				
-				if(!aborting) break;
-				Thread::sleep(250);
-			}
 
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize())
@@ -693,6 +705,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 
 			QueueManager::getInstance()->removeSource(d->getTarget(), aSource->getUser(), QueueItem::Source::FLAG_BAD_TREE, false);
 
+			aSource->setDownload(NULL);
 			QueueManager::getInstance()->putDownload(d, false);
 
 			checkDownloads(aSource);
@@ -741,6 +754,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	removeDownload(d);
 	fire(DownloadManagerListener::Complete(), d, d->isSet(Download::FLAG_TREE_DOWNLOAD));
 
+	aSource->setDownload(NULL);
 	QueueManager::getInstance()->putDownload(d, true);	
 	checkDownloads(aSource, reconn);
 }
@@ -847,8 +861,15 @@ void DownloadManager::removeDownload(Download* d) {
 			} catch(const Exception&) {
 			}
 		}
-		delete d->getFile();
-		d->setFile(NULL);
+		
+		OutputStream* f = d->getFile();
+		
+		{
+			Lock l(cs);
+			d->setFile(NULL);
+		}
+		
+		delete f;
 
 		if(d->isSet(Download::FLAG_ANTI_FRAG)) {
 			d->unsetFlag(Download::FLAG_ANTI_FRAG);
@@ -857,20 +878,9 @@ void DownloadManager::removeDownload(Download* d) {
 
 	{
 		Lock l(cs);
-		// Either I'm stupid or the msvc7 optimizer is doing something _very_ strange here...
-		// STL-port -D_STL_DEBUG complains that .begin() and .end() don't have the same owner (!),
-		// but only in release build
 
 		dcassert(find(downloads.begin(), downloads.end(), d) != downloads.end());
-
 		downloads.erase(remove(downloads.begin(), downloads.end(), d), downloads.end());
-		
-/*		for(Download::Iter i = downloads.begin(); i != downloads.end(); ++i) {
-			if(*i == d) {
-				downloads.erase(i);
-				break;
-			}
-		}*/
 	}
 }
 
@@ -880,6 +890,7 @@ void DownloadManager::abortDownload(const string& aTarget, const Download* excep
 	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
 		if(d != except && d->getTarget() == aTarget) {
+			dcdebug("Trying to close connection for download 0x%X\n", d);
 			d->getUserConnection().disconnect(true);
 		}
 	}

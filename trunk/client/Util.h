@@ -225,22 +225,20 @@ public:
 	static string validateFileName(string aFile);
 	static string cleanPathChars(string aNick);
 	static string formatStatus(int iStatus) {
-		string tmp = emptyString;
 		switch(iStatus) {
-			case 1: tmp = "Normal (1)";	break;
-			case 2: tmp = "Away (2)";	break;
-			case 3: tmp = "Away (3)";	break;
-			case 4: tmp = "Fileserver (4)";	break;
-			case 5: tmp = "Fileserver (5)";	break;
-			case 6: tmp = "Fileserver Away (6)";	break;
-			case 7: tmp = "Fileserver Away (7)";	break;
-			case 8: tmp = "Fireball (8)";	break;
-			case 9: tmp = "Fireball (9)";	break;
-			case 10: tmp = "Fireball Away (10)";	break;
-			case 11: tmp = "Fireball Away (11)";	break;
-			default: tmp = "Unknown (" + toString(iStatus) + ")";	break;
+			case 1: return "Normal (1)";
+			case 2: return "Away (2)";
+			case 3: return "Away (3)";
+			case 4: return "Fileserver (4)";
+			case 5: return "Fileserver (5)";
+			case 6: return "Fileserver Away (6)";
+			case 7: return "Fileserver Away (7)";
+			case 8: return "Fireball (8)";
+			case 9: return "Fireball (9)";
+			case 10: return "Fireball Away (10)";
+			case 11: return "Fireball Away (11)";
+			default: return "Unknown (" + toString(iStatus) + ")";
 		}
-		return tmp;
 	}
 	
 	static string formatBytes(const string& aString) { return formatBytes(toInt64(aString)); }

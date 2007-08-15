@@ -1,3 +1,10 @@
+** svn322
+	some other menu stuff
+	removed autodrop slow sources (slow chunk overlapping will take over its function)
+	last download speed saved in bytes per second
+	queue match displays number of really added alternates
+	some fixes for TransferView
+
 ** svn321
 	hopefully fixed crash #4095
 	hopefully fixed deleting some submenus

@@ -146,7 +146,7 @@ public:
 			case COLUMN_EXACT_SIZE: return getSize() > 0 ? Util::formatExactSize(getSize()) : Util::emptyStringT;
 			case COLUMN_UPLOAD:
 				if (getUser()->getLastDownloadSpeed() > 0) {
-					return Util::toStringW(getUser()->getLastDownloadSpeed()) + _T(" kB/s");
+					return Util::formatBytesW(getUser()->getLastDownloadSpeed()) + _T("/s");
 				} else if(getUser()->isSet(User::FIREBALL)) {
 					return _T(">=100 kB/s");
 				} else {

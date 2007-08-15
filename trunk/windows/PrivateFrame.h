@@ -202,10 +202,6 @@ private:
 	CEdit ctrlMessage;
 	CStatusBarCtrl ctrlStatus;
 
-	OMenu grantMenu;
-	OMenu textMenu;
-	OMenu tabMenu;
-	
 	int menuItems;
 	OMenu emoMenu;
 	CButton ctrlEmoticons;

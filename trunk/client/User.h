@@ -64,13 +64,17 @@ public:
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
 
-	GETSET(uint16_t, lastDownloadSpeed, LastDownloadSpeed);
+	//GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
+	void setLastDownloadSpeed(size_t speed) { lastDownloadSpeed = speed; }
+	size_t getLastDownloadSpeed() const { return lastDownloadSpeed; }
+
 	GETSET(string, firstNick, FirstNick);
 private:
 	User(const User&);
 	User& operator=(const User&);
 
 	CID cid;
+	size_t lastDownloadSpeed;
 };
 
 /** One of possibly many identities of a user, mainly for UI purposes */

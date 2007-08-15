@@ -798,10 +798,10 @@ int QueueManager::matchListing(const DirectoryListing& dl) throw() {
 			if(j != tthMap.end() && i->second->getSize() == qi->getSize()) {
 				try {
 					addSource(qi, dl.getUser(), QueueItem::Source::FLAG_FILE_NOT_AVAILABLE);
+					matches++;
 				} catch(...) {
 					// Ignore...
 				}
-				matches++;
 			}
 		}
 	}
@@ -945,9 +945,9 @@ again:
 	bool useChunks = true;
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
-			freeBlock = q->getChunksInfo()->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed()*1024);
+			freeBlock = q->getChunksInfo()->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
 		} else {
-			freeBlock = q->getChunksInfo()->getChunk(useChunks, aUser->getLastDownloadSpeed()*1024);
+			freeBlock = q->getChunksInfo()->getChunk(useChunks, aUser->getLastDownloadSpeed());
 		}
 
 		if(freeBlock < 0) {
@@ -1123,9 +1123,9 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool co
 		}
 
 		int64_t speed = aDownload->getAverageSpeed();
-		if(speed > 0 && aDownload->getTotal() > 32768 && speed < 10485760){
+		if(speed > 0 && aDownload->getStart() > 0 && aDownload->getTotal() > 32768 && speed < 10485760){
 			UserPtr u = aDownload->getUser();
-			u->setLastDownloadSpeed((uint16_t)(speed / 1024));
+			u->setLastDownloadSpeed((size_t)speed);
 		}
 		delete aDownload;
 	}
@@ -1752,8 +1752,8 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 	return true;
 }
 
-bool QueueManager::dropSource(Download* d, bool autoDrop) {
-	size_t activeSegments, onlineUsers, iHighSpeed = SETTING(H_DOWN_SPEED);
+bool QueueManager::dropSource(Download* d) {
+	size_t activeSegments, onlineUsers, iHighSpeed = SETTING(DISCONNECT_FILE_SPEED);
 	uint64_t overallSpeed;
 	UserPtr aUser = d->getUser();
 
@@ -1766,24 +1766,6 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 
    		dcassert(q->isSource(aUser));
 
-		if(autoDrop) {
-			// Don't drop only downloading source
-			if(q->getCurrents().size() < 2) return false;
-			if((q->getAverageSpeed() > 0) && (2*d->getRunningAverage() > q->getAverageSpeed())) return false;
-
-			aUser->setLastDownloadSpeed((uint16_t)(d->getRunningAverage() / 1024));
-
-		    userQueue.setWaiting(q, aUser);
-			userQueue.remove(q, aUser);
-
-			q->removeSource(aUser, QueueItem::Source::FLAG_SLOW);
-
-			fire(QueueManagerListener::SourcesUpdated(), q);
-			setDirty();
-
-			return true;
-		}
-
 		if(!q->isSet(QueueItem::FLAG_AUTODROP)) return true;
 
 		activeSegments = q->getCurrents().size();
@@ -1794,8 +1776,8 @@ bool QueueManager::dropSource(Download* d, bool autoDrop) {
 	if(!SETTING(DROP_MULTISOURCE_ONLY) || (activeSegments >= 2)) {
 		if((iHighSpeed == 0) || (overallSpeed > iHighSpeed*1024)) {
 			if(onlineUsers > 2) {
-				aUser->setLastDownloadSpeed((uint16_t)(d->getRunningAverage() / 1024));
-				if(d->getRunningAverage() < SETTING(DISCONNECT)*1024) {
+				aUser->setLastDownloadSpeed((size_t)d->getRunningAverage());
+				if(d->getRunningAverage() < SETTING(REMOVE_SPEED)*1024) {
 					removeSource(d->getTarget(), aUser, QueueItem::Source::FLAG_SLOW);
 				} else {
 					d->getUserConnection().disconnect();

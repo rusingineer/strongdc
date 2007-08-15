@@ -9,7 +9,6 @@
 #define IDC_REMOVE_OFFLINE              104
 #define IDC_DISABLE_SOUNDS              105
 #define IDC_CDMDEBUG_WINDOW             106
-#define IDC_CONNECT_ALL                 106
 #define IDD_GENERALPAGE                 107
 #define IDC_DISCONNECT_ALL              107
 #define IDC_COLLAPSE_ALL                108

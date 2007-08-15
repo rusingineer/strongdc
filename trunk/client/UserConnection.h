@@ -230,6 +230,7 @@ private:
 
 	~UserConnection() throw() {
 		BufferedSocket::putSocket(socket);
+		dcassert(!download);
 	}
 	friend struct DeleteFunction;
 

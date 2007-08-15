@@ -713,7 +713,7 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 
 		if(i->isDirectory()) {
 			string newName = aName + name + PATH_SEPARATOR;
-			if((Util::stricmp(newName + PATH_SEPARATOR, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) && shareFolder(newName)) {
+			if((Util::stricmp(newName, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) && shareFolder(newName)) {
 				dir->directories[name] = buildTree(newName, dir);
 			}
 		} else {

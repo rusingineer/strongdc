@@ -326,15 +326,6 @@ private:
 		}
 	};
 	
-	OMenu targetMenu;
-	OMenu targetDirMenu;
-	OMenu fileMenu;
-	OMenu directoryMenu;
-	OMenu priorityMenu;
-	OMenu priorityDirMenu;
-	OMenu copyMenu;
-	OMenu tabMenu;
-
 	CContainedWindow statusContainer;
 	CContainedWindow treeContainer;
 	CContainedWindow listContainer;

@@ -139,7 +139,7 @@ public:
 	/** 
 	 * Specify a Download to a running chunk
 	 */
-	void setDownload(int64_t, Download*, bool);
+	void setDownload(int64_t, Download*, bool) throw(Exception);
 
 	/** 
 	 * Sets download size according to its chunk

@@ -502,8 +502,8 @@
 		<String Name="Segments">Segmenty</String>
 		<String Name="SelectAll">Vybrat vše</String>
 		<String Name="SelectUserList">Označit uživatele v seznamu</String>
-		<String Name="SendPrivateMessage">Poslat Soukromou zprávu(PM)</String>
-		<String Name="SendPublicMessage">Poslat Veřejnou zprávu</String>
+		<String Name="SendPrivateMessage">Poslat soukromou zprávu</String>
+		<String Name="SendPublicMessage">Poslat veřejnou zprávu</String>
 		<String Name="Separator">Oddělovač</String>
 		<String Name="Server">Server</String>
 		<String Name="SetPriority">Nastavit prioritu</String>
