@@ -125,7 +125,7 @@ public:
 	QueueItem::SourceList getBadSources(const QueueItem* qi) const { Lock l(cs); return qi->getBadSources(); }
 	size_t getSourcesCount(const QueueItem* qi) const { Lock l(cs); return qi->getSources().size(); }
 
-	bool getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList) throw();
+	bool getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw();
 	Download* getDownload(UserConnection& aSource, string& aMessage) throw();
 	void putDownload(const Download* aDownload, bool finished, bool connectSources = true) throw();
 

@@ -74,8 +74,6 @@ public:
 		int64_t aSize, const string& aFile, const string& aHubName, 
 		const string& ip, TTHValue aTTH, const string& aToken);
 
-	inline void deleteSelf() { decRef(); }
-
 	string getFileName() const;
 	string toSR(const Client& client) const;
 	AdcCommand toRES(char type) const;
@@ -193,9 +191,9 @@ public:
 
 	int imageIndex() const;
 
-	SearchResult* createParent() { return this; }
-	void updateParent(vector<SearchResult*>& v) { parent->hits = v.size(); }
-	const TTHValue& getGroupCond() const { return getTTH(); }
+	inline SearchResult* createParent() { return this; }
+	inline const TTHValue& getGroupCond() const { return getTTH(); }
+	inline void deleteSelf() { decRef(); }
 
 	GETSET(uint8_t, flagImage, FlagImage);
 

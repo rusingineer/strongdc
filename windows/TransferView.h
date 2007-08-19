@@ -193,11 +193,11 @@ private:
 		
 		uint8_t flagImage;
 		int16_t running;
+		int16_t hits;
 
 		ItemInfo* parent;
 		UserPtr user;
 		Status status;
-		size_t childCount;
 		
 		int64_t pos;
 		int64_t size;
@@ -221,8 +221,8 @@ private:
 
 		const tstring getText(uint8_t col) const {
 			switch(col) {
-				case COLUMN_USER: return (childCount <= 1) ? Text::toT(user->getFirstNick()) : (Util::toStringW(childCount) + _T(' ') + TSTRING(USERS));
-				case COLUMN_HUB: return (running == -1) ? WinUtil::getHubNames(user).first : (Util::toStringW(running) + _T(' ') + TSTRING(NUMBER_OF_SEGMENTS));
+				case COLUMN_USER: return (hits == -1) ? Text::toT(user->getFirstNick()) : (Util::toStringW(hits) + _T(' ') + TSTRING(USERS));
+				case COLUMN_HUB: return (hits == -1) ? WinUtil::getHubNames(user).first : (Util::toStringW(running) + _T(' ') + TSTRING(NUMBER_OF_SEGMENTS));
 				case COLUMN_STATUS: return statusString;
 				case COLUMN_TIMELEFT: return (status == STATUS_RUNNING) ? Util::formatSeconds(timeLeft) : Util::emptyStringT;
 				case COLUMN_SPEED: return (status == STATUS_RUNNING) ? (Util::formatBytesW(speed) + _T("/s")) : Util::emptyStringT;
@@ -244,27 +244,15 @@ private:
 		uint8_t imageIndex() const { return static_cast<uint8_t>(!download ? IMAGE_UPLOAD : (!parent ? IMAGE_DOWNLOAD : IMAGE_SEGMENT)); }
 
 		ItemInfo* createParent() {
-	  		ItemInfo* h = new ItemInfo(user, true);
+	  		ItemInfo* h = new ItemInfo(UserPtr(NULL), true);
+			h->running = 0;
+			h->hits = 0;
 			h->target = target;
 			h->statusString = TSTRING(CONNECTING);
 			return h;
 		}
 
-		void updateParent(vector<ItemInfo*>& children) {
-			parent->childCount = children.size();
-			if(childCount == 1) {
-				ItemInfo* i = children.front();
-				parent->user = i->user;
-				parent->running = -1;
-				parent->flagImage = i->flagImage;
-				parent->ip = i->ip;
-			} else {
-				ip = Util::emptyStringT;
-			}
-		}
-
-		const tstring& getGroupCond() const { return target; }
-
+		inline const tstring& getGroupCond() const { return target; }
 		inline void deleteSelf() { delete this; }
 	};
 
@@ -284,8 +272,8 @@ private:
 
 		bool operator==(const ItemInfo& ii) const { return download == ii.download && user == ii.user; }
 
-		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), queueItem(NULL), download(isDownload), transferFailed(isTransferFailed), fileList(false), flagImage(0) { }
-		UpdateInfo(QueueItem* qi, bool isDownload, bool isTransferFailed = false) : updateMask(0), queueItem(qi), download(isDownload), transferFailed(isTransferFailed), fileList(false), flagImage(0) { qi->inc(); }
+		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), queueItem(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0) { }
+		UpdateInfo(QueueItem* qi, bool isDownload, bool isTransferFailed = false) : updateMask(0), queueItem(qi), download(isDownload), transferFailed(isTransferFailed), flagImage(0) { qi->inc(); }
 
 		~UpdateInfo() { if(queueItem) queueItem->dec(); }
 
@@ -296,7 +284,7 @@ private:
 
 		bool download;
 		bool transferFailed;
-		bool fileList;
+		bool multiSource;
 		uint8_t flagImage;		
 		void setRunning(int16_t aRunning) { running = aRunning; updateMask |= MASK_SEGMENT; }
 		int16_t running;

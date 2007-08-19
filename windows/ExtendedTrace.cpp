@@ -28,7 +28,7 @@
 #include "ExtendedTrace.h"
 
 #define BUFFERSIZE		0x200
-#define LIBCOUNT		32
+#define LIBCOUNT		33
 
 TCHAR* crashLibs[LIBCOUNT][2] = {
 	{ L"Vlsp", L"V-One Smartpass" },
@@ -62,7 +62,8 @@ TCHAR* crashLibs[LIBCOUNT][2] = {
 	{ L"msui32", L"Malware MSUI32" },
 	{ L"fsma32", L"F-Secure Management Agent" },
 	{ L"FSLSP", L"F-Secure Antivirus/Internet Security" },
-	{ L"msxq32", L"Trojan.Win32.Agent.bi" }
+	{ L"msxq32", L"Trojan.Win32.Agent.bi" },
+	{ L"CurXP0", L"Stardock CursorXP" }
 };
 
 static void checkBuggyLibrary(PCSTR library) {

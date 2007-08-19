@@ -138,9 +138,7 @@ public:
 		inc();
 		dcassert(chunksInfo == NULL);
 
-		if(BOOLSETTING(AUTODROP_SLOW_SOURCES)) {
-			setFlag(FLAG_AUTODROP);
-		}
+		setFlag(FLAG_AUTODROP);
 		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || isSet(FLAG_CHECK_FILE_LIST) || (size <= MIN_CHUNK_SIZE*2)) {
 			unsetFlag(FLAG_MULTI_SOURCE);
 		}

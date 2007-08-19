@@ -855,7 +855,7 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 	}
 }
 
-bool QueueManager::getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& aSize, int& aFlags, bool& aFileList) throw() {
+bool QueueManager::getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw() {
     Lock l(cs);
     QueueItem* qi = userQueue.getNextAll(aUser);
 	if(qi == NULL)
@@ -864,7 +864,6 @@ bool QueueManager::getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& 
 	aTarget = qi->getTarget();
 	aSize = qi->getSize();
 	aFlags = qi->getFlags();
-	aFileList = qi->isSet(QueueItem::FLAG_USER_LIST) || qi->isSet(QueueItem::FLAG_TESTSUR);
 
 	return true;
 }
@@ -992,7 +991,7 @@ again:
 
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE) && !d->isSet(Download::FLAG_TREE_DOWNLOAD)) {
 		d->setStartPos(freeBlock);
-		q->getChunksInfo()->setDownloadSize(freeBlock, d, !aSource.isSet(UserConnection::FLAG_STEALTH) && useChunks);
+		q->getChunksInfo()->setDownload(freeBlock, d, !aSource.isSet(UserConnection::FLAG_STEALTH) && useChunks);
 	} else {
 		if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && BOOLSETTING(ANTI_FRAG) ) {
 			d->setStartPos(q->getDownloadedBytes());
@@ -1118,7 +1117,7 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool co
 			
 			FileChunksInfo::Ptr fileChunks = FileChunksInfo::Get(&aDownload->getTTH());
 			if(!(fileChunks == (FileChunksInfo*)NULL)){
-				fileChunks->putChunk(aDownload->getStartPos(), aDownload);
+				fileChunks->putChunk(aDownload->getStartPos());
 			}
 		}
 

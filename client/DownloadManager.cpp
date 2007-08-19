@@ -80,7 +80,9 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 			if (d->getSize() > (SETTING(DISCONNECT_FILESIZE) * 1048576)) {
 				if((d->getRunningAverage() < SETTING(DISCONNECT_SPEED) * 1024)) {
 					if(	(((aTick - d->getLastTick())/1000) > (uint32_t)SETTING(DISCONNECT_TIME)) &&
-						(!QueueManager::getInstance()->dropSource(d))) {
+						(!QueueManager::getInstance()->dropSource(d)))
+					{
+							fire(DownloadManagerListener::Failed(), d, STRING(SLOW_USER) + " - " + STRING(DISCONNECTED));
 							continue;
 					}
 				} else {
@@ -441,21 +443,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 				TigerTree tt = d->getTigerTree();
 				if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
 					d->setFile(new MerkleStream(tt, d->getFile(), d->getPos(), d));
-					if(d->isSet(Download::FLAG_OVERLAPPED)) {
-						Lock l(cs);
-						for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); i++) {
-							if(*i != d && (*i)->getStartPos() == d->getStartPos()) {
-								if(((*i)->getFile() != NULL) && ((*i)->getPos() > (*i)->getStartPos())) {
-									try {
-										// flush overlapped chunk to disk
-										(*i)->getFile()->flush();
-									} catch(const Exception&) {
-									}
-								}
-								break;
-							}
-						}
-					}
 				} else {
 					int64_t start = 0;
 					int64_t blockLeft = 0;
@@ -551,7 +538,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			if(d->getPos() == d->getSize()){
 				aSource->setDownload(NULL);
 				removeDownload(d);
-				QueueManager::getInstance()->putDownload(d, false, false);
+				QueueManager::getInstance()->putDownload(d, false);
 				aSource->setLineMode(0);
 				checkDownloads(aSource);
 			}else{
@@ -662,7 +649,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				
 				aSource->setDownload(NULL);
 				removeDownload(d);
-				QueueManager::getInstance()->putDownload(d, false, false);
+				QueueManager::getInstance()->putDownload(d, false);
 				checkDownloads(aSource);
 			}
 			aSource->setLineMode(0);
@@ -862,14 +849,8 @@ void DownloadManager::removeDownload(Download* d) {
 			}
 		}
 		
-		OutputStream* f = d->getFile();
-		
-		{
-			Lock l(cs);
-			d->setFile(NULL);
-		}
-		
-		delete f;
+		delete d->getFile();
+		d->setFile(NULL);		
 
 		if(d->isSet(Download::FLAG_ANTI_FRAG)) {
 			d->unsetFlag(Download::FLAG_ANTI_FRAG);

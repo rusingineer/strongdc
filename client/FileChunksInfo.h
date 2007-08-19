@@ -73,6 +73,13 @@ private:
 	// allow overlapped download the same pending chunk 
 	// when all running chunks could not be split
 	uint8_t overlappedCount;
+
+	struct NeededPart {
+		Chunk* chunk;
+		Chunk::Map::iterator iter1;
+		vector<int64_t>::const_iterator iter2;
+	};
+
 };
 
 /**
@@ -134,17 +141,12 @@ public:
 	/**
      * Release the chunk with start offset
      */
-	void putChunk(int64_t, const Download* = NULL);
+	void putChunk(int64_t);
 
 	/** 
 	 * Specify a Download to a running chunk
 	 */
-	void setDownload(int64_t, Download*, bool) throw(Exception);
-
-	/** 
-	 * Sets download size according to its chunk
-	 */
-	void setDownloadSize(int64_t, Download*, bool);
+	 void setDownload(int64_t, Download*, bool);
 
 	/**
      * Convert all unfinished chunks range data to a string, eg. "0 5000 10000 30000 "

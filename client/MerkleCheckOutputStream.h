@@ -34,8 +34,6 @@ public:
 			fileChunks = FileChunksInfo::Get(&aTree.getRoot());
 			dcassert(!(fileChunks == (FileChunksInfo*)NULL));
 
-			fileChunks->setDownload(d->getStartPos(), d, true);
-
 			bufPos = 0;
 			start = start + skippingBytes;
 		}
@@ -145,8 +143,6 @@ public:
 				int64_t offset = (int64_t)old * (int64_t)(real.getBlockSize()) - 1;
 				fileChunks->verifyBlock(offset, real, d->getTempTarget());
 			}
-			
-			fileChunks->setDownload(d->getStartPos(), d, false);
 		}
 		return ret;
 	}
