@@ -277,7 +277,6 @@
 		<String Name="Joins">Joins: </String>
 		<String Name="Kb">kB</String>
 		<String Name="Kbps">kB/s</String>
-		<String Name="KbpsDisable">kB/s (0 = disable)</String>
 		<String Name="KickUser">Kick user(s)</String>
 		<String Name="KickUserFile">Kick user(s) with filename</String>
 		<String Name="LargerTargetFileExists">A file of equal or larger size already exists at the target location</String>

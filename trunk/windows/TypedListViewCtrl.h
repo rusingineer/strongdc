@@ -710,29 +710,47 @@ public:
 		return i != parents.end() ? &((*i).second) : NULL;
 	}
 
-	void insertGroupedItem(T* item, bool autoExpand, bool extra = false) {
+	void insertGroupedItem(T* item, bool autoExpand) {
 		T* parent = NULL;
-		ParentPair* pp = NULL;
-		
-		if(!extra)
-			pp = findParentPair(item->getGroupCond());
+		ParentPair* pp = findParentPair(item->getGroupCond());
 
 		int pos = -1;
 
 		if(pp == NULL) {
-			parent = item->createParent();
+			parent = item;
 
 			ParentPair newPP = { parent };
-			pp = &(parents.insert(make_pair(const_cast<key*>(&parent->getGroupCond()), newPP)).first->second);
+			parents.insert(make_pair(const_cast<key*>(&parent->getGroupCond()), newPP));
 
 			parent->parent = NULL; // ensure that parent of this item is really NULL
-			pos = insertItem(getSortPos(parent), parent, parent->imageIndex());
-
-			if(parent != item) {
+			insertItem(getSortPos(parent), parent, parent->imageIndex());
+			return;
+		} else if(pp->children.empty()) {
+			T* oldParent = pp->parent;
+			parent = oldParent->createParent();
+			if(parent != oldParent) {
 				uniqueParent = true;
+				parents.erase(const_cast<key*>(&oldParent->getGroupCond()));
+				deleteItem(oldParent);
+
+				ParentPair newPP = { parent };
+				pp = &(parents.insert(make_pair(const_cast<key*>(&parent->getGroupCond()), newPP)).first->second);
+
+				parent->parent = NULL; // ensure that parent of this item is really NULL
+				oldParent->parent = parent;
+				pp->children.push_back(oldParent); // mark old parent item as a child
+
+				pos = insertItem(getSortPos(parent), parent, parent->imageIndex());
 			} else {
 				uniqueParent = false;
-				return;
+				pos = findItem(parent);
+			}
+
+			if(autoExpand){
+				SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+				parent->collapsed = false;
+			} else {
+				SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 			}
 		} else {
 			parent = pp->parent;
@@ -741,20 +759,11 @@ public:
 
 		pp->children.push_back(item);
 		item->parent = parent;
-		item->updateParent(pp->children);
+		item->parent->hits = static_cast<int16_t>(pp->children.size());
 
 		if(pos != -1) {
-			size_t totalChildren = pp->children.size();
-			if(totalChildren == (size_t)(uniqueParent ? 2 : 1)) {
-				if(autoExpand){
-					SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-					parent->collapsed = false;
-					insertChild(item, pos + totalChildren);
-				} else {
-					SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
-				}
-			} else if(!parent->collapsed) {
-				insertChild(item, pos + totalChildren);
+			if(!parent->collapsed) {
+				insertChild(item, pos + pp->children.size());
 			}
 			updateItem(pos);
 		}
@@ -770,6 +779,7 @@ public:
 			pp->children.clear();
 			parents.erase(const_cast<key*>(&parent->getGroupCond()));
 		}
+		deleteItem(parent);
 	}
 
 	void removeGroupedItem(T* item, bool removeFromMemory = true) {
@@ -779,35 +789,39 @@ public:
 			T* parent = item->parent;
 			ParentPair* pp = findParentPair(parent->getGroupCond());
 
+			deleteItem(item);
+
 			vector<T*>::iterator n = find(pp->children.begin(), pp->children.end(), item);
 			if(n != pp->children.end()) {
 				pp->children.erase(n);
+				parent->hits = static_cast<int16_t>(pp->children.size());
 			}
+	
 			if(uniqueParent) {
+				dcassert(!pp->children.empty());
 				if(pp->children.size() == 1) {
-					if(!parent->collapsed) {
-						parent->collapsed = true;
-						deleteItem(pp->children.front());
-					}
-					SetItemState(findItem(parent), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
-				} else if(pp->children.empty()) {
-					removeParent(parent);
+					T* oldParent = parent;
+					parent = pp->children.front();
+
+					deleteItem(oldParent);
+					parents.erase(const_cast<key*>(&oldParent->getGroupCond()));
+					oldParent->deleteSelf();
+
+					ParentPair newPP = { parent };
+					parents.insert(make_pair(const_cast<key*>(&parent->getGroupCond()), newPP));
+
+					parent->parent = NULL; // ensure that parent of this item is really NULL
 					deleteItem(parent);
-					item->parent = NULL;
-					parent->deleteSelf();
+					insertItem(getSortPos(parent), parent, parent->imageIndex());
 				}
 			} else {
 				if(pp->children.empty()) {
 					SetItemState(findItem(parent), INDEXTOSTATEIMAGEMASK(0), LVIS_STATEIMAGEMASK);
 				}
 			}
-			if(item->parent) {
-				item->updateParent(pp->children);
-				updateItem(item->parent);
-			}
-		}
 
-		deleteItem(item);
+			updateItem(parent);
+		}
 
 		if(removeFromMemory)
 			item->deleteSelf();

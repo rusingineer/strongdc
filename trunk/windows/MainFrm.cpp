@@ -420,6 +420,7 @@ HWND MainFrame::createToolbar() {
 			largeImagesHot.CreateFromImage(Text::toT(SETTING(TOOLBARHOTIMAGE)).c_str(), 20, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED | LR_LOADFROMFILE);
 
 		ctrlToolbar.Create(m_hWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS, 0, ATL_IDW_TOOLBAR);
+		ctrlToolbar.SetExtendedStyle(TBSTYLE_EX_MIXEDBUTTONS);
 		ctrlToolbar.SetImageList(largeImages);
 		ctrlToolbar.SetHotImageList(largeImagesHot);
 		tbarcreated = true;
@@ -1253,6 +1254,10 @@ void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		lastUpdate = aTick;
 		lastUp = Socket::getTotalUp();
 		lastDown = Socket::getTotalDown();
+
+		if(SETTING(DISCONNECT_SPEED) < 1) {
+			SettingsManager::getInstance()->set(SettingsManager::DISCONNECT_SPEED, 1);
+		}
 
 		if(BOOLSETTING(THROTTLE_ENABLE)) {
 			// Limitery sem a tam, vsude kam se podivam :o)

@@ -121,8 +121,8 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			appendUserItems(transferMenu);
 			transferMenu.AppendMenu(MF_SEPARATOR);
 			transferMenu.AppendMenu(MF_STRING, IDC_FORCE, CTSTRING(FORCE_ATTEMPT));
-			transferMenu.AppendMenu(MF_SEPARATOR);
 			if(ii->download) {
+				transferMenu.AppendMenu(MF_SEPARATOR);
 				transferMenu.AppendMenu(MF_STRING, IDC_SEARCH_ALTERNATES, CTSTRING(SEARCH_FOR_ALTERNATES));
 				transferMenu.AppendMenu(MF_STRING, IDC_MENU_SLOWDISCONNECT, CTSTRING(SETCZDC_DISCONNECTING_ENABLE));
 				transferMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)previewMenu, CTSTRING(PREVIEW_MENU));
@@ -234,10 +234,10 @@ void TransferView::runUserCommand(UserCommand& uc) {
 LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		const ItemInfo* ii = ctrlTransfers.getItemData(i);
+		ItemInfo* ii = ctrlTransfers.getItemData(i);
 		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(CONNECTING_FORCED));
 
-		if(ii->parent == NULL) {
+		if(ii->parent == NULL && ii->hits != -1) {
 			const vector<ItemInfo*>& children = ctrlTransfers.findChildren(ii->getGroupCond());
 			for(vector<ItemInfo*>::const_iterator j = children.begin(); j != children.end(); ++j) {
 				ItemInfo* ii = *j;
@@ -250,6 +250,7 @@ LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 				ConnectionManager::getInstance()->force(ii->user);
 			}
 		} else {
+			ii->transferFailed = false;
 			ConnectionManager::getInstance()->force(ii->user);
 		}
 	}
@@ -257,7 +258,7 @@ LRESULT TransferView::onForce(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 }
 
 void TransferView::ItemInfo::removeAll() {
-	if(childCount <= 1) {
+	if(hits <= 1) {
 		QueueManager::getInstance()->removeSource(user, QueueItem::Source::FLAG_REMOVED);
 	} else {
 		if(!BOOLSETTING(CONFIRM_DELETE) || ::MessageBox(0, _T("Do you really want to remove this item?"), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
@@ -321,6 +322,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			// Draw the background and border of the bar	
 			if(ii->size == 0) ii->size = 1;		
 			
+			COLORREF oldcol;
 			if(BOOLSETTING(PROGRESSBAR_ODC_STYLE)) {
 				// New style progressbar tweaks the current colors
 				HLSTRIPLE hls_bk = OperaColors::RGB2HLS(cd->clrTextBk);
@@ -347,9 +349,24 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				// Reset bg (brush)
 				DeleteObject(::SelectObject(dc, oldBg));
 
+				// Draw the text over the entire item
+                oldcol = ::SetTextColor(dc, clr);
+				rc.left += 6;
+                ::DrawText(dc, ii->statusString.c_str(), ii->statusString.length(), rc, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
+				rc.left -= 6;
+
 				COLORREF a, b;
 				OperaColors::EnlightenFlood(!ii->parent ? clr : SETTING(PROGRESS_SEGMENT_COLOR), a, b);
 				OperaColors::FloodFill(cdc, rc.left+1, rc.top+1,  rc.left + (int) ((int64_t)rc.Width() * ii->actual / ii->size), rc.bottom-1, a, b);
+				
+				// Draw the text only over the bar and with correct color
+				::SetTextColor(dc, SETTING(PROGRESS_OVERRIDE_COLORS2) ? 
+					(ii->download ? SETTING(PROGRESS_TEXT_COLOR_DOWN) : SETTING(PROGRESS_TEXT_COLOR_UP)) : 
+					OperaColors::TextFromBackground(clr));
+
+				rc.right = rc.left + (int) ((int64_t)rc.Width() * ii->actual / ii->size) + 1;
+				rc.left += 6;
+                ::DrawText(dc, ii->statusString.c_str(), ii->statusString.length(), rc, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 			} else {
 				CBarShader statusBar(rc.bottom - rc.top, rc.right - rc.left, SETTING(PROGRESS_BACK_COLOR), ii->size);
 
@@ -363,18 +380,18 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 					statusBar.FillRange(ii->actual, ii->pos, SETTING(PROGRESS_COMPRESS_COLOR));
 
 				statusBar.Draw(cdc, rc.top, rc.left, SETTING(PROGRESS_3DDEPTH));
+
+				// Get the color of this text bar
+				oldcol = ::SetTextColor(dc, SETTING(PROGRESS_OVERRIDE_COLORS2) ? 
+					(ii->download ? SETTING(PROGRESS_TEXT_COLOR_DOWN) : SETTING(PROGRESS_TEXT_COLOR_UP)) : 
+					OperaColors::TextFromBackground(clr));
+
+				rc.left += 6;
+				rc.right -= 2;
+				LONG top = rc.top + (rc.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2 + 1;
+				::ExtTextOut(dc, rc.left, top, ETO_CLIPPED, rc, ii->statusString.c_str(), ii->statusString.length(), NULL);
 			}
-
-			// Get the color of this text bar
-			COLORREF oldcol = ::SetTextColor(dc, SETTING(PROGRESS_OVERRIDE_COLORS2) ? 
-				(ii->download ? SETTING(PROGRESS_TEXT_COLOR_DOWN) : SETTING(PROGRESS_TEXT_COLOR_UP)) : 
-				OperaColors::TextFromBackground(clr));
-
-			rc.left += 6;
-			rc.right -= 2;
-			LONG top = rc.top + (rc.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2 + 1;
-			::ExtTextOut(dc, rc.left, top, ETO_CLIPPED, rc, ii->statusString.c_str(), ii->statusString.length(), NULL);
-
+	
 			SelectObject(dc, oldFont);
 			::SetTextColor(dc, oldcol);
 
@@ -499,9 +516,9 @@ int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, u
 
 	switch(col) {
 		case COLUMN_USER: {
-			if(a->childCount == b->childCount)
+			if(a->hits == b->hits)
 				return lstrcmpi(a->getText(COLUMN_USER).c_str(), b->getText(COLUMN_USER).c_str());
-			return compare(a->childCount, b->childCount);						
+			return compare(a->hits, b->hits);						
 		}
 		case COLUMN_HUB: {
 			if(a->running == b->running)
@@ -518,21 +535,18 @@ int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, u
 }
 
 TransferView::ItemInfo* TransferView::findItem(const UpdateInfo& ui, int& pos) const {
-	if(ui.download) {
-		for(ItemInfoList::ParentMap::const_iterator k = ctrlTransfers.parents.begin(); k != ctrlTransfers.parents.end(); ++k) {
-			for(vector<ItemInfo*>::const_iterator j = (*k).second.children.begin(); j != (*k).second.children.end(); j++) {
-				ItemInfo* ii = *j;
+	for(int j = 0; j < ctrlTransfers.GetItemCount(); ++j) {
+		ItemInfo* ii = ctrlTransfers.getItemData(j);
+		if(ui == *ii) {
+			pos = j;
+			return ii;
+		} else if(ui.download && ii->download && ii->parent == NULL) {
+			const vector<ItemInfo*>& children = ctrlTransfers.findChildren(ii->getGroupCond());
+			for(vector<ItemInfo*>::const_iterator k = children.begin(); k != children.end(); k++) {
+				ItemInfo* ii = *k;
 				if(ui == *ii) {
 					return ii;
 				}
-			}
-		}
-	} else {
-		for(int j = 0; j < ctrlTransfers.GetItemCount(); ++j) {
-			ItemInfo* ii = ctrlTransfers.getItemData(j);
-			if(ui == *ii) {
-				pos = j;
-				return ii;
 			}
 		}
 	}
@@ -546,13 +560,13 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 		ctrlTransfers.SetRedraw(FALSE);
 	}
 
-	for(TaskQueue::Iter i = t.begin(); i != t.end(); ++i) {	
+	for(TaskQueue::Iter i = t.begin(); i != t.end(); ++i) {
 		if(i->first == ADD_ITEM) {
 			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
 			ItemInfo* ii = new ItemInfo(ui->user, ui->download);
 			ii->update(*ui);
 			if(ii->download) {
-				ctrlTransfers.insertGroupedItem(ii, false, ui->fileList);
+				ctrlTransfers.insertGroupedItem(ii, false);
 			} else {
 				ctrlTransfers.insertItem(ii, IMAGE_UPLOAD);
 			}
@@ -576,120 +590,108 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			int pos = -1;
 			ItemInfo* ii = findItem(*ui, pos);
 			if(ii) {
-				ii->update(*ui);
 				if(ui->download) {
-					if(ii->parent) {
-						ItemInfo* parent = ii->parent;
-						if(ui->updateMask && UpdateInfo::MASK_FILE) {
-							if(parent->target != ii->target) {
-								ctrlTransfers.removeGroupedItem(ii, false);
-								ctrlTransfers.insertGroupedItem(ii, false);
-								parent = ii->parent;
-							}
-						}
-						if(ui->updateMask & UpdateInfo::MASK_STATUS_STRING) {
-							if(parent->status == ItemInfo::STATUS_WAITING) {
-								parent->statusString = ii->statusString;
-								ctrlTransfers.updateItem(ctrlTransfers.findItem(parent), COLUMN_STATUS);
-							}
-						}
-						if(!parent->collapsed) {
-							updateItem(ctrlTransfers.findItem(ii), ui->updateMask);
-						}
-						continue;
+					ItemInfo* parent = ii->parent ? ii->parent : ii;
+
+					if(	(ui->status == ItemInfo::STATUS_RUNNING) &&
+						(parent->hits == -1 && ui->multiSource))
+					{
+						ui->updateMask &= ~UpdateInfo::MASK_POS;
+						ui->updateMask &= ~UpdateInfo::MASK_ACTUAL;
+						ui->updateMask &= ~UpdateInfo::MASK_SIZE;
+						ui->updateMask &= ~UpdateInfo::MASK_STATUS_STRING;
+						ui->updateMask &= ~UpdateInfo::MASK_TIMELEFT;
 					}
+
+					bool changeParent = (ui->updateMask & UpdateInfo::MASK_FILE) && (ui->target != ii->target);
+					if(changeParent)
+						ctrlTransfers.removeGroupedItem(ii, false);
+
+					ii->update(*ui);
+
+					if(changeParent) {
+						ctrlTransfers.insertGroupedItem(ii, false);
+						parent = ii->parent ? ii->parent : ii;
+					}
+
+					if(ii == parent || !parent->collapsed) {
+						updateItem(ctrlTransfers.findItem(ii), ui->updateMask);
+					}
+					continue;
 				}
+				ii->update(*ui);
 				dcassert(pos != -1);
 				updateItem(pos, ui->updateMask);
 			}
 		} else if(i->first == UPDATE_PARENT) {
 			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
+			ItemInfoList::ParentPair* pp = ctrlTransfers.findParentPair(ui->target);
 			
-			ItemInfo* parent = ctrlTransfers.findParent(ui->target);
-			if(parent) {
-				const vector<ItemInfo*>& children = ctrlTransfers.findChildren(parent->getGroupCond());
-				uint8_t segs = 0;
+			if(!pp || (pp->parent->hits == -1 && !ui->queueItem->isSet(QueueItem::FLAG_MULTI_SOURCE))) 
+				continue;
+			
+			double ratio = 0;
+			int64_t totalSpeed = 0;
+			int16_t segs = 0;
 
-				if(ui->status != ItemInfo::STATUS_WAITING) {
-					size_t totalSpeed = 0; double ratio = 0; int64_t size = -1;
-					tstring ip; uint8_t flagImage = 0; ItemInfo* l = NULL;
-
-					for(vector<ItemInfo*>::const_iterator k = children.begin(); k != children.end(); ++k) {
-						l = *k;
-						ip = l->ip;
-						flagImage = l->flagImage;
-
-						if(l->status == ItemInfo::STATUS_RUNNING) {
+			if(ui->status == ItemInfo::STATUS_RUNNING) {
+				if(pp->parent->hits == -1) {
+					segs = pp->parent->status == ItemInfo::STATUS_RUNNING ? 1 : 0;
+					ratio = 1.00;
+					totalSpeed = pp->parent->speed;
+				} else {
+					for(vector<ItemInfo*>::const_iterator k = pp->children.begin(); k != pp->children.end(); ++k) {
+						if((*k)->status == ItemInfo::STATUS_RUNNING) {
 							segs++;
 
-							totalSpeed += (size_t)l->speed;
-							ratio += l->getRatio();
+							totalSpeed += (*k)->speed;
+							ratio += (*k)->getRatio();
 
-							size = l->size;
 							if(!ui->queueItem->isSet(QueueItem::FLAG_MULTI_SOURCE)) break;
 						}
-					}				
-					
-					ratio = segs > 0 ? ratio / segs : 1.00;
-
-					if(ui->size == -1) ui->setSize(size);
-
-					if(parent->status == ItemInfo::STATUS_WAITING && (segs > 0)) {
-						parent->fileBegin = GET_TICK();
-						ui->setStatus(ItemInfo::STATUS_RUNNING);
-
-						if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-							PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-
-						if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
-							MainFrame::getMainFrame()->ShowBalloonTip((
-								TSTRING(FILE) + _T(": ")+ Util::getFileName(parent->target) + _T("\n")+
-								TSTRING(USER) + _T(": ") + Text::toT(parent->user->getFirstNick())).c_str(), CTSTRING(DOWNLOAD_STARTING));
-						}
 					}
-
-					ui->setSpeed(totalSpeed);
-					ui->setTimeLeft((totalSpeed > 0) ? ((ui->size - ui->pos) / totalSpeed) : 0);
-					ui->setActual((int64_t)((double)ui->pos * ratio));
-					ui->setStatus(segs > 0 ? ItemInfo::STATUS_RUNNING : ItemInfo::STATUS_WAITING);
-					ui->setIP(children.size() == 1 ? ip : Util::emptyStringT, flagImage);
-					ui->queueItem->setAverageSpeed(totalSpeed);
-
-					if(ui->status == ItemInfo::STATUS_RUNNING) {
-						uint64_t time = GET_TICK() - parent->fileBegin;
-						if(time > 800) {
-							if(ui->queueItem->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-								AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
-								_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(ui->pos).c_str(), 
-									(double)ui->pos*100.0/(double)ui->size, Util::formatSeconds(time/1000).c_str());
-							
-								tstring statusString;
-								if(ratio < 1.00000000) {
-									statusString = _T("[Z] ");
-								}
-								statusString += buf;
-								ui->setStatusString(statusString);
-							} else {
-								ui->setStatusString(l->statusString);
-							}
-						} else {
-							ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
-						}
-					}			
-				} else {
-					if(children.size() > 1) {
-						ui->setStatusString(children.front()->statusString);
-					}
-
-					ui->queueItem->setAverageSpeed(0);
 				}
 
-				int16_t running = children.size() == 1 ? -1 : segs;
-				if(running != parent->running) ui->setRunning(running);
+				if(pp->parent->status == ItemInfo::STATUS_WAITING) {
+					pp->parent->fileBegin = GET_TICK();
 
-				parent->update(*ui);
-				updateItem(ctrlTransfers.findItem(parent), ui->updateMask);
+					if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+						PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+					if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
+						MainFrame::getMainFrame()->ShowBalloonTip((
+							TSTRING(FILE) + _T(": ") + Util::getFileName(pp->parent->target)).c_str(), CTSTRING(DOWNLOAD_STARTING));
+					}
+				}
+
+				if(segs == 0)
+					continue;
+
+				uint64_t time = GET_TICK() - pp->parent->fileBegin;
+				if(time > 1000) {
+					AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
+						_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(ui->pos).c_str(), 
+						(double)ui->pos*100.0/(double)ui->size, Util::formatSeconds(time/1000).c_str());
+
+					ui->setStatusString(tstring(buf));
+				} else {
+					ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
+				}
+			} else {
+				segs = 0;
+				ui->queueItem->setAverageSpeed(0);
 			}
+			
+			if(segs != pp->parent->running)
+				ui->setRunning(segs);
+
+			ui->setActual((int64_t)((double)ui->pos * ratio));
+			ui->setTimeLeft((totalSpeed > 0) ? ((ui->size - ui->pos) / totalSpeed) : 0);
+			ui->setSpeed(totalSpeed);
+			ui->queueItem->setAverageSpeed(static_cast<size_t>(totalSpeed));
+
+			pp->parent->update(*ui);
+			updateItem(ctrlTransfers.findItem(pp->parent), ui->updateMask);
 		}
 	}
 
@@ -719,7 +721,7 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	
 TransferView::ItemInfo::ItemInfo(const UserPtr& u, bool aDownload) : user(u), download(aDownload), transferFailed(false),
 	status(STATUS_WAITING), pos(0), size(0), actual(0), speed(0), timeLeft(0), ip(Util::emptyStringT), target(Util::emptyStringT),
-	flagImage(0), collapsed(true), parent(NULL), childCount(0), statusString(Util::emptyStringT), running(-1) { }
+	flagImage(0), collapsed(true), parent(NULL), hits(-1), statusString(Util::emptyStringT), running(0) { }
 
 void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	if(ui.updateMask & UpdateInfo::MASK_STATUS) {
@@ -792,7 +794,7 @@ void TransferView::on(ConnectionManagerListener::Added, const ConnectionQueueIte
 
 	if(ui->download) {
 		string aTarget; int64_t aSize; int aFlags;
-		if(QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags, ui->fileList)) {
+		if(QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags)) {
 			ui->setTarget(Text::toT(aTarget));
 			ui->setSize(aSize);
 		}
@@ -808,7 +810,7 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, const Connection
 	UpdateInfo* ui = new UpdateInfo(aCqi->getUser(), aCqi->getDownload());
 	string aTarget;	int64_t aSize; int aFlags = 0;
 
-	if(QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags, ui->fileList)) {
+	if(QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags)) {
 		ui->setTarget(Text::toT(aTarget));
 		ui->setSize(aSize);
 	}
@@ -844,7 +846,8 @@ void TransferView::on(DownloadManagerListener::Starting, const Download* aDownlo
 	ui->setSize(chunkInfo ? aDownload->getChunkSize() : aDownload->getSize());
 	ui->setTarget(Text::toT(aDownload->getTarget()));
 	ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
-	
+	ui->multiSource = chunkInfo;
+
 	string ip = aDownload->getUserConnection().getRemoteIp();
 	string country = Util::getIpCountry(ip);
 	if(country.empty()) {
@@ -868,10 +871,12 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		bool chunkInfo = d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD);
 		
 		UpdateInfo* ui = new UpdateInfo(d->getUser(), true);
+		ui->setStatus(ItemInfo::STATUS_RUNNING);
 		ui->setActual(chunkInfo ? d->getActual() : d->getStartPos() + d->getActual());
 		ui->setPos(chunkInfo ? d->getTotal() : d->getPos());
 		ui->setTimeLeft(d->getSecondsLeft());
 		ui->setSpeed(d->getRunningAverage());
+		ui->multiSource = chunkInfo;
 
 		if(chunkInfo) {
 			ui->setSize(d->isSet(Download::FLAG_MULTI_CHUNK) ? d->getChunkSize() : d->getSize());
@@ -1176,13 +1181,13 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 	ui->setPos(qi->getDownloadedBytes());
 	ui->setActual(ui->pos);
 	ui->setSize(qi->getSize());
-	ui->setStatus(qi->getStatus() == QueueItem::STATUS_WAITING ? ItemInfo::STATUS_WAITING : ItemInfo::STATUS_RUNNING);
+	ui->setStatus(qi->getStatus() == QueueItem::STATUS_RUNNING ? ItemInfo::STATUS_RUNNING : ItemInfo::STATUS_WAITING);
 
 	speak(UPDATE_PARENT, ui);
 }
 
 void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const string&, int64_t) throw() {
-	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true);
+	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true, true);
 	ui->setTarget(Text::toT(qi->getTarget()));
 	ui->setPos(0);
 	ui->setActual(0);
@@ -1199,6 +1204,7 @@ void TransferView::on(QueueManagerListener::Removed, const QueueItem* qi) throw(
 	ui->setPos(0);
 	ui->setActual(0);
 	ui->setTimeLeft(0);
+	ui->setStatusString(TSTRING(DISCONNECTED));
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 
 	speak(UPDATE_PARENT, ui);

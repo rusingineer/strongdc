@@ -1,3 +1,11 @@
+** svn323
+	added "Stardock CursorXP" to crash libraries
+	removed slow chunk overlapping, because it's stupid and works very bad
+	selecting random chunk position for partial sources
+	slow downloads disconnecting is globally always on and can't be set below 1kB/s
+	don't group single items in TreeListView
+	changes in TransferView
+
 ** svn322
 	some other menu stuff
 	removed autodrop slow sources (slow chunk overlapping will take over its function)

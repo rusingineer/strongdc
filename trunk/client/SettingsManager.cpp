@@ -91,7 +91,7 @@ const string SettingsManager::settingTags[] =
 	"DisconnectSpeed", "DisconnectFileSpeed", "DisconnectTime", "RemoveSpeed",
 	"ProgressOverrideColors", "Progress3DDepth", "ProgressOverrideColors2",
 	"MenubarTwoColors", "MenubarLeftColor", "MenubarRightColor", "MenubarBumped", 
-	"AutoDropSlowSources", "DisconnectFileSize", "UploadQueueFrameShowTree",
+	"DisconnectFileSize", "UploadQueueFrameShowTree",
 	"SegmentsManual", "NumberOfSegments", "PercentFakeShareTolerated",
 	"AutoUpdateIP", "MaxHashSpeed", "GetUserCountry", "DisableCZDiacritic",
 	"DebugCommands", "UseAutoPriorityByDefault", "UseOldSharingUI",
@@ -510,7 +510,6 @@ SettingsManager::SettingsManager()
 	setDefault(FILTER_ENTER, false);
 	setDefault(ENABLE_REAL_UPLOAD_QUEUE, true);
 
-	setDefault(AUTODROP_SLOW_SOURCES, true);
 	setDefault(DROP_MULTISOURCE_ONLY, true);
 	setDefault(DISCONNECT_SPEED, 5);
 	setDefault(DISCONNECT_FILE_SPEED, 15);

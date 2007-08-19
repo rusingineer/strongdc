@@ -276,7 +276,6 @@ enum Strings { // @DontAdd
 	JOINS, // "Joins: "
 	KB, // "kB"
 	KBPS, // "kB/s"
-	KBPS_DISABLE, // "kB/s (0 = disable)"
 	KICK_USER, // "Kick user(s)"
 	KICK_USER_FILE, // "Kick user(s) with filename"
 	LARGER_TARGET_FILE_EXISTS, // "A file of equal or larger size already exists at the target location"

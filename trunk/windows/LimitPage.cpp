@@ -9,18 +9,18 @@
 PropPage::TextItem LimitPage::texts[] = {
 	{ IDC_THROTTLE_ENABLE, ResourceManager::SETCZDC_ENABLE_LIMITING },
 	{ IDC_CZDC_TRANSFER_LIMITING, ResourceManager::SETCZDC_TRANSFER_LIMITING },
-	{ IDC_CZDC_UP_SPEEED, ResourceManager::SETCZDC_UPLOAD_SPEED },
-	{ IDC_CZDC_UP_SPEEED1, ResourceManager::SETCZDC_UPLOAD_SPEED },
+	{ IDC_CZDC_UP_SPEED, ResourceManager::SETCZDC_UPLOAD_SPEED },
+	{ IDC_CZDC_UP_SPEED1, ResourceManager::SETCZDC_UPLOAD_SPEED },
 	{ IDC_SETTINGS_KBPS1, ResourceManager::KBPS },
 	{ IDC_SETTINGS_KBPS2, ResourceManager::KBPS },
 	{ IDC_SETTINGS_KBPS3, ResourceManager::KBPS },
 	{ IDC_SETTINGS_KBPS4, ResourceManager::KBPS },
-	{ IDC_SETTINGS_KBPS5, ResourceManager::KBPS_DISABLE },
+	{ IDC_SETTINGS_KBPS5, ResourceManager::KBPS },
 	{ IDC_SETTINGS_KBPS6, ResourceManager::KBPS },
 	{ IDC_SETTINGS_KBPS7, ResourceManager::KBPS },
 	{ IDC_SETTINGS_MINUTES, ResourceManager::SECONDS },
-	{ IDC_CZDC_DW_SPEEED, ResourceManager::SETCZDC_DOWNLOAD_SPEED },
-	{ IDC_CZDC_DW_SPEEED1, ResourceManager::SETCZDC_DOWNLOAD_SPEED },
+	{ IDC_CZDC_DW_SPEED, ResourceManager::SETCZDC_DOWNLOAD_SPEED },
+	{ IDC_CZDC_DW_SPEED1, ResourceManager::SETCZDC_DOWNLOAD_SPEED },
 	{ IDC_TIME_LIMITING, ResourceManager::SETCZDC_ALTERNATE_LIMITING },
 	{ IDC_CZDC_TO, ResourceManager::SETCZDC_TO },
 	{ IDC_CZDC_SECONDARY_TRANSFER, ResourceManager::SETCZDC_SECONDARY_LIMITING },
@@ -31,7 +31,6 @@ PropPage::TextItem LimitPage::texts[] = {
 	{ IDC_CZDC_I_DOWN_SPEED, ResourceManager::SETCZDC_I_DOWN_SPEED },
 	{ IDC_CZDC_TIME_DOWN, ResourceManager::SETCZDC_TIME_DOWN },
 	{ IDC_CZDC_H_DOWN_SPEED, ResourceManager::SETCZDC_H_DOWN_SPEED },
-	{ IDC_DISCONNECTING_ENABLE, ResourceManager::SETCZDC_DISCONNECTING_ENABLE },
 	{ IDC_CZDC_MIN_FILE_SIZE, ResourceManager::SETCZDC_MIN_FILE_SIZE },
 	{ IDC_SETTINGS_MB, ResourceManager::MB },
 	{ IDC_REMOVE_IF, ResourceManager::NEW_DISCONNECT },
@@ -50,7 +49,6 @@ PropPage::Item LimitPage::items[] = {
 	{ IDC_I_DOWN_SPEED, SettingsManager::DISCONNECT_SPEED, PropPage::T_INT },
 	{ IDC_TIME_DOWN, SettingsManager::DISCONNECT_TIME, PropPage::T_INT },
 	{ IDC_H_DOWN_SPEED, SettingsManager::DISCONNECT_FILE_SPEED, PropPage::T_INT },
-	{ IDC_DISCONNECTING_ENABLE, SettingsManager::AUTODROP_SLOW_SOURCES, PropPage::T_BOOL },
 	{ IDC_SEGMENTED_ONLY, SettingsManager::DROP_MULTISOURCE_ONLY, PropPage::T_BOOL },
 	{ IDC_MIN_FILE_SIZE, SettingsManager::DISCONNECT_FILESIZE, PropPage::T_INT },
 	{ IDC_REMOVE_IF_BELOW, SettingsManager::REMOVE_SPEED, PropPage::T_INT },
@@ -64,13 +62,13 @@ LRESULT LimitPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 
 	CUpDownCtrl spin;
 	spin.Attach(GetDlgItem(IDC_I_DOWN_SPEED_SPIN));
-	spin.SetRange32(0, 99999);
-	spin.Detach(); 
-	spin.Attach(GetDlgItem(IDC_TIME_DOWN_SPIN));
 	spin.SetRange32(1, 99999);
 	spin.Detach(); 
+	spin.Attach(GetDlgItem(IDC_TIME_DOWN_SPIN));
+	spin.SetRange32(10, 180);
+	spin.Detach(); 
 	spin.Attach(GetDlgItem(IDC_H_DOWN_SPEED_SPIN));
-	spin.SetRange32(0, 99999);
+	spin.SetRange32(0, 4096);
 	spin.Detach(); 
 	spin.Attach(GetDlgItem(IDC_UPLOADSPEEDSPIN));
 	spin.SetRange32(0, 99999);
@@ -85,7 +83,7 @@ LRESULT LimitPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	spin.SetRange32(0, 99999);
 	spin.Detach(); 
 	spin.Attach(GetDlgItem(IDC_MIN_FILE_SIZE_SPIN));
-	spin.SetRange32(0, 99999);
+	spin.SetRange32(0, 4096);
 	spin.Detach(); 
 	spin.Attach(GetDlgItem(IDC_REMOVE_SPIN));
 	spin.SetRange32(0, 99999);
@@ -170,25 +168,12 @@ void LimitPage::fixControls() {
 	::EnableWindow(GetDlgItem(IDC_UPLOADSPEEDSPIN_TIME), state);
 	::EnableWindow(GetDlgItem(IDC_MX_DW_SP_LMT_TIME), state);
 	::EnableWindow(GetDlgItem(IDC_DOWNLOADSPEEDSPIN_TIME), state);
-
-	state = (IsDlgButtonChecked(IDC_DISCONNECTING_ENABLE) != 0);
-	::EnableWindow(GetDlgItem(IDC_I_DOWN_SPEED), state);
-	::EnableWindow(GetDlgItem(IDC_I_DOWN_SPEED_SPIN), state);
-	::EnableWindow(GetDlgItem(IDC_TIME_DOWN), state);
-	::EnableWindow(GetDlgItem(IDC_TIME_DOWN_SPIN), state);
-	::EnableWindow(GetDlgItem(IDC_H_DOWN_SPEED), state);
-	::EnableWindow(GetDlgItem(IDC_H_DOWN_SPEED_SPIN), state);
-	::EnableWindow(GetDlgItem(IDC_MIN_FILE_SIZE), state);
-	::EnableWindow(GetDlgItem(IDC_MIN_FILE_SIZE_SPIN), state);
-	::EnableWindow(GetDlgItem(IDC_REMOVE_IF_BELOW), state);
-	::EnableWindow(GetDlgItem(IDC_REMOVE_SPIN), state);	
 }
 
 LRESULT LimitPage::onChangeCont(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	switch (wID) {
 	case IDC_TIME_LIMITING:
 	case IDC_THROTTLE_ENABLE:
-	case IDC_DISCONNECTING_ENABLE:
 		fixControls();
 		break;
 	}

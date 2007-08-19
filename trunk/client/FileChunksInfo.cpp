@@ -118,7 +118,7 @@ int FileChunksInfo::addChunkPos(int64_t start, int64_t pos, size_t& len)
 	return NORMAL_EXIT;
 }
 
-void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool reset) throw(Exception)
+void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
 {
 	Lock l(cs);
 	Chunk::Iter i = running.find(chunk);
@@ -126,43 +126,9 @@ void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool reset) throw(E
 	if(i == running.end()){
 		dcassert(0);
 		return;
-	}
-
-	Chunk* ch = i->second;
-	if(reset && d->isSet(Download::FLAG_OVERLAPPED)) {
-		if(!ch->overlappedCount) {
-			// overlapped chunk has already been finished
-			dcdebug("Overlapped chunk has already been finished\n");
-			throw Exception(CSTRING(BLOCK_FINISHED));
-		}
-
-		dcdebug("Overlapped %I64d,%I64d,%I64d with %s\n", i->first, ch->pos, d->getPos(), d->getUser()->getFirstNick().c_str());
-
-		downloadedSize -= (ch->pos - d->getPos());
-		ch->pos = d->getPos();
 	}
 
 	i->second->download = d;
-}
-
-void FileChunksInfo::setDownloadSize(int64_t chunk, Download* d, bool noStealth)
-{
-	Lock l(cs);
-	Chunk::Iter i = running.find(chunk);
-
-	if(i == running.end()){
-		dcassert(0);
-		return;
-	}
-
-	if(i->second->overlappedCount) {
-		d->setFlag(Download::FLAG_OVERLAPPED);
-		d->addPos(i->second->pos - chunk, i->second->pos - chunk);
-		if(i->second->download) {
-			d->setStart(i->second->download->getStart());
-		}
-		dcdebug("Setting overlap %I64d,%I64d,%I64d from %s\n", i->first, i->second->pos, d->getPos(), d->getUser()->getFirstNick().c_str());
-	}
 
 	if(noStealth) {
 		d->setSize(min(i->second->end, i->second->pos + min(minChunkSize, fileSize - i->second->pos)));
@@ -251,29 +217,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 		for(Chunk::Iter i = running.begin(); i != running.end(); i++)
 		{
 			chunk = i->second;
-
-			if(chunk->overlappedCount > 0) continue;
-
-			if(	chunk->download && // user's download must be known
-				(GET_TICK() - chunk->download->getStart()) > 5000) // it must be running for at least 5 seconds
-			{
-				speed = chunk->download->getAverageSpeed();
-				if(speed == 0) speed = 1;
-
-				int64_t oldChunkLeft = (chunk->end - chunk->pos) / speed;
-				int64_t newChunkLeft = (chunk->end - chunk->pos) / _speed;
-				
-				if(2 * newChunkLeft < oldChunkLeft) { // new user will finish the chunk 2x faster
-					// overlap slow chunk
-					dcdebug("Trying to %dx overlap %I64d,%I64d with %s\n", chunk->overlappedCount, i->first, chunk->pos, chunk->download->getUser()->getFirstNick().c_str());
-					chunk->overlappedCount++;
-					return i->first;
-				}
-			}
-
 			if(chunk->pos == i->first) {
-				// overlap pending chunk
-				dcdebug("Trying to overlap the beginning of the chunk %d\n", chunk->pos);
 				chunk->overlappedCount++;
 				return i->first;
 			}
@@ -316,7 +260,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	return n;
 }
 
-void FileChunksInfo::putChunk(int64_t start,  const Download* aDownload)
+void FileChunksInfo::putChunk(int64_t start)
 {
 	Lock l(cs);
 
@@ -332,10 +276,7 @@ void FileChunksInfo::putChunk(int64_t start,  const Download* aDownload)
 
 			if(i->second->overlappedCount){
 				i->second->overlappedCount--;
-				if(chunk->download == aDownload) {
-					chunk->download = NULL;
-				}
-				dcdebug("put overlapped chunk %d\n", start);
+				chunk->download = NULL;
 				return;
 			}
 
@@ -593,9 +534,9 @@ bool FileChunksInfo::doLastVerify(const TigerTree& aTree, const string& tempTarg
 	if(waiting.empty()){
 		dumpVerifiedBlocks();
 
-		dcassert(verifiedBlocks.size() == 1);
-		dcassert(verifiedBlocks.begin()->first == 0);
-		dcassert(verifiedBlocks.begin()->second == (fileSize - 1) / tthBlockSize + 1);
+		dcassert(verifiedBlocks.size() == 1 && 
+			    verifiedBlocks.begin()->first == 0 &&
+			    verifiedBlocks.begin()->second == (fileSize - 1) / tthBlockSize + 1);
 
         return true;
     }
@@ -619,7 +560,7 @@ void FileChunksInfo::markVerifiedBlock(uint16_t start, uint16_t end)
 	{
 		// check dupe
 		if(start >= i->first && start < i->second){
-//			dcassert(0);
+			dcassert(0);
 			return;
 		}
 
@@ -750,6 +691,7 @@ int64_t splitChunk(int64_t chunkSize, int64_t chunkSpeed, int64_t estimatedSpeed
 	return chunkSize * chunkSpeed / (chunkSpeed + estimatedSpeed);
 }
 */
+
 int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimatedSpeed*/){
 	if(partialInfo.empty()){
 		return -1;
@@ -761,6 +703,8 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimat
 	vector<int64_t> posArray;
 	posArray.reserve(partialInfo.size());
 
+	vector<Chunk::NeededPart> neededParts;
+
 	for(PartsInfo::const_iterator i = partialInfo.begin(); i != partialInfo.end(); i++)
 		posArray.push_back(min(fileSize, (int64_t)(*i) * (int64_t)tthBlockSize));
 
@@ -769,31 +713,42 @@ int64_t FileChunksInfo::getChunk(const PartsInfo& partialInfo, int64_t /*estimat
 		Chunk* chunk = i->second;
 		for(vector<int64_t>::const_iterator j = posArray.begin(); j < posArray.end(); j+=2){
 			if( (*j <= chunk->pos && chunk->pos < *(j+1)) || (chunk->pos <= *j && *j < chunk->end) ){
-				int64_t b = max(chunk->pos, *j);
-				int64_t e = min(chunk->end, *(j+1));
-
-				if(chunk->pos != b && chunk->end != e){
-					int64_t tmp = chunk->end; 
-					chunk->end = b;
-
-					waiting.insert(make_pair(e, new Chunk(e, tmp)));
-
-				}else if(chunk->end != e){
-					chunk->pos = e;
-					waiting.erase(i);
-					waiting.insert(make_pair(chunk->pos, chunk));
-				}else if(chunk->pos != b){
-					chunk->end = b;
-				}else{
-					waiting.erase(i);
-					delete chunk;
-				}
-
-				running.insert(make_pair(b, new Chunk(b, e)));
-				selfCheck();
-				return b;
+				Chunk::NeededPart np = { chunk, i, j };
+				neededParts.push_back(np);
 			}
 		}
+	}
+
+	if(!neededParts.empty()) {
+		const Chunk::NeededPart& np = neededParts[Util::rand(0, neededParts.size())];
+		
+		Chunk* chunk = np.chunk;
+		Chunk::Map::iterator i = np.iter1;
+		vector<int64_t>::const_iterator j = np.iter2;
+		
+		int64_t b = max(chunk->pos, *j);
+		int64_t e = min(chunk->end, *(j+1));
+
+		if(chunk->pos != b && chunk->end != e){
+			int64_t tmp = chunk->end; 
+			chunk->end = b;
+
+			waiting.insert(make_pair(e, new Chunk(e, tmp)));
+
+		}else if(chunk->end != e){
+			chunk->pos = e;
+			waiting.erase(i);
+			waiting.insert(make_pair(chunk->pos, chunk));
+		}else if(chunk->pos != b){
+			chunk->end = b;
+		}else{
+			waiting.erase(i);
+			delete chunk;
+		}
+
+		running.insert(make_pair(b, new Chunk(b, e)));
+		selfCheck();
+		return b;
 	}
 
 	// Check running chunks
