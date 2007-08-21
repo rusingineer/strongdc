@@ -60,7 +60,7 @@ HFONT WinUtil::boldFont = NULL;
 HFONT WinUtil::systemFont = NULL;
 HFONT WinUtil::smallBoldFont = NULL;
 CMenu WinUtil::mainMenu;
-CMenuHandle WinUtil::grantMenu;
+OMenu WinUtil::grantMenu;
 CImageList WinUtil::fileImages;
 CImageList WinUtil::userImages;
 CImageList WinUtil::flagImages;
@@ -511,7 +511,7 @@ void WinUtil::init(HWND hWnd) {
 	hook = SetWindowsHookEx(WH_KEYBOARD, &KeyboardProc, NULL, GetCurrentThreadId());
 	
 	grantMenu.CreatePopupMenu();
-//	grantMenu.InsertSeparatorFirst(CTSTRING(GRANT_SLOTS_MENU));
+	grantMenu.InsertSeparatorFirst(CTSTRING(GRANT_SLOTS_MENU));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT, CTSTRING(GRANT_EXTRA_SLOT));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_HOUR, CTSTRING(GRANT_EXTRA_SLOT_HOUR));
 	grantMenu.AppendMenu(MF_STRING, IDC_GRANTSLOT_DAY, CTSTRING(GRANT_EXTRA_SLOT_DAY));

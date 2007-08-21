@@ -218,7 +218,7 @@ public:
 	static HFONT systemFont;
 	static HFONT smallBoldFont;
 	static CMenu mainMenu;
-	static CMenuHandle grantMenu;
+	static OMenu grantMenu;
 	static int dirIconIndex;
 	static int dirMaskedIndex;
 	static TStringList lastDirs;

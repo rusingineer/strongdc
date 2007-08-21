@@ -538,7 +538,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			if(d->getPos() == d->getSize()){
 				aSource->setDownload(NULL);
 				removeDownload(d);
-				QueueManager::getInstance()->putDownload(d, false);
+				QueueManager::getInstance()->putDownload(d, false, false);
 				aSource->setLineMode(0);
 				checkDownloads(aSource);
 			}else{
@@ -649,7 +649,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				
 				aSource->setDownload(NULL);
 				removeDownload(d);
-				QueueManager::getInstance()->putDownload(d, false);
+				QueueManager::getInstance()->putDownload(d, false, false);
 				checkDownloads(aSource);
 			}
 			aSource->setLineMode(0);
@@ -798,7 +798,7 @@ void DownloadManager::noSlots(UserConnection* aSource, string param) {
 	}
 
 	string extra = param.empty() ? Util::emptyString : " - " + STRING(QUEUED) + param;
-	failDownload(aSource, STRING(NO_SLOTS_AVAILABLE) + extra, false);
+	failDownload(aSource, STRING(NO_SLOTS_AVAILABLE) + extra);
 }
 
 void DownloadManager::on(UserConnectionListener::Error, UserConnection* aSource, const string& aError) throw() {
@@ -809,7 +809,7 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 	failDownload(aSource, aError);
 }
 
-void DownloadManager::failDownload(UserConnection* aSource, const string& reason, bool connectSources) {
+void DownloadManager::failDownload(UserConnection* aSource, const string& reason) {
 	Download* d = aSource->getDownload();
 
 	if(d) {
@@ -835,7 +835,7 @@ void DownloadManager::failDownload(UserConnection* aSource, const string& reason
 			return;
 		}
 
-		QueueManager::getInstance()->putDownload(d, false, connectSources);
+		QueueManager::getInstance()->putDownload(d, false);
 	}
 	removeConnection(aSource);
 }

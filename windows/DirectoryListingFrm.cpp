@@ -645,6 +645,10 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 		priorityMenu.CreatePopupMenu();
 		copyMenu.CreatePopupMenu();
 
+		targetMenu.InsertSeparatorFirst(CTSTRING(DOWNLOAD_TO));
+		priorityMenu.InsertSeparatorFirst(CTSTRING(DOWNLOAD_WITH_PRIORITY));
+
+		copyMenu.InsertSeparatorFirst(CTSTRING(COPY));
 		copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK, CTSTRING(COPY_NICK));
 		copyMenu.AppendMenu(MF_STRING, IDC_COPY_FILENAME, CTSTRING(FILENAME));
 		copyMenu.AppendMenu(MF_STRING, IDC_COPY_SIZE, CTSTRING(SIZE));
@@ -669,13 +673,9 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 		priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGH, CTSTRING(HIGH));
 		priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGHEST, CTSTRING(HIGHEST));
 
-		int n = 0;
+		int n = 1;
 
 		const ItemInfo* ii = ctrlList.getItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
-
-		while(targetMenu.GetMenuItemCount() > 0) {
-			targetMenu.DeleteMenu(0, MF_BYPOSITION);
-		}
 
 		if(ctrlList.GetSelectedCount() == 1 && ii->type == ItemInfo::FILE) {
 			//Append Favorite download dirs
@@ -688,7 +688,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 				targetMenu.AppendMenu(MF_SEPARATOR);
 			}
 
-			n = 0;
+			n = 1;
 			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
 			targets.clear();
 			QueueManager::getInstance()->getTargets(ii->file->getTTH(), targets);
@@ -725,7 +725,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 				targetMenu.AppendMenu(MF_SEPARATOR);
 			}
 
-			n = 0;
+			n = 1;
 			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
 			if(WinUtil::lastDirs.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR);
@@ -763,6 +763,9 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 		targetDirMenu.CreatePopupMenu();
 		priorityDirMenu.CreatePopupMenu();
 
+		targetDirMenu.InsertSeparatorFirst(CTSTRING(DOWNLOAD_TO));
+		priorityDirMenu.InsertSeparatorFirst(CTSTRING(DOWNLOAD_WITH_PRIORITY));
+
 		directoryMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIR, CTSTRING(DOWNLOAD));
 		directoryMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetDirMenu, CTSTRING(DOWNLOAD_TO));
 		directoryMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)priorityDirMenu, CTSTRING(DOWNLOAD_WITH_PRIORITY));
@@ -776,14 +779,9 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 		priorityDirMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGH+90, CTSTRING(HIGH));
 		priorityDirMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGHEST+90, CTSTRING(HIGHEST));
 
-
 		// Strange, windows doesn't change the selection on right-click... (!)
-			
-		while(targetDirMenu.GetMenuItemCount() > 0) {
-			targetDirMenu.DeleteMenu(0, MF_BYPOSITION);
-		}
 
-		int n = 0;
+		int n = 1;
 		//Append Favorite download dirs
 		StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 		if (spl.size() > 0) {
@@ -794,7 +792,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 			targetDirMenu.AppendMenu(MF_SEPARATOR);
 		}
 
-		n = 0;
+		n = 1;
 		targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIRTO, CTSTRING(BROWSE));
 
 		if(WinUtil::lastDirs.size() > 0) {
@@ -873,7 +871,7 @@ LRESULT DirectoryListingFrame::onDownloadTargetDir(WORD /*wNotifyCode*/, WORD wI
 	return 0;
 }
 LRESULT DirectoryListingFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int newId = wID - IDC_DOWNLOAD_FAVORITE_DIRS;
+	int newId = wID - IDC_DOWNLOAD_FAVORITE_DIRS - 1;
 	dcassert(newId >= 0);
 	StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 	
@@ -904,7 +902,7 @@ LRESULT DirectoryListingFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD
 }
 
 LRESULT DirectoryListingFrame::onDownloadWholeFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int newId = wID - IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS;
+	int newId = wID - IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS - 1;
 	dcassert(newId >= 0);
 	
 	HTREEITEM t = ctrlTree.GetSelectedItem();
