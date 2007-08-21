@@ -1005,7 +1005,7 @@ again:
 	return d;
 }
 
-void QueueManager::putDownload(const Download* aDownload, bool finished, bool connectSources) throw() {
+void QueueManager::putDownload(const Download* aDownload, bool finished, bool reportFinish) throw() {
 	UserList getConn;
 	string fname;
 	UserPtr up = aDownload->getUser();
@@ -1087,7 +1087,7 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool co
 						}
 					}
 
-					if((connectSources || (q->getCurrents().size() < 3)) && (q->getPriority() != QueueItem::PAUSED)) {
+					if(q->getPriority() != QueueItem::PAUSED) {
 						q->getOnlineUsers(getConn);
 					}
 	
@@ -1099,7 +1099,7 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool co
 						}
 					} else {
 						userQueue.setWaiting(q, aDownload->getUser());
-						if(q->getStatus() != QueueItem::STATUS_RUNNING) {
+						if(reportFinish && q->getStatus() != QueueItem::STATUS_RUNNING) {
 							fire(QueueManagerListener::StatusUpdated(), q);
 						}
 					}

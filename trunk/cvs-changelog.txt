@@ -1,3 +1,10 @@
+** svn324
+	better transfer's progressbar coloring
+	hopefully fixed "download starting" report
+	hopefully fixed URI encoding in Webserver
+	hopefully fixed problem with missing submenus
+	added some missing menubars
+
 ** svn323
 	added "Stardock CursorXP" to crash libraries
 	removed slow chunk overlapping, because it's stupid and works very bad

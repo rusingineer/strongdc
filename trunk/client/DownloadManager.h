@@ -102,7 +102,7 @@ private:
 	void logDownload(UserConnection* aSource, Download* d);
 	int64_t getResumePos(const string& file, const TigerTree& tt, int64_t startPos);
 
-	void failDownload(UserConnection* aSource, const string& reason, bool connectSources = true);
+	void failDownload(UserConnection* aSource, const string& reason);
 
 	friend class Singleton<DownloadManager>;
 

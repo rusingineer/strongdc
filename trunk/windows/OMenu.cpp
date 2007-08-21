@@ -30,8 +30,8 @@
 
 OMenu::~OMenu() {
 	if (::IsMenu(m_hMenu)) {
-		for (int i = 0; i < GetMenuItemCount(); ++i)
-			CheckOwnerDrawn(i, TRUE);
+		while(GetMenuItemCount() != 0)
+			RemoveMenu(0, MF_BYPOSITION);
 	} else {
 		// How can we end up here??? it sure happens sometimes..
 		for (OMenuItem::Iter i = items.begin(); i != items.end(); ++i) {
@@ -87,10 +87,6 @@ void OMenu::CheckOwnerDrawn(UINT uItem, BOOL byPosition) {
 	mii.cbSize = sizeof(MENUITEMINFO);
 	mii.fMask = MIIM_TYPE | MIIM_DATA | MIIM_SUBMENU;
 	GetMenuItemInfo(uItem, byPosition, &mii);
-
-	if(mii.hSubMenu != NULL) {
-		CMenu::RemoveMenu((UINT)mii.hSubMenu, MF_BYCOMMAND);
-	}
 
 	if (mii.dwItemData != NULL) {
 		OMenuItem* mi = (OMenuItem*)mii.dwItemData;

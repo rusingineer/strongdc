@@ -1259,6 +1259,8 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
 	tabMenuShown = false;
 	OMenu Mnu;
+	Mnu.CreatePopupMenu();
+
 	ChatCtrl::sSelectedUser = Util::emptyStringT;
 
 	ctrlUsers.GetHeader().GetWindowRect(&rc);
@@ -1339,14 +1341,12 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		if(PreparePopupMenu(&ctrlClient, ChatCtrl::sSelectedUser, Mnu )) {
 			if(ChatCtrl::sSelectedUser.empty()) {
 				Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-				if(copyMenu != NULL) copyMenu.DestroyMenu();
 				return TRUE;
 			} else {
 				prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
 				Mnu.AppendMenu(MF_SEPARATOR);
 				Mnu.AppendMenu(MF_STRING, ID_EDIT_CLEAR_ALL, CTSTRING(CLEAR));
 				Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-				if(copyMenu != NULL) copyMenu.DestroyMenu();
 				return TRUE;
 			}
 		}
@@ -2143,10 +2143,6 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu& pMe
 		copyMenu.DestroyMenu();
 		copyMenu.m_hMenu = NULL;
 	}
-	if (pMenu.m_hMenu != NULL) {
-		pMenu.DestroyMenu();
-		pMenu.m_hMenu = NULL;
-	}
 
 	copyMenu.CreatePopupMenu();
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK, CTSTRING(COPY_NICK));
@@ -2160,8 +2156,6 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu& pMe
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_ALL, CTSTRING(COPY_ALL));
 	copyMenu.InsertSeparator(0, TRUE, TSTRING(COPY));
 
-	pMenu.CreatePopupMenu();
-		
     bool bIsChat = (pCtrl == ((CWindow*)&ctrlClient));
 	if(bIsChat && sNick.empty()) {
 		if(!ChatCtrl::sSelectedIP.empty()) {

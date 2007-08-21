@@ -509,14 +509,14 @@ int WebServerSocket::run(){
 				if(m["user"] == SETTING(WEBSERVER_USER) && m["pass"] == SETTING(WEBSERVER_PASS))
 					WebServerManager::getInstance()->login(IP);
 				if((m["search"] != Util::emptyString)) {
-					WebServerManager::getInstance()->search(m["search"], Util::toInt(m["type"]));
+					WebServerManager::getInstance()->search(Util::encodeURI(m["search"], true), Util::toInt(m["type"]));
 				}
 				if((m["stop"] != Util::emptyString)) {
 					check = m["stop"] == "true";
 					WebServerManager::getInstance()->reset();
 				}
 				if(m["name"] != Util::emptyString) {
-					QueueManager::getInstance()->add(m["name"],Util::toInt64(m["size"]),m["tth"]);
+					QueueManager::getInstance()->add(Util::encodeURI(m["name"], true), Util::toInt64(m["size"]), m["tth"]);
 				}
 			}
 
@@ -549,7 +549,7 @@ void WebServerManager::onSearchResult(const SearchResult* aResult) {
 			results += "<form method='GET' name=\"form" + Util::toString(row) + "\" ACTION='search.html'>";
 			//results += "<input type=\"hidden\" name='file' value='" + aResult->getFile() + "'>";
 			results += "<input type=\"hidden\" name='size' value='" + Util::toString(aResult->getSize()) + "'>";
-			results += "<input type='hidden' name='name' value='" + aResult->getFileName() + "'>";
+			results += "<input type='hidden' name='name' value='" + Util::encodeURI(aResult->getFileName()) + "'>";
 			results += "<input type='hidden' name='tth' value='" + aResult->getTTH().toBase32() + "'>";
 			results += "<input type='hidden' name='type' value='" + Util::toString(aResult->getType()) + "'>";
 			results += "<tr onmouseover=\"this.style.backgroundColor='#CC0099'; this.style.cursor='hand';\" onmouseout=\"this.style.backgroundColor='#EEEEEE'; this.style.cursor='hand';\" onclick=\"form" + Util::toString(row) + ".submit();\">";

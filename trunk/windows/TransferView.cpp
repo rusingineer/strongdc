@@ -282,7 +282,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 		int colIndex = ctrlTransfers.findColumn(cd->iSubItem);
 		cd->clrTextBk = WinUtil::bgColor;
 
-		if((colIndex == COLUMN_STATUS) && (ii->status == ItemInfo::STATUS_RUNNING || ii->status == ItemInfo::TREE_DOWNLOAD)) {
+		if((colIndex == COLUMN_STATUS) && (ii->status != ItemInfo::STATUS_WAITING)) {
 			if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				bHandled = FALSE;
 				return 0;
@@ -291,8 +291,8 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			// Get the text to draw
 			// Get the color of this bar
 			COLORREF clr = SETTING(PROGRESS_OVERRIDE_COLORS) ? 
-				(ii->download ? SETTING(DOWNLOAD_BAR_COLOR) : SETTING(UPLOAD_BAR_COLOR)) : 
-				GetSysColor(COLOR_HIGHLIGHT);
+				(ii->download ? (ii->parent ? SETTING(PROGRESS_SEGMENT_COLOR) : SETTING(DOWNLOAD_BAR_COLOR)) :
+				SETTING(UPLOAD_BAR_COLOR)) : GetSysColor(COLOR_HIGHLIGHT);
 
 			//this is just severely broken, msdn says GetSubItemRect requires a one based index
 			//but it wont work and index 0 gives the rect of the whole item
@@ -350,13 +350,15 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				DeleteObject(::SelectObject(dc, oldBg));
 
 				// Draw the text over the entire item
-                oldcol = ::SetTextColor(dc, clr);
+                oldcol = ::SetTextColor(dc, SETTING(PROGRESS_OVERRIDE_COLORS2) ? 
+					(ii->download ? SETTING(PROGRESS_TEXT_COLOR_DOWN) : SETTING(PROGRESS_TEXT_COLOR_UP)) : 
+					clr);
 				rc.left += 6;
                 ::DrawText(dc, ii->statusString.c_str(), ii->statusString.length(), rc, DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER);
 				rc.left -= 6;
 
 				COLORREF a, b;
-				OperaColors::EnlightenFlood(!ii->parent ? clr : SETTING(PROGRESS_SEGMENT_COLOR), a, b);
+				OperaColors::EnlightenFlood(clr, a, b);
 				OperaColors::FloodFill(cdc, rc.left+1, rc.top+1,  rc.left + (int) ((int64_t)rc.Width() * ii->actual / ii->size), rc.bottom-1, a, b);
 				
 				// Draw the text only over the bar and with correct color
@@ -374,7 +376,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				if(!ii->download) {
 					statusBar.FillRange(0, ii->actual,  clr);
 				} else {
-					statusBar.FillRange(0, ii->actual, ii->parent ? SETTING(PROGRESS_SEGMENT_COLOR) : clr);
+					statusBar.FillRange(0, ii->actual, clr);
 				}
 				if(ii->pos > ii->actual)
 					statusBar.FillRange(ii->actual, ii->pos, SETTING(PROGRESS_COMPRESS_COLOR));
@@ -593,6 +595,25 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 				if(ui->download) {
 					ItemInfo* parent = ii->parent ? ii->parent : ii;
 
+					/* is file currently starting ? */
+					if(	(ui->status == ItemInfo::STATUS_RUNNING) &&
+						(parent->status == ItemInfo::STATUS_WAITING))
+					{
+						parent->fileBegin = GET_TICK();
+						parent->statusString = TSTRING(DOWNLOAD_STARTING);
+
+						if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+							PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+						if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
+							MainFrame::getMainFrame()->ShowBalloonTip((
+								TSTRING(FILE) + _T(": ") + Util::getFileName(parent->target)).c_str(), CTSTRING(DOWNLOAD_STARTING));
+						}
+					}
+
+					else
+					
+					/* parent item must be updated with correct info about whole file */
 					if(	(ui->status == ItemInfo::STATUS_RUNNING) &&
 						(parent->hits == -1 && ui->multiSource))
 					{
@@ -603,6 +624,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 						ui->updateMask &= ~UpdateInfo::MASK_TIMELEFT;
 					}
 
+					/* if target has changed, regroup the item */
 					bool changeParent = (ui->updateMask & UpdateInfo::MASK_FILE) && (ui->target != ii->target);
 					if(changeParent)
 						ctrlTransfers.removeGroupedItem(ii, false);
@@ -637,7 +659,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			if(ui->status == ItemInfo::STATUS_RUNNING) {
 				if(pp->parent->hits == -1) {
 					segs = pp->parent->status == ItemInfo::STATUS_RUNNING ? 1 : 0;
-					ratio = 1.00;
 					totalSpeed = pp->parent->speed;
 				} else {
 					for(vector<ItemInfo*>::const_iterator k = pp->children.begin(); k != pp->children.end(); ++k) {
@@ -650,18 +671,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 							if(!ui->queueItem->isSet(QueueItem::FLAG_MULTI_SOURCE)) break;
 						}
 					}
-				}
-
-				if(pp->parent->status == ItemInfo::STATUS_WAITING) {
-					pp->parent->fileBegin = GET_TICK();
-
-					if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-						PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-
-					if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
-						MainFrame::getMainFrame()->ShowBalloonTip((
-							TSTRING(FILE) + _T(": ") + Util::getFileName(pp->parent->target)).c_str(), CTSTRING(DOWNLOAD_STARTING));
-					}
+					ratio = ratio / segs;
 				}
 
 				if(segs == 0)
@@ -674,8 +684,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 						(double)ui->pos*100.0/(double)ui->size, Util::formatSeconds(time/1000).c_str());
 
 					ui->setStatusString(tstring(buf));
-				} else {
-					ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
 				}
 			} else {
 				segs = 0;
@@ -685,7 +693,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			if(segs != pp->parent->running)
 				ui->setRunning(segs);
 
-			ui->setActual((int64_t)((double)ui->pos * ratio));
+			ui->setActual((int64_t)((double)ui->pos * (ratio == 0 ? 1.00 : ratio)));
 			ui->setTimeLeft((totalSpeed > 0) ? ((ui->size - ui->pos) / totalSpeed) : 0);
 			ui->setSpeed(totalSpeed);
 			ui->queueItem->setAverageSpeed(static_cast<size_t>(totalSpeed));
@@ -1181,7 +1189,11 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 	ui->setPos(qi->getDownloadedBytes());
 	ui->setActual(ui->pos);
 	ui->setSize(qi->getSize());
-	ui->setStatus(qi->getStatus() == QueueItem::STATUS_RUNNING ? ItemInfo::STATUS_RUNNING : ItemInfo::STATUS_WAITING);
+
+	if(qi->getStatus() == QueueItem::STATUS_RUNNING)
+		ui->setStatus(ItemInfo::STATUS_RUNNING);
+	else
+		ui->setStatus(ItemInfo::STATUS_WAITING);
 
 	speak(UPDATE_PARENT, ui);
 }

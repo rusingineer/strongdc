@@ -127,7 +127,7 @@ public:
 
 	bool getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw();
 	Download* getDownload(UserConnection& aSource, string& aMessage) throw();
-	void putDownload(const Download* aDownload, bool finished, bool connectSources = true) throw();
+	void putDownload(const Download* aDownload, bool finished, bool reportFinish = true) throw();
 
 	/** @return The highest priority download the user has, PAUSED may also mean no downloads */
 	QueueItem::Priority hasDownload(const UserPtr& aUser) throw();
