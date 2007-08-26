@@ -99,26 +99,23 @@ void CAGEmotionSetup::Load() {
 		if(xml.findChild("Emoticons")) {
 			xml.stepIn();
 
-			tstring strEmotionText;
-			string strEmotionBmpPath;
 			while(xml.findChild("Emoticon")) {
-				strEmotionText = Text::toT(xml.getChildAttrib("PasteText"));
-				if (strEmotionText.empty()) strEmotionText = Text::toT(xml.getChildAttrib("Expression"));
-				strEmotionBmpPath = xml.getChildAttrib("Bitmap");
-				if (strEmotionBmpPath.size() > 0) {
+				tstring strEmotionText = Text::toT(xml.getChildAttrib("PasteText"));
+				if (strEmotionText.empty()) {
+					strEmotionText = Text::toT(xml.getChildAttrib("Expression"));
+				}
+				
+				string strEmotionBmpPath = xml.getChildAttrib("Bitmap");
+				if (!strEmotionBmpPath.empty()) {
 					if (strEmotionBmpPath[0] == '.') {
 						// Relativni cesta - dame od aplikace
 						strEmotionBmpPath = Util::getDataPath() + "EmoPacks\\" + strEmotionBmpPath;
+					} else {
+						strEmotionBmpPath = "EmoPacks\\" + strEmotionBmpPath;
 					}
-					else strEmotionBmpPath = "EmoPacks\\" + strEmotionBmpPath;
 				}
 
-				CAGEmotion* pEmotion = new CAGEmotion(strEmotionText, strEmotionBmpPath);
-
-				BITMAP bm;
-				GetObject(pEmotion->getEmotionBmp(), sizeof(BITMAP), &bm);
-
-				EmotionsList.push_back(pEmotion);
+				EmotionsList.push_back(new CAGEmotion(strEmotionText, strEmotionBmpPath));
 			}
 			xml.stepOut();
 		}
@@ -128,7 +125,6 @@ void CAGEmotionSetup::Load() {
 	}
 	
 	setUseEmoticons(true);
-	return;
 }
 
 void CAGEmotionSetup::Unload() {

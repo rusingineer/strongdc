@@ -353,7 +353,7 @@
 		<String Name="MenuOpenDownloadsDir">Otevřít složku pro stahování</String>
 		<String Name="MenuOpenFileList">Otevřít Seznam souborů...	Ctrl+L</String>
 		<String Name="MenuOpenMatchAll">Porovnat stažené seznamy souborů</String>
-		<String Name="MenuOpenOwnList">Otevřít vlastní Seznam souborů</String>
+		<String Name="MenuOpenOwnList">Otevřít vlastní seznam souborů</String>
 		<String Name="MenuPublicHubs">&amp;Veřejné huby	Ctrl+P</String>
 		<String Name="MenuQuickConnect">&amp;Rychlé připojení ...	Ctrl+Q</String>
 		<String Name="MenuReconnect">&amp;Znovu připojit	Ctrl+R</String>
