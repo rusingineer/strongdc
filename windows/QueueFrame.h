@@ -271,22 +271,11 @@ private:
 	TaskQueue tasks;
 	bool spoken;
 
-	/** Single selection in the queue part */
-	OMenu singleMenu;
-	/** Multiple selection in the queue part */
-	OMenu multiMenu;
-	/** Tree part menu */
 	OMenu browseMenu;
-
 	OMenu removeMenu;
 	OMenu removeAllMenu;
 	OMenu pmMenu;
-	OMenu priorityMenu;
 	OMenu readdMenu;
-	OMenu dirMenu;
-	OMenu previewMenu;
-	OMenu segmentsMenu;
-	OMenu copyMenu;
 
 	int PreviewAppsSize;
 

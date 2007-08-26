@@ -1,3 +1,9 @@
+** svn325
+	some parts of code optimized for speed
+	reorganized QueueFrame's contextmenu code
+	added "Ashampoo Firewall" to crash libraries
+	added "System Mechanic Professional 7's Firewall" to crash libraries
+
 ** svn324
 	better transfer's progressbar coloring
 	hopefully fixed "download starting" report

@@ -256,6 +256,7 @@ public:
 	void updateItem(const T* item) { int i = findItem(item); if(i != -1) updateItem(i); }
 	void deleteItem(const T* item) { int i = findItem(item); if(i != -1) DeleteItem(i); }
 
+#pragma optimize("t", on)
 	int getSortPos(const T* a) const {
 		int high = GetItemCount();
 		if((sortColumn == -1) || (high == 0))
@@ -292,6 +293,7 @@ public:
 
 		return mid;
 	}
+#pragma optimize("", on)
 
 	void setSortColumn(int aSortColumn) {
 		sortColumn = aSortColumn;
@@ -860,11 +862,14 @@ public:
 		resort();
 		return 0;
 	}
+
+#pragma optimize("t", on)
 	void resort() {
 		if(getSortColumn() != -1) {
 			SortItems(&compareFunc, (LPARAM)this);
 		}
 	}
+
 	int getSortPos(const T* a) {
 		int high = GetItemCount();
 		if((getSortColumn() == -1) || (high == 0))
@@ -911,6 +916,7 @@ public:
 
 		return mid;
 	}
+#pragma optimize("", on)
 
    	ParentMap parents;
 

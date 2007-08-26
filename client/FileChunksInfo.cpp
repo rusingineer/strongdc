@@ -27,6 +27,8 @@
 #include "ResourceManager.h"
 #include "LogManager.h"
 
+#pragma optimize("t", on)
+
 FileChunksInfo::tthMap FileChunksInfo::vecAllFileChunksInfo;
 CriticalSection FileChunksInfo::hMutexMapList;
 
@@ -962,3 +964,5 @@ void FileChunksInfo::getAllChunks(vector<int64_t>& v, int type) // type: 0 - dow
 	}
 	sort(v.begin(), v.end());
 }
+
+#pragma optimize("", on)

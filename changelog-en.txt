@@ -1,3 +1,18 @@
+	-- StrongDC++ 2.06 --
+
+* fixed many crashes
+* added "Trojan.Win32.Agent.bi" to crash libraries
+* added "F-Secure Management Agent" to crash libraries
+* added "F-Secure Antivirus/Internet Security" to crash libraries
+* added "Stardock CursorXP" to crash libraries
+* queue match displays number of really added alternates
+* changes in slow user disconnecting
+* selecting random chunk position for partial sources
+* better transfer's progressbar coloring
+* hopefully fixed "download starting" report
+* hopefully fixed URI encoding in Webserver
+
+
 	-- StrongDC++ 2.05 --
 
 * fixed many crashes

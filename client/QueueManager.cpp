@@ -528,7 +528,7 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 			if(qi != NULL) {
 				searchString = qi->getTTH().toBase32();
 				recent.push_back(qi->getTarget());
-				nextSearch = aTick + (SETTING(SEARCH_TIME) * (qi->hasOnlineUsers() ? 24000 : 60000));
+				nextSearch = aTick + (SETTING(SEARCH_TIME) * 60000);
 				if(BOOLSETTING(REPORT_ALTERNATES))
 					LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + Util::getFileName(qi->getTargetFileName()));		
 			}

@@ -536,6 +536,7 @@ int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, u
 	}
 }
 
+#pragma optimize("t", on)
 TransferView::ItemInfo* TransferView::findItem(const UpdateInfo& ui, int& pos) const {
 	for(int j = 0; j < ctrlTransfers.GetItemCount(); ++j) {
 		ItemInfo* ii = ctrlTransfers.getItemData(j);
@@ -712,6 +713,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	
 	return 0;
 }
+#pragma optimize("", on)
 
 LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;

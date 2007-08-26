@@ -62,50 +62,50 @@ public:
 
 	enum FileFlags {
 		/** Normal download, no flags set */
-		FLAG_NORMAL = 0x00, 
+		FLAG_NORMAL				= 0x00, 
 		/** This download should be resumed if possible */
-		FLAG_RESUME = 0x01,
+		FLAG_RESUME				= 0x01,
 		/** This is a user file listing download */
-		FLAG_USER_LIST = 0x02,
+		FLAG_USER_LIST			= 0x02,
 		/** The file list is downloaded to use for directory download (used with USER_LIST) */
 		FLAG_DIRECTORY_DOWNLOAD = 0x04,
 		/** The file is downloaded to be viewed in the gui */
-		FLAG_CLIENT_VIEW = 0x08,
+		FLAG_CLIENT_VIEW		= 0x08,
 		/** Flag to indicate that file should be viewed as a text file */
-		FLAG_TEXT = 0x20,
+		FLAG_TEXT				= 0x20,
 		/** This file exists on the hard disk and should be prioritised */
-		FLAG_EXISTS = 0x40,
+		FLAG_EXISTS				= 0x40,
 		/** Match the queue against this list */
-		FLAG_MATCH_QUEUE = 0x80,
+		FLAG_MATCH_QUEUE		= 0x80,
 		/** The file list downloaded was actually an .xml.bz2 list */
-		FLAG_XML_BZLIST = 0x200,
+		FLAG_XML_BZLIST			= 0x200,
 		/** Test user for slotlocker */
-		FLAG_TESTSUR = 0x400,
+		FLAG_TESTSUR			= 0x400,
 		/** Test user's file list for fake share */
-		FLAG_CHECK_FILE_LIST = 0x800,
+		FLAG_CHECK_FILE_LIST	= 0x800,
 		/** The file can be downloaded from multiple sources simultaneously */
-		FLAG_MULTI_SOURCE = 0x1000,
+		FLAG_MULTI_SOURCE		= 0x1000,
 		/** Autodrop slow source is enabled for this file */
-		FLAG_AUTODROP = 0x2000
+		FLAG_AUTODROP			= 0x2000
 	};
 
 	class Source : public Flags {
 	public:
 		enum {
-			FLAG_NONE = 0x00,
+			FLAG_NONE				= 0x00,
 			FLAG_FILE_NOT_AVAILABLE = 0x01,
-			FLAG_PASSIVE = 0x02,
-			FLAG_REMOVED = 0x04,
-			FLAG_CRC_FAILED = 0x08,
-			FLAG_CRC_WARN = 0x10,
-			FLAG_NO_TTHF = 0x20,
-			FLAG_BAD_TREE = 0x40,
-			FLAG_SLOW = 0x80,
-			FLAG_NO_TREE = 0x100,
-			FLAG_NO_NEED_PARTS = 0x200,
-			FLAG_PARTIAL = 0x400,
-			FLAG_TTH_INCONSISTENCY = 0x800,
-			FLAG_MASK = FLAG_FILE_NOT_AVAILABLE
+			FLAG_PASSIVE			= 0x02,
+			FLAG_REMOVED			= 0x04,
+			FLAG_CRC_FAILED			= 0x08,
+			FLAG_CRC_WARN			= 0x10,
+			FLAG_NO_TTHF			= 0x20,
+			FLAG_BAD_TREE			= 0x40,
+			FLAG_SLOW				= 0x80,
+			FLAG_NO_TREE			= 0x100,
+			FLAG_NO_NEED_PARTS		= 0x200,
+			FLAG_PARTIAL			= 0x400,
+			FLAG_TTH_INCONSISTENCY	= 0x800,
+			FLAG_MASK				= FLAG_FILE_NOT_AVAILABLE
 				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_BAD_TREE
 				| FLAG_SLOW | FLAG_NO_TREE | FLAG_TTH_INCONSISTENCY
 		};
@@ -171,14 +171,6 @@ public:
 				n++;
 		}
 		return n;
-	}
-	bool hasOnlineUsers() const { 
-		SourceConstIter i = sources.begin();
-		for(; i != sources.end(); ++i) {
-			if(i->getUser()->isOnline())
-				return true;
-		}
-		return false;
 	}
 
 	SourceList& getSources() { return sources; }
