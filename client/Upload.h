@@ -21,7 +21,7 @@ public:
 	Upload(UserConnection& conn);
 	~Upload();
 
-	void getParams(const UserConnection& aSource, StringMap& params);
+	void getParams(const UserConnection& aSource, StringMap& params) const;
 
 	GETSET(string, sourceFile, SourceFile);
 	GETSET(InputStream*, stream, Stream);

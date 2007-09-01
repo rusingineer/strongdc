@@ -565,7 +565,7 @@ string ResourceManager::strings[] = {
 "Enable bad software detection", 
 "Bind address", 
 "Network interface for all connections", 
-"Tab bolding on content change", 
+"Tab highlight on content change", 
 "Security Certificates", 
 "Clear search box after each search", 
 "Clients", 

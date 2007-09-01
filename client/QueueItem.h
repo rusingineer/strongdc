@@ -35,11 +35,11 @@ public:
 	typedef QueueItem* Ptr;
 	typedef deque<Ptr> List;
 	typedef List::const_iterator Iter;
-	typedef HASH_MAP<string*, Ptr, noCaseStringHash, noCaseStringEq> StringMap;
+	typedef unordered_map<string*, Ptr, noCaseStringHash, noCaseStringEq> StringMap;
 	typedef StringMap::const_iterator StringIter;
-	typedef HASH_MAP_X(UserPtr, Ptr, User::HashFunction, equal_to<UserPtr>, less<UserPtr>) UserMap;
+	typedef unordered_map<UserPtr, Ptr, User::Hash> UserMap;
 	typedef UserMap::const_iterator UserIter;
-	typedef HASH_MAP_X(UserPtr, List, User::HashFunction, equal_to<UserPtr>, less<UserPtr>) UserListMap;
+	typedef unordered_map<UserPtr, List, User::Hash> UserListMap;
 	typedef UserListMap::const_iterator UserListIter;
 
 	enum Status {
@@ -89,6 +89,27 @@ public:
 		FLAG_AUTODROP			= 0x2000
 	};
 
+	class PartialSource : public FastAlloc<PartialSource>, public PointerBase {
+	public:
+		PartialSource(const string& aMyNick, const string& aHubIpPort, const string& aIp, uint16_t udp) : 
+		  myNick(aMyNick), hubIpPort(aHubIpPort), ip(aIp), udpPort(udp), nextQueryTime(0), pendingQueryCount(0) { }
+		
+		 typedef Pointer<PartialSource> Ptr;
+
+		/**
+		 * Source parts info
+		 * Meaningful only when FLAG_PARTIAL is set
+		 * If this source is not bad source, empty parts info means full file
+		 */
+		GETSET(PartsInfo, partialInfo, PartialInfo);
+		GETSET(string, myNick, MyNick);
+		GETSET(string, hubIpPort, HubIpPort);
+		GETSET(string, ip, Ip);
+		GETSET(uint64_t, nextQueryTime, NextQueryTime);
+		GETSET(uint16_t, udpPort, UdpPort);
+		GETSET(char, pendingQueryCount, PendingQueryCount);
+	};
+
 	class Source : public Flags {
 	public:
 		enum {
@@ -110,19 +131,15 @@ public:
 				| FLAG_SLOW | FLAG_NO_TREE | FLAG_TTH_INCONSISTENCY
 		};
 
-		Source(const UserPtr& aUser) : user(aUser) { }
-		Source(const Source& aSource) : Flags(aSource), user(aSource.user), partialInfo(aSource.partialInfo) { }
+		Source(const UserPtr& aUser) : user(aUser), partialSource(NULL) { }
+		Source(const Source& aSource) : Flags(aSource), user(aSource.user), partialSource(aSource.partialSource) { }
 
 		bool operator==(const UserPtr& aUser) const { return user == aUser; }
 		UserPtr& getUser() { return user; }
+		PartialSource::Ptr& getPartialSource() { return partialSource; }
 
-		/**
-		 * Source parts info
-		 * Meaningful only when FLAG_PARTIAL is set
-		 * If this source is not bad source, empty parts info means full file
-		 */
-		GETSET(PartsInfo, partialInfo, PartialInfo);
 		GETSET(UserPtr, user, User);
+		GETSET(PartialSource::Ptr, partialSource, PartialSource);
 	};
 
 	typedef vector<Source> SourceList;

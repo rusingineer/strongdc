@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Language Name="Example Language" Author="BigMuscle" Version="2.05" Revision="1">
+<Language Name="Example Language" Author="BigMuscle" Version="2.06" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Accepted Disconnects</String>
 		<String Name="AcceptedTimeouts">Accepted Timeouts</String>
@@ -569,7 +569,7 @@
 		<String Name="SettingsBadSoftware">Enable bad software detection</String>
 		<String Name="SettingsBindAddress">Bind address</String>
 		<String Name="SettingsBindAddressHelp">Network interface for all connections</String>
-		<String Name="SettingsBoldOptions">Tab bolding on content change</String>
+		<String Name="SettingsBoldOptions">Tab highlight on content change</String>
 		<String Name="SettingsCertificates">Security Certificates</String>
 		<String Name="SettingsClearSearch">Clear search box after each search</String>
 		<String Name="SettingsClients">Clients</String>

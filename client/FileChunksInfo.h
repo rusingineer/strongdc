@@ -211,7 +211,7 @@ public:
 
 	inline void selfCheck() const;
 
-	typedef HASH_MAP_X(TTHValue*, Ptr, TTHValue::PtrHash, TTHValue::PtrHash, TTHValue::PtrLess) tthMap;
+	typedef unordered_map<TTHValue*, Ptr, TTHValue::PtrHash, TTHValue::PtrHash> tthMap;
 	
 	static tthMap vecAllFileChunksInfo;
 	static CriticalSection hMutexMapList;

@@ -206,7 +206,7 @@ public:
 		ResourceManager::Strings translatedString;
 	};
 
-	typedef HASH_MAP<tstring, int> ImageMap;
+	typedef unordered_map<tstring, int> ImageMap;
 	typedef ImageMap::const_iterator ImageIter;
 	static ImageMap fileIndexes;
 	static HBRUSH bgBrush;

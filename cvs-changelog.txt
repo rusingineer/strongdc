@@ -1,3 +1,8 @@
+** svn326
+	hash_* containers replaced with unordered_* to match the future C++ standard (DC++ SVN)
+	implemented periodic downloaded parts exchanging with partial sources
+	UPnP fixes (DC++ SVN)
+
 ** svn325
 	some parts of code optimized for speed
 	reorganized QueueFrame's contextmenu code

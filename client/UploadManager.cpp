@@ -383,6 +383,7 @@ void UploadManager::reserveSlot(const UserPtr& aUser, uint64_t aTime) {
 }
 
 void UploadManager::unreserveSlot(const UserPtr& aUser) {
+	Lock l(cs);
 	SlotIter uis = reservedSlots.find(aUser);
 	if(uis != reservedSlots.end())
 		reservedSlots.erase(uis);
@@ -481,7 +482,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 	}
 }
 
-void UploadManager::logUpload(Upload* u) {
+void UploadManager::logUpload(const Upload* u) {
 	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
 		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
 		StringMap params;

@@ -562,20 +562,20 @@ struct noCaseStringEq {
 };
 
 /** Case insensitive string ordering */
-struct noCaseStringLess {
-	bool operator()(const string* a, const string* b) const {
-		return Util::stricmp(*a, *b) < 0;
-	}
-	bool operator()(const string& a, const string& b) const {
-		return Util::stricmp(a, b) < 0;
-	}
-	bool operator()(const wstring* a, const wstring* b) const {
-		return Util::stricmp(*a, *b) < 0;
-	}
-	bool operator()(const wstring& a, const wstring& b) const {
-		return Util::stricmp(a, b) < 0;
-	}
-};
+//struct noCaseStringLess {
+//	bool operator()(const string* a, const string* b) const {
+//		return Util::stricmp(*a, *b) < 0;
+//	}
+//	bool operator()(const string& a, const string& b) const {
+//		return Util::stricmp(a, b) < 0;
+//	}
+//	bool operator()(const wstring* a, const wstring* b) const {
+//		return Util::stricmp(*a, *b) < 0;
+//	}
+//	bool operator()(const wstring& a, const wstring& b) const {
+//		return Util::stricmp(a, b) < 0;
+//	}
+//};
 
 #endif // !defined(UTIL_H)
 

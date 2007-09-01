@@ -611,7 +611,7 @@ public:
 		vector<T*> children;
 	};
 
-	typedef HASH_MAP<key*, ParentPair, hashFunc, equalKey> ParentMap;
+	typedef unordered_map<key*, ParentPair, hashFunc, equalKey> ParentMap;
 
 	BEGIN_MSG_MAP(thisClass)
 		MESSAGE_HANDLER(WM_CREATE, onCreate)

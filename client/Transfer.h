@@ -51,7 +51,7 @@ public:
 		return getSize() - getPos();
 	}
 
-	void getParams(const UserConnection& aSource, StringMap& params);
+	void getParams(const UserConnection& aSource, StringMap& params) const;
 
 	UserPtr getUser();
 	const UserPtr getUser() const;

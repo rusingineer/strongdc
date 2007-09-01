@@ -292,7 +292,7 @@ private:
 
 	HTREEITEM fileLists;
 
-	typedef HASH_MULTIMAP_X(string, QueueItemInfo*, noCaseStringHash, noCaseStringEq, noCaseStringLess) DirectoryMap;
+	typedef unordered_multimap<string, QueueItemInfo*, noCaseStringHash, noCaseStringEq> DirectoryMap;
 	typedef DirectoryMap::iterator DirectoryIter;
 	typedef DirectoryMap::const_iterator DirectoryIterC;
 	typedef pair<DirectoryIterC, DirectoryIterC> DirectoryPairC;

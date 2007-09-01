@@ -400,7 +400,7 @@ private:
 		clearTaskList();
 	}
 
-	typedef HASH_MAP<tstring, HubFrame*> FrameMap;
+	typedef unordered_map<tstring, HubFrame*> FrameMap;
 	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 
@@ -418,7 +418,7 @@ private:
 	tstring currentCommand;
 	TStringList::size_type curCommandPosition;		//can't use an iterator because StringList is a vector, and vector iterators become invalid after resizing
 
-	typedef hash_set<UserPtr, User::HashFunction> IgnoreMap;
+	typedef unordered_set<UserPtr, User::Hash> IgnoreMap;
 	static IgnoreMap ignoreList;
 
 	tstring currentNeedle;		// search in chat window

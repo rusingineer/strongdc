@@ -108,7 +108,7 @@ public:
 	void unreserveSlot(const UserPtr& aUser);
 	void clearUserFiles(const UserPtr&);
 	const UploadQueueItem::SlotQueue getWaitingUsers();
-	bool hasReservedSlot(const UserPtr& aUser) const { return reservedSlots.find(aUser) != reservedSlots.end(); }
+	bool hasReservedSlot(const UserPtr& aUser) { Lock l(cs); return reservedSlots.find(aUser) != reservedSlots.end(); }
 	bool isConnecting(const UserPtr& aUser) const { return connectingUsers.find(aUser) != connectingUsers.end(); }
 
 	bool getFireballStatus() const { return isFireball; }
@@ -121,7 +121,7 @@ public:
 	
 	// Upload throttling
 	size_t throttleGetSlice();
-	inline size_t throttleCycleTime() const { 	return mThrottleEnable ? mCycleTime : 0; }
+	inline size_t throttleCycleTime() const { return mThrottleEnable ? mCycleTime : 0; }
 	
 	GETSET(uint8_t, extra, Extra);
 	GETSET(uint64_t, lastGrant, LastGrant);
@@ -132,15 +132,14 @@ private:
 	bool mThrottleEnable;
 	uint8_t running;
 
-	uint64_t m_iHighSpeedStartTick;
-
 	size_t mBytesSpokenFor, mUploadLimit, mCycleTime, mByteSlice;
+	uint64_t m_iHighSpeedStartTick;
 
 	UploadList uploads;
 	UploadList delayUploads;
 	CriticalSection cs;
 	
-	typedef HASH_MAP<UserPtr, uint64_t, User::HashFunction> SlotMap;
+	typedef unordered_map<UserPtr, uint64_t, User::Hash> SlotMap;
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 	SlotMap connectingUsers;
@@ -158,7 +157,7 @@ private:
 	bool getAutoSlot();
 	void removeConnection(UserConnection* aConn);
 	void removeUpload(Upload* aUpload, bool delay = false);
-	void logUpload(Upload* u);
+	void logUpload(const Upload* u);
 
 	// ClientManagerListener
 	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw();

@@ -62,7 +62,7 @@ private:
 	~AdcHub() throw();
 
 	/** Map session id to OnlineUser */
-	typedef HASH_MAP<uint32_t, OnlineUser*> SIDMap;
+	typedef unordered_map<uint32_t, OnlineUser*> SIDMap;
 	typedef SIDMap::const_iterator SIDIter;
 
 	void getUserList(OnlineUser::List& list) const {
