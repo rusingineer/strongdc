@@ -428,10 +428,13 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 		}
 
 		PartsInfo outPartialInfo;
-		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), partialInfo, outPartialInfo);
+		QueueItem::PartialSource ps(ClientManager::getInstance()->getMyNMDCNick(user), hubIpPort, remoteIp, udpPort);
+		ps.setPartialInfo(partialInfo);
+
+		QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), ps, outPartialInfo);
 		
 		if((udpPort > 0) && !outPartialInfo.empty()) {
-			sendPSR(remoteIp, udpPort, false, ClientManager::getInstance()->getMyNMDCNick(user), hubIpPort, tth, outPartialInfo);
+			sendPSR(remoteIp, udpPort, false, ps.getMyNick(), hubIpPort, tth, outPartialInfo);
 		}
 	} /*else if(x.compare(1, 4, "SCH ") == 0 && x[x.length() - 1] == 0x0a) {
 		try {

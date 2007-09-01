@@ -568,7 +568,7 @@ enum Strings { // @DontAdd
 	SETTINGS_BAD_SOFTWARE, // "Enable bad software detection"
 	SETTINGS_BIND_ADDRESS, // "Bind address"
 	SETTINGS_BIND_ADDRESS_HELP, // "Network interface for all connections"
-	SETTINGS_BOLD_OPTIONS, // "Tab bolding on content change"
+	SETTINGS_BOLD_OPTIONS, // "Tab highlight on content change"
 	SETTINGS_CERTIFICATES, // "Security Certificates"
 	SETTINGS_CLEAR_SEARCH, // "Clear search box after each search"
 	SETTINGS_CLIENTS, // "Clients"

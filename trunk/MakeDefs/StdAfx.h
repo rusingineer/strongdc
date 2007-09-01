@@ -26,7 +26,7 @@
 
 #include <string>
 #include <vector>
-#include <hash_map>
+
 using namespace _STL;
 
 //{{AFX_INSERT_LOCATION}}

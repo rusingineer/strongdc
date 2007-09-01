@@ -509,11 +509,51 @@ bool QueueManager::getTTH(const string& name, TTHValue& tth) const throw() {
 	return false;
 }
 
+struct PartsInfoReqParam{
+	PartsInfo	parts;
+	string		tth;
+	string		myNick;
+	string		hubIpPort;
+	string		ip;
+    uint16_t	udpPort;
+};
+
 void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	string searchString;
+	vector<PartsInfoReqParam*> params;
 
 	{
 		Lock l(cs);
+
+		// find max 10 pfs sources to exchange parts
+		// the source basis interval is 5 minutes
+		PFSSourceList sl;
+		fileQueue.findPFSSources(sl);
+
+		for(PFSSourceList::iterator i = sl.begin(); i != sl.end(); i++){
+			QueueItem::PartialSource::Ptr source = (*i->first).getPartialSource();
+			QueueItem* qi = i->second;
+			FileChunksInfo::Ptr chunks = FileChunksInfo::Get(&qi->getTTH());
+
+			if(!chunks) {
+				dcassert(0);
+				continue;
+			}
+
+			PartsInfoReqParam* param = new PartsInfoReqParam;
+			chunks->getPartialInfo(param->parts);
+			param->tth = qi->getTTH().toBase32();
+			param->ip  = source->getIp();
+			param->udpPort = source->getUdpPort();
+			param->myNick = source->getMyNick();
+			param->hubIpPort = source->getHubIpPort();
+
+			params.push_back(param);
+
+			source->setPendingQueryCount(source->getPendingQueryCount() + 1);
+			source->setNextQueryTime(aTick + 300000);		// 5 minutes
+
+		}
 
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {
 			// We keep 30 recent searches to avoid duplicate searches
@@ -533,6 +573,13 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 					LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + Util::getFileName(qi->getTargetFileName()));		
 			}
 		}
+	}
+
+	// Request parts info from partial file sharing sources
+	for(vector<PartsInfoReqParam*>::const_iterator i = params.begin(); i != params.end(); i++){
+		PartsInfoReqParam* param = *i;
+		SearchManager::getInstance()->sendPSR(param->ip, param->udpPort, true, param->myNick, param->hubIpPort, param->tth, param->parts);
+		delete param;
 	}
 
 	if(!searchString.empty()) {
@@ -765,7 +812,7 @@ QueueItem::Priority QueueManager::hasDownload(const UserPtr& aUser) throw() {
 	return qi->getPriority();
 }
 namespace {
-typedef HASH_MAP_X(TTHValue, const DirectoryListing::File*, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>) TTHMap;
+typedef unordered_map<TTHValue, const DirectoryListing::File*, TTHValue::Hash> TTHMap;
 
 // *** WARNING *** 
 // Lock(cs) makes sure that there's only one thread accessing this
@@ -944,7 +991,7 @@ again:
 	bool useChunks = true;
 	if(q->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
 		if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
-			freeBlock = q->getChunksInfo()->getChunk(source->getPartialInfo(), aUser->getLastDownloadSpeed());
+			freeBlock = q->getChunksInfo()->getChunk(source->getPartialSource()->getPartialInfo(), aUser->getLastDownloadSpeed());
 		} else {
 			freeBlock = q->getChunksInfo()->getChunk(useChunks, aUser->getLastDownloadSpeed());
 		}
@@ -1752,18 +1799,17 @@ bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) th
 }
 
 bool QueueManager::dropSource(Download* d) {
-	size_t activeSegments, onlineUsers, iHighSpeed = SETTING(DISCONNECT_FILE_SPEED);
+	size_t activeSegments, onlineUsers;
 	uint64_t overallSpeed;
-	UserPtr aUser = d->getUser();
 
 	{
 	    Lock l(cs);
 
-		QueueItem* q = userQueue.getRunning(aUser);
+		QueueItem* q = userQueue.getRunning(d->getUser());
 
 		if(!q) return false;
 
-   		dcassert(q->isSource(aUser));
+   		dcassert(q->isSource(d->getUser()));
 
 		if(!q->isSet(QueueItem::FLAG_AUTODROP)) return true;
 
@@ -1773,11 +1819,12 @@ bool QueueManager::dropSource(Download* d) {
 	}
 
 	if(!SETTING(DROP_MULTISOURCE_ONLY) || (activeSegments >= 2)) {
+		size_t iHighSpeed = SETTING(DISCONNECT_FILE_SPEED);
 		if((iHighSpeed == 0) || (overallSpeed > iHighSpeed*1024)) {
 			if(onlineUsers > 2) {
-				aUser->setLastDownloadSpeed((size_t)d->getRunningAverage());
+				d->getUser()->setLastDownloadSpeed((size_t)d->getRunningAverage());
 				if(d->getRunningAverage() < SETTING(REMOVE_SPEED)*1024) {
-					removeSource(d->getTarget(), aUser, QueueItem::Source::FLAG_SLOW);
+					removeSource(d->getTarget(), d->getUser(), QueueItem::Source::FLAG_SLOW);
 				} else {
 					d->getUserConnection().disconnect();
 				}
@@ -1788,7 +1835,7 @@ bool QueueManager::dropSource(Download* d) {
 	return true;
 }
 
-bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth, const PartsInfo& partialInfo, PartsInfo& outPartialInfo) {
+bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth, const QueueItem::PartialSource& partialSource, PartsInfo& outPartialInfo) {
 	bool wantConnection = false;
 	dcassert(outPartialInfo.empty());
 
@@ -1819,7 +1866,7 @@ bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth
 		chunksInfo->getPartialInfo(outPartialInfo);
 		
 		// Any parts for me?
-		wantConnection = chunksInfo->isSource(partialInfo);
+		wantConnection = chunksInfo->isSource(partialSource.getPartialInfo());
 
 		// If this user isn't a source and has no parts needed, ignore it
 		QueueItem::SourceIter si = qi->getSource(aUser);
@@ -1837,6 +1884,11 @@ bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth
 				qi->addSource(aUser);
 				si = qi->getSource(aUser);
 				si->setFlag(QueueItem::Source::FLAG_PARTIAL);
+
+				QueueItem::PartialSource* ps = new QueueItem::PartialSource(partialSource.getMyNick(),
+					partialSource.getHubIpPort(), partialSource.getIp(), partialSource.getUdpPort());
+				si->setPartialSource(ps);
+
 				userQueue.add(qi, aUser);
 				dcassert(si != qi->getSources().end());
 				fire(QueueManagerListener::SourcesUpdated(), qi);
@@ -1844,7 +1896,7 @@ bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth
 		}
 
 		// Update source's parts info
-		si->setPartialInfo(partialInfo);
+		si->getPartialSource()->setPartialInfo(partialSource.getPartialInfo());
 	}
 	
 	// Connect to this user
@@ -1881,6 +1933,48 @@ bool QueueManager::handlePartialSearch(const TTHValue& tth, PartsInfo& _outParts
 
 	return !_outPartsInfo.empty();
 }
+
+// compare nextQueryTime, get the oldest ones
+void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl) 
+{
+	typedef multimap<time_t, pair<QueueItem::SourceIter, QueueItem*> > Buffer;
+	Buffer buffer;
+	uint64_t now = GET_TICK();
+
+	for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i) {
+		QueueItem* q = i->second;
+
+		if(q->getSize() < PARTIAL_SHARE_MIN_SIZE) continue;
+
+		QueueItem::SourceList& sources = q->getSources();
+		QueueItem::SourceList& badSources = q->getBadSources();
+
+		for(QueueItem::SourceIter j = sources.begin(); j != sources.end(); ++j) {
+			if(	(*j).isSet(QueueItem::Source::FLAG_PARTIAL) && (*j).getPartialSource()->getNextQueryTime() <= now &&
+				(*j).getPartialSource()->getPendingQueryCount() < 10)
+			{
+				buffer.insert(make_pair((*j).getPartialSource()->getNextQueryTime(), make_pair(j, q)));
+			}
+		}
+
+		for(QueueItem::SourceIter j = badSources.begin(); j != badSources.end(); ++j) {
+			if(	(*j).isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY) == false && (*j).isSet(QueueItem::Source::FLAG_PARTIAL) &&
+				(*j).getPartialSource()->getNextQueryTime() <= now && (*j).getPartialSource()->getPendingQueryCount() < 10 )
+			{
+				buffer.insert(make_pair((*j).getPartialSource()->getNextQueryTime(), make_pair(j, q)));
+			}
+		}
+	}
+
+	// copy to results
+	dcassert(sl.empty());
+	const int32_t maxElements = 10;
+	sl.reserve(maxElements);
+	for(Buffer::iterator i = buffer.begin(); i != buffer.end() && sl.size() < maxElements; i++){
+		sl.push_back(i->second);
+	}
+}
+
 /**
  * @file
  * $Id$

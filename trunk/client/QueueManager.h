@@ -42,7 +42,7 @@ class UserConnection;
 class DirectoryItem {
 public:
 	typedef DirectoryItem* Ptr;
-	typedef HASH_MULTIMAP<UserPtr, Ptr, User::HashFunction> DirectoryMap;
+	typedef unordered_multimap<UserPtr, Ptr, User::Hash> DirectoryMap;
 	typedef DirectoryMap::const_iterator DirectoryIter;
 	typedef pair<DirectoryIter, DirectoryIter> DirectoryPair;
 	
@@ -136,7 +136,7 @@ public:
 	void saveQueue() throw();
 
 	bool handlePartialSearch(const TTHValue& tth, PartsInfo& _outPartsInfo);
-	bool handlePartialResult(const UserPtr& aUser, const TTHValue& tth, const PartsInfo& partialInfo, PartsInfo& outPartialInfo);
+	bool handlePartialResult(const UserPtr& aUser, const TTHValue& tth, const QueueItem::PartialSource& partialSource, PartsInfo& outPartialInfo);
 	
 	bool dropSource(Download* d);
 
@@ -166,8 +166,9 @@ public:
 	GETSET(uint64_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
 
-	typedef HASH_MAP_X(CID, string, CID::Hash, equal_to<CID>, less<CID>) PfsQueue;
+	typedef unordered_map<CID, string, CID::Hash> PfsQueue;
 	typedef PfsQueue::iterator PfsIter;
+	typedef vector<pair<QueueItem::SourceIter, QueueItem*> > PFSSourceList;
 
 	/** All queue items by target */
 	class FileQueue {
@@ -187,6 +188,9 @@ public:
 		uint8_t getMaxSegments(int64_t filesize) const;
 		void find(StringList& sl, int64_t aSize, const string& ext);
 		void find(QueueItem::List& ql, const TTHValue& tth);
+
+		// find some PFS sources to exchange parts info
+		void findPFSSources(PFSSourceList&);
 
 		QueueItem* findAutoSearch(deque<string>& recent) const;
 		size_t getSize() const { return queue.size(); }

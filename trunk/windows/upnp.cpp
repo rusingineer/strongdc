@@ -21,8 +21,8 @@
 
 #include <ole2.h>
 #include "UPnP.h"
-#include <atlconv.h>
 #include "../client/Util.h"
+#include "../client/Text.h"
 
 UPnP::UPnP(const string theIPAddress, const string theProtocol, const string theDescription, const unsigned short thePort) {
 	// need some messy string conversions in here
@@ -33,20 +33,26 @@ UPnP::UPnP(const string theIPAddress, const string theProtocol, const string the
 	PortsAreOpen		= false;
 	
 	PortNumber		    = thePort;
-	bstrProtocol        = A2BSTR(theProtocol.c_str());
-	bstrInternalClient  = A2BSTR(theIPAddress.c_str());
-	bstrDescription		= A2BSTR(theDescription.c_str());
-	bstrExternalIP		= A2BSTR("");
+	bstrProtocol        = SysAllocString(Text::toT(theProtocol).c_str());
+	bstrInternalClient  = SysAllocString(Text::toT(theIPAddress).c_str());
+	bstrDescription		= SysAllocString(Text::toT(theDescription).c_str());
+	bstrExternalIP		= SysAllocString(L"");
 	pUN = NULL;
 }
 
-
 // Opens the UPnP ports defined when the object was created
 HRESULT UPnP::OpenPorts() {
-	HRESULT hr = CoCreateInstance (__uuidof(UPnPNAT),
+	// Lacking the __uuidof in mingw...
+	CLSID upnp;
+	OLECHAR upnps[] = L"{AE1E00AA-3FD5-403C-8A27-2BBDC30CD0E1}";
+	CLSIDFromString(upnps, &upnp);
+	IID iupnp;
+	OLECHAR iupnps[] = L"{B171C812-CC76-485A-94D8-B6B3A2794E99}";
+	CLSIDFromString(iupnps, &iupnp);
+	HRESULT hr = CoCreateInstance (upnp,
 		NULL,
 		CLSCTX_INPROC_SERVER,
-		__uuidof(IUPnPNAT),
+		iupnp,
 		(void**)&pUN);
 
 	if(SUCCEEDED(hr)) {
@@ -98,17 +104,12 @@ HRESULT UPnP::ClosePorts() {
 			pSPMC->Release();
 		}
 
-		SysFreeString(bstrProtocol);
-		SysFreeString(bstrInternalClient);
-		SysFreeString(bstrDescription);
-		SysFreeString(bstrExternalIP);
 	}
 	return hr;
 }
 
 // Returns the current external IP address
 string UPnP::GetExternalIP() {
-  	USES_CONVERSION;
 	HRESULT hr;
 
 	// Check if we opened the desired port, 'cause we use it for getting the IP
@@ -161,7 +162,7 @@ string UPnP::GetExternalIP() {
 	// Check and convert the result
 	string tmp;
 	if(bstrExternal != NULL) {
-		tmp = OLE2A(bstrExternal);
+		tmp = Text::wideToAcp(bstrExternal);
   	} else {
 		tmp = Util::emptyString;
   	}
@@ -180,6 +181,10 @@ UPnP::~UPnP() {
 	if (pUN) {
 		pUN->Release();
 	}
+	SysFreeString(bstrProtocol);
+	SysFreeString(bstrInternalClient);
+	SysFreeString(bstrDescription);
+	SysFreeString(bstrExternalIP);
 }
 
 /**

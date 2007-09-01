@@ -82,10 +82,10 @@ typedef pair<string, string> StringPair;
 typedef vector<StringPair> StringPairList;
 typedef StringPairList::iterator StringPairIter;
 
-typedef HASH_MAP<string, string> StringMap;
+typedef std::tr1::unordered_map<string, string> StringMap;
 typedef StringMap::iterator StringMapIter;
 
-typedef HASH_SET<string> StringSet;
+typedef std::tr1::unordered_set<string> StringSet;
 typedef StringSet::iterator StringSetIter;
 
 typedef vector<wstring> WStringList;
@@ -127,7 +127,7 @@ typedef WStringPairList::iterator WStringPairIter;
 #endif
 
 
-typedef HASH_MAP<wstring, wstring> WStringMap;
+typedef unordered_map<wstring, wstring> WStringMap;
 typedef WStringMap::iterator WStringMapIter;
 
 #ifdef UNICODE
@@ -142,7 +142,9 @@ typedef WStringPairList TStringPairList;
 
 typedef WStringMap TStringMap;
 typedef WStringMapIter TStringMapIter;
+
 #else
+
 typedef string tstring;
 typedef StringList TStringList;
 typedef StringIter TStringIter;
@@ -153,6 +155,7 @@ typedef StringPairList TStringPairList;
 
 typedef StringMap TStringMap;
 typedef StringMapIter TStringMapIter;
+
 #endif
 
 extern void startup(void (*f)(void*, const tstring&), void* p);

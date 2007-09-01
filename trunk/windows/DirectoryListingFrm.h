@@ -364,7 +364,7 @@ private:
 
 	StringMap ucLineParams;
 
-	typedef HASH_MAP_X(UserPtr, DirectoryListingFrame*, User::HashFunction, equal_to<UserPtr>, less<UserPtr>) UserMap;
+	typedef unordered_map<UserPtr, DirectoryListingFrame*, User::Hash> UserMap;
 	typedef UserMap::const_iterator UserIter;
 	
 	static UserMap lists;

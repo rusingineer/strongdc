@@ -58,7 +58,7 @@ void Transfer::updateRunningAverage() {
 	lastTick = tick;
 }
 
-void Transfer::getParams(const UserConnection& aSource, StringMap& params) {
+void Transfer::getParams(const UserConnection& aSource, StringMap& params) const {
 	params["userNI"] = aSource.getUser()->getFirstNick();
 	params["userI4"] = aSource.getRemoteIp();
 	StringList hubNames = ClientManager::getInstance()->getHubNames(aSource.getUser()->getCID());

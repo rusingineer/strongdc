@@ -26,9 +26,6 @@
 #include "Speaker.h"
 #include "CriticalSection.h"
 
-#include <hash_set>
-
-
 class WebServerListener{
 public:
 	template<int I>	struct X { enum { TYPE = I };  };
@@ -113,7 +110,7 @@ private:
 		}
 	};
 
-	typedef hash_map <const char *, WebPageInfo*, hash<const char *>, eqstr> WebPages;
+	typedef unordered_map<const char *, WebPageInfo*, hash<const char *>, eqstr> WebPages;
 	WebPages pages;
 
 	string getDLQueue();

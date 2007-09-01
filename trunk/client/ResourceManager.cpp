@@ -33,7 +33,7 @@ void ResourceManager::loadLanguage(const string& aFile) {
 		SimpleXML xml;
 		xml.fromXML(f.read());
 
-		HASH_MAP<string, int> h;
+		unordered_map<string, int> h;
 		
 		for(int i = 0; i < LAST; ++i) {
 			h[names[i]] = i;
@@ -47,7 +47,7 @@ void ResourceManager::loadLanguage(const string& aFile) {
 				xml.stepIn();
 
 				while(xml.findChild("String")) {
-					HASH_MAP<string, int>::const_iterator j = h.find(xml.getChildAttrib("Name"));
+					unordered_map<string, int>::const_iterator j = h.find(xml.getChildAttrib("Name"));
 
 					if(j != h.end()) {
 						strings[j->second] = xml.getChildData();

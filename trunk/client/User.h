@@ -19,13 +19,13 @@
 #ifndef DCPLUSPLUS_CLIENT_USER_H
 #define DCPLUSPLUS_CLIENT_USER_H
 
-#include "forward.h"
 #include "Util.h"
 #include "Pointer.h"
 #include "CID.h"
 #include "FastAlloc.h"
 #include "CriticalSection.h"
 #include "Flags.h"
+#include "forward.h"
 
 /** A user connected to one or more hubs. */
 class User : public FastAlloc<User>, public PointerBase, public Flags
@@ -45,13 +45,8 @@ public:
 		FIREBALL	= 0x200
 	};
 
-	struct HashFunction {
-#ifdef _MSC_VER
-		static const size_t bucket_size = 4;
-		static const size_t min_buckets = 8;
-#endif
+	struct Hash {
 		size_t operator()(const UserPtr& x) const { return ((size_t)(&(*x)))/sizeof(User); }
-		bool operator()(const UserPtr& a, const UserPtr& b) const { return (&(*a)) < (&(*b)); }
 	};
 
 	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }

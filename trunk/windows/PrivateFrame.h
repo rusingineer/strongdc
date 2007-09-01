@@ -195,7 +195,7 @@ private:
 	~PrivateFrame() { }
 
 	bool created;
-	typedef HASH_MAP<UserPtr, PrivateFrame*, User::HashFunction> FrameMap;
+	typedef unordered_map<UserPtr, PrivateFrame*, User::Hash> FrameMap;
 	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 	ChatCtrl ctrlClient;

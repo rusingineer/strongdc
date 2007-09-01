@@ -79,6 +79,7 @@ public:
 		};
 		typedef vector<Ptr> List;
 		typedef List::const_iterator Iter;
+		typedef unordered_set<TTHValue, TTHValue::Hash> TTHSet;
 		
 		List directories;
 		File::List files;
@@ -94,8 +95,8 @@ public:
 		size_t getTotalFileCount(bool adls = false);		
 		int64_t getTotalSize(bool adls = false);
 		void filterList(DirectoryListing& dirList);
-		void filterList(HASH_SET_X(TTHValue, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>)& l);
-		void getHashList(HASH_SET_X(TTHValue, TTHValue::Hash, equal_to<TTHValue>, less<TTHValue>)& l);
+		void filterList(TTHSet& l);
+		void getHashList(TTHSet& l);
 		
 		size_t getFileCount() { return files.size(); }
 		

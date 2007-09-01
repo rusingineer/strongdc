@@ -174,14 +174,10 @@ private:
 	};
 
 	struct fci_hash {
-#ifdef _MSC_VER 
-		static const size_t bucket_size = 4;
-		static const size_t min_buckets = 8;
-#endif
 		size_t operator()(FloodCacheItem::FCIMapper __x) const { return (__x.c1 ^ __x.c2); }
-		bool operator()(const FloodCacheItem::FCIMapper& a, const FloodCacheItem::FCIMapper& b) {
-			return a.c1 < b.c1 && a.c2 < b.c2;
-		};
+		//bool operator()(const FloodCacheItem::FCIMapper& a, const FloodCacheItem::FCIMapper& b) {
+		//	return a.c1 < b.c1 && a.c2 < b.c2;
+		//};
 	};
 	
 	struct fci_equal_to : public binary_function<FloodCacheItem::FCIMapper, FloodCacheItem::FCIMapper, bool> {
@@ -190,7 +186,7 @@ private:
 		}
 	};
 
-	typedef HASH_MAP<FloodCacheItem::FCIMapper, FloodCacheItem*, fci_hash, fci_equal_to> FCIMap;
+	typedef unordered_map<FloodCacheItem::FCIMapper, FloodCacheItem*, fci_hash, fci_equal_to> FCIMap;
 	typedef FCIMap::iterator FCIIter;
 	
 	static FCIMap flood_cache;
