@@ -848,13 +848,13 @@ void TransferView::on(ConnectionManagerListener::Failed, const ConnectionQueueIt
 
 void TransferView::on(DownloadManagerListener::Starting, const Download* aDownload) {
 	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true);
-	bool chunkInfo = aDownload->isSet(Download::FLAG_MULTI_CHUNK) && !aDownload->isSet(Download::FLAG_TREE_DOWNLOAD);
+	bool chunkInfo = aDownload->isSet(Download::FLAG_MULTI_CHUNK) && aDownload->getType() != Transfer::TYPE_TREE;
 
 	ui->setStatus(ItemInfo::STATUS_RUNNING);
 	ui->setPos(chunkInfo ? 0 : aDownload->getPos());
 	ui->setActual(chunkInfo ? 0 : aDownload->getStartPos() + aDownload->getActual());
 	ui->setSize(chunkInfo ? aDownload->getChunkSize() : aDownload->getSize());
-	ui->setTarget(Text::toT(aDownload->getTarget()));
+	ui->setTarget(Text::toT(aDownload->getPath()));
 	ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
 	ui->multiSource = chunkInfo;
 
@@ -865,7 +865,7 @@ void TransferView::on(DownloadManagerListener::Starting, const Download* aDownlo
 	} else {
 		ui->setIP(Text::toT(country + " (" + ip + ")"), WinUtil::getFlagImage(country.c_str()));
 	}
-	if(aDownload->isSet(Download::FLAG_TREE_DOWNLOAD)) {
+	if(aDownload->getType() == Transfer::TYPE_TREE) {
 		ui->setStatus(ItemInfo::TREE_DOWNLOAD);
 	}
 
@@ -878,7 +878,7 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 	for(DownloadList::const_iterator j = dl.begin(); j != dl.end(); ++j) {
 		Download* d = *j;
 		
-		bool chunkInfo = d->isSet(Download::FLAG_MULTI_CHUNK) && !d->isSet(Download::FLAG_TREE_DOWNLOAD);
+		bool chunkInfo = d->isSet(Download::FLAG_MULTI_CHUNK) && d->getType() != Transfer::TYPE_TREE;
 		
 		UpdateInfo* ui = new UpdateInfo(d->getUser(), true);
 		ui->setStatus(ItemInfo::STATUS_RUNNING);
@@ -907,7 +907,7 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 
 		tstring statusString;
 
-		if(d->isSet(Download::FLAG_PARTIAL)) {
+		if(d->getType() == Transfer::TYPE_PARTIAL_FILE) {
 			statusString += _T("[P]");
 		}
 		if(d->getUserConnection().isSecure()) {
@@ -950,7 +950,7 @@ void TransferView::on(DownloadManagerListener::Failed, const Download* aDownload
 	ui->setPos(0);
 	ui->setStatusString(Text::toT(aReason));
 	ui->setSize(aDownload->getSize());
-	ui->setTarget(Text::toT(aDownload->getTarget()));
+	ui->setTarget(Text::toT(aDownload->getPath()));
 
 	string ip = aDownload->getUserConnection().getRemoteIp();
 	string country = Util::getIpCountry(ip);
@@ -984,7 +984,7 @@ void TransferView::on(UploadManagerListener::Starting, const Upload* aUpload) {
 	ui->setStatus(ItemInfo::STATUS_RUNNING);
 	ui->setPos(aUpload->getPos());
 	ui->setActual(aUpload->getStartPos() + aUpload->getActual());
-	ui->setSize(aUpload->isSet(Upload::FLAG_TTH_LEAVES) ? aUpload->getSize() : aUpload->getFileSize());
+	ui->setSize(aUpload->getType() == Transfer::TYPE_TREE ? aUpload->getSize() : aUpload->getFileSize());
 	ui->setTarget(Text::toT(aUpload->getSourceFile()));
 
 	if(!aUpload->isSet(Upload::FLAG_RESUMED)) {
@@ -1017,11 +1017,11 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 		ui->setSpeed(u->getRunningAverage());
 
 		_stprintf(buf, CTSTRING(UPLOADED_BYTES), Util::formatBytesW(u->getPos()).c_str(), 
-			(double)u->getPos()*100.0/(double)(u->isSet(Upload::FLAG_TTH_LEAVES) ? u->getSize() : u->getFileSize()), Util::formatSeconds((GET_TICK() - u->getStart())/1000).c_str());
+			(double)u->getPos()*100.0/(double)(u->getType() == Transfer::TYPE_TREE ? u->getSize() : u->getFileSize()), Util::formatSeconds((GET_TICK() - u->getStart())/1000).c_str());
 
 		tstring statusString;
 
-		if(u->isSet(Upload::FLAG_PARTIAL_SHARE)) {
+		if(u->getType() == Transfer::TYPE_PARTIAL_FILE) {
 			statusString += _T("[P]");
 		}
 		if(u->isSet(Upload::FLAG_CHUNKED)) {
@@ -1192,7 +1192,7 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 	ui->setActual(ui->pos);
 	ui->setSize(qi->getSize());
 
-	if(qi->getStatus() == QueueItem::STATUS_RUNNING)
+	if(qi->isRunning())
 		ui->setStatus(ItemInfo::STATUS_RUNNING);
 	else
 		ui->setStatus(ItemInfo::STATUS_WAITING);

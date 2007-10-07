@@ -1544,8 +1544,8 @@ void SearchFrame::updateSearchList(SearchResult* sr) {
 	bool doSizeCompare = sel == SearchResult::COLUMN_SIZE && parseFilter(mode, size);
 
 	if(sr != NULL) {
-		if(!matchFilter(sr, sel, doSizeCompare, mode, size))
-			ctrlResults.deleteItem(sr);
+//		if(!matchFilter(sr, sel, doSizeCompare, mode, size))
+//			ctrlResults.deleteItem(sr);
 	} else {
 		ctrlResults.SetRedraw(FALSE);
 		ctrlResults.DeleteAllItems();

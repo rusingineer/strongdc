@@ -55,7 +55,7 @@ class FinishedItem;
 typedef FinishedItem* FinishedItemPtr;
 typedef std::vector<FinishedItemPtr> FinishedItemList;
 
-
+class FinishedManager;
 
 class Identity;
 
@@ -81,6 +81,8 @@ class UnZFilter;
 class Upload;
 typedef Upload* UploadPtr;
 typedef std::vector<UploadPtr> UploadList;
+
+class UploadQueueItem;
 
 class User;
 typedef Pointer<User> UserPtr;

@@ -392,7 +392,6 @@ enum Strings { // @DontAdd
 	NO, // "No"
 	NO_CERTIFICATE_FILE_SET, // "TLS disabled, no certificate file set"
 	NO_DIRECTORY_SPECIFIED, // "No directory specified"
-	NO_DOWNLOADS_FROM_PASSIVE, // "Can't download from passive users when you're passive"
 	NO_DOWNLOADS_FROM_SELF, // "You're trying to download from yourself!"
 	NO_ERRORS, // "No errors"
 	NO_FREE_BLOCK, // "No free block"

@@ -393,7 +393,6 @@
 		<String Name="No">No</String>
 		<String Name="NoCertificateFileSet">TLS disabled, no certificate file set</String>
 		<String Name="NoDirectorySpecified">No directory specified</String>
-		<String Name="NoDownloadsFromPassive">Can't download from passive users when you're passive</String>
 		<String Name="NoDownloadsFromSelf">You're trying to download from yourself!</String>
 		<String Name="NoErrors">No errors</String>
 		<String Name="NoFreeBlock">No free block</String>

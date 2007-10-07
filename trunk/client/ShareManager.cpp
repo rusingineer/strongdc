@@ -1392,7 +1392,7 @@ void ShareManager::on(DownloadManagerListener::Complete, const Download* d, bool
 	if(BOOLSETTING(ADD_FINISHED_INSTANTLY)) {
 		// Check if finished download is supposed to be shared
 		Lock l(cs);
-		const string& n = d->getTarget();
+		const string& n = d->getPath();
 		for(Directory::MapIter i = directories.begin(); i != directories.end(); i++) {
 			if(Util::strnicmp(i->first, n, i->first.size()) == 0 && n[i->first.size()] == PATH_SEPARATOR) {
 				string s = n.substr(i->first.size()+1);

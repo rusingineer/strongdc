@@ -20,14 +20,23 @@
 #include "DCPlusPlus.h"
 
 #include "FinishedManager.h"
+
+#include "ClientManager.h"
 #include "FinishedManagerListener.h"
 #include "Download.h"
 #include "Upload.h"
+#include "DownloadManager.h"
+#include "UploadManager.h"
 
 #include "FileChunksInfo.h"
 #include "LogManager.h"
 #include "ResourceManager.h"
 
+FinishedManager::FinishedManager() { 
+	DownloadManager::getInstance()->addListener(this);
+	UploadManager::getInstance()->addListener(this);
+}
+	
 FinishedManager::~FinishedManager() throw() {
 	DownloadManager::getInstance()->removeListener(this);
 	UploadManager::getInstance()->removeListener(this);
@@ -61,13 +70,13 @@ void FinishedManager::removeAll(bool upload /* = false */) {
 
 void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, bool) throw()
 {
-	if(!d->isSet(Download::FLAG_USER_LIST) && !SETTING(FINISHFILE).empty() && !BOOLSETTING(SOUNDS_DISABLED)) {
+	if(d->getType() == Transfer::TYPE_FILE && !SETTING(FINISHFILE).empty() && !BOOLSETTING(SOUNDS_DISABLED)) {
 		PlaySound(Text::toT(SETTING(FINISHFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	}
 		
-	if(!d->isSet(Download::FLAG_TREE_DOWNLOAD) && (!d->isSet(Download::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
+	if(d->getType() == Transfer::TYPE_FILE || (d->getType() == Transfer::TYPE_FULL_LIST && BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
 		FinishedItemPtr item = new FinishedItem(
-			d->getTarget(), d->getUser(),
+			d->getPath(), d->getUser(),
 			Util::toString(ClientManager::getInstance()->getHubNames(d->getUser()->getCID())),
 			d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->getTTH().toBase32());
 		{
@@ -79,7 +88,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, b
 	
 		size_t BUF_SIZE = STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 128;
 		char* buf = new char[BUF_SIZE];
-		snprintf(buf, BUF_SIZE, CSTRING(FINISHED_DOWNLOAD), Util::getFileName(d->getTarget()).c_str(), 
+		snprintf(buf, BUF_SIZE, CSTRING(FINISHED_DOWNLOAD), Util::getFileName(d->getPath()).c_str(), 
 			d->getUser()->getFirstNick().c_str());
 
 		LogManager::getInstance()->message(buf);
@@ -89,7 +98,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, b
 
 void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw()
 {
-	if(!u->isSet(Upload::FLAG_TTH_LEAVES) && (!u->isSet(Upload::FLAG_USER_LIST) || BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
+	if(u->getType() == Transfer::TYPE_FILE || (u->getType() == Transfer::TYPE_FULL_LIST && BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
 		if ((!SETTING(UPLOADFILE).empty() && (!BOOLSETTING(SOUNDS_DISABLED))))
 			PlaySound(Text::toT(SETTING(UPLOADFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 

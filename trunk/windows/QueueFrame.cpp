@@ -127,7 +127,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 					online++;
 			}
 
-			if(getStatus() == QueueItem::STATUS_WAITING) {
+			if(!isRunning()) {
 				TCHAR buf[64];
 				if(online > 0) {
 					size_t size = QueueManager::getInstance()->getSourcesCount(qi);
@@ -154,7 +154,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 						return buf;
 					}
 				}
-			} else if(getStatus() == QueueItem::STATUS_RUNNING) {
+			} else if(isRunning()) {
 				TCHAR buf[64];
 				size_t size = QueueManager::getInstance()->getSourcesCount(qi);
 				if(size == 1) {
@@ -167,7 +167,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 		}
 		case COLUMN_SEGMENTS: {
 			const QueueItem* qi = QueueManager::getInstance()->fileQueue.find(getTarget());
-			return Util::toStringW(qi ? qi->getCurrents().size() : 0) + _T("/") + Util::toStringW(qi ? qi->getMaxSegments() : 0);
+			return Util::toStringW(qi ? qi->getDownloads().size() : 0) + _T("/") + Util::toStringW(qi ? qi->getMaxSegments() : 0);
 		}
 		case COLUMN_SIZE: return (getSize() == -1) ? TSTRING(UNKNOWN) : Util::formatBytesW(getSize());
 		case COLUMN_DOWNLOADED: return (getSize() > 0) ? Util::formatBytesW(getDownloadedBytes()) + _T(" (") + Util::toStringW((double)getDownloadedBytes()*100.0/(double)getSize()) + _T("%)") : Util::emptyStringT;

@@ -116,8 +116,6 @@ private:
 	void on(Data, UserConnection*, const uint8_t*, size_t) throw();
 	void on(Error, UserConnection*, const string&) throw();
 	void on(Failed, UserConnection*, const string&) throw();
-	void on(Sending, UserConnection*, int64_t) throw();
-	void on(FileLength, UserConnection*, int64_t) throw();
 	void on(MaxedOut, UserConnection*, string param = Util::emptyString) throw();
 	void on(FileNotAvailable, UserConnection*) throw();
 	void on(ListLength, UserConnection* aSource, const string& aListLength);
