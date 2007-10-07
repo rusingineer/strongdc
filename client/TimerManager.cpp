@@ -55,7 +55,7 @@ uint64_t TimerManager::getTick() {
 		cycles++;
 	}
 	lastTick = tick;
-	return static_cast<uint64_t>(cycles) * (static_cast<uint64_t>(std::numeric_limits<DWORD>::max()) + 1) + tick;
+	return static_cast<uint64_t>(cycles) * (static_cast<uint64_t>(std::numeric_limits<DWORD>::max()) + 1) + static_cast<uint64_t>(tick);
 #else
 	timeval tv2;
 	gettimeofday(&tv2, NULL);

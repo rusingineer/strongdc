@@ -19,12 +19,16 @@
 #ifndef DCPLUSPLUS_CLIENT_FINISHED_MANAGER_H
 #define DCPLUSPLUS_CLIENT_FINISHED_MANAGER_H
 
-#include "DownloadManager.h"
-#include "UploadManager.h"
+#include "DownloadManagerListener.h"
+#include "UploadManagerListener.h"
 
+#include "Speaker.h"
 #include "CriticalSection.h"
 #include "Singleton.h"
 #include "FinishedManagerListener.h"
+#include "Util.h"
+#include "User.h"
+#include "MerkleTree.h"
 
 class FinishedItem
 {
@@ -107,10 +111,7 @@ public:
 private:
 	friend class Singleton<FinishedManager>;
 	
-	FinishedManager() { 
-		DownloadManager::getInstance()->addListener(this);
-		UploadManager::getInstance()->addListener(this);
-	}
+	FinishedManager();
 	~FinishedManager() throw();
 
 	void on(DownloadManagerListener::Complete, const Download* d, bool) throw();

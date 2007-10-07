@@ -42,13 +42,6 @@ public:
 	typedef unordered_map<UserPtr, List, User::Hash> UserListMap;
 	typedef UserListMap::const_iterator UserListIter;
 
-	enum Status {
-		/** The queue item is waiting to be downloaded and can be found in userQueue */
-		STATUS_WAITING,
-		/** This item is being downloaded and can be found in running */
-		STATUS_RUNNING
-	};
-
 	enum Priority {
 		DEFAULT = -1,
 		PAUSED = 0,
@@ -89,25 +82,26 @@ public:
 		FLAG_AUTODROP			= 0x2000
 	};
 
+	/**
+	 * Source parts info
+	 * Meaningful only when Source::FLAG_PARTIAL is set
+	 */
 	class PartialSource : public FastAlloc<PartialSource>, public PointerBase {
 	public:
 		PartialSource(const string& aMyNick, const string& aHubIpPort, const string& aIp, uint16_t udp) : 
 		  myNick(aMyNick), hubIpPort(aHubIpPort), ip(aIp), udpPort(udp), nextQueryTime(0), pendingQueryCount(0) { }
 		
-		 typedef Pointer<PartialSource> Ptr;
+		~PartialSource() { }
 
-		/**
-		 * Source parts info
-		 * Meaningful only when FLAG_PARTIAL is set
-		 * If this source is not bad source, empty parts info means full file
-		 */
+		typedef Pointer<PartialSource> Ptr;
+
 		GETSET(PartsInfo, partialInfo, PartialInfo);
 		GETSET(string, myNick, MyNick);
 		GETSET(string, hubIpPort, HubIpPort);
 		GETSET(string, ip, Ip);
 		GETSET(uint64_t, nextQueryTime, NextQueryTime);
 		GETSET(uint16_t, udpPort, UdpPort);
-		GETSET(char, pendingQueryCount, PendingQueryCount);
+		GETSET(uint8_t, pendingQueryCount, PendingQueryCount);
 	};
 
 	class Source : public Flags {
@@ -148,13 +142,11 @@ public:
 
 	QueueItem(const string& aTarget, int64_t aSize, 
 		Priority aPriority, Flags::MaskType aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue& tth) :
-	Flags(aFlag), target(aTarget), currentDownload(NULL), averageSpeed(0),
-	size(aSize), downloadedBytes(aDownloadedBytes), status(STATUS_WAITING), priority(aPriority), added(aAdded),
+	Flags(aFlag), target(aTarget), averageSpeed(0), chunksInfo(NULL),
+	size(aSize), downloadedBytes(aDownloadedBytes), priority(aPriority), added(aAdded),
 	tthRoot(tth), autoPriority(false)
 	{
 		inc();
-		dcassert(chunksInfo == NULL);
-
 		setFlag(FLAG_AUTODROP);
 		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || isSet(FLAG_CHECK_FILE_LIST) || (size <= MIN_CHUNK_SIZE*2)) {
 			unsetFlag(FLAG_MULTI_SOURCE);
@@ -163,13 +155,12 @@ public:
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
-		size(rhs.size), downloadedBytes(rhs.downloadedBytes), status(rhs.status), priority(rhs.priority), currents(rhs.currents),
-		currentDownload(rhs.currentDownload), added(rhs.added), tthRoot(rhs.tthRoot),
+		size(rhs.size), downloadedBytes(rhs.downloadedBytes), priority(rhs.priority), downloads(rhs.downloads),
+		added(rhs.added), tthRoot(rhs.tthRoot),
 		averageSpeed(rhs.averageSpeed), autoPriority(rhs.autoPriority)
 	{
 		inc();
-		if(rhs.getCurrentDownload() == NULL)
-			setChunksInfo(rhs.chunksInfo);
+		setChunksInfo(rhs.chunksInfo);
 	}
 
 	~QueueItem() {
@@ -180,15 +171,7 @@ public:
 		}	
 	}
 
-	size_t countOnlineUsers() const {
-		size_t n = 0;
-		SourceConstIter i = sources.begin();
-		for(; i != sources.end(); ++i) {
-			if(i->getUser()->isOnline())
-				n++;
-		}
-		return n;
-	}
+	size_t countOnlineUsers() const;
 
 	SourceList& getSources() { return sources; }
 	const SourceList& getSources() const { return sources; }
@@ -217,39 +200,20 @@ public:
 		return false;
 	}
 	
-	void addCurrent(const UserPtr& aUser) {
-		dcassert(isSource(aUser));
-		currents.push_back(aUser);
-	}
+	int64_t getDownloadedBytes() const;
+	void setDownloadedBytes(int64_t pos) { downloadedBytes = pos; }
 	
-	bool isCurrent(const UserPtr& aUser) const {
-		dcassert(isSource(aUser));
-		return find(currents.begin(), currents.end(), aUser) != currents.end();
-	}
-
-	// All setCurrent(NULL) should be replaced with this
-	void removeCurrent(const UserPtr& aUser) {
-		dcassert(isSource(aUser));
-		dcassert(find(currents.begin(), currents.end(), aUser) != currents.end());
-
-		currents.erase(find(currents.begin(), currents.end(), aUser));
-	}
-
-	int64_t getDownloadedBytes() const {
-		if(isSet(QueueItem::FLAG_MULTI_SOURCE))
-			return chunksInfo->getDownloadedSize();
-		return downloadedBytes;
-	}
-
-	void setDownloadedBytes(int64_t pos) {
-		downloadedBytes = pos;
-	}
-	
-	const Download* getCurrentDownload() const { dcassert(!isSet(QueueItem::FLAG_MULTI_SOURCE)); return currentDownload; }
-	void setCurrentDownload(Download* aCurrentDownload) { dcassert(!isSet(QueueItem::FLAG_MULTI_SOURCE)); currentDownload = aCurrentDownload; }
+	DownloadList& getDownloads() { return downloads; }
 	
 	FileChunksInfo::Ptr getChunksInfo() const { dcassert(isSet(QueueItem::FLAG_MULTI_SOURCE)); return chunksInfo; }
 	void setChunksInfo(FileChunksInfo* aChunksInfo) { dcassert(isSet(QueueItem::FLAG_MULTI_SOURCE)); aChunksInfo->inc(); chunksInfo = aChunksInfo; }
+
+	bool isRunning() const {
+		return !isWaiting();
+	}
+	bool isWaiting() const {
+		return downloads.empty();
+	}
 
 	string getListName() const {
 		dcassert(isSet(QueueItem::FLAG_USER_LIST));
@@ -261,25 +225,22 @@ public:
 	}
 
 	const string& getTempTarget();
-	void setTempTarget(const string& aTempTarget) {
-		tempTarget = aTempTarget;
-	}
+	void setTempTarget(const string& aTempTarget) { tempTarget = aTempTarget; }
 
 	GETSET(TTHValue, tthRoot, TTH);
-	GETSET(UserList, currents, Currents);
+	GETSET(DownloadList, downloads, Downloads);
 	GETSET(string, target, Target);
 	GETSET(int64_t, size, Size);
 	GETSET(time_t, added, Added);
 	GETSET(size_t, averageSpeed, AverageSpeed);
-	GETSET(Status, status, Status);
 	GETSET(Priority, priority, Priority);
 	GETSET(uint8_t, maxSegments, MaxSegments);
 	GETSET(bool, autoPriority, AutoPriority);
 	
 	QueueItem::Priority calculateAutoPriority() const {
-		if(getAutoPriority()){
+		if(autoPriority) {
 			QueueItem::Priority p;
-			int percent = (int)(getDownloadedBytes() * 10.0 / getSize());
+			int percent = static_cast<int>(getDownloadedBytes() * 10.0 / size);
 			switch(percent){
 					case 0:
 					case 1:
@@ -309,9 +270,9 @@ public:
 
 	bool hasFreeSegments() const {
 		if(!isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-			return (status != STATUS_RUNNING);
+			return isWaiting();
 		} else {
-			return ((currents.size() < maxSegments) &&
+			return ((downloads.size() < maxSegments) &&
 					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) > averageSpeed)));
 		}
 	}
@@ -322,14 +283,9 @@ private:
 	friend class QueueManager;
 	SourceList sources;
 	SourceList badSources;
-
 	string tempTarget;
 	int64_t downloadedBytes;
-
-	union {
-		const Download* currentDownload;
-		FileChunksInfo* chunksInfo;
-	};
+	FileChunksInfo* chunksInfo;
 
 	void addSource(const UserPtr& aUser);
 	void removeSource(const UserPtr& aUser, Flags::MaskType reason);

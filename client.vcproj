@@ -288,6 +288,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\QueueItem.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\QueueManager.cpp"
 				>
 			</File>

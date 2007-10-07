@@ -326,7 +326,7 @@ private:
 	void on(ConnectionManagerListener::Removed, const ConnectionQueueItem* aCqi) throw();
 	void on(ConnectionManagerListener::StatusChanged, const ConnectionQueueItem* aCqi) throw();
 
-	void on(DownloadManagerListener::Complete, const Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, Util::getFileName(aDownload->getTarget()), isTree);}
+	void on(DownloadManagerListener::Complete, const Download* aDownload, bool isTree) throw() { onTransferComplete(aDownload, false, Util::getFileName(aDownload->getPath()), isTree);}
 	void on(DownloadManagerListener::Failed, const Download* aDownload, const string& aReason) throw();
 	void on(DownloadManagerListener::Starting, const Download* aDownload) throw();
 	void on(DownloadManagerListener::Tick, const DownloadList& aDownload) throw();

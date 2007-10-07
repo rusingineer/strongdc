@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #ifndef DCPLUSPLUS_CLIENT_TRANSFER_H_
 #define DCPLUSPLUS_CLIENT_TRANSFER_H_
 
@@ -8,9 +26,16 @@
 
 class Transfer {
 public:
-	static const string TYPE_FILE;		///< File transfer
-	static const string TYPE_LIST;		///< Partial file list
-	static const string TYPE_TTHL;		///< TTH Leaves
+	enum Type {
+		TYPE_FILE,
+		TYPE_PARTIAL_FILE,
+		TYPE_FULL_LIST,
+		TYPE_PARTIAL_LIST,
+		TYPE_TREE,
+		TYPE_LAST
+	};
+	
+	static const string names[TYPE_LAST];
 
 	static const string USER_LIST_NAME;
 	static const string USER_LIST_NAME_BZ;
@@ -60,6 +85,7 @@ public:
 	const UserConnection& getUserConnection() const { return userConnection; }
 
 	GETSET(TTHValue, tth, TTH);
+	GETSET(Type, type, Type);
 	GETSET(uint64_t, start, Start);
 	GETSET(uint64_t, lastTick, LastTick);
 	GETSET(int64_t, runningAverage, RunningAverage);

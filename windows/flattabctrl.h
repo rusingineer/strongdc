@@ -623,22 +623,22 @@ private:
 		}
 	};
 
-	void moveTabs(TabInfo* aTab, bool after){
+	void moveTabs(TabInfo* aTab, bool after) {
 		if(moving == NULL)
 			return;
 
 		TabInfo::List::iterator i, j;
 		//remove the tab we're moving
-		for(j = tabs.begin(); j != tabs.end(); ++j){
-			if((*j) == moving){
+		for(j = tabs.begin(); j != tabs.end(); ++j) {
+			if((*j) == moving) {
 				tabs.erase(j);
 				break;
 			}
 		}
 
 		//find the tab we're going to insert before or after
-		for(i = tabs.begin(); i != tabs.end(); ++i){
-			if((*i) == aTab){
+		for(i = tabs.begin(); i != tabs.end(); ++i) {
+			if((*i) == aTab) {
 				if(after)
 					++i;
 				break;
@@ -687,7 +687,7 @@ private:
 	 * Draws a tab
 	 * @return The width of the tab
 	 */
-	void drawTab(CDC& dc, TabInfo* tab, int pos, int row, bool aActive = false) {
+	void drawTab(CDC& dc, const TabInfo* tab, int pos, int row, bool aActive = false) {
 		
 		int ypos = (getRows() - row - 1) * getTabHeight();
 

@@ -76,8 +76,6 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 		return false;
 	}
 	
-	bool partialShare = false;
-
 	InputStream* is = 0;
 	int64_t start = 0;
 	int64_t bytesLeft = 0;
@@ -85,12 +83,11 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 
 	bool userlist = (aFile == Transfer::USER_LIST_NAME_BZ || aFile == Transfer::USER_LIST_NAME);
 	bool free = userlist;
-	bool leaves = false;
-	bool partList = false;
 
 	string sourceFile;
+	Transfer::Type type;
 	try {
-		if(aType == Transfer::TYPE_FILE) {
+		if(aType == Transfer::names[Transfer::TYPE_FILE]) {
 			sourceFile = ShareManager::getInstance()->toReal(aFile);
 
 			if(aFile == Transfer::USER_LIST_NAME) {
@@ -125,7 +122,8 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 					is = new LimitedInputStream<true>(is, aBytes);
 				}
 			}
-		} else if(aType == Transfer::TYPE_TTHL) {
+			type = userlist ? Transfer::TYPE_FULL_LIST : Transfer::TYPE_FILE;			
+		} else if(aType == Transfer::names[Transfer::TYPE_TREE]) {
 			//sourceFile = ShareManager::getInstance()->toReal(aFile);
 			sourceFile = aFile;
 			MemoryInputStream* mis = ShareManager::getInstance()->getTree(aFile);
@@ -137,9 +135,9 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 			start = 0;
 			bytesLeft = size = mis->getSize();
 			is = mis;
-			leaves = true;
 			free = true;
-		} else if(aType == Transfer::TYPE_LIST) {
+			type = Transfer::TYPE_TREE;			
+		} else if(aType == Transfer::names[Transfer::TYPE_PARTIAL_LIST]) {
 			// Partial file list
 			MemoryInputStream* mis = ShareManager::getInstance()->generatePartialList(aFile, listRecursive);
 			if(mis == NULL) {
@@ -153,7 +151,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 	
 			is = mis;
 			free = true;
-			partList = true;
+			type = Transfer::TYPE_PARTIAL_LIST;
 		} else {
 			aSource.fileNotAvail("Unknown file type");
 			return false;
@@ -169,7 +167,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 			string tempTarget;
 
             if(QueueManager::getInstance()->getTargetByRoot(fileHash, target, tempTarget)){
-				if(aType == Transfer::TYPE_FILE) {
+				if(aType == Transfer::names[Transfer::TYPE_FILE]) {
 					sourceFile = tempTarget;
 					// check start position and bytes
 					FileChunksInfo::Ptr chunksInfo = FileChunksInfo::Get(&fileHash);
@@ -191,7 +189,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 								is = new LimitedInputStream<true>(is, aBytes);
 							}
 
-							partialShare = true;
+							type = Transfer::TYPE_PARTIAL_FILE;
 							goto ok;
 						}catch(const Exception&) {
 							aSource.fileNotAvail();
@@ -206,7 +204,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 				target = FinishedManager::getInstance()->getTarget(fileHash.toBase32());
 
 				if(!target.empty() && Util::fileExists(target)){
-					if(aType == Transfer::TYPE_FILE) {
+					if(aType == Transfer::names[Transfer::TYPE_FILE]) {
 						sourceFile = target;
 						try{
 							is = new SharedFileStream(sourceFile, aStartPos, 0, true);
@@ -224,7 +222,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 								is = new LimitedInputStream<true>(is, aBytes);
 							}
 
-							partialShare = true;
+							type = Transfer::TYPE_PARTIAL_FILE;
 							goto ok;
 						}catch(const Exception&){
 							aSource.fileNotAvail();
@@ -303,20 +301,14 @@ ok:
 	if(u->getSize() != size)
 		u->setFlag(Upload::FLAG_CHUNKED);
 
+	if(resumed)
+		u->setFlag(Upload::FLAG_RESUMED);
+
 	u->setFileSize(size);
 	u->setStartPos(start);
 	u->setSourceFile(sourceFile);
 
-	if(userlist)
-		u->setFlag(Upload::FLAG_USER_LIST);
-	if(leaves)
-		u->setFlag(Upload::FLAG_TTH_LEAVES);
-	if(partList)
-		u->setFlag(Upload::FLAG_PARTIAL_LIST);
-	if(partialShare)
-		u->setFlag(Upload::FLAG_PARTIAL_SHARE);
-	if(resumed)
-		u->setFlag(Upload::FLAG_RESUMED);
+	u->setType(type);
 
 	uploads.push_back(u);
 
@@ -396,7 +388,7 @@ void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, con
 	}
 	
 	int64_t bytes = -1;
-	if(prepareFile(*aSource, Transfer::TYPE_FILE, Util::toAdcFile(aFile), aResume, bytes)) {
+	if(prepareFile(*aSource, Transfer::names[Transfer::TYPE_FILE], Util::toAdcFile(aFile), aResume, bytes)) {
 		aSource->setState(UserConnection::STATE_SEND);
 		aSource->fileLength(Util::toString(aSource->getUpload()->getSize()));
 	}
@@ -483,8 +475,7 @@ void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSo
 }
 
 void UploadManager::logUpload(const Upload* u) {
-	if(BOOLSETTING(LOG_UPLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || !u->isSet(Upload::FLAG_USER_LIST)) && 
-		!u->isSet(Upload::FLAG_TTH_LEAVES)) {
+	if(BOOLSETTING(LOG_UPLOADS) && u->getType() != Transfer::TYPE_TREE && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || u->getType() != Transfer::TYPE_FULL_LIST)) {
 		StringMap params;
 		u->getParams(u->getUserConnection(), params);
 		LOG(LogManager::UPLOAD, params);
@@ -630,7 +621,8 @@ void UploadManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 }
 
 void UploadManager::on(GetListLength, UserConnection* conn) throw() { 
-	conn->listLen("42");
+	conn->error("GetListLength not supported");
+	conn->disconnect(false);
 }
 
 void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcCommand& c) throw() {
@@ -642,7 +634,7 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 	const string& type = c.getParam(0);
 	const string& ident = c.getParam(1);
 
-	if(type == Transfer::TYPE_FILE) {
+	if(type == Transfer::names[Transfer::TYPE_FILE]) {
 		try {
 			aSource->send(ShareManager::getInstance()->getFileInfo(ident));
 		} catch(const ShareException&) {

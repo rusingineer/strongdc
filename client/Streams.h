@@ -25,8 +25,7 @@
 STANDARD_EXCEPTION(FileException);
 
 /**
- * A naive output stream. We don't use the stl ones to avoid compiling STLPort,
- * besides this is a lot more lightweight (and less flexible)...
+ * A simple output stream. Intended to be used for nesting streams one inside the other.
  */
 class OutputStream {
 public:

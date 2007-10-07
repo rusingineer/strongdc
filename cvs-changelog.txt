@@ -1,3 +1,10 @@
+** svn327
+	added "AdWare.Win32.BHO.cw" to crash libraries
+	added "Traffic Compressor" to crash libraries
+	some DC++ SVN merge
+	!!! filelist downloads broken (DON' REPORT IT AS A BUG!)
+	!!! sometimes crashes in QueueManager::UserQueue::remove
+
 ** svn326
 	hash_* containers replaced with unordered_* to match the future C++ standard (DC++ SVN)
 	implemented periodic downloaded parts exchanging with partial sources

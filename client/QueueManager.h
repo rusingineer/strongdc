@@ -144,7 +144,7 @@ public:
 		QueueItem::List ql;
 		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
 			QueueItem* q = i->second;
-			if(q->getStatus() == QueueItem::STATUS_RUNNING) {
+			if(q->isRunning()) {
 				ql.push_back(q);
 			}
 		}
@@ -196,11 +196,7 @@ public:
 		size_t getSize() const { return queue.size(); }
 		const QueueItem::StringMap& getQueue() const { return queue; }
 		void move(QueueItem* qi, const string& aTarget);
-		void remove(QueueItem* qi) {
-			queue.erase(const_cast<string*>(&qi->getTarget()));
-			qi->dec();
-		}
-
+		void remove(QueueItem* qi);
 	private:
 		QueueItem::StringMap queue;
 	};
@@ -217,8 +213,8 @@ private:
 		QueueItem* getNext(const UserPtr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST, QueueItem* pNext = NULL);
 		QueueItem* getNextAll(const UserPtr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST);
 		QueueItem* getRunning(const UserPtr& aUser);
-		void setRunning(QueueItem* qi, const UserPtr& aUser);
-		void setWaiting(QueueItem* qi, const UserPtr& aUser);
+		void addDownload(QueueItem* qi, Download* d);
+		void removeDownload(QueueItem* qi, const UserPtr& d);
 		const QueueItem::UserListMap& getList(int p) const { return userQueue[p]; }
 		void remove(QueueItem* qi);
 		void remove(QueueItem* qi, const UserPtr& aUser);

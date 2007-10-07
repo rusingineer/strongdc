@@ -420,7 +420,7 @@ string WebServerManager::getDLQueue(){
 		ret += "		<td>" + Util::formatBytes(aQI->getSize()) + "</td>";
 		ret += "		<td>" + Util::formatBytes(aQI->getDownloadedBytes()) + " ("+ Util::toString(percent) + "%)</td>";
 		ret += "		<td>" + Util::formatBytes(aQI->getAverageSpeed()) + "/s</td>";
-		ret += "		<td>" + Util::toString((int)aQI->getCurrents().size())+"/"+Util::toString(aQI->getMaxSegments()) + "</td>";
+		ret += "		<td>" + Util::toString((int)aQI->getDownloads().size())+"/"+Util::toString(aQI->getMaxSegments()) + "</td>";
 		ret += "	</tr>";
 	}
 	ret+="</table>";

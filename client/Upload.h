@@ -8,14 +8,10 @@
 class Upload : public Transfer, public Flags {
 public:
 	enum Flags {
-		FLAG_USER_LIST = 0x01,
-		FLAG_TTH_LEAVES = 0x02,
-		FLAG_ZUPLOAD = 0x04,
-		FLAG_PARTIAL_LIST = 0x08,
-		FLAG_PENDING_KICK = 0x10,
-		FLAG_PARTIAL_SHARE = 0x20,
-		FLAG_RESUMED = 0x40,
-		FLAG_CHUNKED = 0x80
+		FLAG_ZUPLOAD = 0x01,
+		FLAG_PENDING_KICK = 0x02,
+		FLAG_RESUMED = 0x04,
+		FLAG_CHUNKED = 0x08
 	};
 
 	Upload(UserConnection& conn);

@@ -25,15 +25,15 @@
 #include "ResourceManager.h"
 #include "ClientManager.h"
 
-const string Transfer::TYPE_FILE = "file";
-const string Transfer::TYPE_LIST = "list";
-const string Transfer::TYPE_TTHL = "tthl";
+const string Transfer::names[] = {
+	"file", "file", "file", "list", "tthl"
+};
 
 const string Transfer::USER_LIST_NAME = "files.xml";
 const string Transfer::USER_LIST_NAME_BZ = "files.xml.bz2";
 
-Transfer::Transfer(UserConnection& conn) : start(0), lastTick(GET_TICK()), runningAverage(0),
-last(0), actual(0), pos(0), startPos(0), size(-1), fileSize(-1), userConnection(conn) { }
+Transfer::Transfer(UserConnection& conn) : start(0), lastTick(GET_TICK()), type(TYPE_FILE), runningAverage(0),
+	last(0), actual(0), pos(0), startPos(0), size(-1), fileSize(-1), userConnection(conn) { }
 
 void Transfer::updateRunningAverage() {
 	uint64_t tick = GET_TICK();
