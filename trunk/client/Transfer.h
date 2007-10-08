@@ -40,7 +40,7 @@ public:
 	static const string USER_LIST_NAME;
 	static const string USER_LIST_NAME_BZ;
 
-	Transfer(UserConnection& conn);
+	Transfer(UserConnection& conn, const string& path, const TTHValue& tth);
 	~Transfer() { };
 
 	int64_t getPos() const { return pos; }
@@ -80,11 +80,13 @@ public:
 
 	UserPtr getUser();
 	const UserPtr getUser() const;
+	
+	const string& getPath() const { return path; }
+	const TTHValue& getTTH() const { return tth; }
 
 	UserConnection& getUserConnection() { return userConnection; }
 	const UserConnection& getUserConnection() const { return userConnection; }
 
-	GETSET(TTHValue, tth, TTH);
 	GETSET(Type, type, Type);
 	GETSET(uint64_t, start, Start);
 	GETSET(uint64_t, lastTick, LastTick);
@@ -94,6 +96,10 @@ private:
 	Transfer(const Transfer&);
 	Transfer& operator=(const Transfer&);
 
+	/** The file being transferred */
+	string path;
+	/** TTH of the file being transferred */
+	TTHValue tth;
 	/** Bytes on last avg update */
 	int64_t last;
 	/** Total actual bytes transfered this session (compression?) */

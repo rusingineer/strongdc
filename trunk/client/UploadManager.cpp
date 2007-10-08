@@ -280,7 +280,7 @@ ok:
 		Upload* up = *i;
 		if(&aSource == &up->getUserConnection()) {
 			delayUploads.erase(i);
-			if(sourceFile != up->getSourceFile()) {
+			if(sourceFile != up->getPath()) {
 				logUpload(up);
 			} else {
 				resumed = true;
@@ -291,12 +291,9 @@ ok:
 		}
 	}
 
-	Upload* u = new Upload(aSource);
+	Upload* u = new Upload(aSource, sourceFile, TTHValue());
 	u->setStream(is);
-	if(aBytes == -1)
-		u->setSize(size);
-	else
-		u->setSize(start + bytesLeft);
+	u->setSize(aBytes == -1 ? size : start + bytesLeft);
 		
 	if(u->getSize() != size)
 		u->setFlag(Upload::FLAG_CHUNKED);
@@ -306,7 +303,6 @@ ok:
 
 	u->setFileSize(size);
 	u->setStartPos(start);
-	u->setSourceFile(sourceFile);
 
 	u->setType(type);
 
@@ -765,7 +761,7 @@ void UploadManager::abortUpload(const string& aFile, bool waiting){
 		for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); i++){
 			Upload* u = (*i);
 
-			if(u->getSourceFile() == aFile){
+			if(u->getPath() == aFile){
 				u->getUserConnection().disconnect(true);
 				nowait = false;
 			}
@@ -784,7 +780,7 @@ void UploadManager::abortUpload(const string& aFile, bool waiting){
 			for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); i++){
 				Upload* u = (*i);
 
-				if(u->getSourceFile() == aFile){
+				if(u->getPath() == aFile){
 					dcdebug("upload %s is not removed\n", aFile.c_str());
 					nowait = false;
 					break;

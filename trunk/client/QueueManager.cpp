@@ -293,45 +293,6 @@ void QueueManager::UserQueue::add(QueueItem* qi, const UserPtr& aUser) {
 	}
 }
 
-QueueItem* QueueManager::UserQueue::getNextAll(const UserPtr& aUser, QueueItem::Priority minPrio) {
-	int p = QueueItem::LAST - 1;
-
-	do {
-		QueueItem::UserListIter i = userQueue[p].find(aUser);
-		if(i != userQueue[p].end()) {
-			dcassert(!i->second.empty());
-			return i->second.front();
-		}
-		p--;
-	} while(p >= minPrio);
-
-	return NULL;
-}
-
-void QueueManager::UserQueue::addDownload(QueueItem* qi, Download* d) {
-	qi->getDownloads().push_back(d);
-
-	// Only one download per user...
-	dcassert(running.find(d->getUser()) == running.end());
-	running[d->getUser()] = qi;
-}
-
-void QueueManager::UserQueue::removeDownload(QueueItem* qi, const UserPtr& user) {
-	// Remove the download from running
-	running.erase(user);
-
-	for(DownloadList::iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); ++i) {
-		if((*i)->getUser() == user) {
-			qi->getDownloads().erase(i);
-			break;
-		}
-	}
-	
-	if(qi->isWaiting()) {
-		qi->setAverageSpeed(0);
-	}
-}
-
 QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Priority minPrio, QueueItem* pNext /* = NULL */) {
 	int p = QueueItem::LAST - 1;
 	bool fNext = false;
@@ -371,6 +332,45 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 	return NULL;
 }
 
+QueueItem* QueueManager::UserQueue::getNextAll(const UserPtr& aUser, QueueItem::Priority minPrio) {
+	int p = QueueItem::LAST - 1;
+
+	do {
+		QueueItem::UserListIter i = userQueue[p].find(aUser);
+		if(i != userQueue[p].end()) {
+			dcassert(!i->second.empty());
+			return i->second.front();
+		}
+		p--;
+	} while(p >= minPrio);
+
+	return NULL;
+}
+
+void QueueManager::UserQueue::addDownload(QueueItem* qi, Download* d) {
+	qi->getDownloads().push_back(d);
+
+	// Only one download per user...
+	dcassert(running.find(d->getUser()) == running.end());
+	running[d->getUser()] = qi;
+}
+
+void QueueManager::UserQueue::removeDownload(QueueItem* qi, const UserPtr& user) {
+	// Remove the download from running
+	running.erase(user);
+
+	for(DownloadList::iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); ++i) {
+		if((*i)->getUser() == user) {
+			qi->getDownloads().erase(i);
+			break;
+		}
+	}
+	
+	if(qi->isWaiting()) {
+		qi->setAverageSpeed(0);
+	}
+}
+
 QueueItem* QueueManager::UserQueue::getRunning(const UserPtr& aUser) {
 	QueueItem::UserIter i = running.find(aUser);
 	return (i == running.end()) ? 0 : i->second;
@@ -383,7 +383,7 @@ void QueueManager::UserQueue::remove(QueueItem* qi) {
 }
 
 void QueueManager::UserQueue::remove(QueueItem* qi, const UserPtr& aUser) {
-	if(!qi->isSet(QueueItem::FLAG_MULTI_SOURCE) && qi->isRunning()) {
+	if(qi->isRunning()) {
 		removeDownload(qi, aUser);
 	}
 	
@@ -885,9 +885,11 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 	Lock l(cs);
 
 	const UserPtr& aUser = aSource.getUser();
+	dcdebug("Getting download for %s...", aUser->getCID().toBase32().c_str());
 	// First check PFS's...
 	PfsIter pi = pfsQueue.find(aUser->getCID());
 	if(pi != pfsQueue.end()) {
+		dcdebug("partial %s\n", pi->second.c_str());
 		return new Download(aSource, pi->second);
 	}
 
@@ -895,8 +897,10 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 
 again:
 
-	if(!q)
+	if(!q) {
+		dcdebug("none\n");
 		return 0;
+	}
 
 	if((SETTING(FILE_SLOTS) != 0) && (q->isWaiting()) && !q->isSet(QueueItem::FLAG_TESTSUR) &&
 		!q->isSet(QueueItem::FLAG_USER_LIST) && (getRunningFiles().size() >= (size_t)SETTING(FILE_SLOTS))) {
@@ -945,10 +949,36 @@ again:
 	userQueue.addDownload(q, d);	
 
 	fire(QueueManagerListener::StatusUpdated(), q);
+	dcdebug("found %s\n", q->getTarget().c_str());
 	return d;
 }
 
-void QueueManager::putDownload(const Download* aDownload, bool finished, bool reportFinish) throw() {
+void QueueManager::moveFile(const string& source, const string& target) {
+	try {
+		File::ensureDirectory(target);
+		if(File::getSize(source) > MOVER_LIMIT) {
+			mover.moveFile(source, target);
+		} else {
+			File::renameFile(source, target);
+		}
+	} catch(const FileException&) {
+		try {
+			if(!SETTING(DOWNLOAD_DIRECTORY).empty()) {
+				File::renameFile(source, SETTING(DOWNLOAD_DIRECTORY) + Util::getFileName(target));
+			} else {
+				File::renameFile(source, Util::getFilePath(source) + Util::getFileName(target));
+			}
+		} catch(const FileException&) {
+			try {
+				File::renameFile(source, Util::getFilePath(source) + Util::getFileName(target));
+			} catch(const FileException&) {
+				// Ignore...
+			}
+		}
+	}
+}
+
+void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFinish) throw() {
 	UserList getConn;
 	string fname;
 	UserPtr up = aDownload->getUser();
@@ -970,7 +1000,7 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool re
 
 			if(q) {
 				if(aDownload->getType() == Transfer::TYPE_FULL_LIST) {
-					if(aDownload->getPath() == Transfer::USER_LIST_NAME_BZ) {
+					if(aDownload->isSet(Download::FLAG_XML_BZ_LIST)) {
 						q->setFlag(QueueItem::FLAG_XML_BZLIST);
 					} else {
 						q->unsetFlag(QueueItem::FLAG_XML_BZLIST);
@@ -983,13 +1013,11 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool re
 						dcassert(aDownload->getTreeValid());
 						HashManager::getInstance()->addTree(aDownload->getTigerTree());
 
-						if(q->isRunning()) {
-							userQueue.removeDownload(q, aDownload->getUser());
-							fire(QueueManagerListener::StatusUpdated(), q);
-						}
+						userQueue.removeDownload(q, aDownload->getUser());
+						fire(QueueManagerListener::StatusUpdated(), q);
 					} else {
 						// Now, let's see if this was a directory download filelist...
-						if( (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) && directories.find(q->getDownloads()[0]->getUser()) != directories.end()) ||
+						if( (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) && directories.find(aDownload->getUser()) != directories.end()) ||
 							(q->isSet(QueueItem::FLAG_MATCH_QUEUE)) ) 
 						{
 							fname = q->getListName();
@@ -1005,6 +1033,24 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool re
 								dir = i->second;
 								dirMap.erase(i);
 							}
+						}
+
+						// Check if we're anti-fragging...
+						if(aDownload->isSet(Download::FLAG_ANTI_FRAG)) {
+							// Ok, rename the file to what we expect it to be...
+							try {
+								const string& tgt = aDownload->getTempTarget().empty() ? aDownload->getPath() : aDownload->getTempTarget();
+								File::renameFile(aDownload->getDownloadTarget(), tgt);
+								aDownload->unsetFlag(Download::FLAG_ANTI_FRAG);
+							} catch(const FileException& e) {
+								dcdebug("AntiFrag: %s\n", e.getError().c_str());
+								// Now what?
+							}
+						}
+						
+						// Check if we need to move the file
+						if( !aDownload->getTempTarget().empty() && (Util::stricmp(aDownload->getPath().c_str(), aDownload->getTempTarget().c_str()) != 0) ) {
+							moveFile(aDownload->getTempTarget(), aDownload->getPath());
 						}
 
 						fire(QueueManagerListener::Finished(), q, dir, aDownload->getAverageSpeed());
@@ -1034,11 +1080,9 @@ void QueueManager::putDownload(const Download* aDownload, bool finished, bool re
 						q->getOnlineUsers(getConn);
 					}
 	
-					if(q->isRunning()) {
-						userQueue.removeDownload(q, aDownload->getUser());
-						if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE) || (reportFinish && q->isWaiting())) {
-							fire(QueueManagerListener::StatusUpdated(), q);						
-						}
+					userQueue.removeDownload(q, aDownload->getUser());
+					if(!q->isSet(QueueItem::FLAG_MULTI_SOURCE) || (reportFinish && q->isWaiting())) {
+						fire(QueueManagerListener::StatusUpdated(), q);						
 					}
 				}
 			} else if(aDownload->getType() != Transfer::TYPE_TREE) {

@@ -24,7 +24,8 @@ public:
 		FLAG_TTH_CHECK			= 0x10,
 		FLAG_TESTSUR			= 0x20,
 		FLAG_CHECK_FILE_LIST	= 0x40,
-		FLAG_OVERLAPPED			= 0x80
+		FLAG_OVERLAPPED			= 0x80,
+		FLAG_XML_BZ_LIST		= 0x100
 	};
 
 	Download(UserConnection& conn, const string& pfsDir) throw();
@@ -57,7 +58,6 @@ public:
 	/** @internal */
 	AdcCommand getCommand(bool zlib) const;
 
-	GETSET(string, path, Path);
 	GETSET(string, tempTarget, TempTarget);
 	GETSET(uint64_t, lastTick, LastTick);
 	GETSET(OutputStream*, file, File);

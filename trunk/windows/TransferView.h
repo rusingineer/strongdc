@@ -334,7 +334,7 @@ private:
 
 	void on(UploadManagerListener::Starting, const Upload* aUpload) throw();
 	void on(UploadManagerListener::Tick, const UploadList& aUpload) throw();
-	void on(UploadManagerListener::Complete, const Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getSourceFile(), false); }
+	void on(UploadManagerListener::Complete, const Upload* aUpload) throw() { onTransferComplete(aUpload, true, aUpload->getPath(), false); }
 
 	void on(QueueManagerListener::StatusUpdated, const QueueItem*) throw();
 	void on(QueueManagerListener::Removed, const QueueItem*) throw();

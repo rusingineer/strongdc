@@ -96,7 +96,7 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		fire(DownloadManagerListener::Tick(), tickList);
 }
 
-void DownloadManager::FileMover::moveFile(const string& source, const string& target) {
+void QueueManager::FileMover::moveFile(const string& source, const string& target) {
 	Lock l(cs);
 	files.push_back(make_pair(source, target));
 	if(!active) {
@@ -105,7 +105,7 @@ void DownloadManager::FileMover::moveFile(const string& source, const string& ta
 	}
 }
 
-int DownloadManager::FileMover::run() {
+int QueueManager::FileMover::run() {
 	for(;;) {
 		FilePair next;
 		{
@@ -249,19 +249,13 @@ void DownloadManager::checkDownloads(UserConnection* aConn, bool reconn /*=false
 
 	aConn->setState(UserConnection::STATE_SND);
 
-	if(d->getType() == Transfer::TYPE_FULL_LIST) {
-		if(aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {
-			d->setPath(Transfer::USER_LIST_NAME_BZ);
-		} else {
-			d->setPath(Transfer::USER_LIST_NAME);
-		}
-	}
-
 	{
 		Lock l(cs);
 		downloads.push_back(d);
 	}
-	
+	if(aConn->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST) && d->getType() == Transfer::TYPE_FULL_LIST) {
+		d->setFlag(Download::FLAG_XML_BZ_LIST);
+	}
 	aConn->send(d->getCommand(aConn->isSet(UserConnection::FLAG_SUPPORTS_ZLIB_GET)));
 }
 
@@ -300,7 +294,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 	}
 	
 	if(d->getPos() >= d->getSize() || d->getSize() > d->getFileSize()) {
-		// Already finished?
+		// Already finished? A zero-byte file list could cause this...
 		aSource->setDownload(NULL);
 		removeDownload(d);
 		QueueManager::getInstance()->putDownload(d, false);
@@ -538,15 +532,12 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 	} catch(const FileException& e) {
 		failDownload(aSource, e.getError());
 	} catch(const Exception& e) {
-		// Nuke the bytes we have written, this is probably a compression error
-		d->resetPos();
 		failDownload(aSource, e.getError());
 	}
 }
 
 /** Download finished! */
 void DownloadManager::handleEndData(UserConnection* aSource) {
-
 	dcassert(aSource->getState() == UserConnection::STATE_RUNNING);
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
@@ -587,20 +578,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		try {
 			d->getFile()->flush();
 			delete d->getFile();
-			d->setFile(NULL);
-
-			// Check if we're anti-fragging...
-			if(d->isSet(Download::FLAG_ANTI_FRAG)) {
-				// Ok, rename the file to what we expect it to be...
-				try {
-					const string& tgt = d->getTempTarget().empty() ? d->getPath() : d->getTempTarget();
-					File::renameFile(d->getDownloadTarget(), tgt);
-					d->unsetFlag(Download::FLAG_ANTI_FRAG);
-				} catch(const FileException& e) {
-					dcdebug("AntiFrag: %s\n", e.getError().c_str());
-					// Now what?
-				}
-			}
+			d->setFile(0);
 		} catch(const FileException& e) {
 			failDownload(aSource, e.getError());
 			return;
@@ -611,11 +589,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 
 		if(BOOLSETTING(LOG_DOWNLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || d->getType() != Transfer::TYPE_FULL_LIST) && d->getType() != Transfer::TYPE_TREE) {
 			logDownload(aSource, d);
-		}
-	
-		// Check if we need to move the file
-		if( !d->getTempTarget().empty() && (Util::stricmp(d->getPath().c_str(), d->getTempTarget().c_str()) != 0) ) {
-			moveFile(d->getTempTarget(), d->getPath());
 		}
 	}
 
@@ -641,32 +614,6 @@ void DownloadManager::logDownload(UserConnection* aSource, Download* d) {
 	StringMap params;
 	d->getParams(*aSource, params);
 	LOG(LogManager::DOWNLOAD, params);
-}
-
-void DownloadManager::moveFile(const string& source, const string& target) {
-	try {
-		File::ensureDirectory(target);
-		if(File::getSize(source) > MOVER_LIMIT) {
-			mover.moveFile(source, target);
-		} else {
-			File::renameFile(source, target);
-		}
-	} catch(const FileException&) {
-		try {
-			if(!SETTING(DOWNLOAD_DIRECTORY).empty()) {
-				File::renameFile(source, SETTING(DOWNLOAD_DIRECTORY) + Util::getFileName(target));
-			} else {
-				File::renameFile(source, Util::getFilePath(source) + Util::getFileName(target));
-			}
-		} catch(const FileException&) {
-			try {
-				File::renameFile(source, Util::getFilePath(source) + Util::getFileName(target));
-			} catch(const FileException&) {
-				// Ignore...
-			}
-		}
-	}
-
 }
 
 void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSource, string param) throw() { 

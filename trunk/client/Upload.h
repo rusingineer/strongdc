@@ -14,12 +14,11 @@ public:
 		FLAG_CHUNKED = 0x08
 	};
 
-	Upload(UserConnection& conn);
+	Upload(UserConnection& conn, const string& path, const TTHValue& tth);
 	~Upload();
 
 	void getParams(const UserConnection& aSource, StringMap& params) const;
 
-	GETSET(string, sourceFile, SourceFile);
 	GETSET(InputStream*, stream, Stream);
 };
 
