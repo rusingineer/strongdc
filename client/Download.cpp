@@ -25,20 +25,18 @@
 #include "QueueItem.h"
 #include "HashManager.h"
 
-Download::Download(UserConnection& conn, const string& pfsDir) throw() : Transfer(conn),
-	path(pfsDir), file(0), treeValid(false)
+Download::Download(UserConnection& conn, const string& pfsDir) throw() : Transfer(conn, pfsDir, TTHValue()),
+	file(0), treeValid(false)
 {
 	conn.setDownload(this);
 	setType(TYPE_PARTIAL_LIST);
 }
 
-Download::Download(UserConnection& conn, QueueItem& qi, bool partial) throw() : Transfer(conn),
-	path(qi.getTarget()), tempTarget(qi.getTempTarget()), file(0),
-	lastTick(GET_TICK()), treeValid(false)
+Download::Download(UserConnection& conn, QueueItem& qi, bool partial) throw() : Transfer(conn, qi.getTarget(), qi.getTTH()),
+	tempTarget(qi.getTempTarget()), file(0), lastTick(GET_TICK()), treeValid(false)
 {
 	conn.setDownload(this);
 	
-	setTTH(qi.getTTH());
 	setSize(qi.getSize());
 	setFileSize(qi.getSize());
 
@@ -93,7 +91,6 @@ Download::Download(UserConnection& conn, QueueItem& qi, bool partial) throw() : 
 			}
 		}
 	}
-
 }
 
 Download::~Download() {
@@ -105,8 +102,14 @@ AdcCommand Download::getCommand(bool zlib) const {
 	
 	cmd.addParam(Transfer::names[getType()]);
 
-	if(getType() == TYPE_PARTIAL_LIST || getType() == TYPE_FULL_LIST) {
+	if(getType() == TYPE_PARTIAL_LIST) { 
 		cmd.addParam(Util::toAdcFile(getPath()));
+	} else if(getType() == TYPE_FULL_LIST) {
+		if(isSet(Download::FLAG_XML_BZ_LIST)) {
+			cmd.addParam(USER_LIST_NAME_BZ);
+		} else {
+			cmd.addParam(USER_LIST_NAME);
+		}
 	} else {
 		cmd.addParam("TTH/" + getTTH().toBase32());
 	}

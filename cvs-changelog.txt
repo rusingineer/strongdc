@@ -1,3 +1,8 @@
+** svn328
+	hopefully fixed filelist downloads
+	some DC++ SVN merge
+	this svn hasn't been tested at all !!!
+
 ** svn327
 	added "AdWare.Win32.BHO.cw" to crash libraries
 	added "Traffic Compressor" to crash libraries

@@ -70,25 +70,6 @@ private:
 	uint32_t mCycleTime;
 	size_t mBytesSpokenFor, mDownloadLimit, mByteSlice;
 	
-	enum { MOVER_LIMIT = 10*1024*1024 };
-	class FileMover : public Thread {
-	public:
-		FileMover() : active(false) { }
-		~FileMover() { join(); }
-
-		void moveFile(const string& source, const string& target);
-		int run();
-	private:
-		typedef pair<string, string> FilePair;
-		typedef vector<FilePair> FileList;
-		typedef FileList::const_iterator FileIter;
-
-		bool active;
-
-		FileList files;
-		CriticalSection cs;
-	} mover;
-	
 	CriticalSection cs;
 	DownloadList downloads;
 	UserConnectionList idlers;
@@ -98,7 +79,6 @@ private:
 	void fileNotAvailable(UserConnection* aSource);
 	void noSlots(UserConnection* aSource, string param = Util::emptyString);
 	
-	void moveFile(const string& source, const string&target);
 	void logDownload(UserConnection* aSource, Download* d);
 	int64_t getResumePos(const string& file, const TigerTree& tt, int64_t startPos);
 

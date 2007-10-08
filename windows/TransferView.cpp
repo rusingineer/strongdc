@@ -985,7 +985,7 @@ void TransferView::on(UploadManagerListener::Starting, const Upload* aUpload) {
 	ui->setPos(aUpload->getPos());
 	ui->setActual(aUpload->getStartPos() + aUpload->getActual());
 	ui->setSize(aUpload->getType() == Transfer::TYPE_TREE ? aUpload->getSize() : aUpload->getFileSize());
-	ui->setTarget(Text::toT(aUpload->getSourceFile()));
+	ui->setTarget(Text::toT(aUpload->getPath()));
 
 	if(!aUpload->isSet(Upload::FLAG_RESUMED)) {
 		ui->setStatusString(TSTRING(UPLOAD_STARTING));

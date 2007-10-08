@@ -103,7 +103,7 @@ void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw
 			PlaySound(Text::toT(SETTING(UPLOADFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 		FinishedItemPtr item = new FinishedItem(
-			u->getSourceFile(), u->getUser(),
+			u->getPath(), u->getUser(),
 			Util::toString(ClientManager::getInstance()->getHubNames(u->getUser()->getCID())),
 			u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
 		{
@@ -115,7 +115,7 @@ void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw
 
 		size_t BUF_SIZE = STRING(FINISHED_UPLOAD).size() + MAX_PATH + 128;
 		char* buf = new char[BUF_SIZE];
-		snprintf(buf, BUF_SIZE, CSTRING(FINISHED_UPLOAD), (Util::getFileName(u->getSourceFile())).c_str(), 
+		snprintf(buf, BUF_SIZE, CSTRING(FINISHED_UPLOAD), (Util::getFileName(u->getPath())).c_str(), 
 			u->getUser()->getFirstNick().c_str());
 
 		LogManager::getInstance()->message(buf);
