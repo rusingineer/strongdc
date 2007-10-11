@@ -1,3 +1,8 @@
+** svn329
+	some stuff about average speed measuring
+	DC++ version bump
+	again not tested !!!
+
 ** svn328
 	hopefully fixed filelist downloads
 	some DC++ SVN merge

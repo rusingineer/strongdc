@@ -688,7 +688,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 				}
 			} else {
 				segs = 0;
-				ui->queueItem->setAverageSpeed(0);
 			}
 			
 			if(segs != pp->parent->running)
@@ -697,7 +696,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			ui->setActual((int64_t)((double)ui->pos * (ratio == 0 ? 1.00 : ratio)));
 			ui->setTimeLeft((totalSpeed > 0) ? ((ui->size - ui->pos) / totalSpeed) : 0);
 			ui->setSpeed(totalSpeed);
-			ui->queueItem->setAverageSpeed(static_cast<size_t>(totalSpeed));
 
 			pp->parent->update(*ui);
 			updateItem(ctrlTransfers.findItem(pp->parent), ui->updateMask);
@@ -885,7 +883,7 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		ui->setActual(chunkInfo ? d->getActual() : d->getStartPos() + d->getActual());
 		ui->setPos(chunkInfo ? d->getTotal() : d->getPos());
 		ui->setTimeLeft(d->getSecondsLeft());
-		ui->setSpeed(d->getRunningAverage());
+		ui->setSpeed(static_cast<int64_t>(d->getAverageSpeed()));
 		ui->multiSource = chunkInfo;
 
 		if(chunkInfo) {
@@ -934,7 +932,7 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		}
 		statusString += buf;
 		ui->setStatusString(statusString);
-		if((d->getRunningAverage() == 0) && ((GET_TICK() - d->getStart()) > 1000)) {
+		if((d->getAverageSpeed() < 1) && ((GET_TICK() - d->getStart()) > 1000)) {
 			d->getUserConnection().disconnect();
 		}
 			
@@ -1014,7 +1012,7 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 		ui->setActual(u->getStartPos() + u->getActual());
 		ui->setPos(u->getPos());
 		ui->setTimeLeft(u->getSecondsLeft(true)); // we are interested when whole file is finished and not only one chunk
-		ui->setSpeed(u->getRunningAverage());
+		ui->setSpeed(static_cast<int64_t>(u->getAverageSpeed()));
 
 		_stprintf(buf, CTSTRING(UPLOADED_BYTES), Util::formatBytesW(u->getPos()).c_str(), 
 			(double)u->getPos()*100.0/(double)(u->getType() == Transfer::TYPE_TREE ? u->getSize() : u->getFileSize()), Util::formatSeconds((GET_TICK() - u->getStart())/1000).c_str());
@@ -1045,7 +1043,7 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 		ui->setStatusString(statusString);
 					
 		tasks.add(UPDATE_ITEM, ui);
-		if((u->getRunningAverage() == 0) && ((GET_TICK() - u->getStart()) > 1000)) {
+		if((u->getAverageSpeed() < 1) && ((GET_TICK() - u->getStart()) > 1000)) {
 			u->getUserConnection().disconnect(true);
 		}
 	}

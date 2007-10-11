@@ -198,7 +198,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 			continue;
 
 		if(chunk->pos > i->first){
-			speed = chunk->download ? chunk->download->getAverageSpeed() : 1;
+			speed = chunk->download ? static_cast<int64_t>(chunk->download->getAverageSpeed()) : 1;
 			if(speed == 0) speed = 1;
 		}else{
 			speed = chunk->download ? chunk->download->getUser()->getLastDownloadSpeed() : DEFAULT_SPEED;
@@ -232,7 +232,7 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 	int64_t b = maxChunk->pos;
 	int64_t e = maxChunk->end;
 
-	speed = maxChunk->download ? maxChunk->download->getAverageSpeed() : DEFAULT_SPEED;
+	speed = maxChunk->download ? static_cast<int64_t>(maxChunk->download->getAverageSpeed()) : DEFAULT_SPEED;
 
 	if(speed == 0 && maxChunk->download){
 		speed =  maxChunk->download->getUser()->getLastDownloadSpeed();

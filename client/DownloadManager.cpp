@@ -74,11 +74,12 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 
 		if(d->getTotal() > 0) {
 			tickList.push_back(d);
+			(*i)->tick();
 		}
 
 		if (d->getType() == Transfer::TYPE_FILE) {
 			if (d->getSize() > (SETTING(DISCONNECT_FILESIZE) * 1048576)) {
-				if((d->getRunningAverage() < SETTING(DISCONNECT_SPEED) * 1024)) {
+				if((d->getAverageSpeed() < SETTING(DISCONNECT_SPEED) * 1024)) {
 					if(	(((aTick - d->getLastTick())/1000) > (uint32_t)SETTING(DISCONNECT_TIME)) &&
 						(!QueueManager::getInstance()->dropSource(d)))
 					{
@@ -90,10 +91,11 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 				}
 			}
 		}
+		
+		if(tickList.size() > 0)
+			fire(DownloadManagerListener::Tick(), tickList);
+			
 	}
-	
-	if(tickList.size() > 0)
-		fire(DownloadManagerListener::Tick(), tickList);
 }
 
 void QueueManager::FileMover::moveFile(const string& source, const string& target) {
@@ -605,7 +607,7 @@ int64_t DownloadManager::getRunningAverage() {
 	int64_t avg = 0;
 	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
-		avg += d->getRunningAverage();
+		avg += static_cast<int64_t>(d->getAverageSpeed());
 	}
 	return avg;
 }
