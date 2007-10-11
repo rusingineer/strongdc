@@ -142,7 +142,7 @@ public:
 
 	QueueItem(const string& aTarget, int64_t aSize, 
 		Priority aPriority, Flags::MaskType aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue& tth) :
-	Flags(aFlag), target(aTarget), averageSpeed(0), chunksInfo(NULL),
+	Flags(aFlag), target(aTarget), chunksInfo(NULL),
 	size(aSize), downloadedBytes(aDownloadedBytes), priority(aPriority), added(aAdded),
 	tthRoot(tth), autoPriority(false)
 	{
@@ -156,8 +156,7 @@ public:
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
 		size(rhs.size), downloadedBytes(rhs.downloadedBytes), priority(rhs.priority), downloads(rhs.downloads),
-		added(rhs.added), tthRoot(rhs.tthRoot),
-		averageSpeed(rhs.averageSpeed), autoPriority(rhs.autoPriority)
+		added(rhs.added), tthRoot(rhs.tthRoot), autoPriority(rhs.autoPriority)
 	{
 		inc();
 		setChunksInfo(rhs.chunksInfo);
@@ -232,7 +231,6 @@ public:
 	GETSET(string, target, Target);
 	GETSET(int64_t, size, Size);
 	GETSET(time_t, added, Added);
-	GETSET(size_t, averageSpeed, AverageSpeed);
 	GETSET(Priority, priority, Priority);
 	GETSET(uint8_t, maxSegments, MaxSegments);
 	GETSET(bool, autoPriority, AutoPriority);
@@ -273,8 +271,18 @@ public:
 			return isWaiting();
 		} else {
 			return ((downloads.size() < maxSegments) &&
-					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) > averageSpeed)));
+					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) > getAverageSpeed())));
 		}
+	}
+
+	int64_t getAverageSpeed() const {
+		int64_t totalSpeed = 0;
+		
+		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); i++) {
+			totalSpeed += static_cast<int64_t>((*i)->getAverageSpeed());
+		}
+
+		return totalSpeed;
 	}
 
 private:

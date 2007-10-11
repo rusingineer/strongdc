@@ -23,6 +23,7 @@
 #include "MerkleTree.h"
 #include "TimerManager.h"
 #include "Util.h"
+#include "CriticalSection.h"
 
 class Transfer {
 public:
@@ -46,14 +47,15 @@ public:
 	int64_t getPos() const { return pos; }
 	void setPos(int64_t aPos) { pos = aPos; }
 
-	void resetPos() { pos = getStartPos(); }
 	void setStartPos(int64_t aPos) { startPos = aPos; pos = aPos; }
 	int64_t getStartPos() const { return startPos; }
 
 	void addPos(int64_t aBytes, int64_t aActual) { pos += aBytes; actual+= aActual; }
 
-	enum { AVG_PERIOD = 30000 };
-	void updateRunningAverage();
+	enum { SAMPLES = 15 };
+	
+	/** Record a sample for average calculation */
+	void tick();
 
 	int64_t getTotal() const { return getPos() - getStartPos(); }
 	int64_t getActual() const { return actual; }
@@ -61,15 +63,11 @@ public:
 	int64_t getSize() const { return size; }
 	void setSize(int64_t aSize) { size = aSize; }
 
-	int64_t getAverageSpeed() const {
-		int64_t diff = (int64_t)(GET_TICK() - getStart());
-		return (diff > 0) ? (getTotal() * (int64_t)1000 / diff) : 0;
-	}
+	double getAverageSpeed() const;
 
 	int64_t getSecondsLeft(bool wholeFile = false) {
-		updateRunningAverage();
-		int64_t avg = getRunningAverage();
-		return (avg > 0) ? (((wholeFile ? getFileSize() : getSize()) - getPos()) / avg) : 0;
+		int64_t avg = static_cast<int64_t>(getAverageSpeed());
+		return (avg > 0) ? ((wholeFile ? getFileSize() : getBytesLeft()) / avg) : 0;
 	}
 
 	int64_t getBytesLeft() const {
@@ -90,18 +88,22 @@ public:
 	GETSET(Type, type, Type);
 	GETSET(uint64_t, start, Start);
 	GETSET(uint64_t, lastTick, LastTick);
-	GETSET(int64_t, runningAverage, RunningAverage);
 	GETSET(int64_t, fileSize, FileSize);
 private:
+	
+	typedef std::pair<uint64_t, int64_t> Sample;
+	typedef deque<Sample> SampleList;
+	
 	Transfer(const Transfer&);
 	Transfer& operator=(const Transfer&);
 
+	SampleList samples;
+	mutable CriticalSection cs;
+	
 	/** The file being transferred */
 	string path;
 	/** TTH of the file being transferred */
 	TTHValue tth;
-	/** Bytes on last avg update */
-	int64_t last;
 	/** Total actual bytes transfered this session (compression?) */
 	int64_t actual;
 	/** Write position in file */

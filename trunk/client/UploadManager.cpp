@@ -332,7 +332,7 @@ int64_t UploadManager::getRunningAverage() {
 	int64_t avg = 0;
 	for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); ++i) {
 		Upload* u = *i;
-		avg += (int)u->getRunningAverage();
+		avg += static_cast<int64_t>(u->getAverageSpeed());
 	}
 	return avg;
 }
@@ -645,6 +645,8 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	{
 		Lock l(cs);
+		UploadList ticks;
+		
 		throttleSetup();
 
 		if((aTick / 1000) % 10 == 0) {
@@ -655,12 +657,20 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 					delete u;
 					delayUploads.erase(i);
 					i = delayUploads.begin();
-				} else i++;
+				} else
+					i++;
 			}
 		}
 
-		if(uploads.size() > 0)
-			fire(UploadManagerListener::Tick(), uploads);
+		for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); ++i) {
+			if((*i)->getTotal() > 0) {
+				ticks.push_back(*i);
+				(*i)->tick();
+			}
+		}
+
+		if(ticks.size() > 0)
+			fire(UploadManagerListener::Tick(), ticks);
 
 		notifyQueuedUsers();
 		fire(UploadManagerListener::QueueUpdate());

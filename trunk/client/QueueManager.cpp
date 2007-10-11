@@ -365,10 +365,6 @@ void QueueManager::UserQueue::removeDownload(QueueItem* qi, const UserPtr& user)
 			break;
 		}
 	}
-	
-	if(qi->isWaiting()) {
-		qi->setAverageSpeed(0);
-	}
 }
 
 QueueItem* QueueManager::UserQueue::getRunning(const UserPtr& aUser) {
@@ -1053,7 +1049,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 							moveFile(aDownload->getTempTarget(), aDownload->getPath());
 						}
 
-						fire(QueueManagerListener::Finished(), q, dir, aDownload->getAverageSpeed());
+						fire(QueueManagerListener::Finished(), q, dir, static_cast<int64_t>(aDownload->getAverageSpeed()));
 						fire(QueueManagerListener::Removed(), q);
 
 						userQueue.remove(q);
@@ -1101,10 +1097,10 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 			}
 		}
 
-		int64_t speed = aDownload->getAverageSpeed();
+		size_t speed = static_cast<size_t>(aDownload->getAverageSpeed());
 		if(speed > 0 && aDownload->getStart() > 0 && aDownload->getTotal() > 32768 && speed < 10485760){
 			UserPtr u = aDownload->getUser();
-			u->setLastDownloadSpeed((size_t)speed);
+			u->setLastDownloadSpeed(speed);
 		}
 		delete aDownload;
 	}
@@ -1741,8 +1737,8 @@ bool QueueManager::dropSource(Download* d) {
 		size_t iHighSpeed = SETTING(DISCONNECT_FILE_SPEED);
 		if((iHighSpeed == 0) || (overallSpeed > iHighSpeed*1024)) {
 			if(onlineUsers > 2) {
-				d->getUser()->setLastDownloadSpeed((size_t)d->getRunningAverage());
-				if(d->getRunningAverage() < SETTING(REMOVE_SPEED)*1024) {
+				d->getUser()->setLastDownloadSpeed(static_cast<size_t>(d->getAverageSpeed()));
+				if(d->getAverageSpeed() < SETTING(REMOVE_SPEED)*1024) {
 					removeSource(d->getPath(), d->getUser(), QueueItem::Source::FLAG_SLOW);
 				} else {
 					d->getUserConnection().disconnect();
