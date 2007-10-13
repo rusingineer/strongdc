@@ -75,15 +75,12 @@ public:
 	typedef vector<Ptr> List;
 	typedef List::const_iterator Iter;
 
-	FavoriteHubEntry() throw() : connect(false), encoding(Text::systemCharset), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
+	FavoriteHubEntry() throw() : connect(false), encoding(Text::systemCharset), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
 	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), encoding(Text::systemCharset),
-		description(rhs.getDescription()), connect(false), windowposx(0), windowposy(0), windowsizex(0), 
-		windowsizey(0), windowtype(0), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
+		description(rhs.getDescription()), connect(false), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
 	FavoriteHubEntry(const FavoriteHubEntry& rhs) throw() : userdescription(rhs.userdescription), name(rhs.getName()), 
 		server(rhs.getServer()), description(rhs.getDescription()), password(rhs.getPassword()), connect(rhs.getConnect()), 
-		nick(rhs.nick), windowposx(rhs.windowposx), windowposy(rhs.windowposy), windowsizex(rhs.windowsizex), 
-		windowsizey(rhs.windowsizey), windowtype(rhs.windowtype), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth),
+		nick(rhs.nick), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth),
 		userliststate(rhs.userliststate), mode(rhs.mode), ip(rhs.ip), encoding(rhs.getEncoding()),
 		rawOne(rhs.rawOne), rawTwo(rhs.rawTwo), rawThree(rhs.rawThree), rawFour(rhs.rawFour), rawFive(rhs.rawFive) { }
 	~FavoriteHubEntry() throw() { }
@@ -104,11 +101,6 @@ public:
 	GETSET(string, headerVisible, HeaderVisible);
 	GETSET(bool, connect, Connect);
 	GETSET(string, encoding, Encoding);
-	GETSET(int, windowposx, WindowPosX);
-	GETSET(int, windowposy, WindowPosY);
-	GETSET(int, windowsizex, WindowSizeX);
-	GETSET(int, windowsizey, WindowSizeY);
-	GETSET(int, windowtype, WindowType);
 	GETSET(int, chatusersplit, ChatUserSplit);
 	GETSET(bool, stealth, Stealth);
 	GETSET(bool, userliststate, UserListState);	

@@ -18,14 +18,14 @@ public:
 
 	enum {
 		FLAG_ZDOWNLOAD			= 0x01,
-		FLAG_MULTI_CHUNK		= 0x02,
-		FLAG_ANTI_FRAG			= 0x04,
-		FLAG_CHUNKED			= 0x08,
-		FLAG_TTH_CHECK			= 0x10,
-		FLAG_TESTSUR			= 0x20,
-		FLAG_CHECK_FILE_LIST	= 0x40,
-		FLAG_OVERLAPPED			= 0x80,
-		FLAG_XML_BZ_LIST		= 0x100
+		FLAG_ANTI_FRAG			= 0x02,
+		FLAG_CHUNKED			= 0x04,
+		FLAG_TTH_CHECK			= 0x08,
+		FLAG_TESTSUR			= 0x10,
+		FLAG_CHECK_FILE_LIST	= 0x20,
+		FLAG_OVERLAPPED			= 0x40,
+		FLAG_XML_BZ_LIST		= 0x80,
+		FLAG_PARTIAL			= 0x100
 	};
 
 	Download(UserConnection& conn, const string& pfsDir) throw();

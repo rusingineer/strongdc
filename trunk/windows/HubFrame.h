@@ -231,7 +231,7 @@ public:
 		, const tstring& rawThree = Util::emptyStringT
 		, const tstring& rawFour = Util::emptyStringT
 		, const tstring& rawFive = Util::emptyStringT
-		, int windowposx = 0, int windowposy = 0, int windowsizex = 0, int windowsizey = 0, int windowtype = 0, int chatusersplit = 0, bool userliststate = true,
+		, int chatusersplit = 0, bool userliststate = true,
 		        string sColumsOrder = Util::emptyString, string sColumsWidth = Util::emptyString, string sColumsVisible = Util::emptyString);
 	static void resortUsers();	
 	static void closeDisconnected();

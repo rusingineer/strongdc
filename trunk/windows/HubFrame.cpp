@@ -179,8 +179,7 @@ void HubFrame::openWindow(const tstring& aServer
 							, const tstring& rawThree /*= Util::emptyString*/
 							, const tstring& rawFour /*= Util::emptyString*/
 							, const tstring& rawFive /*= Util::emptyString*/
-		, int windowposx, int windowposy, int windowsizex, int windowsizey, int windowtype, int chatusersplit, bool userliststate,
-       string sColumsOrder, string sColumsWidth, string sColumsVisible) {
+		, int chatusersplit, bool userliststate, string sColumsOrder, string sColumsWidth, string sColumsVisible) {
 	FrameIter i = frames.find(aServer);
 	if(i == frames.end()) {
 		HubFrame* frm = new HubFrame(aServer
@@ -192,19 +191,10 @@ void HubFrame::openWindow(const tstring& aServer
 			, chatusersplit, userliststate);
 		frames[aServer] = frm;
 
-		int nCmdShow = SW_SHOWDEFAULT;
-		CRect rc = frm->rcDefault;
-
-		rc.left = windowposx;
-		rc.top = windowposy;
-		rc.right = rc.left + windowsizex;
-		rc.bottom = rc.top + windowsizey;
-		if( (rc.left < 0 ) || (rc.top < 0) || (rc.right - rc.left < 10) || ((rc.bottom - rc.top) < 10) ) {
-			rc = frm->rcDefault;
-		}
-		frm->CreateEx(WinUtil::mdiClient, rc);
-		if(windowtype)
-			frm->ShowWindow(((nCmdShow == SW_SHOWDEFAULT) || (nCmdShow == SW_SHOWNORMAL)) ? windowtype : nCmdShow);
+//		int nCmdShow = SW_SHOWDEFAULT;
+		frm->CreateEx(WinUtil::mdiClient, frm->rcDefault);
+//		if(windowtype)
+//			frm->ShowWindow(((nCmdShow == SW_SHOWDEFAULT) || (nCmdShow == SW_SHOWNORMAL)) ? windowtype : nCmdShow);
 	} else {
 		if(::IsIconic(i->second->m_hWnd))
 			::ShowWindow(i->second->m_hWnd, SW_RESTORE);
@@ -985,23 +975,7 @@ LRESULT HubFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 		ctrlUsers.saveHeaderOrder(tmp, tmp2, tmp3);
 
 		FavoriteHubEntry *fhe = FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server));
-		if(fhe != NULL){
-			WINDOWPLACEMENT wp;
-			wp.length = sizeof(wp);
-			GetWindowPlacement(&wp);
-
-			CRect rc;
-			GetWindowRect(rc);
-			CRect rcmdiClient;
-			::GetWindowRect(WinUtil::mdiClient, &rcmdiClient);
-			if(wp.showCmd == SW_SHOW || wp.showCmd == SW_SHOWNORMAL) {
-				fhe->setWindowPosX(rc.left - (rcmdiClient.left + 2));
-				fhe->setWindowPosY(rc.top - (rcmdiClient.top + 2));
-				fhe->setWindowSizeX(rc.Width());
-				fhe->setWindowSizeY(rc.Height());
-			}
-			if(wp.showCmd == SW_SHOWNORMAL || wp.showCmd == SW_SHOW || wp.showCmd == SW_SHOWMAXIMIZED || wp.showCmd == SW_MAXIMIZE)
-				fhe->setWindowType((int)wp.showCmd);
+		if(fhe != NULL) {
 			fhe->setChatUserSplit(m_nProportionalPos);
 			fhe->setUserListState(showUsers);
 			fhe->setHeaderOrder(tmp);

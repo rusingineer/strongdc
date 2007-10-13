@@ -751,13 +751,6 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 
 				segmentsMenu.CheckMenuItem(qi->getMaxSegments(), MF_BYPOSITION | MF_CHECKED);
 
-				if(qi->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-					segmentsMenu.EnableMenuItem(110, MFS_DISABLED);
-				} else {
-					for(int i=1;i<10;++i) {
-						segmentsMenu.EnableMenuItem(i + 110, MFS_DISABLED);		
-					}
-				}
 				if((ii->isSet(QueueItem::FLAG_USER_LIST)) == false) {
 					string ext = Util::getFileExt(ii->getTarget());
 					if(ext.size()>1) ext = ext.substr(1);
@@ -767,6 +760,8 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 					} else {
 						singleMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
 					}
+				} else {
+					singleMenu.EnableMenuItem((UINT)(HMENU)segmentsMenu, MFS_DISABLED);
 				}
 
 				menuItems = 0;
@@ -1037,8 +1032,8 @@ LRESULT QueueFrame::onSegments(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 	while( (i = ctrlQueue.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		QueueItem* qi = QueueManager::getInstance()->fileQueue.find(ii->getTarget());
-		if(qi && qi->isSet(QueueItem::FLAG_MULTI_SOURCE))
-			qi->setMaxSegments(max((uint8_t)2, (uint8_t)(wID - 109)));
+
+		qi->setMaxSegments(max((uint8_t)2, (uint8_t)(wID - 109)));
 
 		ctrlQueue.updateItem(ctrlQueue.findItem(ii), COLUMN_SEGMENTS);
 	}
@@ -1377,34 +1372,29 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
 			CBarShader statusBar(rc.Height(), rc.Width(), SETTING(PROGRESS_BACK_COLOR), qii->getSize());
 
-			if(qii->isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-				FileChunksInfo::Ptr fileChunksInfo = qii->getChunksInfo();			
-				vector<int64_t> v;
+			FileChunksInfo::Ptr fileChunksInfo = qii->getChunksInfo();			
+			vector<int64_t> v;
 
-				// running chunks
-				fileChunksInfo->getAllChunks(v, 1);
-				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_RUNNING));
-				}
-				v.clear();
-
-				// downloaded chunks
-				fileChunksInfo->getAllChunks(v, 0);
-				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_DOWNLOADED));
-				}
-				v.clear();
-
-				// verified chunks
-				fileChunksInfo->getAllChunks(v, 2);
-				for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-					statusBar.FillRange(*i, *(i+1), SETTING(COLOR_VERIFIED));
-				}
-			} else {			
-				int64_t possibleVerified = qii->getDownloadedBytes() - (qii->getDownloadedBytes() % 65536);
-				statusBar.FillRange(0, possibleVerified, SETTING(COLOR_VERIFIED));
-				statusBar.FillRange(possibleVerified, qii->getDownloadedBytes(), SETTING(COLOR_DOWNLOADED));
+			// running chunks
+			fileChunksInfo->getAllChunks(v, 1);
+			for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
+				statusBar.FillRange(*i, *(i+1), SETTING(COLOR_RUNNING));
 			}
+			v.clear();
+
+			// downloaded chunks
+			fileChunksInfo->getAllChunks(v, 0);
+			for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
+				statusBar.FillRange(*i, *(i+1), SETTING(COLOR_DOWNLOADED));
+			}
+			v.clear();
+
+			// verified chunks
+			fileChunksInfo->getAllChunks(v, 2);
+			for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
+				statusBar.FillRange(*i, *(i+1), SETTING(COLOR_VERIFIED));
+			}
+
 			CDC cdc;
 			cdc.CreateCompatibleDC(cd->nmcd.hdc);
 			HBITMAP pOldBmp = cdc.SelectBitmap(CreateCompatibleBitmap(cd->nmcd.hdc,  rc.Width(),  rc.Height()));

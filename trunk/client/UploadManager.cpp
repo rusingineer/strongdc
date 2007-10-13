@@ -83,6 +83,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 
 	bool userlist = (aFile == Transfer::USER_LIST_NAME_BZ || aFile == Transfer::USER_LIST_NAME);
 	bool free = userlist;
+	bool partial = false;
 
 	string sourceFile;
 	Transfer::Type type;
@@ -189,7 +190,8 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 								is = new LimitedInputStream<true>(is, aBytes);
 							}
 
-							type = Transfer::TYPE_PARTIAL_FILE;
+							partial = true;
+							type = Transfer::TYPE_FILE;
 							goto ok;
 						}catch(const Exception&) {
 							aSource.fileNotAvail();
@@ -222,7 +224,8 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 								is = new LimitedInputStream<true>(is, aBytes);
 							}
 
-							type = Transfer::TYPE_PARTIAL_FILE;
+							partial = true;
+							type = Transfer::TYPE_FILE;
 							goto ok;
 						}catch(const Exception&){
 							aSource.fileNotAvail();
@@ -301,9 +304,11 @@ ok:
 	if(resumed)
 		u->setFlag(Upload::FLAG_RESUMED);
 
+	if(partial)
+		u->setFlag(Upload::FLAG_PARTIAL);
+
 	u->setFileSize(size);
 	u->setStartPos(start);
-
 	u->setType(type);
 
 	uploads.push_back(u);

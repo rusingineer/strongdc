@@ -406,11 +406,6 @@ void FavoriteManager::save() {
 			xml.addChildAttrib("Server", (*i)->getServer());
 			xml.addChildAttrib("UserDescription", (*i)->getUserDescription());
 			xml.addChildAttrib("Encoding", (*i)->getEncoding());
-			xml.addChildAttrib("WindowPosX", (*i)->getWindowPosX());
-			xml.addChildAttrib("WindowPosY", (*i)->getWindowPosY());
-			xml.addChildAttrib("WindowSizeX", (*i)->getWindowSizeX());
-			xml.addChildAttrib("WindowSizeY", (*i)->getWindowSizeY());
-			xml.addChildAttrib("WindowType", (*i)->getWindowType());
 			xml.addChildAttrib("ChatUserSplit", (*i)->getChatUserSplit());
 			xml.addChildAttrib("StealthMode", (*i)->getStealth());
 			xml.addChildAttrib("UserListState", (*i)->getUserListState());
@@ -571,11 +566,6 @@ void FavoriteManager::load(SimpleXML& aXml) {
 			e->setServer(aXml.getChildAttrib("Server"));
 			e->setUserDescription(aXml.getChildAttrib("UserDescription"));
 			e->setEncoding(aXml.getChildAttrib("Encoding"));
-			e->setWindowPosX(aXml.getIntChildAttrib("WindowPosX"));
-			e->setWindowPosY(aXml.getIntChildAttrib("WindowPosY"));
-			e->setWindowSizeX(aXml.getIntChildAttrib("WindowSizeX"));
-			e->setWindowSizeY(aXml.getIntChildAttrib("WindowSizeY"));
-			e->setWindowType(aXml.getIntChildAttrib("WindowType"));
 			e->setChatUserSplit(aXml.getIntChildAttrib("ChatUserSplit"));
 			e->setStealth(aXml.getBoolChildAttrib("StealthMode"));
 			e->setUserListState(aXml.getBoolChildAttrib("UserListState"));

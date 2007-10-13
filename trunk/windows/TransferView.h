@@ -284,7 +284,6 @@ private:
 
 		bool download;
 		bool transferFailed;
-		bool multiSource;
 		uint8_t flagImage;		
 		void setRunning(int16_t aRunning) { running = aRunning; updateMask |= MASK_SEGMENT; }
 		int16_t running;

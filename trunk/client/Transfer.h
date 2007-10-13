@@ -29,10 +29,10 @@ class Transfer {
 public:
 	enum Type {
 		TYPE_FILE,
-		TYPE_PARTIAL_FILE,
 		TYPE_FULL_LIST,
 		TYPE_PARTIAL_LIST,
 		TYPE_TREE,
+		TYPE_TESTSUR,
 		TYPE_LAST
 	};
 	

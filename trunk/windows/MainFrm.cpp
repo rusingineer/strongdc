@@ -800,7 +800,7 @@ void MainFrame::autoConnect(const FavoriteHubEntry::List& fl) {
 					, Text::toT(entry->getRawThree())
 					, Text::toT(entry->getRawFour())
 					, Text::toT(entry->getRawFive())
-					, entry->getWindowPosX(), entry->getWindowPosY(), entry->getWindowSizeX(), entry->getWindowSizeY(), entry->getWindowType(), entry->getChatUserSplit(), entry->getUserListState());
+					, entry->getChatUserSplit(), entry->getUserListState());
  			} else
  				missedAutoConnect = true;
  		}				

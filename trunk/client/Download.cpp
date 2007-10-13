@@ -42,16 +42,16 @@ Download::Download(UserConnection& conn, QueueItem& qi, bool partial) throw() : 
 
 	if(qi.isSet(QueueItem::FLAG_USER_LIST)) {
 		setType(TYPE_FULL_LIST);
+	} else if(qi.isSet(QueueItem::FLAG_TESTSUR)) {
+		setType(TYPE_TESTSUR);
 	} else if(partial) {
-		setType(TYPE_PARTIAL_FILE);
+		setFlag(FLAG_PARTIAL);
 	}
 
 	if(qi.isSet(QueueItem::FLAG_CHECK_FILE_LIST))
 		setFlag(Download::FLAG_CHECK_FILE_LIST);
 	if(qi.isSet(QueueItem::FLAG_TESTSUR))
 		setFlag(Download::FLAG_TESTSUR);
-	if(qi.isSet(QueueItem::FLAG_MULTI_SOURCE))
-		setFlag(Download::FLAG_MULTI_CHUNK);
 
 	if(qi.getSize() != -1) {
 		if(HashManager::getInstance()->getTree(getTTH(), getTigerTree())) {
@@ -62,34 +62,32 @@ Download::Download(UserConnection& conn, QueueItem& qi, bool partial) throw() : 
 			getTigerTree().setFileSize(qi.getSize());
 			setPos(0);
 			setSize(-1);
-		} else if (!isSet(Download::FLAG_MULTI_CHUNK)) {
+		} else {
 			// Use the root as tree to get some sort of validation at least...
 			getTigerTree() = TigerTree(qi.getSize(), qi.getSize(), getTTH());
 			setTreeValid(true);
 		}
 
-		if(!isSet(Download::FLAG_MULTI_CHUNK)) {
-			if(qi.isSet(QueueItem::FLAG_RESUME) && getType() != TYPE_TREE) {
-				const string& target = (getTempTarget().empty() ? getPath() : getTempTarget());
-				int64_t start = File::getSize(target);
+		//if(qi.isSet(QueueItem::FLAG_RESUME) && getType() != TYPE_TREE) {
+		//	const string& target = (getTempTarget().empty() ? getPath() : getTempTarget());
+		//	int64_t start = File::getSize(target);
 
-				// Only use antifrag if we don't have a previous non-antifrag part
-				if( BOOLSETTING(ANTI_FRAG) && (start == -1)) {
-					int64_t aSize = File::getSize(target + Download::ANTI_FRAG_EXT);
+		//	// Only use antifrag if we don't have a previous non-antifrag part
+		//	if( BOOLSETTING(ANTI_FRAG) && (start == -1)) {
+		//		int64_t aSize = File::getSize(target + Download::ANTI_FRAG_EXT);
 
-					if(aSize == getSize())
-						start = qi.getDownloadedBytes();
-					else
-						start = 0;
+		//		if(aSize == getSize())
+		//			start = qi.getDownloadedBytes();
+		//		else
+		//			start = 0;
 
-					setFlag(Download::FLAG_ANTI_FRAG);
-				}
+		//		setFlag(Download::FLAG_ANTI_FRAG);
+		//	}
 
-				setStartPos(std::max<int64_t>(0, start - (start % getTigerTree().getBlockSize())));
-			} else {
-				setStartPos(0);
-			}
-		}
+		//	setStartPos(std::max<int64_t>(0, start - (start % getTigerTree().getBlockSize())));
+		//} else {
+		//	setStartPos(0);
+		//}
 	}
 }
 

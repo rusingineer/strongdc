@@ -615,8 +615,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 					else
 					
 					/* parent item must be updated with correct info about whole file */
-					if(	(ui->status == ItemInfo::STATUS_RUNNING) &&
-						(parent->hits == -1 && ui->multiSource))
+					if(	(ui->status == ItemInfo::STATUS_RUNNING) &&	(parent->hits == -1))
 					{
 						ui->updateMask &= ~UpdateInfo::MASK_POS;
 						ui->updateMask &= ~UpdateInfo::MASK_ACTUAL;
@@ -650,7 +649,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
 			ItemInfoList::ParentPair* pp = ctrlTransfers.findParentPair(ui->target);
 			
-			if(!pp || (pp->parent->hits == -1 && !ui->queueItem->isSet(QueueItem::FLAG_MULTI_SOURCE))) 
+			if(!pp/* || (pp->parent->hits == -1 && ui->queueItem->isSet(QueueItem::FLAG_USER_LIST))*/) 
 				continue;
 			
 			double ratio = 0;
@@ -662,14 +661,12 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 					segs = pp->parent->status == ItemInfo::STATUS_RUNNING ? 1 : 0;
 					totalSpeed = pp->parent->speed;
 				} else {
-					for(vector<ItemInfo*>::const_iterator k = pp->children.begin(); k != pp->children.end(); ++k) {
-						if((*k)->status == ItemInfo::STATUS_RUNNING) {
+					for(DownloadList::const_iterator i = ui->queueItem->getDownloads().begin(); i != ui->queueItem->getDownloads().end(); i++) {
+						if((*i)->getTotal() > 0) {
 							segs++;
 
-							totalSpeed += (*k)->speed;
-							ratio += (*k)->getRatio();
-
-							if(!ui->queueItem->isSet(QueueItem::FLAG_MULTI_SOURCE)) break;
+							totalSpeed += static_cast<int64_t>((*i)->getAverageSpeed());
+							ratio += (*i)->getActual() / (*i)->getPos();
 						}
 					}
 					ratio = ratio / segs;
@@ -846,15 +843,14 @@ void TransferView::on(ConnectionManagerListener::Failed, const ConnectionQueueIt
 
 void TransferView::on(DownloadManagerListener::Starting, const Download* aDownload) {
 	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true);
-	bool chunkInfo = aDownload->isSet(Download::FLAG_MULTI_CHUNK) && aDownload->getType() != Transfer::TYPE_TREE;
 
+	bool isFile = aDownload->getType() == Transfer::TYPE_FILE;
 	ui->setStatus(ItemInfo::STATUS_RUNNING);
-	ui->setPos(chunkInfo ? 0 : aDownload->getPos());
-	ui->setActual(chunkInfo ? 0 : aDownload->getStartPos() + aDownload->getActual());
-	ui->setSize(chunkInfo ? aDownload->getChunkSize() : aDownload->getSize());
+	ui->setPos(isFile ? 0 : aDownload->getPos());
+	ui->setActual(isFile ? 0 : aDownload->getStartPos() + aDownload->getActual());
+	ui->setSize(isFile ? aDownload->getChunkSize() : aDownload->getSize());
 	ui->setTarget(Text::toT(aDownload->getPath()));
 	ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
-	ui->multiSource = chunkInfo;
 
 	string ip = aDownload->getUserConnection().getRemoteIp();
 	string country = Util::getIpCountry(ip);
@@ -876,18 +872,15 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 	for(DownloadList::const_iterator j = dl.begin(); j != dl.end(); ++j) {
 		Download* d = *j;
 		
-		bool chunkInfo = d->isSet(Download::FLAG_MULTI_CHUNK) && d->getType() != Transfer::TYPE_TREE;
-		
 		UpdateInfo* ui = new UpdateInfo(d->getUser(), true);
 		ui->setStatus(ItemInfo::STATUS_RUNNING);
-		ui->setActual(chunkInfo ? d->getActual() : d->getStartPos() + d->getActual());
-		ui->setPos(chunkInfo ? d->getTotal() : d->getPos());
 		ui->setTimeLeft(d->getSecondsLeft());
 		ui->setSpeed(static_cast<int64_t>(d->getAverageSpeed()));
-		ui->multiSource = chunkInfo;
 
-		if(chunkInfo) {
-			ui->setSize(d->isSet(Download::FLAG_MULTI_CHUNK) ? d->getChunkSize() : d->getSize());
+		if(d->getType() == Transfer::TYPE_FILE) {
+			ui->setActual(d->getActual());
+			ui->setPos(d->getTotal());
+			ui->setSize(d->getChunkSize());
 			ui->timeLeft = (ui->speed > 0) ? ((ui->size - d->getTotal()) / ui->speed) : 0;
 
 			double progress = (double)(d->getTotal())*100.0/(double)ui->size;
@@ -899,13 +892,16 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 				continue;
 			}
 		} else {
+			ui->setActual(d->getStartPos() + d->getActual());
+			ui->setPos(d->getPos());
+
 			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(d->getPos()).c_str(), 
 				(double)d->getPos()*100.0/(double)d->getSize(), Util::formatSeconds((GET_TICK() - d->getStart())/1000).c_str());
 		}
 
 		tstring statusString;
 
-		if(d->getType() == Transfer::TYPE_PARTIAL_FILE) {
+		if(d->isSet(Download::FLAG_PARTIAL)) {
 			statusString += _T("[P]");
 		}
 		if(d->getUserConnection().isSecure()) {
@@ -1019,7 +1015,7 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 
 		tstring statusString;
 
-		if(u->getType() == Transfer::TYPE_PARTIAL_FILE) {
+		if(u->isSet(Upload::FLAG_PARTIAL)) {
 			statusString += _T("[P]");
 		}
 		if(u->isSet(Upload::FLAG_CHUNKED)) {
@@ -1127,7 +1123,6 @@ LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		const ItemInfo* ii = ctrlTransfers.getItemData(i);
-		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(DISCONNECTED));
 		
 		const vector<ItemInfo*>& children = ctrlTransfers.findChildren(ii->getGroupCond());
 		for(vector<ItemInfo*>::const_iterator j = children.begin(); j != children.end(); ++j) {
@@ -1138,6 +1133,8 @@ LRESULT TransferView::onDisconnectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 			if(h != -1)
 				ctrlTransfers.SetItemText(h, COLUMN_STATUS, CTSTRING(DISCONNECTED));
 		}
+
+		ctrlTransfers.SetItemText(i, COLUMN_STATUS, CTSTRING(DISCONNECTED));
 	}
 	return 0;
 }
@@ -1186,14 +1183,15 @@ void TransferView::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw()
 void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) throw() {
 	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true);
 	ui->setTarget(Text::toT(qi->getTarget()));
-	ui->setPos(qi->getDownloadedBytes());
-	ui->setActual(ui->pos);
-	ui->setSize(qi->getSize());
 
-	if(qi->isRunning())
+	if(qi->isRunning() && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
+		ui->setPos(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getPos() : qi->getDownloadedBytes());
+		ui->setSize(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getSize() : qi->getSize());
+		ui->setActual(ui->pos);
 		ui->setStatus(ItemInfo::STATUS_RUNNING);
-	else
+	} else {
 		ui->setStatus(ItemInfo::STATUS_WAITING);
+	}
 
 	speak(UPDATE_PARENT, ui);
 }
