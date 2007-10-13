@@ -76,10 +76,8 @@ public:
 		FLAG_TESTSUR			= 0x400,
 		/** Test user's file list for fake share */
 		FLAG_CHECK_FILE_LIST	= 0x800,
-		/** The file can be downloaded from multiple sources simultaneously */
-		FLAG_MULTI_SOURCE		= 0x1000,
 		/** Autodrop slow source is enabled for this file */
-		FLAG_AUTODROP			= 0x2000
+		FLAG_AUTODROP			= 0x1000
 	};
 
 	/**
@@ -141,21 +139,18 @@ public:
 	typedef SourceList::const_iterator SourceConstIter;
 
 	QueueItem(const string& aTarget, int64_t aSize, 
-		Priority aPriority, Flags::MaskType aFlag, int64_t aDownloadedBytes, time_t aAdded, const TTHValue& tth) :
-	Flags(aFlag), target(aTarget), chunksInfo(NULL),
-	size(aSize), downloadedBytes(aDownloadedBytes), priority(aPriority), added(aAdded),
+		Priority aPriority, Flags::MaskType aFlag, time_t aAdded, const TTHValue& tth) :
+	Flags(aFlag), target(aTarget), chunksInfo(NULL), maxSegments(1),
+	size(aSize), priority(aPriority), added(aAdded),
 	tthRoot(tth), autoPriority(false)
 	{
 		inc();
 		setFlag(FLAG_AUTODROP);
-		if(isSet(FLAG_USER_LIST) || isSet(FLAG_TESTSUR) || isSet(FLAG_CHECK_FILE_LIST) || (size <= MIN_CHUNK_SIZE*2)) {
-			unsetFlag(FLAG_MULTI_SOURCE);
-		}
 	}
 
 	QueueItem(const QueueItem& rhs) : 
 	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
-		size(rhs.size), downloadedBytes(rhs.downloadedBytes), priority(rhs.priority), downloads(rhs.downloads),
+		size(rhs.size), priority(rhs.priority), downloads(rhs.downloads), maxSegments(rhs.maxSegments),
 		added(rhs.added), tthRoot(rhs.tthRoot), autoPriority(rhs.autoPriority)
 	{
 		inc();
@@ -163,11 +158,11 @@ public:
 	}
 
 	~QueueItem() {
-		if(isSet(QueueItem::FLAG_MULTI_SOURCE)) {
+		if(!isSet(FLAG_USER_LIST) && !isSet(FLAG_TESTSUR)) {
 			chunksInfo->dec();
 			chunksInfo = NULL;
 			FileChunksInfo::Free(&getTTH());
-		}	
+		}
 	}
 
 	size_t countOnlineUsers() const;
@@ -200,12 +195,11 @@ public:
 	}
 	
 	int64_t getDownloadedBytes() const;
-	void setDownloadedBytes(int64_t pos) { downloadedBytes = pos; }
 	
 	DownloadList& getDownloads() { return downloads; }
 	
-	FileChunksInfo::Ptr getChunksInfo() const { dcassert(isSet(QueueItem::FLAG_MULTI_SOURCE)); return chunksInfo; }
-	void setChunksInfo(FileChunksInfo* aChunksInfo) { dcassert(isSet(QueueItem::FLAG_MULTI_SOURCE)); aChunksInfo->inc(); chunksInfo = aChunksInfo; }
+	FileChunksInfo::Ptr getChunksInfo() const { return chunksInfo; }
+	void setChunksInfo(FileChunksInfo* aChunksInfo) { aChunksInfo->inc(); chunksInfo = aChunksInfo; }
 
 	bool isRunning() const {
 		return !isWaiting();
@@ -267,12 +261,8 @@ public:
 	}
 
 	bool hasFreeSegments() const {
-		if(!isSet(QueueItem::FLAG_MULTI_SOURCE)) {
-			return isWaiting();
-		} else {
-			return ((downloads.size() < maxSegments) &&
-					(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) > getAverageSpeed())));
-		}
+		return ((downloads.size() < maxSegments) &&
+				(!BOOLSETTING(DONT_BEGIN_SEGMENT) || ((size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED)*1024) > getAverageSpeed())));
 	}
 
 	int64_t getAverageSpeed() const {
@@ -292,7 +282,7 @@ private:
 	SourceList sources;
 	SourceList badSources;
 	string tempTarget;
-	int64_t downloadedBytes;
+
 	FileChunksInfo* chunksInfo;
 
 	void addSource(const UserPtr& aUser);

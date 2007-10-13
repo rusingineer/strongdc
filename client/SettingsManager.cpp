@@ -67,7 +67,7 @@ const string SettingsManager::settingTags[] =
 	"MainWindowSizeX", "MainWindowSizeY", "MainWindowPosX", "MainWindowPosY", "AutoAway",
 	"SocksPort", "SocksResolve", "KeepLists", "AutoKick", "QueueFrameShowTree", 
 	"CompressTransfers", "ShowProgressBars", "MaxTabRows",
-	"MaxCompression", "AntiFragMethod", "MDIMaxmimized", "NoAwayMsgToBots",
+	"MaxCompression", "AntiFragMethod", "NoAwayMsgToBots",
 	"SkipZeroByte", "AdlsBreakOnFirst",
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem",
 	"LogFilelistTransfers", "ShowStatusbar", "BandwidthSettingMode", "ShowToolbar", "ShowTransferview", 
@@ -522,7 +522,6 @@ SettingsManager::SettingsManager()
 	setDefault(MAIN_WINDOW_SIZE_Y, CW_USEDEFAULT);
 	setDefault(MAIN_WINDOW_POS_X, CW_USEDEFAULT);
 	setDefault(MAIN_WINDOW_POS_Y, CW_USEDEFAULT);
-	setDefault(MDI_MAXIMIZED, true);
 	setDefault(UPLOAD_BAR_COLOR, RGB(205, 60, 55));
 	setDefault(DOWNLOAD_BAR_COLOR, RGB(55, 170, 85));
 	setDefault(PROGRESS_BACK_COLOR, RGB(95, 95, 95));

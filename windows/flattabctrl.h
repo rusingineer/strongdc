@@ -811,29 +811,17 @@ public:
 
 		// If the currently active MDI child is maximized, we want to create this one maximized too
 		ATL::CWindow wndParent = hWndParent;
-		BOOL bMaximized = FALSE;
 
-		if(MDIGetActive(&bMaximized) == NULL)
-			bMaximized = BOOLSETTING(MDI_MAXIMIZED);
-
-		if(bMaximized)
-			wndParent.SetRedraw(FALSE);
+		wndParent.SetRedraw(FALSE);
 
 		HWND hWnd = CFrameWindowImplBase<TBase, TWinTraits >::Create(hWndParent, rect.m_lpRect, szWindowName, dwStyle, dwExStyle, (UINT)0U, atom, lpCreateParam);
 
-		if(bMaximized)
-		{
-			// Maximize and redraw everything
-			if(hWnd != NULL)
-				MDIMaximize(hWnd);
-			wndParent.SetRedraw(TRUE);
-			wndParent.RedrawWindow(NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
-			::SetFocus(GetMDIFrame());   // focus will be set back to this window
-		}
-		else if(hWnd != NULL && WinUtil::isAppActive && ::IsWindowVisible(m_hWnd) && !::IsChild(hWnd, ::GetFocus()))
-		{
-			::SetFocus(hWnd);
-		}
+		// Maximize and redraw everything
+		if(hWnd != NULL)
+			MDIMaximize(hWnd);
+		wndParent.SetRedraw(TRUE);
+		wndParent.RedrawWindow(NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+		::SetFocus(GetMDIFrame());   // focus will be set back to this window
 
 		return hWnd;
 	}
@@ -892,10 +880,6 @@ public:
 		getTab()->removeTab(m_hWnd);
 		if(m_hMenu == WinUtil::mainMenu)
 			m_hMenu = NULL;
-
-		BOOL bMaximized = FALSE;
-		if(::SendMessage(m_hWndMDIClient, WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized) != NULL)
-			SettingsManager::getInstance()->set(SettingsManager::MDI_MAXIMIZED, (bMaximized>0));
 
 		return 0;
 	}

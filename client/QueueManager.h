@@ -128,7 +128,8 @@ public:
 	bool getQueueInfo(const UserPtr& aUser, string& aTarget, int64_t& aSize, int& aFlags) throw();
 	Download* getDownload(UserConnection& aSource, string& aMessage) throw();
 	void putDownload(Download* aDownload, bool finished, bool reportFinish = true) throw();
-
+	void setFile(Download* download);
+	
 	/** @return The highest priority download the user has, PAUSED may also mean no downloads */
 	QueueItem::Priority hasDownload(const UserPtr& aUser) throw();
 	
@@ -199,7 +200,7 @@ public:
 			}
 		void add(QueueItem* qi);
 		QueueItem* add(const string& aTarget, int64_t aSize, 
-			Flags::MaskType aFlags, QueueItem::Priority p, const string& aTempTarget, int64_t aDownloaded,
+			Flags::MaskType aFlags, QueueItem::Priority p, const string& aTempTarget,
 			time_t aAdded, const string& freeBlocks, const string& verifiedBlocks, const TTHValue& root) throw(QueueException, FileException);
 
 		QueueItem* find(const string& target) const;

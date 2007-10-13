@@ -25,18 +25,17 @@
 template<class TreeType, bool managed>
 class MerkleCheckOutputStream : public OutputStream {
 public:
-	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start, Download* aDown = NULL) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0), d(aDown) {
-		if(aDown) {
-			skippingBytes = (size_t)(start % aTree.getBlockSize());
-			if(skippingBytes > 0)
-				skippingBytes = (size_t)(aTree.getBlockSize() - skippingBytes);
+	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start, Download* aDown) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0), d(aDown) {
+		
+		skippingBytes = (size_t)(start % aTree.getBlockSize());
+		if(skippingBytes > 0)
+			skippingBytes = (size_t)(aTree.getBlockSize() - skippingBytes);
 
-			fileChunks = FileChunksInfo::Get(&aTree.getRoot());
-			dcassert(!(fileChunks == (FileChunksInfo*)NULL));
+		fileChunks = FileChunksInfo::Get(&aTree.getRoot());
 
-			bufPos = 0;
-			start = start + skippingBytes;
-		}
+		bufPos = 0;
+		start = start + skippingBytes;
+
 		// Only start at block boundaries
 		dcassert(start % aTree.getBlockSize() == 0);
 		cur.setFileSize(start);
@@ -48,26 +47,12 @@ public:
 		}
 		cur.getLeaves().insert(cur.getLeaves().begin(), aTree.getLeaves().begin(), aTree.getLeaves().begin() + nBlocks);
 		
-		if(d)
-			verified = cur.getLeaves().size();
+		verified = cur.getLeaves().size();
 	}
 
 	~MerkleCheckOutputStream() throw() { if(managed) delete s; }
 
 	size_t flush() throw(FileException) {
-		if(!d) {
-			if (bufPos != 0)
-				cur.update(buf, bufPos);
-			bufPos = 0;
-
-			cur.finalize();
-			if(cur.getLeaves().size() == real.getLeaves().size()) {
-				if (cur.getRoot() != real.getRoot())
-					throw FileException(STRING(TTH_INCONSISTENCY));
-			} else  {
-				checkTrees();
-			}
-		}
 		return s->flush();
 	}
 
@@ -105,7 +90,7 @@ public:
 		bool verifyFlag = false;
 		size_t pos = 0;
 		
-		if(d && (skippingBytes > 0))
+		if(skippingBytes > 0)
 		{
 			if(skippingBytes >= len)
 			{
@@ -118,7 +103,7 @@ public:
 					fileChunks->verifyBlock(offset, real, d->getTempTarget());
 				}
 				return ret;
-	        }else{
+	        } else {
 				pos = skippingBytes;
 				skippingBytes = 0;
 				verifyFlag = true;
@@ -130,20 +115,19 @@ public:
 		checkTrees();
 		size_t ret = s->write(b, len);
 		
-		if(d) {
-			// mark verified block
-			if(verified > old) {
-				s->flush();
-				fileChunks->markVerifiedBlock((uint16_t)old, (uint16_t)verified);
-			}
-
-			if(verifyFlag){
-				s->flush();
-				dcassert(old > 0);
-				int64_t offset = (int64_t)old * (int64_t)(real.getBlockSize()) - 1;
-				fileChunks->verifyBlock(offset, real, d->getTempTarget());
-			}
+		// mark verified block
+		if(verified > old) {
+			s->flush();
+			fileChunks->markVerifiedBlock((uint16_t)old, (uint16_t)verified);
 		}
+
+		if(verifyFlag){
+			s->flush();
+			dcassert(old > 0);
+			int64_t offset = (int64_t)old * (int64_t)(real.getBlockSize()) - 1;
+			fileChunks->verifyBlock(offset, real, d->getTempTarget());
+		}
+
 		return ret;
 	}
 

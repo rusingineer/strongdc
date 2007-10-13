@@ -26,7 +26,7 @@
 #include "ClientManager.h"
 
 const string Transfer::names[] = {
-	"file", "file", "file", "list", "tthl"
+	"file", "file", "list", "tthl", "file"
 };
 
 const string Transfer::USER_LIST_NAME = "files.xml";
@@ -41,7 +41,7 @@ void Transfer::tick() {
 	while(samples.size() >= SAMPLES) {
 		samples.pop_front();
 	}
-	samples.push_back(std::make_pair(GET_TICK(), pos));
+	samples.push_back(std::make_pair(GET_TICK() - start, pos - startPos));
 }
 
 double Transfer::getAverageSpeed() const {

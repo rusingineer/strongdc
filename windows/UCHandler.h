@@ -74,7 +74,8 @@ public:
 				subMenu.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CTSTRING(GET_USER_RESPONSES));
 				subMenu.AppendMenu(MF_STRING, IDC_REPORT, CTSTRING(REPORT));
 				subMenu.AppendMenu(MF_STRING, IDC_CHECKLIST, CTSTRING(CHECK_FILELIST));
-				extraItems = 4;
+				subMenu.AppendMenu(MF_SEPARATOR);
+				extraItems = 5;
 			} else {
 				extraItems = 1;
 			}

@@ -60,8 +60,7 @@ FileChunksInfo::FileChunksInfo(const TTHValue* tth, int64_t size, const vector<i
 	dcassert(size);
 
 	tthBlockSize = max((size_t)TigerTree::calcBlockSize(fileSize, 10), (size_t)MIN_BLOCK_SIZE);
-	minChunkSize = max((int64_t)MIN_CHUNK_SIZE, (int64_t)(fileSize / 100));
-	minChunkSize = minChunkSize - (minChunkSize % tthBlockSize);
+	minChunkSize = tthBlockSize;
 
 	if(chunks != NULL){
 		for(vector<int64_t>::const_iterator i = chunks->begin(); i < chunks->end(); i++, i++)
@@ -138,7 +137,7 @@ void FileChunksInfo::setDownload(int64_t chunk, Download* d, bool noStealth)
 	}
 }
 
-int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
+int64_t FileChunksInfo::getChunk(int64_t _speed)
 {
 	Chunk* chunk = NULL;
 
@@ -146,8 +145,6 @@ int64_t FileChunksInfo::getChunk(bool& useChunks, int64_t _speed)
 
 	Lock l(cs);
 	dcdebug("getChunk speed = %I64d, running = %d waiting = %d\n", _speed, running.size(), waiting.size());
-
-	useChunks = true;//(waiting.size() > 1) || (running.size() > 0);
 
 	// if there is any waiting chunk, return it
 	if(!waiting.empty()){

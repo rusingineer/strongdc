@@ -83,7 +83,5 @@ const string& QueueItem::getTempTarget() {
 }
 
 int64_t QueueItem::getDownloadedBytes() const {
-	if(isSet(QueueItem::FLAG_MULTI_SOURCE))
-		return chunksInfo->getDownloadedSize();
-	return downloadedBytes;
+	return chunksInfo->getDownloadedSize();
 }

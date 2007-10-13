@@ -1,3 +1,9 @@
+** svn330
+	hopefully fixed average speed measuring
+	chunk size is equal to TTH block size
+	MDI windows are always maximized
+	KNOWN BUG: changing priority can cause a crash, so turn off autopriority and don't change priority at all
+
 ** svn329
 	some stuff about average speed measuring
 	DC++ version bump

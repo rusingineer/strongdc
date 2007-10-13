@@ -143,42 +143,6 @@ void DownloadManager::removeConnection(UserConnectionPtr aConn) {
  	idlers.erase(remove(idlers.begin(), idlers.end(), aConn), idlers.end());
 }
 
-class TreeOutputStream : public OutputStream {
-public:
-	TreeOutputStream(TigerTree& aTree) : tree(aTree), bufPos(0) {
-	}
-
-	size_t write(const void* xbuf, size_t len) throw(Exception) {
-		size_t pos = 0;
-		uint8_t* b = (uint8_t*)xbuf;
-		while(pos < len) {
-			size_t left = len - pos;
-			if(bufPos == 0 && left >= TigerTree::HASH_SIZE) {
-				tree.getLeaves().push_back(TTHValue(b + pos));
-				pos += TigerTree::HASH_SIZE;
-			} else {
-				size_t bytes = min(TigerTree::HASH_SIZE - bufPos, left);
-				memcpy(buf + bufPos, b + pos, bytes);
-				bufPos += bytes;
-				pos += bytes;
-				if(bufPos == TigerTree::HASH_SIZE) {
-					tree.getLeaves().push_back(TTHValue(buf));
-					bufPos = 0;
-				}
-			}
-		}
-		return len;
-	}
-
-	size_t flush() throw(Exception) {
-		return 0;
-	}
-private:
-	TigerTree& tree;
-	uint8_t buf[TigerTree::HASH_SIZE];
-	size_t bufPos;
-};
-
 void DownloadManager::checkIdle(const UserPtr& user) {	
 	Lock l(cs);	
 	for(UserConnectionList::iterator i = idlers.begin(); i != idlers.end(); ++i) {	
@@ -304,77 +268,37 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 		return false;
 	}
 
-	dcassert(d->getSize() != -1);
+	try {
+		QueueManager::getInstance()->setFile(d);
+	} catch(const FileException& e) {
+		failDownload(aSource, STRING(COULD_NOT_OPEN_TARGET_FILE) + e.getError());
+		return false;
+	} catch(const Exception& e) {
+		failDownload(aSource, e.getError());
+		return false;
+	}
 
-	if(d->getType() == Transfer::TYPE_PARTIAL_LIST) {
-		d->setFile(new StringOutputStream(d->getPFS()));
-	} else if(d->getType() == Transfer::TYPE_TREE) {
-		d->setFile(new TreeOutputStream(d->getTigerTree()));
-	} else {
-		string target = d->getDownloadTarget();
-		File::ensureDirectory(target);
-		if(d->getType() == Transfer::TYPE_FULL_LIST) {
-			if(aSource->isSet(UserConnection::FLAG_SUPPORTS_XML_BZLIST)) {
-				target += ".xml.bz2";
-			} else {
-				target += ".xml";
-			}
+
+	try {
+		if((d->getType() == Transfer::TYPE_FILE || d->getType() == Transfer::TYPE_FULL_LIST) && SETTING(BUFFER_SIZE) > 0 ) {
+			d->setFile(new BufferedOutputStream<true>(d->getFile()));
 		}
-
-		IOStream* file = NULL;
-
-		try {
-			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-				file = new SharedFileStream(target, d->getPos(), d->getFileSize());
-			} else {
-				// Let's check if we can find this file in a any .SFV...
-				file = new File(target, File::RW, File::OPEN | File::CREATE);
-				if(d->isSet(Download::FLAG_ANTI_FRAG)) {
-					((File*)file)->setSize(d->getSize());
-				}
-			}
-		} catch(const FileException& e) {
-			delete file;
-			failDownload(aSource, STRING(COULD_NOT_OPEN_TARGET_FILE) + e.getError());
-			return false;
-		} catch(const Exception& e) {
-			delete file;
-			failDownload(aSource, e.getError());
-			return false;
+		
+		if(d->getType() == Transfer::TYPE_FILE) {
+			typedef MerkleCheckOutputStream<TigerTree, true> MerkleStream;
+			d->setFile(new MerkleStream(d->getTigerTree(), d->getFile(), d->getStartPos(), d));
+			d->setFile(new ChunkOutputStream<true>(d->getFile(), &d->getTTH(), d->getStartPos(), d->getPos()));
+			d->setFlag(Download::FLAG_TTH_CHECK);
 		}
-
-		d->setFile(file);
-
-		try {
-			if(SETTING(BUFFER_SIZE) > 0) {
-				d->setFile(new BufferedOutputStream<true>(d->getFile()));
-			}
-			
-			if(d->getType() == Transfer::TYPE_FILE && d->getTreeValid()) {
-				typedef MerkleCheckOutputStream<TigerTree, true> MerkleStream;
-				if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-					d->setFile(new MerkleStream(d->getTigerTree(), d->getFile(), d->getPos(), d));
-				} else {
-					d->setFile(new MerkleStream(d->getTigerTree(), d->getFile(), d->getStartPos()));
-				}
-				d->setFlag(Download::FLAG_TTH_CHECK);
-			}
-				
-			if(d->isSet(Download::FLAG_MULTI_CHUNK)) {
-				d->setFile(new ChunkOutputStream<true>(d->getFile(), &d->getTTH(), d->getStartPos(), d->getPos()));
-			} else {
-				((File*)file)->setPos(d->getPos());
-			}
-		} catch(const Exception& e) {
-			delete d->getFile();
-			d->setFile(NULL);
-			failDownload(aSource, e.getError());
-			return false;
-		} catch(...) {
-			delete d->getFile();
-			d->setFile(NULL);
-			return false;			
-		}
+	} catch(const Exception& e) {
+		delete d->getFile();
+		d->setFile(NULL);
+		failDownload(aSource, e.getError());
+		return false;
+	} catch(...) {
+		delete d->getFile();
+		d->setFile(NULL);
+		return false;			
 	}
 	
 	if(z) {
@@ -382,7 +306,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 		d->setFile(new FilteredOutputStream<UnZFilter, true>(d->getFile()));
 	}
 
-	dcassert(d->getPos() != -1);
 	if(d->getStart() == 0) {
 		d->setStart(GET_TICK());
 	}
@@ -510,7 +433,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		if(d->getPos() > d->getSize()) {
 			throw Exception(STRING(TOO_MUCH_DATA));
 		} else if(d->getPos() == d->getSize()) {
-			if(!d->isSet(Download::FLAG_MULTI_CHUNK) || (d->getType() != Transfer::TYPE_FILE)) {
+			if(d->getType() != Transfer::TYPE_FILE) {
 				handleEndData(aSource);
 			}
 			else{ // peer's partial size < chunk size
@@ -586,7 +509,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			return;
 		}
 
-		reconn = d->isSet(Download::FLAG_MULTI_CHUNK) && (d->getPos() != d->getSize());
+		reconn = d->getType() == Transfer::TYPE_FILE && (d->getPos() != d->getSize());
 		dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getPath().c_str(), d->getSize(), d->getTotal());
 
 		if(BOOLSETTING(LOG_DOWNLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || d->getType() != Transfer::TYPE_FULL_LIST) && d->getType() != Transfer::TYPE_TREE) {
