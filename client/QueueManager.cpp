@@ -571,14 +571,14 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 		Lock l(cs);
 
 		QueueItem* q = fileQueue.find(target);
-		if(q == NULL) {
-			QueueItem::List ql;
-			fileQueue.find(ql, root);
-			if(!ql.empty()){
-				dcassert(ql.size() == 1);
-				q = ql[0];
-			}
-		}
+		//if(q == NULL && root) {
+		//	QueueItem::List ql;
+		//	fileQueue.find(ql, root);
+		//	if(!ql.empty()){
+		//		dcassert(ql.size() == 1);
+		//		q = ql[0];
+		//	}
+		//}
 				
 		if(q == NULL) {
 			q = fileQueue.add(target, aSize, aFlags, QueueItem::DEFAULT, Util::emptyString, GET_TIME(), Util::emptyString, Util::emptyString, root);

@@ -649,32 +649,10 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			auto_ptr<UpdateInfo> ui(reinterpret_cast<UpdateInfo*>(i->second));
 			ItemInfoList::ParentPair* pp = ctrlTransfers.findParentPair(ui->target);
 			
-			if(!pp/* || (pp->parent->hits == -1 && ui->queueItem->isSet(QueueItem::FLAG_USER_LIST))*/) 
+			if(!pp) 
 				continue;
-			
-			double ratio = 0;
-			int64_t totalSpeed = 0;
-			int16_t segs = 0;
 
 			if(ui->status == ItemInfo::STATUS_RUNNING) {
-				if(pp->parent->hits == -1) {
-					segs = pp->parent->status == ItemInfo::STATUS_RUNNING ? 1 : 0;
-					totalSpeed = pp->parent->speed;
-				} else {
-					for(DownloadList::const_iterator i = ui->queueItem->getDownloads().begin(); i != ui->queueItem->getDownloads().end(); i++) {
-						if((*i)->getTotal() > 0) {
-							segs++;
-
-							totalSpeed += static_cast<int64_t>((*i)->getAverageSpeed());
-							ratio += (*i)->getActual() / (*i)->getPos();
-						}
-					}
-					ratio = ratio / segs;
-				}
-
-				if(segs == 0)
-					continue;
-
 				uint64_t time = GET_TICK() - pp->parent->fileBegin;
 				if(time > 1000) {
 					AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
@@ -683,17 +661,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 
 					ui->setStatusString(tstring(buf));
 				}
-			} else {
-				segs = 0;
 			}
-			
-			if(segs != pp->parent->running)
-				ui->setRunning(segs);
-
-			ui->setActual((int64_t)((double)ui->pos * (ratio == 0 ? 1.00 : ratio)));
-			ui->setTimeLeft((totalSpeed > 0) ? ((ui->size - ui->pos) / totalSpeed) : 0);
-			ui->setSpeed(totalSpeed);
-
 			pp->parent->update(*ui);
 			updateItem(ctrlTransfers.findItem(pp->parent), ui->updateMask);
 		}
@@ -1185,12 +1153,36 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 	ui->setTarget(Text::toT(qi->getTarget()));
 
 	if(qi->isRunning() && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
-		ui->setPos(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getPos() : qi->getDownloadedBytes());
-		ui->setSize(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getSize() : qi->getSize());
-		ui->setActual(ui->pos);
-		ui->setStatus(ItemInfo::STATUS_RUNNING);
+		double ratio = 0;
+		int64_t totalSpeed = 0;
+		int16_t segs = 0;
+
+		for(DownloadList::const_iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); i++) {
+			if((*i)->getStart() > 0) {
+				segs++;
+
+				totalSpeed += static_cast<int64_t>((*i)->getAverageSpeed());
+				ratio += (*i)->getActual() / (*i)->getPos();
+			}
+		}
+
+		ui->setRunning(segs);
+		if(segs > 0) {
+			ratio = ratio / segs;
+
+			ui->setSize(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getSize() : qi->getSize());
+			ui->setPos(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getPos() : qi->getDownloadedBytes());
+			ui->setActual((int64_t)((double)ui->pos * (ratio == 0 ? 1.00 : ratio)));
+			ui->setTimeLeft((totalSpeed > 0) ? ((ui->size - ui->pos) / totalSpeed) : 0);
+			ui->setSpeed(totalSpeed);
+			ui->setStatus(ItemInfo::STATUS_RUNNING);
+		} else {
+			ui->setStatus(ItemInfo::STATUS_WAITING);
+		}
 	} else {
+		ui->setSize(qi->getSize());
 		ui->setStatus(ItemInfo::STATUS_WAITING);
+		ui->setRunning(0);
 	}
 
 	speak(UPDATE_PARENT, ui);
@@ -1204,6 +1196,7 @@ void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const
 	ui->setTimeLeft(0);
 	ui->setStatusString(TSTRING(DOWNLOAD_FINISHED_IDLE));
 	ui->setStatus(ItemInfo::STATUS_WAITING);
+	ui->setRunning(0);
 	
 	speak(UPDATE_PARENT, ui);
 }
@@ -1216,6 +1209,7 @@ void TransferView::on(QueueManagerListener::Removed, const QueueItem* qi) throw(
 	ui->setTimeLeft(0);
 	ui->setStatusString(TSTRING(DISCONNECTED));
 	ui->setStatus(ItemInfo::STATUS_WAITING);
+	ui->setRunning(0);
 
 	speak(UPDATE_PARENT, ui);
 }
