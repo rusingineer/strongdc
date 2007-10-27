@@ -59,6 +59,7 @@
 		<String Name="BrowseFileList">Browse file list</String>
 		<String Name="Bumped">Bumped</String>
 		<String Name="Cancel">Cancel</String>
+		<String Name="CertificateGenerated">Generated new TLS certificate"</String>
 		<String Name="CertificateNotTrusted">Certificate not trusted, unable to connect</String>
 		<String Name="CertificateGenerationFailed">TLS disabled, failed to generate certificate: </String>
 		<String Name="Cid">CID</String>

@@ -379,6 +379,10 @@ void QueueManager::UserQueue::remove(QueueItem* qi, const UserPtr& aUser) {
 		removeDownload(qi, aUser);
 	}
 
+	removeUser(qi, aUser);
+}
+
+void QueueManager::UserQueue::removeUser(QueueItem* qi, const UserPtr& aUser) {
 	dcassert(qi->isSource(aUser));
 	QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
 	QueueItem::UserListMap::iterator j = ulm.find(aUser);
@@ -1365,13 +1369,14 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 				userQueue.add(q);
 			} else {
 				running = true;
+
 				for(QueueItem::SourceConstIter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
-					if(userQueue.getRunning(i->getUser()) != q) userQueue.remove(q, i->getUser());
+					userQueue.removeUser(q, i->getUser());
 				}
+
 				q->setPriority(p);
-				for(QueueItem::SourceConstIter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
-					if(userQueue.getRunning(i->getUser()) != q) userQueue.add(q, i->getUser());
-				}
+
+				userQueue.add(q);
 			}
 			setDirty();
 			fire(QueueManagerListener::StatusUpdated(), q);

@@ -58,6 +58,7 @@ enum Strings { // @DontAdd
 	BROWSE_FILE_LIST, // "Browse file list"
 	BUMPED, // "Bumped"
 	CANCEL, // "Cancel"
+	CERTIFICATE_GENERATED, // "Generated new TLS certificate"	
 	CERTIFICATE_NOT_TRUSTED, // "Certificate not trusted, unable to connect"
 	CERTIFICATE_GENERATION_FAILED, // "TLS disabled, failed to generate certificate: "
 	CID, // "CID"

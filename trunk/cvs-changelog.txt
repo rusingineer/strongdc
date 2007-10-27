@@ -1,5 +1,7 @@
-KNOWN BUGS:
-* changing priority can cause a crash, so turn off autopriority and don't change priority at all
+** svn332
+	yaSSL replaced with OpenSSL
+	some DC++ SVN merge
+	hopefully fixed crash when changing queue priority
 
 ** svn331
 	some TransferView optimization

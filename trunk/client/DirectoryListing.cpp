@@ -97,7 +97,8 @@ void DirectoryListing::loadFile(const string& name) throw(Exception) {
 	} else if(Util::stricmp(ext, ".xml") == 0) {
 		int64_t sz = ::File::getSize(name);
 		if(sz == -1 || sz >= static_cast<int64_t>(txt.max_size()))
-			throw(FileException(CSTRING(FILE_NOT_AVAILABLE)));
+			throw FileException(STRING(FILE_NOT_AVAILABLE));
+			
 		txt.resize((size_t) sz);
 		size_t n = txt.length();
 		::File(name, ::File::READ, ::File::OPEN).read(&txt[0], n);

@@ -33,10 +33,7 @@ void SSLSocket::connect(const string& aIp, uint16_t aPort) throw(SocketException
 	Socket::setBlocking(true);
 	Socket::connect(aIp, aPort);
 	
-	if(ssl)
-		SSL_free(ssl);
-
-	ssl = SSL_new(ctx);
+	ssl.reset(SSL_new(ctx));
 	if(!ssl)
 		checkSSL(-1);
 
@@ -49,10 +46,7 @@ void SSLSocket::connect(const string& aIp, uint16_t aPort) throw(SocketException
 void SSLSocket::accept(const Socket& listeningSocket) throw(SocketException) {
 	Socket::accept(listeningSocket);
 
-	if(ssl)
-		SSL_free(ssl);
-
-	ssl = SSL_new(ctx);
+	ssl.reset(SSL_new(ctx));
 	if(!ssl)
 		checkSSL(-1);
 
@@ -100,8 +94,7 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 				return -1;
 			default:
 				{
-					SSL_free(ssl);
-					ssl = 0;
+					ssl.reset();
 					// @todo replace 80 with MAX_ERROR_SZ or whatever's appropriate for yaSSL in some nice way...
 					char errbuf[80];
 					throw SocketException(string("SSL Error: ") + ERR_error_string(err, errbuf) + " (" + Util::toString(ret) + ", " + Util::toString(err) + ")"); // @todo Translate
@@ -137,6 +130,23 @@ bool SSLSocket::isTrusted() const throw() {
 	return true;
 }
 
+std::string SSLSocket::getCipherName() const throw() {
+	if(!ssl)
+		return Util::emptyString;
+	
+	return SSL_get_cipher_name(ssl);
+}
+
+std::string SSLSocket::getDigest() const throw() {
+	if(!ssl)
+		return Util::emptyString;
+	X509* x509 = SSL_get_peer_certificate(ssl);
+	if(!x509)
+		return Util::emptyString;
+	
+	return ssl::X509_digest(x509, EVP_sha1());
+}
+
 void SSLSocket::shutdown() throw() {
 	if(ssl)
 		SSL_shutdown(ssl);
@@ -144,8 +154,7 @@ void SSLSocket::shutdown() throw() {
 
 void SSLSocket::close() throw() {
 	if(ssl) {
-		SSL_free(ssl);
-		ssl = 0;
+		ssl.reset();
 	}
 	Socket::shutdown();
 	Socket::close();

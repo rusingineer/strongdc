@@ -71,6 +71,8 @@ UploadManager::~UploadManager() throw() {
 }
 
 bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, const string& aFile, int64_t aStartPos, int64_t& aBytes, bool listRecursive) {
+	dcdebug("Preparing %s %s " I64_FMT " " I64_FMT " %d\n", aType.c_str(), aFile.c_str(), aStartPos, aBytes, listRecursive);
+
 	if(aFile.empty() || aStartPos < 0 || aBytes < -1 || aBytes == 0) {
 		aSource.fileNotAvail("Invalid request");
 		return false;
@@ -87,6 +89,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 
 	string sourceFile;
 	Transfer::Type type;
+
 	try {
 		if(aType == Transfer::names[Transfer::TYPE_FILE]) {
 			sourceFile = ShareManager::getInstance()->toReal(aFile);
@@ -145,6 +148,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 				aSource.fileNotAvail();
 				return false;
 			}
+			
 			// Some old dc++ clients err here...
 			aBytes = -1;
 			start = 0;
@@ -453,7 +457,7 @@ void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, 
 	if(u) {
 		fire(UploadManagerListener::Failed(), u, aError);
 
-		dcdebug("UM::onFailed: Removing upload from %s\n", aSource->getUser()->getFirstNick().c_str());
+		dcdebug("UM::onFailed (%s): Removing upload\n", aError.c_str());
 		removeUpload(u);
 	}
 

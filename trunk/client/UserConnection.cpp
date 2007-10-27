@@ -88,7 +88,9 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 			param.rfind(/*path/file*/" no more exists") != string::npos) { 
     		fire(UserConnectionListener::FileNotAvailable(), this);
     	} else {
+			dcdebug("Unknown $Error %s\n", param.c_str());
 			fire(UserConnectionListener::Failed(), this, param);
+			disconnect(true);
 	    }
 	} else if(cmd == "$GetListLen") {
     	fire(UserConnectionListener::GetListLength(), this);
@@ -156,7 +158,12 @@ void UserConnection::inf(bool withToken) {
 	AdcCommand c(AdcCommand::CMD_INF);
 	c.addParam("ID", ClientManager::getInstance()->getMyCID().toBase32());
 	if(withToken) {
-		c.addParam("TO", getToken());
+		if(getToken().compare(0, 2, "TO") == 0) {
+			// Compatibility with pre-0.700
+			c.addParam(getToken());
+		} else {
+			c.addParam("TO", getToken());
+		}
 	}
 	send(c);
 }
