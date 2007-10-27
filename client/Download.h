@@ -4,9 +4,8 @@
 #include "forward.h"
 #include "Transfer.h"
 #include "MerkleTree.h"
-#include "ZUtils.h"
-#include "FilteredFile.h"
 #include "Flags.h"
+#include "Streams.h"
 
 /**
  * Comes as an argument in the DownloadManagerListener functions.
@@ -62,7 +61,6 @@ public:
 	GETSET(uint64_t, lastTick, LastTick);
 	GETSET(OutputStream*, file, File);
 	GETSET(bool, treeValid, TreeValid);
-
 private:
 	Download(const Download&);
 	Download& operator=(const Download&);

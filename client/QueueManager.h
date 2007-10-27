@@ -238,6 +238,7 @@ private:
 		const QueueItem::UserListMap& getList(int p) const { return userQueue[p]; }
 		void remove(QueueItem* qi);
 		void remove(QueueItem* qi, const UserPtr& aUser);
+		void removeUser(QueueItem* qi, const UserPtr& aUser);
 
 		const QueueItem::UserMap& getRunning() const { return running; }
 	private:

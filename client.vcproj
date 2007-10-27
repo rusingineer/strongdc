@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\yassl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\openssl\include&quot;"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="1"
@@ -129,7 +129,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="false"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\yassl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\openssl\include&quot;"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="1"
@@ -325,6 +325,10 @@
 			</File>
 			<File
 				RelativePath=".\client\Socket.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\client\SSL.cpp"
 				>
 			</File>
 			<File
@@ -666,6 +670,10 @@
 			</File>
 			<File
 				RelativePath=".\client\Speaker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\SSL.h"
 				>
 			</File>
 			<File

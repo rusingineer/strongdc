@@ -31,6 +31,7 @@
 #include "FilteredFile.h"
 #include "MerkleCheckOutputStream.h"
 #include "UserConnection.h"
+#include "ZUtils.h"
 #include "SharedFileStream.h"
 #include "ChunkOutputStream.h"
 #include "UploadManager.h"
