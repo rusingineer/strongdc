@@ -781,6 +781,7 @@ enum Strings { // @DontAdd
 	SUSPEND, // "Suspend"
 	TABS_ON_TOP, // "Tabs on top"
 	TAG, // "Tag"
+	TARGET_REMOVED, // "Target removed"
 	TARGET_FILENAME_TOO_LONG, // "Target filename too long"
 	TB, // "TB"
 	TCP_PORT_BUSY, // "Unable to open TCP/TLS port. File transfers will not work correctly until you change settings or turn off any application that might be using the TCP/TLS port"

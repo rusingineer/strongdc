@@ -418,9 +418,7 @@ QueueManager::~QueueManager() throw() {
 		StringList filelists2 = File::findFiles(path, "*.DcLst");
 		filelists.insert(filelists.end(), filelists2.begin(), filelists2.end());
 
-		for(StringIter i = filelists.begin(); i != filelists.end(); ++i) {
-			File::deleteFile(*i);
-		}
+		std::for_each(filelists.begin(), filelists.end(), &File::deleteFile);
 	}
 }
 
@@ -748,6 +746,7 @@ void buildMap(const DirectoryListing::Directory* dir) throw() {
 	}
 }
 }
+
 int QueueManager::matchListing(const DirectoryListing& dl) throw() {
 	int matches = 0;
 	{
@@ -784,7 +783,7 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 
 	Lock l(cs);
 	QueueItem* qs = fileQueue.find(aSource);
-	if(qs != NULL) {
+	if(qs) {
 		// Don't move running downloads
 		if(qs->isRunning()) {
 			return;
@@ -802,14 +801,14 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 			setDirty();
 		} else {
 			// Don't move to target of different size
-			if(qs->getSize() != qt->getSize())
+			if(qs->getSize() != qt->getSize() || qs->getTTH() != qt->getTTH())
 				return;
 
-			try {
-				for(QueueItem::SourceConstIter i = qs->getSources().begin(); i != qs->getSources().end(); ++i) {
+			for(QueueItem::SourceConstIter i = qs->getSources().begin(); i != qs->getSources().end(); ++i) {
+				try {
 					addSource(qt, i->getUser(), QueueItem::Source::FLAG_MASK);
+				} catch(const Exception&) {
 				}
-			} catch(const Exception&) {
 			}
 			delSource = true;
 		}
@@ -987,10 +986,17 @@ private:
 
 void QueueManager::setFile(Download* d) {
 	if(d->getType() == Transfer::TYPE_FILE) {
+		Lock l(cs);
+
+		QueueItem* qi = fileQueue.find(d->getPath());
+		if(!qi) {
+			throw QueueException(STRING(TARGET_REMOVED));
+		}
+		
 		string target = d->getDownloadTarget();
 		File::ensureDirectory(target);
 	
-		d->setFile(new SharedFileStream(target, d->getPos(), d->getFileSize()));
+		d->setFile(new SharedFileStream(target, d->getPos(), qi->getSize()));
 	} else if(d->getType() == Transfer::TYPE_FULL_LIST) {
 		string target = d->getDownloadTarget();
 		File::ensureDirectory(target);

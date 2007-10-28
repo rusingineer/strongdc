@@ -1162,7 +1162,7 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 				segs++;
 
 				totalSpeed += static_cast<int64_t>((*i)->getAverageSpeed());
-				ratio += (*i)->getActual() / (*i)->getPos();
+				ratio += (*i)->getPos() > 0 ? (*i)->getActual() / (*i)->getPos() : 1.00;
 			}
 		}
 
