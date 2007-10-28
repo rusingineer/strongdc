@@ -782,6 +782,7 @@
 		<String Name="Suspend">Suspend</String>
 		<String Name="TabsOnTop">Tabs on top</String>
 		<String Name="Tag">Tag</String>
+		<String Name="TargetRemoved">Target removed</String>
 		<String Name="TargetFilenameTooLong">Target filename too long</String>
 		<String Name="Tb">TB</String>
 		<String Name="TcpPortBusy">Unable to open TCP/TLS port. File transfers will not work correctly until you change settings or turn off any application that might be using the TCP/TLS port</String>

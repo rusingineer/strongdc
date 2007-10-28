@@ -1,3 +1,8 @@
+** SVN333
+	fixed missing library directory
+	fixed crash due to division by zero
+	small stuff from DC++
+
 ** svn332
 	yaSSL replaced with OpenSSL
 	some DC++ SVN merge
