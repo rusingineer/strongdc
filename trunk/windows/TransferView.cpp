@@ -487,7 +487,7 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 
 		ItemInfo* i = ctrlTransfers.getItemData(item->iItem);
 		const vector<ItemInfo*>& children = ctrlTransfers.findChildren(i->getGroupCond());
-		if(children.size() <= 1) {
+		if(i->parent != NULL || children.size() <= 1) {
 			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
 				case 0:
 					i->pm();
@@ -923,9 +923,9 @@ void TransferView::on(DownloadManagerListener::Failed, const Download* aDownload
 	}
 	if(BOOLSETTING(POPUP_DOWNLOAD_FAILED)) {
 		MainFrame::getMainFrame()->ShowBalloonTip((
-			TSTRING(FILE)+_T(": ") + Util::getFileName(ui->target) + _T("\n")+
-			TSTRING(USER)+_T(": ") + Text::toT(ui->user->getFirstNick()) + _T("\n")+
-			TSTRING(REASON)+_T(": ") + Text::toT(aReason)).c_str(), CTSTRING(DOWNLOAD_FAILED), NIIF_WARNING);
+			TSTRING(FILE) + _T(": ") + Util::getFileName(ui->target) + _T("\n")+
+			TSTRING(USER) + _T(": ") + WinUtil::getNicks(ui->user) + _T("\n")+
+			TSTRING(REASON) + _T(": ") + Text::toT(aReason)).c_str(), CTSTRING(DOWNLOAD_FAILED), NIIF_WARNING);
 	}
 
 	speak(UPDATE_ITEM, ui);
@@ -1026,13 +1026,13 @@ void TransferView::onTransferComplete(const Transfer* aTransfer, bool isUpload, 
 		if(BOOLSETTING(POPUP_DOWNLOAD_FINISHED) && !isTree) {
 			MainFrame::getMainFrame()->ShowBalloonTip((
 				TSTRING(FILE) + _T(": ") + Text::toT(aFileName) + _T("\n")+
-				TSTRING(USER) + _T(": ") + Text::toT(aTransfer->getUser()->getFirstNick())).c_str(), CTSTRING(DOWNLOAD_FINISHED_IDLE));
+				TSTRING(USER) + _T(": ") + WinUtil::getNicks(aTransfer->getUser())).c_str(), CTSTRING(DOWNLOAD_FINISHED_IDLE));
 		}
 	} else {
 		if(BOOLSETTING(POPUP_UPLOAD_FINISHED) && !isTree) {
 			MainFrame::getMainFrame()->ShowBalloonTip((
 				TSTRING(FILE) + _T(": ") + Text::toT(aFileName) + _T("\n")+
-				TSTRING(USER) + _T(": ") + Text::toT(aTransfer->getUser()->getFirstNick())).c_str(), CTSTRING(UPLOAD_FINISHED_IDLE));
+				TSTRING(USER) + _T(": ") + WinUtil::getNicks(aTransfer->getUser())).c_str(), CTSTRING(UPLOAD_FINISHED_IDLE));
 		}
 	}
 	
@@ -1176,8 +1176,6 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 			ui->setTimeLeft((totalSpeed > 0) ? ((ui->size - ui->pos) / totalSpeed) : 0);
 			ui->setSpeed(totalSpeed);
 			ui->setStatus(ItemInfo::STATUS_RUNNING);
-		} else {
-			ui->setStatus(ItemInfo::STATUS_WAITING);
 		}
 	} else {
 		ui->setSize(qi->getSize());

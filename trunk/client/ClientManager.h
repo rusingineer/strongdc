@@ -33,7 +33,7 @@ class UserCommand;
 
 class ClientManager : public Speaker<ClientManagerListener>, 
 	private ClientListener, public Singleton<ClientManager>, 
-	private TimerManagerListener, private SettingsManagerListener
+	private TimerManagerListener
 {
 public:
 	Client* getClient(const string& aHubURL);
@@ -43,7 +43,7 @@ public:
 	int64_t getAvailable() const;
 	StringList getHubs(const CID& cid) const;
 	StringList getHubNames(const CID& cid) const;
-	//StringList getNicks(const CID& cid) const;
+	StringList getNicks(const CID& cid) const;
 	string getConnection(const CID& cid) const;
 
 	bool isConnected(const string& aUrl) const;
@@ -203,18 +203,13 @@ private:
 
 	ClientManager() {
 		TimerManager::getInstance()->addListener(this); 
-		SettingsManager::getInstance()->addListener(this);
 	}
 
 	~ClientManager() throw() {
-		SettingsManager::getInstance()->removeListener(this);
 		TimerManager::getInstance()->removeListener(this); 
 	}
 
 	void updateCachedIp();
-
-	// SettingsManagerListener
-	void on(Load, SimpleXML&) throw();
 
 	// ClientListener
 	void on(Connected, const Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }

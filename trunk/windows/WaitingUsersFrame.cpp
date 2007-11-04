@@ -399,13 +399,13 @@ void WaitingUsersFrame::AddFile(UploadQueueItem* aUQI) {
 	}
 
 	if(add) {
-		userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(aUQI->getUser()->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str(), 
+		userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (WinUtil::getNicks(aUQI->getUser()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str(), 
 			0, 0, 0, 0, (LPARAM)(new UserItem(aUQI->getUser())), rootItem, TVI_LAST);
 	}	
 	if(selNode && selNode != rootItem) {
 		TCHAR selBuf[256];
 		ctrlQueued.GetItemText(selNode, selBuf, 255);
-		if(_tcscmp(selBuf, (Text::toT(aUQI->getUser()->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str()) != 0) {
+		if(_tcscmp(selBuf, (WinUtil::getNicks(aUQI->getUser()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str()) != 0) {
 			return;
 		}
 	}
@@ -450,7 +450,7 @@ const tstring UploadQueueItem::getText(uint8_t col) const {
 	switch(col) {
 		case COLUMN_FILE: return Text::toT(Util::getFileName(file));
 		case COLUMN_PATH: return Text::toT(Util::getFilePath(file));
-		case COLUMN_NICK: return Text::toT(user->getFirstNick());
+		case COLUMN_NICK: return WinUtil::getNicks(user);
 		case COLUMN_HUB: return WinUtil::getHubNames(user).first;
 		case COLUMN_SIZE: return Util::formatBytesW(size);
 		case COLUMN_ADDED: return Text::toT(Util::formatTime("%Y-%m-%d %H:%M", time));

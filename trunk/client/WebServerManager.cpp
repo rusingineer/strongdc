@@ -440,7 +440,7 @@ string WebServerManager::getULQueue(){
 	UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getWaitingUsers();
 	for(UploadQueueItem::SlotQueue::const_iterator ii = users.begin(); ii != users.end(); ++ii) {
 		for(UploadQueueItem::List::const_iterator i = ii->second.begin(); i != ii->second.end(); ++i) {
-			ret+="<tr><td>" + (*i)->getUser()->getFirstNick() + "</td>";
+			ret+="<tr><td>" + ClientManager::getInstance()->getNicks((*i)->getUser()->getCID())[0] + "</td>";
 			ret+="<td>" + Util::getFileName((*i)->getFile()) + "</td></tr>";
 		}
 	}
@@ -553,7 +553,7 @@ void WebServerManager::onSearchResult(const SearchResult* aResult) {
 			results += "<input type='hidden' name='tth' value='" + aResult->getTTH().toBase32() + "'>";
 			results += "<input type='hidden' name='type' value='" + Util::toString(aResult->getType()) + "'>";
 			results += "<tr onmouseover=\"this.style.backgroundColor='#CC0099'; this.style.cursor='hand';\" onmouseout=\"this.style.backgroundColor='#EEEEEE'; this.style.cursor='hand';\" onclick=\"form" + Util::toString(row) + ".submit();\">";
-			results += "<td>" + aResult->getUser()->getFirstNick() + "</td><td>" + aResult->getFileName() + "</td><td>" + Util::formatBytes(aResult->getSize()) + "</td><td>" + aResult->getTTH().toBase32() + "</td></form></tr>";
+			results += "<td>" + ClientManager::getInstance()->getNicks(aResult->getUser()->getCID())[0] + "</td><td>" + aResult->getFileName() + "</td><td>" + Util::formatBytes(aResult->getSize()) + "</td><td>" + aResult->getTTH().toBase32() + "</td></form></tr>";
 			row++;
 		}
 	}

@@ -99,7 +99,7 @@ void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const Use
 
 		if(BOOLSETTING(POPUP_NEW_PM)) {
 			pair<tstring, bool> hubs = WinUtil::getHubNames(replyTo);
-			MainFrame::getMainFrame()->ShowBalloonTip((Text::toT(replyTo->getFirstNick() + " - ") + hubs.first).c_str(), CTSTRING(PRIVATE_MESSAGE));
+			MainFrame::getMainFrame()->ShowBalloonTip((WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first).c_str(), CTSTRING(PRIVATE_MESSAGE));
 		}
 
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -113,7 +113,7 @@ void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const Use
 		if(!myPM) {
 			if(BOOLSETTING(POPUP_PM)) {
 				pair<tstring, bool> hubs = WinUtil::getHubNames(replyTo);
-				MainFrame::getMainFrame()->ShowBalloonTip((Text::toT(replyTo->getFirstNick() + " - ") + hubs.first).c_str(), CTSTRING(PRIVATE_MESSAGE));
+				MainFrame::getMainFrame()->ShowBalloonTip((WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first).c_str(), CTSTRING(PRIVATE_MESSAGE));
 			}
 
 			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -287,7 +287,7 @@ void PrivateFrame::onEnter()
 				params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 				params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 				params["userCID"] = replyTo->getCID().toBase32(); 
-				params["userNI"] = replyTo->getFirstNick();
+				params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 				params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 				WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false))));
 			} else if(Util::stricmp(s.c_str(), _T("stats")) == 0) {
@@ -365,7 +365,7 @@ void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMA
 		params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 		params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 		params["userCID"] = replyTo->getCID().toBase32(); 
-		params["userNI"] = replyTo->getFirstNick();
+		params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 		params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 		LOG(LogManager::PM, params);
 	}
@@ -410,7 +410,7 @@ LRESULT PrivateFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	OMenu tabMenu;
 	tabMenu.CreatePopupMenu();	
 
-	tabMenu.InsertSeparatorFirst(Text::toT(replyTo->getFirstNick()));
+	tabMenu.InsertSeparatorFirst(Text::toT(ClientManager::getInstance()->getNicks(replyTo->getCID())[0]));
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		tabMenu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG,  CTSTRING(OPEN_USER_LOG));
 		tabMenu.AppendMenu(MF_SEPARATOR);
@@ -524,7 +524,7 @@ void PrivateFrame::updateTitle() {
 		unsetIconState();
 		setTabColor(RGB(0, 255,	255));
 		if(isoffline) {
-			tstring status = _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - ") + hubs.first + _T("] ***");
+			tstring status = _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first + _T("] ***");
 			if(BOOLSETTING(STATUS_IN_CHAT)) {
 				addLine(status, WinUtil::m_ChatTextServer);
 			} else {
@@ -535,7 +535,7 @@ void PrivateFrame::updateTitle() {
 	} else {
 		setIconState();
 		setTabColor(RGB(255, 0, 0));
-		tstring status = _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getFirstNick() + " - ") + hubs.first + _T("] ***");
+		tstring status = _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first + _T("] ***");
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
 			addLine(status, WinUtil::m_ChatTextServer);
 		} else {
@@ -543,7 +543,7 @@ void PrivateFrame::updateTitle() {
 		}
 		isoffline = true;
 	}
-	SetWindowText((Text::toT(replyTo->getFirstNick()) + _T(" - ") + hubs.first).c_str());
+	SetWindowText((WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first).c_str());
 }
 
 LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -607,7 +607,7 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	delete[] buf;
 	string::size_type start = x.find_last_of(_T(" <\t\r\n"), c);
 	if (start == string::npos) { start = 0; }
-	tstring nick = Text::toT(replyTo->getFirstNick());
+	tstring nick = Text::toT(ClientManager::getInstance()->getNicks(replyTo->getCID())[0]);
 	if (x.substr(start, (nick.length() + 2) ) == (_T("<") + nick + _T(">"))) {
 		if(!replyTo->isOnline()) {
 			return S_OK;
@@ -678,7 +678,7 @@ void PrivateFrame::readLog() {
 	params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 	params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 	params["userCID"] = replyTo->getCID().toBase32(); 
-	params["userNI"] = replyTo->getFirstNick();
+	params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 	params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 		
 	string path = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false));
@@ -729,7 +729,7 @@ LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
 	params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
 	params["userCID"] = replyTo->getCID().toBase32(); 
-	params["userNI"] = replyTo->getFirstNick();
+	params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 	params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 
 	string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false));

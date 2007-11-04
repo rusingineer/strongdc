@@ -91,13 +91,13 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 		
 		tstring x;
 		if (ctrlUsers.GetSelectedCount() == 1) {
-			x = Text::toT(ctrlUsers.getItemData(WinUtil::getFirstSelectedIndex(ctrlUsers))->user->getFirstNick());
+			x = Text::toT(ClientManager::getInstance()->getNicks(ctrlUsers.getItemData(WinUtil::getFirstSelectedIndex(ctrlUsers))->user->getCID())[0]);
 		} else {
 			x = _T("");
 		}
 
-		//if (!x.empty())
-		//	usersMenu.InsertSeparatorFirst(x);
+		if (!x.empty())
+			usersMenu.InsertSeparatorFirst(x);
 		
 		usersMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
@@ -271,7 +271,7 @@ LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(ui->getUser()->getCID()));
 		params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(ui->getUser()->getCID()));
 		params["userCID"] = ui->getUser()->getCID().toBase32(); 
-		params["userNI"] = ui->getUser()->getFirstNick();
+		params["userNI"] = Util::toString(ClientManager::getInstance()->getNicks(ui->getUser()->getCID()))[0];
 		params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 
 		string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false));

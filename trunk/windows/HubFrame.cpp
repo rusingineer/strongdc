@@ -335,7 +335,7 @@ void HubFrame::onEnter() {
 			} else if(Util::stricmp(cmd.c_str(), _T("ignorelist"))==0) {
 				tstring ignorelist = _T("Ignored users:");
 				for(IgnoreMap::const_iterator i = ignoreList.begin(); i != ignoreList.end(); ++i)
-					ignorelist += _T(" ") + Text::toT((*i)->getFirstNick());
+					ignorelist += _T(" ") + Text::toT(ClientManager::getInstance()->getNicks((*i)->getCID())[0]);
 				addLine(ignorelist, WinUtil::m_ChatTextSystem);
 			} else if(Util::stricmp(cmd.c_str(), _T("log")) == 0) {
 				StringMap params;
@@ -1194,6 +1194,11 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 	tabMenuShown = true;
 	OMenu tabMenu, copyHubMenu;
 
+	copyHubMenu.CreatePopupMenu();
+	copyHubMenu.InsertSeparatorFirst(TSTRING(COPY));
+	copyHubMenu.AppendMenu(MF_STRING, IDC_COPY_HUBNAME, CTSTRING(HUB_NAME));
+	copyHubMenu.AppendMenu(MF_STRING, IDC_COPY_HUBADDRESS, CTSTRING(HUB_ADDRESS));
+
 	tabMenu.CreatePopupMenu();
 	tabMenu.InsertSeparatorFirst(Text::toT((client->getHubName() != "") ? (client->getHubName().size() > 50 ? client->getHubName().substr(0, 50) : client->getHubName()) : client->getHubUrl()));	
 	if(BOOLSETTING(LOG_MAIN_CHAT)) {
@@ -1207,11 +1212,6 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 	tabMenu.AppendMenu(MF_SEPARATOR);
 	tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
 	
-	copyHubMenu.CreatePopupMenu();
-	copyHubMenu.InsertSeparatorFirst(TSTRING(COPY));
-	copyHubMenu.AppendMenu(MF_STRING, IDC_COPY_HUBNAME, CTSTRING(HUB_NAME));
-	copyHubMenu.AppendMenu(MF_STRING, IDC_COPY_HUBADDRESS, CTSTRING(HUB_ADDRESS));
-
 	if(!client->isConnected())
 		tabMenu.EnableMenuItem((UINT)(HMENU)copyHubMenu, MF_GRAYED);
 	else

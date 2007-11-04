@@ -121,7 +121,7 @@ public:
 					return Text::toT(getFileName());
 				}
 			case COLUMN_HITS: return hits == 0 ? Util::emptyStringT : Util::toStringW(hits + 1) + _T(' ') + TSTRING(USERS);
-			case COLUMN_NICK: return Text::toT(getUser()->getFirstNick());
+			case COLUMN_NICK: return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(getUser()->getCID())));
 			case COLUMN_TYPE:
 				if(getType() == SearchResult::TYPE_FILE) {
 					tstring type = Text::toT(Util::getFileExt(Text::fromT(getText(COLUMN_FILENAME))));

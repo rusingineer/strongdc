@@ -1,4 +1,9 @@
-** SVN333
+** svn334
+	fixed too often "Download starting" message
+	fixed double click action on download transfer
+	changes in users' nick processing
+
+** svn333
 	fixed missing library directory
 	fixed crash due to division by zero
 	small stuff from DC++

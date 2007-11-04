@@ -20,6 +20,7 @@
 #define QUEUE_MANAGER_H
 
 #include "TimerManager.h"
+#include "ClientManager.h"
 
 #include "CriticalSection.h"
 #include "Exception.h"
@@ -82,15 +83,19 @@ public:
 	void addPfs(const UserPtr& aUser, const string& aDir) throw(QueueException);
 
 	void addTestSUR(UserPtr aUser, bool checkList = false) throw(QueueException, FileException) {
-		string fileName = "TestSUR" + Util::validateFileName(Util::cleanPathChars(aUser->getFirstNick()))  + "." + aUser->getCID().toBase32();
-		string target = Util::getConfigPath() + "TestSURs\\" + fileName;
+		StringList nicks = ClientManager::getInstance()->getNicks(*aUser);
+		string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
+		string target = Util::getConfigPath() + "TestSURs\\TestSUR" + nick + aUser->getCID().toBase32();
+
 		add(target, -1, TTHValue(), aUser, (Flags::MaskType)((checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR));
 	}
 
 	void removeTestSUR(UserPtr aUser) {
 		try {
-			string fileName = "TestSUR" + Util::validateFileName(Util::cleanPathChars(aUser->getFirstNick()))  + "." + aUser->getCID().toBase32();
-			string target = Util::getConfigPath() + "TestSURs\\" + fileName;
+			StringList nicks = ClientManager::getInstance()->getNicks(*aUser);
+			string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
+			string target = Util::getConfigPath() + "TestSURs\\TestSUR" + nick + aUser->getCID().toBase32();
+
 			remove(target);
 		} catch(...) {
 			// exception
@@ -236,10 +241,10 @@ private:
 		void addDownload(QueueItem* qi, Download* d);
 		void removeDownload(QueueItem* qi, const UserPtr& d);
 		const QueueItem::UserListMap& getList(int p) const { return userQueue[p]; }
-		void remove(QueueItem* qi);
-		void remove(QueueItem* qi, const UserPtr& aUser);
-		void removeUser(QueueItem* qi, const UserPtr& aUser);
-
+		void remove(QueueItem* qi, bool removeRunning = true);
+		void remove(QueueItem* qi, const UserPtr& aUser, bool removeRunning = true);
+		void setPriority(QueueItem* qi, QueueItem::Priority p);
+		
 		const QueueItem::UserMap& getRunning() const { return running; }
 	private:
 		/** QueueItems by priority and user (this is where the download order is determined) */
