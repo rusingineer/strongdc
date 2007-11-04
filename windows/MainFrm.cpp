@@ -117,7 +117,7 @@ public:
 				const size_t BUF_SIZE = STRING(MATCHED_FILES).size() + 16;
 				AutoArray<char> tmp(BUF_SIZE);
 				snprintf(tmp, BUF_SIZE, CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl));
-				LogManager::getInstance()->message(u->getFirstNick() + ": " + string(tmp));
+				LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(u->getCID())) + ": " + string(tmp));
 			} catch(const Exception&) {
 
 			}

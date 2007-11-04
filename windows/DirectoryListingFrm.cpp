@@ -165,7 +165,7 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	SetSplitterExtendedStyle(SPLIT_PROPORTIONAL);
 	SetSplitterPanes(ctrlTree.m_hWnd, ctrlList.m_hWnd);
 	m_nProportionalPos = 2500;
-	string nick = dl->getUser()->getFirstNick();
+	string nick = ClientManager::getInstance()->getNicks(dl->getUser()->getCID())[0];
 	treeRoot = ctrlTree.InsertItem(TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT | TVIF_PARAM, Text::toT(nick).c_str(), WinUtil::getDirIconIndex(), WinUtil::getDirIconIndex(), 0, 0, (LPARAM)dl->getRoot(), NULL, TVI_SORT);
 	dcassert(treeRoot != NULL);
 	
@@ -1166,20 +1166,20 @@ void DirectoryListingFrame::closeAll(){
 }
 
 LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	string sCopy;
+	tstring sCopy;
 	if(ctrlList.GetSelectedCount() == 1) {
 		const ItemInfo* ii = ctrlList.getSelectedItem();
 		if(ii->type != ItemInfo::FILE)
 			return 0;
 		switch (wID) {
 			case IDC_COPY_NICK:
-				sCopy = dl->getUser()->getFirstNick();
+				sCopy = WinUtil::getNicks(dl->getUser());
 				break;
 			case IDC_COPY_FILENAME:
-				sCopy = Util::getFileName(ii->file->getName());
+				sCopy = Util::getFileName(Text::toT(ii->file->getName()));
 				break;
 			case IDC_COPY_SIZE:
-				sCopy = Util::formatBytes(ii->file->getSize());
+				sCopy = Util::formatBytesW(ii->file->getSize());
 				break;
 			case IDC_COPY_LINK:
 				if(ii->type == ItemInfo::FILE) {
@@ -1188,14 +1188,14 @@ LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 				break;
 			case IDC_COPY_TTH:
 				if(ii->type == ItemInfo::FILE)
-					sCopy = ii->file->getTTH().toBase32();
+					sCopy = Text::toT(ii->file->getTTH().toBase32());
 				break;
 			default:
 				dcdebug("DIRECTORYLISTINGFRAME DON'T GO HERE\n");
 				return 0;
 		}
 		if (!sCopy.empty())
-			WinUtil::setClipboard(Text::toT(sCopy));
+			WinUtil::setClipboard(sCopy);
 	}
 	return S_OK;
 }
@@ -1237,7 +1237,7 @@ LRESULT DirectoryListingFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/
 	tstring nick = _T("");
 	UserPtr pUser = dl->getUser();
 	if(pUser != (User*) NULL)
-		nick = Text::toT(pUser->getFirstNick());
+		nick = Text::toT(ClientManager::getInstance()->getNicks(pUser->getCID())[0]);
 
 	tabMenu.InsertSeparatorFirst(nick);
 	tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);

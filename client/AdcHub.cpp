@@ -55,12 +55,7 @@ OnlineUser& AdcHub::getUser(const uint32_t aSID, const CID& aCID) {
 		return *ou;
 	}
 
-	UserPtr p;
-	if(aSID == sid) {
-		p = ClientManager::getInstance()->getMe();
-	} else {
-		p = ClientManager::getInstance()->getUser(aCID);
-	}
+	UserPtr p = ClientManager::getInstance()->getUser(aCID);
 
 	{
 		Lock l(cs);
@@ -174,10 +169,6 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 		u->getUser()->setFlag(User::BOT);
 	} else {
 		u->getUser()->unsetFlag(User::BOT);
-	}
-
-	if(u->getUser()->getFirstNick().empty()) {
-		u->getUser()->setFirstNick(u->getIdentity().getNick());
 	}
 
 	if(u->getIdentity().supports(ADCS_FEATURE)) {
@@ -551,7 +542,7 @@ void AdcHub::info(bool /*alwaysSend*/) {
 		lastInfoMap[var] = tmp; \
 	}
 
-//	updateCounts(false); \
+	updateCounts(false); \
 
 	ADDPARAM("ID", ClientManager::getInstance()->getMyCID().toBase32());
 	ADDPARAM("PD", ClientManager::getInstance()->getMyPID().toBase32());

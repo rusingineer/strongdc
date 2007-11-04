@@ -1328,21 +1328,21 @@ LRESULT SearchFrame::onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*
 LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int pos = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
 	dcassert(pos != -1);
-	string sCopy;
+	tstring sCopy;
 	if ( pos >= 0 ) {
 		SearchResult* sr = ctrlResults.getItemData(pos);
 		switch (wID) {
 			case IDC_COPY_NICK:
-				sCopy = sr->getUser()->getFirstNick();
+				sCopy = WinUtil::getNicks(sr->getUser());
 				break;
 			case IDC_COPY_FILENAME:
-				sCopy = Util::getFileName(sr->getFile());
+				sCopy = Util::getFileName(Text::toT(sr->getFile()));
 				break;
 			case IDC_COPY_PATH:
-				sCopy = Util::getFilePath(sr->getFile());
+				sCopy = Util::getFilePath(Text::toT(sr->getFile()));
 				break;
 			case IDC_COPY_SIZE:
-				sCopy = Util::formatBytes(sr->getSize());
+				sCopy = Util::formatBytesW(sr->getSize());
 				break;
 			case IDC_COPY_LINK:
 				if(sr->getType() == SearchResult::TYPE_FILE) {
@@ -1351,14 +1351,14 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 				break;
 			case IDC_COPY_TTH:
 				if(sr->getType() == SearchResult::TYPE_FILE)
-					sCopy = sr->getTTH().toBase32();
+					sCopy = Text::toT(sr->getTTH().toBase32());
 				break;
 			default:
 				dcdebug("SEARCHFRAME DON'T GO HERE\n");
 				return 0;
 		}
 		if (!sCopy.empty())
-			WinUtil::setClipboard(Text::toT(sCopy));
+			WinUtil::setClipboard(sCopy);
 	}
 	return S_OK;
 }

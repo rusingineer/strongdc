@@ -221,7 +221,7 @@ private:
 
 		const tstring getText(uint8_t col) const {
 			switch(col) {
-				case COLUMN_USER: return (hits == -1) ? Text::toT(user->getFirstNick()) : (Util::toStringW(hits) + _T(' ') + TSTRING(USERS));
+				case COLUMN_USER: return (hits == -1) ? WinUtil::getNicks(user) : (Util::toStringW(hits) + _T(' ') + TSTRING(USERS));
 				case COLUMN_HUB: return (hits == -1) ? WinUtil::getHubNames(user).first : (Util::toStringW(running) + _T(' ') + TSTRING(NUMBER_OF_SEGMENTS));
 				case COLUMN_STATUS: return statusString;
 				case COLUMN_TIMELEFT: return (status == STATUS_RUNNING) ? Util::formatSeconds(timeLeft) : Util::emptyStringT;

@@ -59,17 +59,12 @@ public:
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
 
-	//GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
-	void setLastDownloadSpeed(size_t speed) { lastDownloadSpeed = speed; }
-	size_t getLastDownloadSpeed() const { return lastDownloadSpeed; }
-
-	GETSET(string, firstNick, FirstNick);
+	GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
 private:
 	User(const User&);
 	User& operator=(const User&);
 
 	CID cid;
-	size_t lastDownloadSpeed;
 };
 
 /** One of possibly many identities of a user, mainly for UI purposes */
@@ -83,27 +78,12 @@ public:
 	~Identity() { }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
+	GS(Nick, "NI")
 	GS(Description, "DE")
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
 	GS(Status, "ST")
-
-	void setNick(const string& aNick) {
-		if(!user || !user->isSet(User::NMDC)) {
-			set("NI", aNick);
-		}
-	}
-
-	const string& getNick() const {
-		if(user && user->isSet(User::NMDC)) {
-			return user->getFirstNick();
-		} else {
-			Lock l(cs);
-			InfMap::const_iterator i = info.find(*(short*)"NI");
-			return i == info.end() ? Util::emptyString : i->second;
-		}
-	}
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
@@ -192,7 +172,7 @@ public:
 	bool update(int sortCol, const tstring& oldText = Util::emptyStringT);
 	uint8_t imageIndex() const { return UserInfoBase::getImage(identity); }
 	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
-	const string& getNick() const { return identity.getNick(); }
+	const string getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 	
 	const tstring getText(uint8_t col) const;

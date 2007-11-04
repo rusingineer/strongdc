@@ -1569,11 +1569,11 @@ int WinUtil::getOsMinor()
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 	return ver.dwMinorVersion;
 }
-/*
+
 tstring WinUtil::getNicks(const CID& cid) throw() {
-	return Util::toStringW(ClientManager::getInstance()->getNicks(cid));
+	return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(cid)));
 }
-*/
+
 pair<tstring, bool> WinUtil::getHubNames(const CID& cid) throw() {
 	StringList hubs = ClientManager::getInstance()->getHubNames(cid);
 	if(hubs.empty()) {

@@ -80,7 +80,7 @@ private:
 
 	mutable CriticalSection cs;
 
-	typedef unordered_map<string*, OnlineUser*, noCaseStringHash, noCaseStringEq> NickMap;
+	typedef unordered_map<string, OnlineUser*, noCaseStringHash, noCaseStringEq> NickMap;
 	typedef NickMap::const_iterator NickIter;
 
 	NickMap users;

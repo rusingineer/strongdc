@@ -292,7 +292,6 @@ ok:
 			} else {
 				resumed = true;
 			}
-			dcdebug("Upload from %s removed on next chunk\n", up->getUserConnection().getUser()->getFirstNick().c_str());
 			delete up;
 			break;
 		}
@@ -507,7 +506,6 @@ int UploadManager::addFailedUpload(const UserPtr& aUser, const string& file, int
 	if(found == false) {
 		UploadQueueItem* uqi = new UploadQueueItem(aUser, file, pos, size, currentTime);
 		if(it == waitingUsers.end()) {
-			dcdebug("Added user %s to upload queue.\n", aUser->getFirstNick().c_str());
 			UploadQueueItem::List list;
 			list.push_back(uqi);
 			waitingUsers.push_back(make_pair(aUser, list));
@@ -568,7 +566,6 @@ void UploadManager::notifyQueuedUsers() {
 			UserPtr u = waitingUsers.front().first;
 			clearUserFiles(u);
 			
-			dcdebug("Contacting an user: %s\n", u->getFirstNick().c_str());
 			connectingUsers[u] = GET_TICK();
 			ClientManager::getInstance()->connect(u, Util::toString(Util::rand()));
 
@@ -620,7 +617,7 @@ void UploadManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	}
 		
 	for(UserList::const_iterator i = disconnects.begin(); i != disconnects.end(); ++i) {
-		LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + (*i)->getFirstNick());
+		LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + Util::toString(ClientManager::getInstance()->getNicks((*i)->getCID())));
 		ConnectionManager::getInstance()->disconnect(*i, false);
 	}
 }

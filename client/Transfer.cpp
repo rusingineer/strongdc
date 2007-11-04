@@ -41,22 +41,22 @@ void Transfer::tick() {
 	while(samples.size() >= SAMPLES) {
 		samples.pop_front();
 	}
-	samples.push_back(std::make_pair(GET_TICK() - start, pos - startPos));
+	samples.push_back(std::make_pair(GET_TICK(), pos - startPos));
 }
 
 double Transfer::getAverageSpeed() const {
 	Lock l(cs);
-	uint64_t ticks = 0;
-	int64_t bytes = 0;
-	for(SampleList::const_iterator i = samples.begin(); i != samples.end(); ++i) {
-		ticks += i->first;
-		bytes += i->second;
+	if(samples.size() < 2) {
+		return 0;
 	}
-	return bytes > 0 ? (static_cast<double>(bytes) / ticks) * 1000.0 : 0;
+	uint64_t ticks = samples.back().first - samples.front().first;
+	int64_t bytes = samples.back().second - samples.front().second;
+
+	return ticks > 0 ? (static_cast<double>(bytes) / ticks) * 1000.0 : 0;
 }
 
 void Transfer::getParams(const UserConnection& aSource, StringMap& params) const {
-	params["userNI"] = aSource.getUser()->getFirstNick();
+	params["userNI"] = Util::toString(ClientManager::getInstance()->getNicks(aSource.getUser()->getCID()));
 	params["userI4"] = aSource.getRemoteIp();
 	StringList hubNames = ClientManager::getInstance()->getHubNames(aSource.getUser()->getCID());
 	if(hubNames.empty())

@@ -314,7 +314,7 @@ void ADLSearchManager::PrepareDestinationDirectories(DestDirList& destDirVector,
 
 void ADLSearchManager::matchListing(DirectoryListing& aDirList) throw() {
 	StringMap params;
-	params["userNI"] = aDirList.getUser()->getFirstNick();
+	params["userNI"] = ClientManager::getInstance()->getNicks(aDirList.getUser()->getCID())[0];
 	params["userCID"] = aDirList.getUser()->getCID().toBase32();
 
 	setUser(aDirList.getUser());

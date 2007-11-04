@@ -186,7 +186,7 @@ public:
 
 	void setWindowTitle() {
 		if(error.empty())
-			SetWindowText((Text::toT(dl->getUser()->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(dl->getUser()).first).c_str());
+			SetWindowText((WinUtil::getNicks(dl->getUser()) + _T(" - ") + WinUtil::getHubNames(dl->getUser()).first).c_str());
 		else
 			SetWindowText(error.c_str());		
 	}
@@ -410,7 +410,7 @@ private:
 		} catch(const AbortException) {
 			mWindow->PostMessage(WM_SPEAKER, DirectoryListingFrame::ABORTED);
 		} catch(const Exception& e) {
-			mWindow->error = Text::toT(mWindow->dl->getUser()->getFirstNick() + ": " + e.getError());
+			mWindow->error = Text::toT(ClientManager::getInstance()->getNicks(mWindow->dl->getUser()->getCID())[0] + ": " + e.getError());
 			mWindow->PostMessage(WM_SPEAKER, DirectoryListingFrame::ABORTED);
 		}
 

@@ -363,26 +363,28 @@ void QueueManager::UserQueue::removeDownload(QueueItem* qi, const UserPtr& user)
 	}
 }
 
+void QueueManager::UserQueue::setPriority(QueueItem* qi, QueueItem::Priority p) {
+	remove(qi, false);
+	qi->setPriority(p);
+	add(qi);
+}
+
 QueueItem* QueueManager::UserQueue::getRunning(const UserPtr& aUser) {
 	QueueItem::UserIter i = running.find(aUser);
 	return (i == running.end()) ? 0 : i->second;
 }
 
-void QueueManager::UserQueue::remove(QueueItem* qi) {
+void QueueManager::UserQueue::remove(QueueItem* qi, bool removeRunning) {
 	for(QueueItem::SourceConstIter i = qi->getSources().begin(); i != qi->getSources().end(); ++i) {
-		remove(qi, i->getUser());
+		remove(qi, i->getUser(), removeRunning);
 	}
 }
 
-void QueueManager::UserQueue::remove(QueueItem* qi, const UserPtr& aUser) {
-	if(getRunning(aUser) == qi/*qi->isRunning()*/) {
+void QueueManager::UserQueue::remove(QueueItem* qi, const UserPtr& aUser, bool removeRunning) {
+	if(removeRunning && qi->isRunning()) {
 		removeDownload(qi, aUser);
 	}
 
-	removeUser(qi, aUser);
-}
-
-void QueueManager::UserQueue::removeUser(QueueItem* qi, const UserPtr& aUser) {
 	dcassert(qi->isSource(aUser));
 	QueueItem::UserListMap& ulm = userQueue[qi->getPriority()];
 	QueueItem::UserListMap::iterator j = ulm.find(aUser);
@@ -512,7 +514,9 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 
 void QueueManager::addList(const UserPtr& aUser, Flags::MaskType aFlags, const string& aInitialDir /* = Util::emptyString */) throw(QueueException, FileException) {
 	// complete target is checked later, just remove path separators from the nick here
-	string target = Util::getListPath() + Util::cleanPathChars(aUser->getFirstNick()) + "." + aUser->getCID().toBase32();
+	StringList nicks = ClientManager::getInstance()->getNicks(*aUser);
+	string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
+	string target = Util::getListPath() + nick + aUser->getCID().toBase32();
 
 	if (!aInitialDir.empty()) {
 		dirMap[aUser->getCID().toBase32()] = aInitialDir;
@@ -665,11 +669,11 @@ bool QueueManager::addSource(QueueItem* qi, UserPtr aUser, Flags::MaskType addBa
 	bool wantConnection = (qi->getPriority() != QueueItem::PAUSED) && qi->hasFreeSegments();
 
 	if(qi->isSource(aUser)) {
-		throw QueueException(STRING(DUPLICATE_SOURCE) + ": " + Util::getFileName(qi->getTarget()) + ", " + aUser->getFirstNick());
+		throw QueueException(STRING(DUPLICATE_SOURCE) + ": " + Util::getFileName(qi->getTarget()));
 	}
 
 	if(qi->isBadSourceExcept(aUser, addBad)) {
-		throw QueueException(STRING(DUPLICATE_SOURCE) + ": " + Util::getFileName(qi->getTarget()) + ", " + aUser->getFirstNick());
+		throw QueueException(STRING(DUPLICATE_SOURCE) + ": " + Util::getFileName(qi->getTarget()));
 	}
 
 	qi->addSource(aUser);
@@ -1133,7 +1137,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						File::deleteFile(q->getListName());
 					}
 
-
 					if(q->getPriority() != QueueItem::PAUSED) {
 						q->getOnlineUsers(getConn);
 					}
@@ -1211,7 +1214,7 @@ void QueueManager::processList(const string& name, UserPtr& user, int flags) {
 		const size_t BUF_SIZE = STRING(MATCHED_FILES).size() + 16;
 		AutoArray<char> tmp(BUF_SIZE);
 		snprintf(tmp, BUF_SIZE, CSTRING(MATCHED_FILES), matchListing(dirList));
-		LogManager::getInstance()->message(user->getFirstNick() + ": " + string(tmp));			
+		LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(user->getCID())) + ": " + string(tmp));
 	}
 }
 
@@ -1364,26 +1367,13 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 	
 		QueueItem* q = fileQueue.find(aTarget);
 		if( (q != NULL) && (q->getPriority() != p) ) {
-			if(q->isWaiting()) {
-				if(q->getPriority() == QueueItem::PAUSED || p == QueueItem::HIGHEST) {
-					// Problem, we have to request connections to all these users...
-					q->getOnlineUsers(ul);
-				}
+			running = q->isRunning();
 
-				userQueue.remove(q);
-				q->setPriority(p);
-				userQueue.add(q);
-			} else {
-				running = true;
-
-				for(QueueItem::SourceConstIter i = q->getSources().begin(); i != q->getSources().end(); ++i) {
-					userQueue.removeUser(q, i->getUser());
-				}
-
-				q->setPriority(p);
-
-				userQueue.add(q);
+			if(q->getPriority() == QueueItem::PAUSED || p == QueueItem::HIGHEST) {
+				// Problem, we have to request connections to all these users...
+				q->getOnlineUsers(ul);
 			}
+			userQueue.setPriority(q, p);
 			setDirty();
 			fire(QueueManagerListener::StatusUpdated(), q);
 		}
@@ -1468,8 +1458,6 @@ void QueueManager::saveQueue() throw() {
 					if(j->isSet(QueueItem::Source::FLAG_PARTIAL)) continue;
 					f.write(LIT("\t\t<Source CID=\""));
 					f.write(j->getUser()->getCID().toBase32());
-					f.write(LIT("\" Nick=\""));
-					f.write(SimpleXML::escape(j->getUser()->getFirstNick(), tmp, true));
 					f.write(LIT("\"/>\r\n"));
 				}
 
@@ -1586,8 +1574,6 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 				return;
 			}
 			UserPtr user = ClientManager::getInstance()->getUser(CID(cid));
-			const string& nick = getAttrib(attribs, sNick, 1);
-			user->setFirstNick(nick);
 
 			try {
 				if(qm->addSource(cur, user, 0) && user->isOnline())
