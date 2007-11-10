@@ -307,9 +307,7 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t newSize, bool
 		d->setFile(new FilteredOutputStream<UnZFilter, true>(d->getFile()));
 	}
 
-	if(d->getStart() == 0) {
-		d->setStart(GET_TICK());
-	}
+	d->setStart(GET_TICK());
 	aSource->setState(UserConnection::STATE_RUNNING);
 
 	fire(DownloadManagerListener::Starting(), d);
@@ -403,27 +401,6 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 				Thread::sleep(250);
 			}
 
-#ifdef _DEBUG
-			AutoArray<char> buf(512*1024);
-
-			SharedFileStream* f = new SharedFileStream(d->getTempTarget(), 0);
-			TigerTree tth(TigerTree::calcBlockSize(d->getSize(), 1));
-
-			if(d->getSize() > 0) {
-				size_t n = 512*1024;
-				while( (n = f->read(buf, n)) > 0) {
-					tth.update(buf, n);
-					n = 512*1024;
-				}
-			} else {
-				tth.update("", 0);
-			}
-			tth.finalize();
-
-			dcassert(tth.getRoot() == d->getTTH());
-			delete f;
-#endif
-
 			d->setPos(e.pos);
 			if(d->getPos() == d->getSize())
 				aSource->setLineMode(0);
@@ -436,10 +413,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 		} else if(d->getPos() == d->getSize()) {
 			if(d->getType() != Transfer::TYPE_FILE) {
 				handleEndData(aSource);
-			}
-			else{ // peer's partial size < chunk size
-				//fire(DownloadManagerListener::Failed(), d, CSTRING(BLOCK_FINISHED));
-
+			} else { // peer's partial size < chunk size
 				if(d->getTreeValid()) {
 					FileChunksInfo::Ptr lpFileDataInfo = FileChunksInfo::Get(&d->getTTH());
 					if(!(lpFileDataInfo == (FileChunksInfo*)NULL)) {
@@ -475,8 +449,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		delete d->getFile();
 		d->setFile(NULL);
 
-		d->setSize(d->getTigerTree().getFileSize());
-
 		int64_t bl = 1024;
 		while(bl * (int64_t)d->getTigerTree().getLeaves().size() < d->getTigerTree().getFileSize())
 			bl *= 2;
@@ -499,7 +471,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		d->setTreeValid(true);
 		reconn = false;
 	} else {
-
 		// First, finish writing the file (flushing the buffers and closing the file...)
 		try {
 			d->getFile()->flush();
@@ -510,10 +481,10 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 			return;
 		}
 
+		dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getPath().c_str(), d->getSize(), d->getPos());
 		reconn = d->getType() == Transfer::TYPE_FILE && (d->getPos() != d->getSize());
-		dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getPath().c_str(), d->getSize(), d->getTotal());
 
-		if(BOOLSETTING(LOG_DOWNLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || d->getType() != Transfer::TYPE_FULL_LIST) && d->getType() != Transfer::TYPE_TREE) {
+		if(BOOLSETTING(LOG_DOWNLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || d->getType() == Transfer::TYPE_FILE)) {
 			logDownload(aSource, d);
 		}
 	}

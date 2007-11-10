@@ -1,3 +1,9 @@
+** svn335
+	fixed QueueManager's crash
+	something from DC++ 0.703
+	allows to set one segment in QueueFrame
+	some changes about timing in TransferView
+
 ** svn334
 	fixed too often "Download starting" message
 	fixed double click action on download transfer
