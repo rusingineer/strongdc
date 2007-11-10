@@ -596,24 +596,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 				if(ui->download) {
 					ItemInfo* parent = ii->parent ? ii->parent : ii;
 
-					/* is file currently starting ? */
-					if(	(ui->status == ItemInfo::STATUS_RUNNING) &&
-						(parent->status == ItemInfo::STATUS_WAITING))
-					{
-						parent->fileBegin = GET_TICK();
-						parent->statusString = TSTRING(DOWNLOAD_STARTING);
-
-						if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
-							PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
-
-						if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
-							MainFrame::getMainFrame()->ShowBalloonTip((
-								TSTRING(FILE) + _T(": ") + Util::getFileName(parent->target)).c_str(), CTSTRING(DOWNLOAD_STARTING));
-						}
-					}
-
-					else
-					
 					/* parent item must be updated with correct info about whole file */
 					if(	(ui->status == ItemInfo::STATUS_RUNNING) &&	(parent->hits == -1))
 					{
@@ -652,16 +634,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			if(!pp) 
 				continue;
 
-			if(ui->status == ItemInfo::STATUS_RUNNING) {
-				uint64_t time = GET_TICK() - pp->parent->fileBegin;
-				if(time > 1000) {
-					AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
-						_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(ui->pos).c_str(), 
-						(double)ui->pos*100.0/(double)ui->size, Util::formatSeconds(time/1000).c_str());
-
-					ui->setStatusString(tstring(buf));
-				}
-			}
 			pp->parent->update(*ui);
 			updateItem(ctrlTransfers.findItem(pp->parent), ui->updateMask);
 		}
@@ -1168,16 +1140,41 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 
 		ui->setRunning(segs);
 		if(segs > 0) {
-			ratio = ratio / segs;
-
+			ui->setStatus(ItemInfo::STATUS_RUNNING);
 			ui->setSize(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getSize() : qi->getSize());
 			ui->setPos(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getPos() : qi->getDownloadedBytes());
 			ui->setActual((int64_t)((double)ui->pos * (ratio == 0 ? 1.00 : ratio)));
 			ui->setTimeLeft((totalSpeed > 0) ? ((ui->size - ui->pos) / totalSpeed) : 0);
 			ui->setSpeed(totalSpeed);
-			ui->setStatus(ItemInfo::STATUS_RUNNING);
+
+			if(qi->getFileBegin() == 0) {
+				// file is starting
+				const_cast<QueueItem*>(qi)->setFileBegin(GET_TICK());
+
+				ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
+				if ((!SETTING(BEGINFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
+					PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
+
+				if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
+					MainFrame::getMainFrame()->ShowBalloonTip((
+						TSTRING(FILE) + _T(": ") + Util::getFileName(ui->target)).c_str(), CTSTRING(DOWNLOAD_STARTING));
+				}
+			} else {
+				uint64_t time = GET_TICK() - qi->getFileBegin();
+				if(time > 1000) {
+					AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
+						_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(ui->pos).c_str(), 
+						(double)ui->pos*100.0/(double)ui->size, Util::formatSeconds(time/1000).c_str());
+
+					ui->setStatusString(tstring(buf));
+				}
+			}
+
+			ratio = ratio / segs;
 		}
 	} else {
+		const_cast<QueueItem*>(qi)->setFileBegin(0);
+
 		ui->setSize(qi->getSize());
 		ui->setStatus(ItemInfo::STATUS_WAITING);
 		ui->setRunning(0);

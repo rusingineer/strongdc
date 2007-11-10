@@ -381,7 +381,7 @@ void QueueManager::UserQueue::remove(QueueItem* qi, bool removeRunning) {
 }
 
 void QueueManager::UserQueue::remove(QueueItem* qi, const UserPtr& aUser, bool removeRunning) {
-	if(removeRunning && qi->isRunning()) {
+	if(removeRunning && getRunning(aUser) == qi) {
 		removeDownload(qi, aUser);
 	}
 
@@ -937,14 +937,14 @@ again:
 	
 	if(d->getType() == Transfer::TYPE_FILE) {
 		d->setStartPos(freeBlock);
-		q->getChunksInfo()->setDownload(freeBlock, d, !aSource.isSet(UserConnection::FLAG_STEALTH) && q->getMaxSegments() != 1);
+		q->getChunksInfo()->setDownload(freeBlock, d, !aSource.isSet(UserConnection::FLAG_STEALTH)/* && q->getMaxSegments() != 1*/);
 	} else if(d->getType() == Transfer::TYPE_TREE) {
 		q->getChunksInfo()->putChunk(freeBlock);
 	}
 	
 	userQueue.addDownload(q, d);	
 
-	fire(QueueManagerListener::StatusUpdated(), q);
+	//fire(QueueManagerListener::StatusUpdated(), q);
 	dcdebug("found %s\n", q->getTarget().c_str());
 	return d;
 }
@@ -1137,7 +1137,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						File::deleteFile(q->getListName());
 					}
 
-					if(q->getPriority() != QueueItem::PAUSED) {
+					if(reportFinish && q->getPriority() != QueueItem::PAUSED) {
 						q->getOnlineUsers(getConn);
 					}
 	

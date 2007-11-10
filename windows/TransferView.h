@@ -204,7 +204,6 @@ private:
 		int64_t actual;
 		int64_t speed;
 		int64_t timeLeft;
-		uint64_t fileBegin;
 		
 		tstring ip;
 		tstring statusString;

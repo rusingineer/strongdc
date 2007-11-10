@@ -1033,7 +1033,7 @@ LRESULT QueueFrame::onSegments(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 		QueueItemInfo* ii = ctrlQueue.getItemData(i);
 		QueueItem* qi = QueueManager::getInstance()->fileQueue.find(ii->getTarget());
 
-		qi->setMaxSegments(max((uint8_t)2, (uint8_t)(wID - 109)));
+		qi->setMaxSegments((uint8_t)(wID - 109));
 
 		ctrlQueue.updateItem(ctrlQueue.findItem(ii), COLUMN_SEGMENTS);
 	}

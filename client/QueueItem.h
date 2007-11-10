@@ -140,7 +140,7 @@ public:
 
 	QueueItem(const string& aTarget, int64_t aSize, 
 		Priority aPriority, Flags::MaskType aFlag, time_t aAdded, const TTHValue& tth) :
-	Flags(aFlag), target(aTarget), chunksInfo(NULL), maxSegments(1),
+	Flags(aFlag), target(aTarget), chunksInfo(NULL), maxSegments(1), fileBegin(0),
 	size(aSize), priority(aPriority), added(aAdded),
 	tthRoot(tth), autoPriority(false)
 	{
@@ -149,7 +149,7 @@ public:
 	}
 
 	QueueItem(const QueueItem& rhs) : 
-	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget),
+	Flags(rhs), target(rhs.target), tempTarget(rhs.tempTarget), fileBegin(rhs.fileBegin),
 		size(rhs.size), priority(rhs.priority), downloads(rhs.downloads), maxSegments(rhs.maxSegments),
 		added(rhs.added), tthRoot(rhs.tthRoot), autoPriority(rhs.autoPriority)
 	{
@@ -223,6 +223,7 @@ public:
 	GETSET(TTHValue, tthRoot, TTH);
 	GETSET(DownloadList, downloads, Downloads);
 	GETSET(string, target, Target);
+	GETSET(uint64_t, fileBegin, FileBegin);
 	GETSET(int64_t, size, Size);
 	GETSET(time_t, added, Added);
 	GETSET(Priority, priority, Priority);
