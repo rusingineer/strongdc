@@ -229,7 +229,8 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 			return tmp.empty() ? TSTRING(NO_ERRORS) : tmp;
 		}
 		case COLUMN_ADDED: return Text::toT(Util::formatTime("%Y-%m-%d %H:%M", getAdded()));
-		case COLUMN_TTH: return Text::toT(getTTH().toBase32());
+		case COLUMN_TTH: 
+			return qi->isSet(QueueItem::FLAG_USER_LIST) || qi->isSet(QueueItem::FLAG_TESTSUR) ? Util::emptyStringT : Text::toT(getTTH().toBase32());
 		case COLUMN_TYPE: {
 			tstring type = Text::toT(Util::getFileExt(getTarget()));
 			if(type.size() > 0 && type[0] == '.')

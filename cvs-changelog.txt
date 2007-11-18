@@ -1,3 +1,9 @@
+** svn336
+	toolbar fixes
+	DC++ SVN merge
+	QueueFrame shouldn't display weird TTH strings for filelists/testsurs
+	hopefully fixed crash on exit with opened debug window
+
 ** svn335
 	fixed QueueManager's crash
 	something from DC++ 0.703

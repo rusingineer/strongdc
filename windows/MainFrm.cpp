@@ -419,7 +419,7 @@ HWND MainFrame::createToolbar() {
 		else
 			largeImagesHot.CreateFromImage(Text::toT(SETTING(TOOLBARHOTIMAGE)).c_str(), 20, 0, CLR_DEFAULT, IMAGE_BITMAP, LR_CREATEDIBSECTION | LR_SHARED | LR_LOADFROMFILE);
 
-		ctrlToolbar.Create(m_hWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS, 0, ATL_IDW_TOOLBAR);
+		ctrlToolbar.Create(m_hWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_LIST, 0, ATL_IDW_TOOLBAR);
 		ctrlToolbar.SetExtendedStyle(TBSTYLE_EX_MIXEDBUTTONS);
 		ctrlToolbar.SetImageList(largeImages);
 		ctrlToolbar.SetHotImageList(largeImagesHot);
@@ -446,7 +446,7 @@ HWND MainFrame::createToolbar() {
 			nTB.idCommand = WinUtil::ToolbarButtons[i].id;
 			nTB.fsState = TBSTATE_ENABLED;
 			nTB.fsStyle = TBSTYLE_AUTOSIZE | ((WinUtil::ToolbarButtons[i].check == true)? TBSTYLE_CHECK : TBSTYLE_BUTTON);
-			nTB.iString = WinUtil::ToolbarButtons[i].tooltip;
+			nTB.iString = ctrlToolbar.AddStrings(CTSTRING_I((ResourceManager::Strings)WinUtil::ToolbarButtons[i].tooltip));
 		}
 		ctrlToolbar.AddButtons(1, &nTB);
 	}	
@@ -753,21 +753,8 @@ LRESULT MainFrame::onGetToolTip(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	LPNMTTDISPINFO pDispInfo = (LPNMTTDISPINFO)pnmh;
 	pDispInfo->szText[0] = 0;
 
-	if((idCtrl != 0) && !(pDispInfo->uFlags & TTF_IDISHWND))
-	{
-		int stringId = -1;
-
-		for(int i = 0; WinUtil::ToolbarButtons[i].id != 0; i++) {
-			if(WinUtil::ToolbarButtons[i].id == idCtrl) {
-				stringId = WinUtil::ToolbarButtons[i].tooltip;
-				break;
-			}
-		}
-		if(stringId != -1) {
-			_tcsncpy(pDispInfo->lpszText, CTSTRING_I((ResourceManager::Strings)stringId), 79);
-			pDispInfo->uFlags |= TTF_DI_SETITEM;
-		}
-	} else { // if we're really in the status bar, this should be detected intelligently
+	if(!((idCtrl != 0) && !(pDispInfo->uFlags & TTF_IDISHWND))) {
+		// if we're really in the status bar, this should be detected intelligently
 		lastLines.clear();
 		for(TStringIter i = lastLinesList.begin(); i != lastLinesList.end(); ++i) {
 			lastLines += *i;
