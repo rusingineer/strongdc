@@ -68,6 +68,11 @@ void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility
 	}
 }
 
+bool Identity::isClientType(ClientType ct) const {
+	int type = Util::toInt(get("CT"));
+	return (type & ct) == ct;
+}
+
 const string Identity::getTag() const {
 	if(!get("TA").empty())
 		return get("TA");
@@ -76,6 +81,7 @@ const string Identity::getTag() const {
 	return "<" + get("VE") + ",M:" + string(isTcpActive() ? "A" : "P") + ",H:" + get("HN") + "/" +
 		get("HR") + "/" + get("HO") + ",S:" + get("SL") + ">";
 }
+
 const string Identity::get(const char* name) const {
 	Lock l(cs);
 	InfMap::const_iterator i = info.find(*(short*)name);
@@ -143,7 +149,7 @@ const string Identity::setCheat(const Client& c, const string& aCheatDescription
 }
 
 const string Identity::getReport() const {
-	string report = "\r\nClient:		" + get("CT");
+	string report = "\r\nClient:		" + get("CL");
 	report += "\r\nXML Generator:	" + (get("GE").empty() ? "N/A" : get("GE"));
 	report += "\r\nLock:		" + get("LO");
 	report += "\r\nPk:		" + get("PK");
@@ -178,7 +184,7 @@ const string Identity::getReport() const {
 const string Identity::updateClientType(const OnlineUser& ou) {
 	if ( getUser()->isSet(User::DCPLUSPLUS) && (get("LL") == "11") && (getBytesShared() > 0) ) {
 		string report = setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
-		set("CT", "DC++ Stealth");
+		set("CL", "DC++ Stealth");
 		set("BC", "1");
 		set("BF", "1");
 		ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(LISTLEN_MISMATCH));
@@ -187,7 +193,7 @@ const string Identity::updateClientType(const OnlineUser& ou) {
 		strncmp(getTag().c_str(), "<++ V:0.69", 10) == 0 &&
 		get("LL") != "42") {
 			string report = setCheat(ou.getClient(), "Listlen mismatched" , true);
-			set("CT", "Faked DC++");
+			set("CL", "Faked DC++");
 			set("CM", "Supports corrupted files...");
 			set("BC", "1");
 			ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(LISTLEN_MISMATCH));
@@ -243,16 +249,16 @@ const string Identity::updateClientType(const OnlineUser& ou) {
 
 		DETECTION_DEBUG("Client found: " + cp.getName() + " time taken: " + Util::toString(GET_TICK()-tick) + " milliseconds");
 		if (cp.getUseExtraVersion()) {
-			set("CT", cp.getName() + " " + extraVersion );
+			set("CL", cp.getName() + " " + extraVersion );
 		} else {
-			set("CT", cp.getName() + " " + version);
+			set("CL", cp.getName() + " " + version);
 		}
 		set("CS", cp.getCheatingDescription());
 		set("CM", cp.getComment());
 		set("BC", cp.getCheatingDescription().empty() ? Util::emptyString : "1");
 
 		if (cp.getCheckMismatch() && version.compare(pkVersion) != 0) { 
-			set("CT", get("CT") + " Version mis-match");
+			set("CL", get("CL") + " Version mis-match");
 			set("CS", get("CS") + " Version mis-match");
 			set("BC", "1");
 			string report = setCheat(ou.getClient(), get("CS"), true);
@@ -265,7 +271,7 @@ const string Identity::updateClientType(const OnlineUser& ou) {
 		}
 		return report;
 	}
-	set("CT", "Unknown");
+	set("CL", "Unknown");
 	set("CS", Util::emptyString);
 	set("BC", Util::emptyString);
 
@@ -338,7 +344,7 @@ const tstring OnlineUser::getText(uint8_t col) const {
 			return Text::toT(ip);
 		}
 		case COLUMN_EMAIL: return Text::toT(identity.getEmail());
-		case COLUMN_VERSION: return Text::toT(identity.get("CT").empty() ? identity.get("VE") : identity.get("CT"));
+		case COLUMN_VERSION: return Text::toT(identity.get("CL").empty() ? identity.get("VE") : identity.get("CL"));
 		case COLUMN_MODE: return identity.isTcpActive() ? _T("A") : _T("P");
 		case COLUMN_HUBS: {
 			const tstring hn = Text::toT(identity.get("HN"));

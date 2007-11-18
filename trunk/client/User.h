@@ -70,7 +70,14 @@ private:
 /** One of possibly many identities of a user, mainly for UI purposes */
 class Identity {
 public:
-
+	enum ClientType {
+		CT_BOT = 1,
+		CT_REGGED = 2,
+		CT_OP = 4,
+		CT_OWNER = 8,
+		CT_HUB = 16
+	};
+	
 	Identity() { }
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
 	Identity(const Identity& rhs) : user(rhs.user), info(rhs.info) { }
@@ -97,11 +104,11 @@ public:
 	void setHidden(bool hidden) { set("HI", hidden ? "1" : Util::emptyString); }
 	const string getTag() const;
 	bool supports(const string& name) const;
-	bool isHub() const { return !get("HU").empty(); }
-	bool isOp() const { return !get("OP").empty(); }
-	bool isRegistered() const { return !get("RG").empty(); }
+	bool isHub() const { return isClientType(CT_HUB) || !get("HU").empty(); }
+	bool isOp() const { return isClientType(CT_OP) || !get("OP").empty(); }
+	bool isRegistered() const { return isClientType(CT_REGGED) || !get("RG").empty(); }
 	bool isHidden() const { return !get("HI").empty(); }
-	bool isBot() const { return !get("BO").empty(); }
+	bool isBot() const { return isClientType(CT_BOT) || !get("BO").empty(); }
 	bool isAway() const { return !get("AW").empty(); }
 	bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
 	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
@@ -112,6 +119,8 @@ public:
 	uint32_t getSID() const { return Util::toUInt32(get("SI")); }
 	void setSID(uint32_t sid) { if(sid != 0) set("SI", Util::toString(sid)); }
 	
+	bool isClientType(ClientType ct) const;
+		
 	const string setCheat(const Client& c, const string& aCheatDescription, bool aBadClient);
 	const string getReport() const;
 	const string updateClientType(const OnlineUser& ou);
@@ -121,7 +130,7 @@ public:
 	UserPtr& getUser() { return user; }
 	GETSET(UserPtr, user, User);
 private:
-	typedef map<short, string> InfMap;
+	typedef std::tr1::unordered_map<short, string> InfMap;
 	typedef InfMap::const_iterator InfIter;
 	InfMap info;
 	/** @todo there are probably more threading issues here ...*/

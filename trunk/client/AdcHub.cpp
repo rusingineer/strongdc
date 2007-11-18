@@ -38,6 +38,9 @@ const string AdcHub::SECURE_CLIENT_PROTOCOL("ADCS/0.10");
 const string AdcHub::ADCS_FEATURE("ADC0");
 const string AdcHub::TCP4_FEATURE("TCP4");
 const string AdcHub::UDP4_FEATURE("UDP4");
+const string AdcHub::BASE_SUPPORT("ADBASE");
+const string AdcHub::BAS0_SUPPORT("ADBAS0");
+const string AdcHub::TIGR_SUPPORT("ADTIGR");
 
 AdcHub::AdcHub(const string& aHubURL, bool secure) : Client(aHubURL, '\n', secure), sid(0) {
 	TimerManager::getInstance()->addListener(this);
@@ -193,12 +196,26 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 void AdcHub::handle(AdcCommand::SUP, AdcCommand& c) throw() {
 	if(state != STATE_PROTOCOL) /** @todo SUP changes */
 		return;
-	if(find(c.getParameters().begin(), c.getParameters().end(), "ADBASE") == c.getParameters().end()
-		&& find(c.getParameters().begin(), c.getParameters().end(), "ADBAS0") == c.getParameters().end())
-	{
+	bool baseOk = false;
+	bool tigrOk = false;
+	for(StringIter i = c.getParameters().begin(); i != c.getParameters().end(); ++i) {
+		if(*i == BAS0_SUPPORT) {
+			baseOk = true;
+			tigrOk = true;
+		} else if(*i == BASE_SUPPORT) {
+			baseOk = true;
+		} else if(*i == TIGR_SUPPORT) {
+			tigrOk = true;
+		}
+	}
+	
+	if(!baseOk) {
 		fire(ClientListener::StatusMessage(), this, "Failed to negotiate base protocol"); // @todo internationalize
 		socket->disconnect(false);
 		return;
+	} else if(!tigrOk) {
+		// What now? Some hubs fake BASE support without TIGR support =/
+		fire(ClientListener::StatusMessage(), this, "Hub probably uses an old version of ADC, please encourage the owner to upgrade");
 	}
 }
 
@@ -517,6 +534,24 @@ void AdcHub::password(const string& pwd) {
 	}
 }
 
+static void addParam(StringMap& lastInfoMap, AdcCommand& c, const string& var, const string& value) {
+	StringMapIter i = lastInfoMap.find(var);
+	
+	if(i != lastInfoMap.end()) {
+		if(i->second != value) {
+			if(value.empty()) {
+				lastInfoMap.erase(i);
+			} else { 
+				i->second = value;
+			}
+			c.addParam(var, value);
+		}
+	} else if(!value.empty()) {
+		lastInfoMap.insert(make_pair(var, value));
+		c.addParam(var, value);
+	}
+}
+
 void AdcHub::info(bool /*alwaysSend*/) {
 	if(state != STATE_IDENTIFY && state != STATE_NORMAL)
 		return;
@@ -524,37 +559,20 @@ void AdcHub::info(bool /*alwaysSend*/) {
 	reloadSettings(false);
 
 	AdcCommand c(AdcCommand::CMD_INF, AdcCommand::TYPE_BROADCAST);
-	string tmp;
 
-	StringMapIter i;
-#define ADDPARAM(var, content) \
-	tmp = content; \
-	if((i = lastInfoMap.find(var)) != lastInfoMap.end()) { \
-		if(i->second != tmp) { \
-			if(tmp.empty()) \
-				lastInfoMap.erase(i); \
-			else \
-				i->second = tmp; \
-			c.addParam(var, tmp); \
-		} \
-	} else if(!tmp.empty()) { \
-		c.addParam(var, tmp); \
-		lastInfoMap[var] = tmp; \
-	}
+	updateCounts(false);
 
-	updateCounts(false); \
-
-	ADDPARAM("ID", ClientManager::getInstance()->getMyCID().toBase32());
-	ADDPARAM("PD", ClientManager::getInstance()->getMyPID().toBase32());
-	ADDPARAM("NI", getCurrentNick());
-	ADDPARAM("DE", getCurrentDescription());
-	ADDPARAM("SL", Util::toString(SETTING(SLOTS)));
-	ADDPARAM("SS", ShareManager::getInstance()->getShareSizeString());
-	ADDPARAM("SF", Util::toString(ShareManager::getInstance()->getSharedFiles()));
-	ADDPARAM("EM", SETTING(EMAIL));
-	ADDPARAM("HN", Util::toString(counts.normal));
-	ADDPARAM("HR", Util::toString(counts.registered));
-	ADDPARAM("HO", Util::toString(counts.op));
+	addParam(lastInfoMap, c, "ID", ClientManager::getInstance()->getMyCID().toBase32());
+	addParam(lastInfoMap, c, "PD", ClientManager::getInstance()->getMyPID().toBase32());
+	addParam(lastInfoMap, c, "NI", getCurrentNick());
+	addParam(lastInfoMap, c, "DE", getCurrentDescription());
+	addParam(lastInfoMap, c, "SL", Util::toString(SETTING(SLOTS)));
+	addParam(lastInfoMap, c, "SS", ShareManager::getInstance()->getShareSizeString());
+	addParam(lastInfoMap, c, "SF", Util::toString(ShareManager::getInstance()->getSharedFiles()));
+	addParam(lastInfoMap, c, "EM", SETTING(EMAIL));
+	addParam(lastInfoMap, c, "HN", Util::toString(counts.normal));
+	addParam(lastInfoMap, c, "HR", Util::toString(counts.registered));
+	addParam(lastInfoMap, c, "HO", Util::toString(counts.op));
 
 #ifdef SVNVERSION
 #define VER VERSIONSTRING SVNVERSION
@@ -562,25 +580,22 @@ void AdcHub::info(bool /*alwaysSend*/) {
 #define VER VERSIONSTRING
 #endif		
 
-	ADDPARAM("VE", getStealth() ? ("++ " DCVERSIONSTRING) : ("StrgDC++ " VER));
+	addParam(lastInfoMap, c, "VE", getStealth() ? ("++ " DCVERSIONSTRING) : ("StrgDC++ " VER));
 	
 	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-		ADDPARAM("US", Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024*8));
+		addParam(lastInfoMap, c, "US", Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024*8));
 	} else {
-		ADDPARAM("US", Util::toString((long)(Util::toDouble(SETTING(UPLOAD_SPEED))*1024*1024)));
+		addParam(lastInfoMap, c, "US", Util::toString((long)(Util::toDouble(SETTING(UPLOAD_SPEED))*1024*1024)));
 	}
 
+	addParam(lastInfoMap, c, "AW", Util::getAway() ? "1" : Util::emptyString);
+	
 	if(SETTING(THROTTLE_ENABLE) && SETTING(MAX_DOWNLOAD_SPEED_LIMIT) != 0) {
-		ADDPARAM("DS", Util::toString((SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*1024*8)));
+		addParam(lastInfoMap, c, "DS", Util::toString((SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*1024*8)));
 	} else {
-		ADDPARAM("DS", Util::emptyString);
+		addParam(lastInfoMap, c, "DS", Util::emptyString);
 	}
 
-	if(Util::getAway()){
-		ADDPARAM("AW", '1');
-	} else {
-		ADDPARAM("AW", Util::emptyString);
-	}
 
 	string su;
 	if(CryptoManager::getInstance()->TLSOk()) {
@@ -589,24 +604,22 @@ void AdcHub::info(bool /*alwaysSend*/) {
 
 	if(isActive()) {
 		if(BOOLSETTING(NO_IP_OVERRIDE) && !SETTING(EXTERNAL_IP).empty()) {
-			ADDPARAM("I4", Socket::resolve(SETTING(EXTERNAL_IP)));
+			addParam(lastInfoMap, c, "I4", Socket::resolve(SETTING(EXTERNAL_IP)));
 		} else {
-			ADDPARAM("I4", "0.0.0.0");
+			addParam(lastInfoMap, c, "I4", "0.0.0.0");
 		}
-		ADDPARAM("U4", Util::toString(SearchManager::getInstance()->getPort()));
+		addParam(lastInfoMap, c, "U4", Util::toString(SearchManager::getInstance()->getPort()));
 		su += TCP4_FEATURE + ",";
 		su += UDP4_FEATURE + ",";
 	} else {
-		ADDPARAM("I4", "");
-		ADDPARAM("U4", "");
+		addParam(lastInfoMap, c, "I4", "");
+		addParam(lastInfoMap, c, "U4", "");
 	}
 
 	if(!su.empty()) {
 		su.erase(su.size() - 1);
 	}
-	ADDPARAM("SU", su);
-
-#undef ADDPARAM
+	addParam(lastInfoMap, c, "SU", su);
 
 	if(c.getParameters().size() > 0) {
 		send(c);
@@ -635,7 +648,7 @@ void AdcHub::on(Connected) throw() {
 	lastInfoMap.clear();
 	sid = 0;
 
-	send(AdcCommand(AdcCommand::CMD_SUP, AdcCommand::TYPE_HUB).addParam("ADBAS0"));
+	send(AdcCommand(AdcCommand::CMD_SUP, AdcCommand::TYPE_HUB).addParam(BAS0_SUPPORT).addParam(TIGR_SUPPORT));
 }
 
 void AdcHub::on(Line, const string& aLine) throw() {

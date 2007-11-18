@@ -67,6 +67,8 @@ LRESULT CDMDebugFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		stop = true;
 		s.signal();
 
+		while(stop);	/// wait for closing the thread
+
 		PostMessage(WM_CLOSE);
 	} else {
 		bHandled = FALSE;
