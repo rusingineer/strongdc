@@ -60,7 +60,7 @@ FileChunksInfo::FileChunksInfo(const TTHValue* tth, int64_t size, const vector<i
 	dcassert(size);
 
 	tthBlockSize = max((size_t)TigerTree::calcBlockSize(fileSize, 10), (size_t)MIN_BLOCK_SIZE);
-	minChunkSize = tthBlockSize;
+	minChunkSize = max((int64_t)1024 * 1024, (int64_t)tthBlockSize);
 
 	if(chunks != NULL){
 		for(vector<int64_t>::const_iterator i = chunks->begin(); i < chunks->end(); i++, i++)
