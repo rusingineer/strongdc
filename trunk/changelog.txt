@@ -1,3 +1,16 @@
+	-- StrongDC++ 2.06 --
+
+* opravena spousta pádù
+* pøidány informace o spoustì knihoven, které by mohly zpùsobit pád aplikace
+* pøi porovnání fronty je zobrazen poèet skuteènì pøidaných alternativ
+* zmìny v odpojování pomalých stahování
+* pro èásteèné zdroje se volí náhodný segment
+* lepší obarvování progresbarù u pøenosù
+* opraveno hlášení "Stahování zaèíná"
+* opraveno kódování URI ve Webserveru
+* yaSSL nahrazeno OpenSSL
+* nìjaké zmìny z DC++ 0.703
+
 	-- StrongDC++ 2.05 --
 	
 * opravena spousta pádù
