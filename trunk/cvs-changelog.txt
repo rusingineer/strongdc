@@ -1,3 +1,7 @@
+** svn338
+	allow files with $ in their name
+	some DC++ SVN merge
+
 ** svn337
 	reverted debug window crash, but at least it doesn't lock
 	minimum chunk size set to 1 MB

@@ -23,7 +23,7 @@
 #define DCVERSIONSTRING "0.703"
 #define DCVERSIONFLOAT 0.7031
 
-#define SVNVERSION "svn337"
+#define SVNVERSION "svn338"
 
 /* Update the .rc file as well... */
 

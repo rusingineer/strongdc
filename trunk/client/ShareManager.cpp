@@ -689,12 +689,9 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 
 		if(name == "." || name == "..")
 			continue;
-		if(name.find('$') != string::npos) {
-			LogManager::getInstance()->message(STRING(FORBIDDEN_DOLLAR_FILE) + name + " (" + STRING(SIZE) + ": " + Util::toString(File::getSize(name)) + " " + STRING(B) + ") (" + STRING(DIRECTORY) + ": \"" + aName + "\")");
-			continue;
-		}
-		if(BOOLSETTING(REMOVE_FORBIDDEN)) {
+
 		//check for forbidden file patterns
+		if(BOOLSETTING(REMOVE_FORBIDDEN)) {
 			string::size_type nameLen = name.size();
 			string fileExt = Util::getFileExt(name);
 			if ((Util::stricmp(fileExt.c_str(), ".tdc") == 0) ||

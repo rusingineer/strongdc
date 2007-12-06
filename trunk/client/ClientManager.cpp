@@ -523,7 +523,11 @@ void ClientManager::on(Failed, const Client* client, const string&) throw() {
 
 void ClientManager::on(HubUserCommand, const Client* client, int aType, int ctx, const string& name, const string& command) throw() { 
 	if(BOOLSETTING(HUB_USER_COMMANDS)) {
-		if(aType == ::UserCommand::TYPE_CLEAR) {
+		if(aType == UserCommand::TYPE_REMOVE) {
+			int cmd = FavoriteManager::getInstance()->findUserCommand(name, client->getHubUrl());
+			if(cmd != -1)
+				FavoriteManager::getInstance()->removeUserCommand(cmd);
+		} else if(aType == UserCommand::TYPE_CLEAR) {
  			FavoriteManager::getInstance()->removeHubUserCommands(ctx, client->getHubUrl());
  		} else {
 			FavoriteManager::getInstance()->addUserCommand(aType, ctx, ::UserCommand::FLAG_NOSAVE, name, command, client->getHubUrl());
