@@ -56,10 +56,12 @@ public:
 		ERROR_BAD_STATE = 44,
 		ERROR_FEATURE_MISSING = 45,
 		ERROR_BAD_IP = 46,
+		ERROR_NO_HUB_HASH = 47,
 		ERROR_TRANSFER_GENERIC = 50,
 		ERROR_FILE_NOT_AVAILABLE = 51,
 		ERROR_FILE_PART_NOT_AVAILABLE = 52,
-		ERROR_SLOTS_FULL = 53
+		ERROR_SLOTS_FULL = 53,
+		ERROR_NO_CLIENT_HASH = 54
 	};
 
 	enum Severity {
@@ -103,7 +105,7 @@ public:
 	C(PSR, 'P','S','R');
 #undef C
 
-	static const uint32_t HUB_SID = 0x41414141;		// AAAA in base32
+	static const uint32_t HUB_SID = 0xffffffff;		// No client will have this sid
 
 	explicit AdcCommand(uint32_t aCmd, char aType = TYPE_CLIENT);
 	explicit AdcCommand(uint32_t aCmd, const uint32_t aTarget, char aType);

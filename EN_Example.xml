@@ -206,7 +206,6 @@
 		<String Name="FinishedUploads">Finished Uploads</String>
 		<String Name="Folder">Folder</String>
 		<String Name="Forbidden">Forbidden</String>
-		<String Name="ForbiddenDollarFile">File with '$' cannot be downloaded and will not be shared: </String>
 		<String Name="ForceAttempt">Force attempt</String>
 		<String Name="GarbageIncoming">Send garbage on incomming connection (to avoid ISP P2P throttling)</String>
 		<String Name="GarbageOutgoing">Send garbage on outgoing connection (to avoid ISP P2P throttling)</String>

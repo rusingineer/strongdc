@@ -205,7 +205,6 @@ enum Strings { // @DontAdd
 	FINISHED_UPLOADS, // "Finished Uploads"
 	FOLDER, // "Folder"
 	FORBIDDEN, // "Forbidden"
-	FORBIDDEN_DOLLAR_FILE, // "File with '$' cannot be downloaded and will not be shared: "
 	FORCE_ATTEMPT, // "Force attempt"
 	GARBAGE_INCOMING, // "Send garbage on incomming connection (to avoid ISP P2P throttling)"
 	GARBAGE_OUTGOING, // "Send garbage on outgoing connection (to avoid ISP P2P throttling)"

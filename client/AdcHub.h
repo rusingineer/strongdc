@@ -73,6 +73,7 @@ private:
 		}
 	}
 
+	bool oldPassword;
 	Socket udp;
 	SIDMap users;
 	StringMap lastInfoMap;
@@ -82,13 +83,15 @@ private:
 	uint32_t sid;
 
 	static const string CLIENT_PROTOCOL;
-	static const string SECURE_CLIENT_PROTOCOL;
+	static const string CLIENT_PROTOCOL_TEST;
+	static const string SECURE_CLIENT_PROTOCOL_TEST;
 	static const string ADCS_FEATURE;
 	static const string TCP4_FEATURE;
 	static const string UDP4_FEATURE;
 	static const string BASE_SUPPORT;
 	static const string BAS0_SUPPORT;
 	static const string TIGR_SUPPORT;
+	static const string UCM0_SUPPORT;
 
 	string checkNick(const string& nick);
 
