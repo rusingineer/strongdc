@@ -623,7 +623,7 @@ void QueueManager::readd(const string& target, const UserPtr& aUser) throw(Queue
 	{
 		Lock l(cs);
 		QueueItem* q = fileQueue.find(target);
-		if(q != NULL && q->isBadSource(aUser)) {
+		if(q && q->isBadSource(aUser)) {
 			wantConnection = addSource(q, aUser, QueueItem::Source::FLAG_MASK);
 		}
 	}
@@ -1052,6 +1052,9 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 
 	{
 		Lock l(cs);
+
+		delete aDownload->getFile();
+		aDownload->setFile(0);
 
 		if(aDownload->getType() == Transfer::TYPE_PARTIAL_LIST) {
 			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUser()->getCID());

@@ -43,6 +43,7 @@ ConnectionManager::ConnectionManager() : floodCounter(0), server(0), secureServe
 	features.push_back(UserConnection::FEATURE_TTHF);
 
 	adcFeatures.push_back("AD" + UserConnection::FEATURE_ADC_BAS0);
+	adcFeatures.push_back("AD" + UserConnection::FEATURE_ADC_BASE);
 	adcFeatures.push_back("AD" + UserConnection::FEATURE_ADC_TIGR);
 	adcFeatures.push_back("AD" + UserConnection::FEATURE_ADC_BZIP);
 }
@@ -358,7 +359,7 @@ void ConnectionManager::disconnect() throw() {
 void ConnectionManager::on(AdcCommand::SUP, UserConnection* aSource, const AdcCommand& cmd) throw() {
 	if(aSource->getState() != UserConnection::STATE_SUPNICK) {
 		// Already got this once, ignore...@todo fix support updates
-		dcdebug("CM::onMyNick %p sent nick twice\n", (void*)aSource);
+		dcdebug("CM::onSUP %p sent sup twice\n", (void*)aSource);
 		return;
 	}
 
@@ -410,7 +411,7 @@ void ConnectionManager::on(AdcCommand::SUP, UserConnection* aSource, const AdcCo
 	aSource->setState(UserConnection::STATE_INF);
 }
 
-void ConnectionManager::on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw() {
+void ConnectionManager::on(AdcCommand::STA, UserConnection*, const AdcCommand& /*cmd*/) throw() {
 	
 }
 
@@ -645,9 +646,7 @@ void ConnectionManager::on(UserConnectionListener::Key, UserConnection* aSource,
 
 void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCommand& cmd) throw() {
 	if(aSource->getState() != UserConnection::STATE_INF) {
-		// Already got this once, ignore...
 		aSource->send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_GENERIC, "Expecting INF"));
-		dcdebug("CM::onINF %p sent INF twice\n", (void*)aSource);
 		aSource->disconnect();
 		return;
 	}
@@ -686,9 +685,10 @@ void ConnectionManager::on(AdcCommand::INF, UserConnection* aSource, const AdcCo
 		ConnectionQueueItem::Iter i = find(downloads.begin(), downloads.end(), aSource->getUser());
 		
 		if(i != downloads.end()) {
-			// Last compare for compatibility with pre-0.700
 			const string& to = (*i)->getToken();
-			if(to == token || (to.size() > 2 && to.compare(0, 2, "TO") == 0 && to.compare(2, to.size() - 2, token) == 0)) {
+			
+			// 0.698 would send an empty token in some cases...remove this bugfix at some point
+			if(to == token || token.empty()) {
 				down = true;
 			}
 		}

@@ -414,10 +414,15 @@ void UploadManager::on(UserConnectionListener::Send, UserConnection* aSource) th
 }
 
 void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcCommand& c) throw() {
-	int64_t aBytes = Util::toInt64(c.getParam(3));
-	int64_t aStartPos = Util::toInt64(c.getParam(2));
-	const string& fname = c.getParam(1);
+	if(aSource->getState() != UserConnection::STATE_GET) {
+		dcdebug("UM::onGET Bad state, ignoring\n");
+		return;
+	}
+
 	const string& type = c.getParam(0);
+	const string& fname = c.getParam(1);
+	int64_t aStartPos = Util::toInt64(c.getParam(2));
+	int64_t aBytes = Util::toInt64(c.getParam(3));
 
 	if(prepareFile(*aSource, type, fname, aStartPos, aBytes, c.hasFlag("RE", 4))) {
 		Upload* u = aSource->getUpload();
@@ -628,6 +633,11 @@ void UploadManager::on(GetListLength, UserConnection* conn) throw() {
 }
 
 void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcCommand& c) throw() {
+	if(aSource->getState() != UserConnection::STATE_GET) {
+		dcdebug("UM::onSend Bad state, ignoring\n");
+		return;
+	}
+	
 	if(c.getParameters().size() < 2) {
 		aSource->send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_PROTOCOL_GENERIC, "Missing parameters"));
 		return;
