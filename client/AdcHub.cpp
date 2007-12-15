@@ -215,7 +215,7 @@ void AdcHub::handle(AdcCommand::SUP, AdcCommand& c) throw() {
 		return;
 	} else if(!tigrOk) {
 		oldPassword = true;
-		// What now? Some hubs fake BASE support without TIGR support =/
+		// Some hubs fake BASE support without TIGR support =/
 		fire(ClientListener::StatusMessage(), this, "Hub probably uses an old version of ADC, please encourage the owner to upgrade");
 	}
 }
@@ -270,11 +270,25 @@ void AdcHub::handle(AdcCommand::GPA, AdcCommand& c) throw() {
 
 void AdcHub::handle(AdcCommand::QUI, AdcCommand& c) throw() {
 	uint32_t s = AdcCommand::toSID(c.getParam(0));
-	putUser(s);
+	putUser(s); // @todo: use the DI flag
 
-	// No use to hammer if we're banned
-	if(s == sid &&  c.hasFlag("TL", 1)) {
-		setAutoReconnect(false);
+	string tmp;
+	if(c.getParam("MS", 1, tmp)) {
+		fire(ClientListener::StatusMessage(), this, tmp);
+	}
+	
+	if(s == sid) {
+		if(c.getParam("TL", 1, tmp)) {
+			if(tmp == "-1") {
+				setAutoReconnect(false);
+			} else {
+				setAutoReconnect(true);
+				setReconnDelay(Util::toUInt32(tmp));
+			}
+		}
+		if(c.getParam("RD", 1, tmp)) {
+			fire(ClientListener::Redirect(), this, tmp);
+		}
 	}
 }
 
@@ -282,18 +296,24 @@ void AdcHub::handle(AdcCommand::CTM, AdcCommand& c) throw() {
 	OnlineUser* u = findUser(c.getFrom());
 	if(!u || u->getUser() == ClientManager::getInstance()->getMe())
 		return;
-	if(c.getParameters().size() < 3)
+	if(c.getParameters().size() < 2)
 		return;
 
 	const string& protocol = c.getParam(0);
 	const string& port = c.getParam(1);
 
 	string token;
-	bool hasToken = c.getParam("TO", 2, token);
+	if(c.getParameters().size() == 3) {
+		const string& tok = c.getParam(2);
 
-	if(!hasToken) {
-		// @todo remove this bugfix for <=0.698 some time
-		token = c.getParam(2);
+		// 0.699 put TO before the token, keep this bug fix for a while
+		if(tok.compare(0, 2, "TO") == 0) {
+			token = tok.substr(2);
+		} else {
+			token = tok;
+		}
+	} else {
+		// <= 0.703 would send an empty token for passive connections when replying to RCM
 	}
 
 	bool secure = false;
@@ -305,9 +325,7 @@ void AdcHub::handle(AdcCommand::CTM, AdcCommand& c) throw() {
 		AdcCommand cmd(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_UNSUPPORTED, "Protocol unknown", AdcCommand::TYPE_DIRECT);
 		cmd.setTo(c.getFrom());
 		cmd.addParam("PR", protocol);
-
-		if(hasToken)
-			cmd.addParam("TO", token);
+		cmd.addParam("TO", token);
 
 		send(cmd);
 		return;
@@ -322,7 +340,7 @@ void AdcHub::handle(AdcCommand::CTM, AdcCommand& c) throw() {
 }
 
 void AdcHub::handle(AdcCommand::RCM, AdcCommand& c) throw() {
-	if(c.getParameters().empty()) {
+	if(c.getParameters().size() < 2) {
 		return;
 	}
 	if(!isActive())
@@ -332,8 +350,14 @@ void AdcHub::handle(AdcCommand::RCM, AdcCommand& c) throw() {
 		return;
 
 	const string& protocol = c.getParam(0);
+	const string& tok = c.getParam(1);
 	string token;
-	bool hasToken = c.getParam("TO", 1, token);
+	// 0.699 sent a token with "TO" prefix
+	if(tok.compare(0, 2, "TO") == 0) {
+		token = tok.substr(2);
+	} else {
+		token = tok;
+	}
 
 	bool secure;
 	if(protocol == CLIENT_PROTOCOL || protocol == CLIENT_PROTOCOL_TEST) {
@@ -344,9 +368,7 @@ void AdcHub::handle(AdcCommand::RCM, AdcCommand& c) throw() {
 		AdcCommand cmd(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_UNSUPPORTED, "Protocol unknown", AdcCommand::TYPE_DIRECT);
 		cmd.setTo(c.getFrom());
 		cmd.addParam("PR", protocol);
-
-		if(hasToken)
-			cmd.addParam("TO", token);
+		cmd.addParam("TO", token);
 
 		send(cmd);
 		return;
@@ -435,6 +457,8 @@ void AdcHub::handle(AdcCommand::STA, AdcCommand& c) throw() {
 				u->getUser()->setFlag(User::NO_ADCS_0_10_PROTOCOL);
 				u->getUser()->unsetFlag(User::TLS);
 			}
+			// Try again...
+			ConnectionManager::getInstance()->force(u->getUser());
 		}
 	}
 	fire(ClientListener::Message(), this, *u, c.getParam(1));
@@ -476,14 +500,15 @@ void AdcHub::connect(const OnlineUser& user, string const& token, bool secure) {
 		proto = &SECURE_CLIENT_PROTOCOL_TEST;
 	} else {
 		// dc++ <= 0.703 has a bug which makes it respond with CSTA to the hub if an unrecognised protocol is used *sigh*
-		if(true || user.getUser()->isSet(User::NO_ADC_1_0_PROTOCOL)) {
-			if(user.getUser()->isSet(User::NO_ADC_0_10_PROTOCOL)) {
+		// so we try 0.10 first...
+		if(user.getUser()->isSet(User::NO_ADC_0_10_PROTOCOL)) {
+			if(user.getUser()->isSet(User::NO_ADC_1_0_PROTOCOL)) {
 				/// @todo log
 				return;
 			}
-			proto = &CLIENT_PROTOCOL_TEST;
-		} else {
 			proto = &CLIENT_PROTOCOL;
+		} else {
+			proto = &CLIENT_PROTOCOL_TEST;
 		}
 	}
 
@@ -628,7 +653,6 @@ void AdcHub::info(bool /*alwaysSend*/) {
 		addParam(lastInfoMap, c, "DS", Util::emptyString);
 	}
 
-
 	string su;
 	if(CryptoManager::getInstance()->TLSOk()) {
 		su += ADCS_FEATURE + ",";
@@ -681,7 +705,7 @@ void AdcHub::on(Connected c) throw() {
 	sid = 0;
 
 	AdcCommand cmd(AdcCommand::CMD_SUP, AdcCommand::TYPE_HUB);
-	cmd.addParam(BAS0_SUPPORT).addParam(TIGR_SUPPORT);
+	cmd.addParam(BAS0_SUPPORT).addParam(BASE_SUPPORT).addParam(TIGR_SUPPORT);
 	
 	if(BOOLSETTING(HUB_USER_COMMANDS)) {
 		cmd.addParam(UCM0_SUPPORT);

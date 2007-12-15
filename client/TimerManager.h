@@ -54,6 +54,7 @@ public:
 private:
 
 	Semaphore s;
+	static FastCriticalSection cs;
 
 	friend class Singleton<TimerManager>;
 	TimerManager() { 

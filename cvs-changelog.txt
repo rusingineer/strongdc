@@ -1,3 +1,9 @@
+** svn339
+	fixed TTH verify for small files
+	removed autodisconnecting when speed is below 1B/s
+	hopefully fixed timer problems (reconnect, wrong uptime etc.)
+	DC++ SVN merge
+
 ** svn338
 	allow files with $ in their name
 	some DC++ SVN merge

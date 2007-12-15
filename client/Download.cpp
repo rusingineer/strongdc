@@ -67,27 +67,6 @@ Download::Download(UserConnection& conn, QueueItem& qi, bool partial) throw() : 
 			getTigerTree() = TigerTree(qi.getSize(), qi.getSize(), getTTH());
 			setTreeValid(true);
 		}
-
-		//if(qi.isSet(QueueItem::FLAG_RESUME) && getType() != TYPE_TREE) {
-		//	const string& target = (getTempTarget().empty() ? getPath() : getTempTarget());
-		//	int64_t start = File::getSize(target);
-
-		//	// Only use antifrag if we don't have a previous non-antifrag part
-		//	if( BOOLSETTING(ANTI_FRAG) && (start == -1)) {
-		//		int64_t aSize = File::getSize(target + Download::ANTI_FRAG_EXT);
-
-		//		if(aSize == getSize())
-		//			start = qi.getDownloadedBytes();
-		//		else
-		//			start = 0;
-
-		//		setFlag(Download::FLAG_ANTI_FRAG);
-		//	}
-
-		//	setStartPos(std::max<int64_t>(0, start - (start % getTigerTree().getBlockSize())));
-		//} else {
-		//	setStartPos(0);
-		//}
 	}
 }
 

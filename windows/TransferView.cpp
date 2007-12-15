@@ -868,9 +868,9 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		}
 		statusString += buf;
 		ui->setStatusString(statusString);
-		if((d->getAverageSpeed() < 1) && ((GET_TICK() - d->getStart()) > 1000)) {
-			d->getUserConnection().disconnect();
-		}
+		//if((d->getAverageSpeed() < 1) && ((GET_TICK() - d->getStart()) > 1000)) {
+		//	d->getUserConnection().disconnect();
+		//}
 			
 		tasks.add(UPDATE_ITEM, ui);
 	}
@@ -979,9 +979,9 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 		ui->setStatusString(statusString);
 					
 		tasks.add(UPDATE_ITEM, ui);
-		if((u->getAverageSpeed() < 1) && ((GET_TICK() - u->getStart()) > 1000)) {
-			u->getUserConnection().disconnect(true);
-		}
+		//if((u->getAverageSpeed() < 1) && ((GET_TICK() - u->getStart()) > 1000)) {
+		//	u->getUserConnection().disconnect(true);
+		//}
 	}
 
 	PostMessage(WM_SPEAKER);
