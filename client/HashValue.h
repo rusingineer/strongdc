@@ -40,15 +40,15 @@ struct HashValue : FastAlloc<HashValue<Hasher> >{
 
 	HashValue() { }
 	explicit HashValue(uint8_t* aData) { memcpy(data, aData, SIZE); }
-	explicit HashValue(const string& base32) { Encoder::fromBase32(base32.c_str(), data, SIZE); }
+	explicit HashValue(const std::string& base32) { Encoder::fromBase32(base32.c_str(), data, SIZE); }
 	HashValue(const HashValue& rhs) { memcpy(data, rhs.data, SIZE); }
 	HashValue& operator=(const HashValue& rhs) { memcpy(data, rhs.data, SIZE); return *this; }
 	bool operator!=(const HashValue& rhs) const { return !(*this == rhs); }
 	bool operator==(const HashValue& rhs) const { return memcmp(data, rhs.data, SIZE) == 0; }
 	bool operator<(const HashValue& rhs) const { return memcmp(data, rhs.data, SIZE) < 0; }
 
-	string toBase32() const { return Encoder::toBase32(data, SIZE); }
-	string& toBase32(string& tmp) const { return Encoder::toBase32(data, SIZE, tmp); }
+	std::string toBase32() const { return Encoder::toBase32(data, SIZE); }
+	std::string& toBase32(std::string& tmp) const { return Encoder::toBase32(data, SIZE, tmp); }
 
 	uint8_t data[SIZE];
 };

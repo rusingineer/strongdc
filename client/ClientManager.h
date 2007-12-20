@@ -166,8 +166,6 @@ public:
 
 	const Client::List& getClients() const { return clients; }
 
-	string getCachedIp() const { Lock l(cs); return cachedIp; }
-
 	CID getMyCID();
 	const CID& getMyPID();
 	
@@ -196,7 +194,6 @@ private:
 
 	UserPtr me;
 	
-	string cachedIp;
 	CID pid;	
 
 	friend class Singleton<ClientManager>;
@@ -208,8 +205,6 @@ private:
 	~ClientManager() throw() {
 		TimerManager::getInstance()->removeListener(this); 
 	}
-
-	void updateCachedIp();
 
 	// ClientListener
 	void on(Connected, const Client* c) throw() { fire(ClientManagerListener::ClientConnected(), c); }

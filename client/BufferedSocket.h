@@ -118,12 +118,12 @@ private:
 	~BufferedSocket() throw();
 
 	CriticalSection cs;
-	Semaphore taskSem;
 
+	Semaphore taskSem;
 	vector<pair<Tasks, TaskData*> > tasks;
-	vector<uint8_t> inbuf;
-	vector<uint8_t> writeBuf;
-	vector<uint8_t> sendBuf;
+	ByteVector inbuf;
+	ByteVector writeBuf;
+	ByteVector sendBuf;
 	
 	string line;
 	int64_t dataBytes;

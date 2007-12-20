@@ -451,8 +451,6 @@ const string& ClientManager::getHubUrl(const UserPtr& aUser) const {
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
 	Lock l(cs);
 
-	updateCachedIp(); // no point in doing a resolve for every single hub we're searching on
-
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->isConnected()) {
 			(*i)->search(aSizeMode, aSize, aFileType, aString, aToken);
@@ -462,8 +460,6 @@ void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const st
 
 void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
 	Lock l(cs);
-
-	updateCachedIp(); // no point in doing a resolve for every single hub we're searching on
 
 	for(StringIter it = who.begin(); it != who.end(); ++it) {
 		string& client = *it;
@@ -533,27 +529,6 @@ void ClientManager::on(HubUserCommand, const Client* client, int aType, int ctx,
 			FavoriteManager::getInstance()->addUserCommand(aType, ctx, ::UserCommand::FLAG_NOSAVE, name, command, client->getHubUrl());
 		}
 	}
-}
-
-void ClientManager::updateCachedIp() {
-	// Best case - the server detected it
-	if((!BOOLSETTING(NO_IP_OVERRIDE) || SETTING(EXTERNAL_IP).empty())) {
-		for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-			if(!(*i)->getMyIdentity().getIp().empty()) {
-				cachedIp = (*i)->getMyIdentity().getIp();
-				return;
-			}
-		}
-	}
-
-	if(!SETTING(EXTERNAL_IP).empty()) {
-		cachedIp = Socket::resolve(SETTING(EXTERNAL_IP));
-		return;
-	}
-
-	//if we've come this far just use the first client to get the ip.
-	if(clients.size() > 0)
-		cachedIp = (*clients.begin())->getLocalIp();
 }
 
 void ClientManager::setListLength(const UserPtr& p, const string& listLen) {

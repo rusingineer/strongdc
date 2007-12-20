@@ -16,18 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(BLOOM_FILTER_H)
-#define BLOOM_FILTER_H
+#ifndef DCPLUSPLUS_DCPP_BLOOM_FILTER_H
+#define DCPLUSPLUS_DCPP_BLOOM_FILTER_H
 
 #include "ZUtils.h"
 
-struct CRC32Hash {
-	size_t operator()(const void* buf, size_t len) { f(buf, len); return f.getValue(); }
-private:
-	CRC32Filter f;
-};
-
-template<size_t N, class HashFunc = CRC32Hash>
+template<size_t N>
 class BloomFilter {
 public:
 	BloomFilter(size_t tableSize) { table.resize(tableSize); }
@@ -77,10 +71,15 @@ private:
 		} 
 	}
 
-	/* Same functionality, but the old one did not want to compile for some reason. */
+	/* This is roughly how boost::hash does it */
 	size_t getPos(const string& s, size_t i, size_t l) const {
-		HashFunc hf;
-		return (hf(&s[i], l) % table.size());
+		size_t h = 0;
+		const char* c = s.data() + i;
+		const char* end = s.data() + l;
+		for(; c < end; ++c) {
+			h ^= *c + 0x9e3779b9 + (h<<6) + (h>>2);
+		}
+		return (h % table.size());
 	}
 	
 	vector<bool> table;
