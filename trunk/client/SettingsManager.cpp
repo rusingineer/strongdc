@@ -122,7 +122,7 @@ const string SettingsManager::settingTags[] =
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
-	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "EnableRealUploadQueue",
+	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "EnableRealUploadQueue", "SendBloom",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -296,7 +296,8 @@ SettingsManager::SettingsManager()
 	setDefault(ALLOW_UNTRUSTED_CLIENTS, true);		
 	setDefault(FAST_HASH, true);
 	setDefault(SORT_FAVUSERS_FIRST, false);
-	setDefault(SHOW_SHELL_MENU, false);	
+	setDefault(SHOW_SHELL_MENU, false);
+	setDefault(SEND_BLOOM, true);		
 	setDefault(NUMBER_OF_SEGMENTS, 3);
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);

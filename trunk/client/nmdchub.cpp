@@ -262,7 +262,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 		// Filter own searches
 		if(meActive && bPassive == false) {
-			if(seeker == ((getFavIp().empty() ? ClientManager::getInstance()->getCachedIp() : getFavIp()) + ":" + Util::toString(SearchManager::getInstance()->getPort()))) {
+			if(seeker == (getLocalIp() + ":" + Util::toString(SearchManager::getInstance()->getPort()))) {
 				return;
 			}
 		} else {
@@ -910,7 +910,7 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	int chars = 0;
 	size_t BUF_SIZE;	
 	if(isActive() && !BOOLSETTING(SEARCH_PASSIVE)) {
-		string x = getFavIp().empty() ? ClientManager::getInstance()->getCachedIp() : getFavIp();
+		string x = getLocalIp();
 		BUF_SIZE = x.length() + tmp.length() + 64;
 		buf = new char[BUF_SIZE];
 		chars = snprintf(buf, BUF_SIZE, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, aSize, aFileType+1, tmp.c_str());

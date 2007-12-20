@@ -1,3 +1,6 @@
+** svn340
+	added hub bloom filter (DC++ SVN)
+
 ** svn339
 	fixed TTH verify for small files
 	removed autodisconnecting when speed is below 1B/s
