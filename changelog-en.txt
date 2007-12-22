@@ -9,7 +9,10 @@
 * hopefully fixed "download starting" report
 * hopefully fixed URI encoding in Webserver
 * yaSSL replaced with OpenSSL
-* some changes from DC++ 0.703
+* some changes from DC++ 0.705 SVN
+* removed autodisconnecting when speed is below 1B/s
+* hopefully fixed timer problems (reconnect, wrong uptime etc.)
+
 
 
 	-- StrongDC++ 2.05 --

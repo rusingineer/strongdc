@@ -9,7 +9,10 @@
 * opraveno hlášení "Stahování zaèíná"
 * opraveno kódování URI ve Webserveru
 * yaSSL nahrazeno OpenSSL
-* nìjaké zmìny z DC++ 0.703
+* nìjaké zmìny z DC++ 0.705 SVN
+* odstranìno automatické odpojení pøenosu, pokud rychlost klesla pod 1B/s
+* snad opraveny problémy s èasovaèem (rekonekt, špatný uptime atd.)
+
 
 	-- StrongDC++ 2.05 --
 	

@@ -1,3 +1,7 @@
+** svn341
+	some Linux fixes (DC++ SVN)
+	hopefully fixed crashes due to invalid TTH block size
+
 ** svn340
 	added hub bloom filter (DC++ SVN)
 
