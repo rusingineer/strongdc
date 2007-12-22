@@ -26,6 +26,7 @@
 #include "ClientManager.h"
 #include "LogManager.h"
 #include "HashManager.h"
+#include "DownloadManager.h"
 
 #include "SimpleXML.h"
 #include "StringTokenizer.h"
@@ -302,6 +303,7 @@ void ShareManager::load(SimpleXML& aXml) {
 	}
 }
 
+
 static const string SDIRECTORY = "Directory";
 static const string SFILE = "File";
 static const string SNAME = "Name";
@@ -573,6 +575,10 @@ public:
 			return ((dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) || (cFileName[0] == L'.'));
 		}
 
+		bool isLink() {
+			return false;
+		}
+
 		int64_t getSize() {
 			return (int64_t)nFileSizeLow | ((int64_t)nFileSizeHigh)<<32;
 		}
@@ -642,6 +648,12 @@ public:
 			if (!ent) return false;
 			return ent->d_name[0] == '.';
 		}
+		bool isLink() {
+			struct stat inode;
+			if (!ent) return false;
+			if (lstat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return false;
+			return S_ISLNK(inode.st_mode);
+		}
 		int64_t getSize() {
 			struct stat inode;
 			if (!ent) return false;
@@ -706,9 +718,11 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 					continue;
 			}
 		}
-		if(!BOOLSETTING(SHARE_HIDDEN) && i->isHidden() )
+		if(!BOOLSETTING(SHARE_HIDDEN) && i->isHidden())
 			continue;
-
+		if(i->isLink())
+ 			continue;
+ 			
 		if(i->isDirectory()) {
 			string newName = aName + name + PATH_SEPARATOR;
 			if((Util::stricmp(newName, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) && shareFolder(newName)) {

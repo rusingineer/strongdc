@@ -54,7 +54,6 @@ public:
 private:
 
 	Semaphore s;
-	static FastCriticalSection cs;
 
 	friend class Singleton<TimerManager>;
 	TimerManager() { 
@@ -73,6 +72,7 @@ private:
 #ifdef _WIN32
 	static DWORD lastTick;
 	static uint32_t cycles;
+	static FastCriticalSection cs;
 #else
 	static timeval tv;
 #endif
