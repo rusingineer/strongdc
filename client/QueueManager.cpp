@@ -1687,22 +1687,33 @@ void QueueManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		saveQueue();
 	}
 
-	Lock l(cs);
 
-	QueueItem::List um = getRunningFiles();
-	for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
-		QueueItem* q = *j;
+	vector<pair<string, QueueItem::Priority>> priorities;
 
-		if(q->getAutoPriority()) {
-			QueueItem::Priority p1 = q->getPriority();
-			if(p1 != QueueItem::PAUSED) {
-				QueueItem::Priority p2 = q->calculateAutoPriority();
-				if(p1 != p2)
-					setPriority(q->getTarget(), p2);
+	{
+		Lock l(cs);
+
+		QueueItem::List um = getRunningFiles();
+		for(QueueItem::Iter j = um.begin(); j != um.end(); ++j) {
+			QueueItem* q = *j;
+
+			if(q->getAutoPriority()) {
+				QueueItem::Priority p1 = q->getPriority();
+				if(p1 != QueueItem::PAUSED) {
+					QueueItem::Priority p2 = q->calculateAutoPriority();
+					if(p1 != p2)
+						priorities.push_back(make_pair(q->getTarget(), p2));
+				}
 			}
+			fire(QueueManagerListener::StatusUpdated(), q);
 		}
-		fire(QueueManagerListener::StatusUpdated(), q);
 	}
+
+	for(vector<pair<string, QueueItem::Priority>>::const_iterator p = priorities.begin(); p != priorities.end(); p++) {
+		setPriority((*p).first, (*p).second);
+	}
+
+
 }
 
 bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException) 
