@@ -535,7 +535,7 @@ void PrivateFrame::updateTitle() {
 	} else {
 		setIconState();
 		setTabColor(RGB(255, 0, 0));
-		tstring status = _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first + _T("] ***");
+		tstring status = _T(" *** ") + TSTRING(USER_WENT_OFFLINE);
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
 			addLine(status, WinUtil::m_ChatTextServer);
 		} else {

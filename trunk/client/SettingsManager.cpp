@@ -205,7 +205,7 @@ SettingsManager::SettingsManager()
 	setDefault(LOG_FORMAT_SYSTEM, "[%Y-%m-%d %H:%M] %[message]");
 	setDefault(LOG_FILE_MAIN_CHAT, "%[hubURL].log");
 	setDefault(LOG_FILE_STATUS, "%[hubURL]_status.log");
-	setDefault(LOG_FILE_PRIVATE_CHAT, "PM\\%[userNI].%[userCID].log");
+	setDefault(LOG_FILE_PRIVATE_CHAT, "PM\\%[userCID].log");
 	setDefault(LOG_FILE_UPLOAD, "Uploads.log");
 	setDefault(LOG_FILE_DOWNLOAD, "Downloads.log");
 	setDefault(LOG_FILE_SYSTEM, "system.log");
