@@ -168,6 +168,21 @@ public:
 		tempTarget = ql.front()->getTempTarget();
 		return true;
 	}
+
+	bool isChunkDownloaded(const TTHValue& tth, int64_t startPos, int64_t bytes, string& tempTarget, int64_t& size) {
+		Lock l(cs);
+		QueueItem::List ql;
+		fileQueue.find(ql, tth);
+
+		if(ql.empty()) return false;
+
+		QueueItem* qi = ql.front();
+
+		tempTarget = qi->getTempTarget();
+		size = qi->getSize();
+
+		return qi->isChunkDownloaded(startPos, bytes);
+	}
 	
 	GETSET(uint64_t, lastSave, LastSave);
 	GETSET(string, queueFile, QueueFile);
@@ -204,9 +219,9 @@ public:
 				i->second->dec();
 			}
 		void add(QueueItem* qi);
-		QueueItem* add(const string& aTarget, int64_t aSize, 
-			Flags::MaskType aFlags, QueueItem::Priority p, const string& aTempTarget,
-			time_t aAdded, const string& freeBlocks, const string& verifiedBlocks, const TTHValue& root) throw(QueueException, FileException);
+		QueueItem* add(const string& aTarget, int64_t aSize, Flags::MaskType aFlags, QueueItem::Priority p, 
+			const string& aTempTarget, time_t aAdded, const TTHValue& root)
+			throw(QueueException, FileException);
 
 		QueueItem* find(const string& target) const;
 		void find(QueueItem::List& sl, int64_t aSize, const string& ext);
@@ -235,8 +250,7 @@ private:
 	public:
 		void add(QueueItem* qi);
 		void add(QueueItem* qi, const UserPtr& aUser);
-		QueueItem* getNext(const UserPtr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST, QueueItem* pNext = NULL);
-		QueueItem* getNextAll(const UserPtr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST);
+		QueueItem* getNext(const UserPtr& aUser, QueueItem::Priority minPrio = QueueItem::LOWEST);
 		QueueItem* getRunning(const UserPtr& aUser);
 		void addDownload(QueueItem* qi, Download* d);
 		void removeDownload(QueueItem* qi, const UserPtr& d);

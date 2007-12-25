@@ -89,7 +89,7 @@ private:
 	DownloadManager();
 	~DownloadManager() throw();
 
-	void checkDownloads(UserConnection* aConn, bool reconn = false);
+	void checkDownloads(UserConnection* aConn);
 	void handleEndData(UserConnection* aSource);
 
 	// UserConnectionListener
@@ -103,7 +103,7 @@ private:
 	void on(AdcCommand::SND, UserConnection*, const AdcCommand&) throw();
 	void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw();
 
-	bool prepareFile(UserConnection* aSource, int64_t newSize, bool z);
+	bool prepareFile(UserConnection* aSource, int64_t start, int64_t newSize, bool z);
 	// TimerManagerListener
 	void on(TimerManagerListener::Second, uint64_t aTick) throw();
 };

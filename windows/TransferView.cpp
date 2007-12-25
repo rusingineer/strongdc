@@ -784,11 +784,10 @@ void TransferView::on(ConnectionManagerListener::Failed, const ConnectionQueueIt
 void TransferView::on(DownloadManagerListener::Starting, const Download* aDownload) {
 	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true);
 
-	bool isFile = aDownload->getType() == Transfer::TYPE_FILE;
 	ui->setStatus(ItemInfo::STATUS_RUNNING);
-	ui->setPos(isFile ? 0 : aDownload->getPos());
-	ui->setActual(isFile ? 0 : aDownload->getStartPos() + aDownload->getActual());
-	ui->setSize(isFile ? aDownload->getChunkSize() : aDownload->getSize());
+	ui->setPos(aDownload->getPos());
+	ui->setActual(aDownload->getActual());
+	ui->setSize(aDownload->getSize());
 	ui->setTarget(Text::toT(aDownload->getPath()));
 	ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
 
@@ -819,12 +818,12 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 
 		if(d->getType() == Transfer::TYPE_FILE) {
 			ui->setActual(d->getActual());
-			ui->setPos(d->getTotal());
-			ui->setSize(d->getChunkSize());
-			ui->timeLeft = (ui->speed > 0) ? ((ui->size - d->getTotal()) / ui->speed) : 0;
+			ui->setPos(d->getPos());
+			ui->setSize(d->getSize());
+			ui->setTimeLeft(d->getSecondsLeft());
 
-			double progress = (double)(d->getTotal())*100.0/(double)ui->size;
-			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(d->getTotal()).c_str(), 
+			double progress = (double)(d->getPos())*100.0/(double)ui->size;
+			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(d->getPos()).c_str(), 
 				progress, Util::formatSeconds((GET_TICK() - d->getStart())/1000).c_str());
 			if(progress > 100) {
 				// workaround to fix > 100% percentage
@@ -942,16 +941,17 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 	for(UploadList::const_iterator j = ul.begin(); j != ul.end(); ++j) {
 		Upload* u = *j;
 
-		if (u->getTotal() == 0) continue;
+		if (u->getPos() == 0) continue;
 
 		UpdateInfo* ui = new UpdateInfo(u->getUser(), false);
 		ui->setActual(u->getStartPos() + u->getActual());
-		ui->setPos(u->getPos());
+		ui->setPos(u->getStartPos() + u->getPos());
 		ui->setTimeLeft(u->getSecondsLeft(true)); // we are interested when whole file is finished and not only one chunk
 		ui->setSpeed(static_cast<int64_t>(u->getAverageSpeed()));
 
-		_stprintf(buf, CTSTRING(UPLOADED_BYTES), Util::formatBytesW(u->getPos()).c_str(), 
-			(double)u->getPos()*100.0/(double)(u->getType() == Transfer::TYPE_TREE ? u->getSize() : u->getFileSize()), Util::formatSeconds((GET_TICK() - u->getStart())/1000).c_str());
+		_stprintf(buf, CTSTRING(UPLOADED_BYTES), Util::formatBytesW(ui->pos).c_str(), 
+			(double)ui->pos * 100.0 / (double)(u->getType() == Transfer::TYPE_TREE ? u->getSize() : u->getFileSize()),
+			Util::formatSeconds((GET_TICK() - u->getStart())/1000).c_str());
 
 		tstring statusString;
 
@@ -1134,12 +1134,14 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 				segs++;
 
 				totalSpeed += static_cast<int64_t>((*i)->getAverageSpeed());
-				ratio += (*i)->getPos() > 0 ? (*i)->getActual() / (*i)->getPos() : 1.00;
+				ratio += (*i)->getPos() > 0 ? (double)(*i)->getActual() / (double)(*i)->getPos() : 1.00;
 			}
 		}
 
 		ui->setRunning(segs);
 		if(segs > 0) {
+			ratio = ratio / segs;
+
 			ui->setStatus(ItemInfo::STATUS_RUNNING);
 			ui->setSize(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getSize() : qi->getSize());
 			ui->setPos(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getPos() : qi->getDownloadedBytes());
@@ -1169,8 +1171,6 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 					ui->setStatusString(tstring(buf));
 				}
 			}
-
-			ratio = ratio / segs;
 		}
 	} else {
 		const_cast<QueueItem*>(qi)->setFileBegin(0);

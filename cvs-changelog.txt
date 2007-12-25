@@ -1,3 +1,10 @@
+** svn344
+	removed FileChunksInfo
+	partial file sharing broken - i'll fix it later
+
+** svn343
+	released 2.06	
+
 ** svn342
 	[ADC] sending favorite IP in I4
 	fixed deadlock in QueueManager

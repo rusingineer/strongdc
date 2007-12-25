@@ -25,17 +25,7 @@
 template<class TreeType, bool managed>
 class MerkleCheckOutputStream : public OutputStream {
 public:
-	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start, Download* aDown) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0), d(aDown) {
-		
-		skippingBytes = (size_t)(start % aTree.getBlockSize());
-		if(skippingBytes > 0)
-			skippingBytes = (size_t)(aTree.getBlockSize() - skippingBytes);
-
-		fileChunks = FileChunksInfo::Get(&aTree.getRoot());
-
-		bufPos = 0;
-		start = start + skippingBytes;
-
+	MerkleCheckOutputStream(const TreeType& aTree, OutputStream* aStream, int64_t start) : s(aStream), real(aTree), cur(aTree.getBlockSize()), verified(0), bufPos(0) {
 		// Only start at block boundaries
 		dcassert(start % aTree.getBlockSize() == 0);
 		cur.setFileSize(start);
@@ -46,19 +36,28 @@ public:
 			return;
 		}
 		cur.getLeaves().insert(cur.getLeaves().begin(), aTree.getLeaves().begin(), aTree.getLeaves().begin() + nBlocks);
-		
-		verified = cur.getLeaves().size();
 	}
 
 	~MerkleCheckOutputStream() throw() { if(managed) delete s; }
 
 	size_t flush() throw(FileException) {
+		if (bufPos != 0)
+			cur.update(buf, bufPos);
+		bufPos = 0;
+
+		cur.finalize();
+		if(cur.getLeaves().size() == real.getLeaves().size()) {
+			if (cur.getRoot() != real.getRoot())
+				throw FileException(STRING(TTH_INCONSISTENCY));
+		} else {
+			checkTrees();
+		}
 		return s->flush();
 	}
 
-	void commitBytes(const void* b, size_t len, size_t pos = 0) throw(FileException) {
+	void commitBytes(const void* b, size_t len) throw(FileException) {
 		uint8_t* xb = (uint8_t*)b;
-		//size_t pos = 0;
+		size_t pos = 0;
 		
 		if(bufPos != 0) {
 			size_t bytes = min(TreeType::BASE_BLOCK_SIZE - bufPos, len);
@@ -87,48 +86,9 @@ public:
 	}
 
 	size_t write(const void* b, size_t len) throw(FileException) {
-		bool verifyFlag = false;
-		size_t pos = 0;
-		
-		if(skippingBytes > 0)
-		{
-			if(skippingBytes >= len)
-			{
-				skippingBytes -= len;
-				size_t ret = s->write(b, len);
-				if(skippingBytes == 0){
-					s->flush();
-					dcassert(verified > 0);
-					int64_t offset = (int64_t)verified * (int64_t)(real.getBlockSize()) - 1;
-					fileChunks->verifyBlock(offset, real, d->getTempTarget());
-				}
-				return ret;
-	        } else {
-				pos = skippingBytes;
-				skippingBytes = 0;
-				verifyFlag = true;
-			}
-		}
-		commitBytes(b, len, pos);
-
-		size_t old = verified;
+		commitBytes(b, len);
 		checkTrees();
-		size_t ret = s->write(b, len);
-		
-		// mark verified block
-		if(verified > old) {
-			s->flush();
-			fileChunks->markVerifiedBlock((uint16_t)old, (uint16_t)verified);
-		}
-
-		if(verifyFlag){
-			s->flush();
-			dcassert(old > 0);
-			int64_t offset = (int64_t)old * (int64_t)(real.getBlockSize()) - 1;
-			fileChunks->verifyBlock(offset, real, d->getTempTarget());
-		}
-
-		return ret;
+		return s->write(b, len);
 	}
 
 	int64_t verifiedBytes() const {
@@ -139,9 +99,6 @@ private:
 	TreeType real;
 	TreeType cur;
 	size_t verified;
-	size_t skippingBytes;					// the bytes that will be skipped
-	FileChunksInfo::Ptr fileChunks;
-	Download* d;
 
 	uint8_t buf[TreeType::BASE_BLOCK_SIZE];
 	size_t bufPos;

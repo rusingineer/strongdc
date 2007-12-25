@@ -32,8 +32,8 @@ const string Transfer::names[] = {
 const string Transfer::USER_LIST_NAME = "files.xml";
 const string Transfer::USER_LIST_NAME_BZ = "files.xml.bz2";
 
-Transfer::Transfer(UserConnection& conn, const string& path_, const TTHValue& tth_) : start(0), type(TYPE_FILE),
-	path(path_), tth(tth_), actual(0), pos(0), startPos(0), size(-1), fileSize(-1), userConnection(conn),
+Transfer::Transfer(UserConnection& conn, const string& path_, const TTHValue& tth_) : segment(0, -1), type(TYPE_FILE), start(0),
+	path(path_), tth(tth_), actual(0), pos(0), fileSize(-1), userConnection(conn),
 	lastTick(GET_TICK()) { }
 
 void Transfer::tick() {
@@ -41,7 +41,7 @@ void Transfer::tick() {
 	while(samples.size() >= SAMPLES) {
 		samples.pop_front();
 	}
-	samples.push_back(std::make_pair(GET_TICK(), pos - startPos));
+	samples.push_back(std::make_pair(GET_TICK(), pos));
 }
 
 double Transfer::getAverageSpeed() const {
@@ -68,8 +68,8 @@ void Transfer::getParams(const UserConnection& aSource, StringMap& params) const
 	params["hubURL"] = Util::toString(hubs);
 	params["fileSI"] = Util::toString(getSize());
 	params["fileSIshort"] = Util::formatBytes(getSize());
-	params["fileSIchunk"] = Util::toString(getTotal());
-	params["fileSIchunkshort"] = Util::formatBytes(getTotal());
+//	params["fileSIchunk"] = Util::toString(getTotal());
+//	params["fileSIchunkshort"] = Util::formatBytes(getTotal());
 	params["fileSIactual"] = Util::toString(getActual());
 	params["fileSIactualshort"] = Util::formatBytes(getActual());
 	params["speed"] = Util::formatBytes(static_cast<int64_t>(getAverageSpeed())) + "/s";

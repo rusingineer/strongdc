@@ -55,7 +55,7 @@ string ResourceManager::strings[] = {
 "Browse file list", 
 "Bumped", 
 "Cancel", 
-"Generated new TLS certificate"	, 
+"Generated new TLS certificate", 
 "Certificate not trusted, unable to connect", 
 "TLS disabled, failed to generate certificate: ", 
 "CID", 

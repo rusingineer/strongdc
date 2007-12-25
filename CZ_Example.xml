@@ -59,6 +59,7 @@
 		<String Name="BrowseFileList">Procházet Seznam souborů</String>
 		<String Name="Bumped">3D Efekt</String>
 		<String Name="Cancel">Zrušit</String>
+		<String Name="CertificateGenerated">Vygenerován nový TLS certifikát</String>		
 		<String Name="CertificateNotTrusted">Nelze navázat připojení, certifikát je neplatný</String>
 		<String Name="CertificateGenerationFailed">TLS kódování je zakázáno, nepodařilo se generovat certifikát: </String>
 		<String Name="Cid">CID</String>
@@ -205,7 +206,6 @@
 		<String Name="FinishedUploads">Dokončené odesílání</String>
 		<String Name="Folder">Složka</String>
 		<String Name="Forbidden">Zakázané</String>
-		<String Name="ForbiddenDollarFile">Soubor obsahující "$" není možné stáhnout a nebude sdílen: </String>
 		<String Name="ForceAttempt">Vynutit připojení</String>
 		<String Name="GarbageIncoming">Odeslat bordel při příchozím spojení</String>
 		<String Name="GarbageOutgoing">Odeslat bordel pri odchozím spojení</String>
@@ -277,7 +277,6 @@
 		<String Name="Joins">Příchod: </String>
 		<String Name="Kb">kB</String>
 		<String Name="Kbps">kB/s</String>
-		<String Name="KbpsDisable">kB/s (0 = vyp.)</String>
 		<String Name="KickUser">Kopnout uživatele</String>
 		<String Name="KickUserFile">Kopnout uživatele (s názvem souboru)</String>
 		<String Name="LargerTargetFileExists">Jméno souboru se stejnou nebo větší velikostí již existuje.</String>
@@ -394,7 +393,6 @@
 		<String Name="No">Ne</String>
 		<String Name="NoCertificateFileSet">TLS šifrování zakázáno, certifikát není nastaven</String>
 		<String Name="NoDirectorySpecified">Žádný adresář nezadán</String>
-		<String Name="NoDownloadsFromPassive">Nelze stahovat od pasivních uživatelů v pasivním módu!</String>
 		<String Name="NoDownloadsFromSelf">Snažíte se stahovat od sebe!!</String>
 		<String Name="NoErrors">Žádné chyby</String>
 		<String Name="NoFreeBlock">Nejsou volné bloky</String>
@@ -458,7 +456,6 @@
 		<String Name="Properties">&amp;Vlastnosti</String>
 		<String Name="PublicHubs">Veřejné huby</String>
 		<String Name="Purge">Vyčistit</String>
-		<String Name="QueueUpdating">Zapnout aktualizaci fronty v reálném čase (používá více CPU!!!)</String>
 		<String Name="Queued">Ve frontě: </String>		
 		<String Name="QuickConnect">Rychlé připojení</String>
 		<String Name="Rating">Hodnocení</String>
@@ -652,7 +649,6 @@
 		<String Name="SettingsName">Jméno</String>
 		<String Name="SettingsNetwork">Nastavení připojení</String>
 		<String Name="SettingsNoAwaymsgToBots">Neposílat zprávu o nepřítomnosti BOTům</String>
-		<String Name="SettingsNominalBandwidth">Nestavení připojení</String>
 		<String Name="SettingsNormal">Normální</String>
 		<String Name="SettingsOdcShutdowntimeout">Do vypnutí</String>
 		<String Name="SettingsOnlyHashed">Pozn.: Soubory budou přidány do sdílení až po nahashování!</String>
@@ -785,6 +781,7 @@
 		<String Name="Suspend">Režim spánku</String>
 		<String Name="TabsOnTop">Záložky nahoře</String>
 		<String Name="Tag">Tag</String>
+		<String Name="TargetRemoved">Cílový soubor odstraněn</String>		
 		<String Name="TargetFilenameTooLong">Cílový soubor je příliš dlouhý</String>
 		<String Name="Tb">TB</String>
 		<String Name="TcpPortBusy">Nepořilo se otevřít TCP port. Přenos souborů nebude správě fungovat, dokud nezměníte TCP port v nastavení, nebo nerestartujete aplikaci.</String>
@@ -832,6 +829,7 @@ Výchozí: %H:%M:%S</String>
 		<String Name="UnableToCreateThread">Nepodařilo se vytvořit vlákno</String>
 		<String Name="UnableToOpenFilelist">Nepodařilo se otevřít seznam souborů: </String>
 		<String Name="UnableToRename">Nelze přejmenovat </String>
+		<String Name="UnableToSendFile">Nelze odeslat soubor </String>
 		<String Name="UnignoreUser">Neignorovat uživatele</String>
 		<String Name="Unknown">Neznámý</String>
 		<String Name="UnknownCommand">Neznámý příkaz: </String>
