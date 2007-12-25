@@ -83,7 +83,6 @@ private:
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>
 {
 public:
-	
 	/** @return Number of uploads. */ 
 	size_t getUploadCount() { Lock l(cs); return uploads.size(); }
 

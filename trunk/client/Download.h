@@ -45,8 +45,6 @@ public:
 		return isSet(FLAG_ANTI_FRAG) ? tgt + ANTI_FRAG_EXT : tgt;
 	}
 
-	int64_t getChunkSize() const { return getSize() - getStartPos(); }
-	
 	/** @internal */
 	TigerTree& getTigerTree() { return tt; }
 	string& getPFS() { return pfs; }

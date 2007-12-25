@@ -25,7 +25,6 @@
 #include "ClientManager.h"
 #include "ShareManager.h"
 #include "ResourceManager.h"
-#include "FileChunksInfo.h"
 #include "QueueManager.h"
 
 SearchResult::SearchResult(Types aType, int64_t aSize, const string& aFile, const TTHValue& aTTH) :

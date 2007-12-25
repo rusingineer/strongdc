@@ -56,16 +56,17 @@ Download::Download(UserConnection& conn, QueueItem& qi, bool partial) throw() : 
 	if(qi.getSize() != -1) {
 		if(HashManager::getInstance()->getTree(getTTH(), getTigerTree())) {
 			setTreeValid(true);
+			setSegment(qi.getNextSegment(getTigerTree().getBlockSize()));
 		} else if(conn.isSet(UserConnection::FLAG_SUPPORTS_TTHL) && !qi.getSource(conn.getUser())->isSet(QueueItem::Source::FLAG_NO_TREE) && qi.getSize() > HashManager::MIN_BLOCK_SIZE) {
 			// Get the tree unless the file is small (for small files, we'd probably only get the root anyway)
 			setType(TYPE_TREE);
 			getTigerTree().setFileSize(qi.getSize());
-			setPos(0);
-			setSize(-1);
+			setSegment(Segment(0, -1));
 		} else {
 			// Use the root as tree to get some sort of validation at least...
 			getTigerTree() = TigerTree(qi.getSize(), qi.getSize(), getTTH());
 			setTreeValid(true);
+			setSegment(qi.getNextSegment(getTigerTree().getBlockSize()));
 		}
 	}
 }
@@ -91,8 +92,8 @@ AdcCommand Download::getCommand(bool zlib) const {
 		cmd.addParam("TTH/" + getTTH().toBase32());
 	}
 
-	cmd.addParam(Util::toString(getPos()));
-	cmd.addParam(Util::toString(getSize() - getPos()));
+	cmd.addParam(Util::toString(getStartPos()));
+	cmd.addParam(Util::toString(getSize()));
 
 	if(zlib && BOOLSETTING(COMPRESS_TRANSFERS)) {
 		cmd.addParam("ZL1");

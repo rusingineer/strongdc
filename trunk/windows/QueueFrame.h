@@ -29,7 +29,6 @@
 #include "../client/QueueManager.h"
 #include "../client/FastAlloc.h"
 #include "../client/TaskQueue.h"
-#include "../client/FileChunksInfo.h"
 
 #define SHOWTREE_MESSAGE_MAP 12
 
@@ -233,7 +232,6 @@ private:
 		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}
 
 		const QueueItem* getQueueItem() const { return qi; }
-		const FileChunksInfo::Ptr getChunksInfo() const { return qi->getChunksInfo(); }
 		const string getPath() const { return Util::getFilePath(getTarget()); }
 
 		bool isSet(Flags::MaskType aFlag) const { return (qi->getFlags() & aFlag) == aFlag; }
@@ -242,6 +240,7 @@ private:
 
 		int64_t getSize() const { return qi->getSize(); }
 		int64_t getDownloadedBytes() const { return qi->getDownloadedBytes(); }
+		vector<int64_t> getDownloadedChunks() const { return qi->getDownloadedChunks(); }
 
 		time_t getAdded() const { return qi->getAdded(); }
 		const TTHValue& getTTH() const { return qi->getTTH(); }

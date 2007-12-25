@@ -260,10 +260,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\FileChunksInfo.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\client\FinishedManager.cpp"
 				>
 			</File>
@@ -313,10 +309,6 @@
 			</File>
 			<File
 				RelativePath=".\client\SettingsManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\client\SharedFileStream.cpp"
 				>
 			</File>
 			<File
@@ -457,10 +449,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\ChunkOutputStream.h"
-				>
-			</File>
-			<File
 				RelativePath=".\client\CID.h"
 				>
 			</File>
@@ -553,10 +541,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\FileChunksInfo.h"
-				>
-			</File>
-			<File
 				RelativePath=".\client\FilteredFile.h"
 				>
 			</File>
@@ -645,6 +629,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\Segment.h"
+				>
+			</File>
+			<File
 				RelativePath=".\client\Semaphore.h"
 				>
 			</File>
@@ -654,10 +642,6 @@
 			</File>
 			<File
 				RelativePath=".\client\SettingsManager.h"
-				>
-			</File>
-			<File
-				RelativePath=".\client\SharedFileStream.h"
 				>
 			</File>
 			<File

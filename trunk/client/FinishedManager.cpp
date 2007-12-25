@@ -28,7 +28,6 @@
 #include "DownloadManager.h"
 #include "UploadManager.h"
 
-#include "FileChunksInfo.h"
 #include "LogManager.h"
 #include "ResourceManager.h"
 
@@ -78,7 +77,7 @@ void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, b
 		FinishedItemPtr item = new FinishedItem(
 			d->getPath(), d->getUser(),
 			Util::toString(ClientManager::getInstance()->getHubNames(d->getUser()->getCID())),
-			d->getSize(), d->getTotal(), (GET_TICK() - d->getStart()), GET_TIME(), d->getTTH().toBase32());
+			d->getSize(), d->getPos(), (GET_TICK() - d->getStart()), GET_TIME(), d->getTTH().toBase32());
 		{
 			Lock l(cs);
 			downloads.push_back(item);
@@ -105,7 +104,7 @@ void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw
 		FinishedItemPtr item = new FinishedItem(
 			u->getPath(), u->getUser(),
 			Util::toString(ClientManager::getInstance()->getHubNames(u->getUser()->getCID())),
-			u->getSize(), u->getTotal(), (GET_TICK() - u->getStart()), GET_TIME());
+			u->getSize(), u->getPos(), (GET_TICK() - u->getStart()), GET_TIME());
 		{
 			Lock l(cs);
 			uploads.push_back(item);

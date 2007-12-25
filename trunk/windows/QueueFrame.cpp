@@ -1373,28 +1373,27 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
 			CBarShader statusBar(rc.Height(), rc.Width(), SETTING(PROGRESS_BACK_COLOR), qii->getSize());
 
-			FileChunksInfo::Ptr fileChunksInfo = qii->getChunksInfo();			
-			vector<int64_t> v;
-
-			// running chunks
-			fileChunksInfo->getAllChunks(v, 1);
-			for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-				statusBar.FillRange(*i, *(i+1), SETTING(COLOR_RUNNING));
-			}
-			v.clear();
+			// TODO: multisource
+			//FileChunksInfo::Ptr fileChunksInfo = qii->getChunksInfo();			
+			//// running chunks
+			//fileChunksInfo->getAllChunks(v, 1);
+			//for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
+			//	statusBar.FillRange(*i, *(i+1), SETTING(COLOR_RUNNING));
+			//}
+			//v.clear();
 
 			// downloaded chunks
-			fileChunksInfo->getAllChunks(v, 0);
+			vector<int64_t> v = qii->getDownloadedChunks();
 			for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 				statusBar.FillRange(*i, *(i+1), SETTING(COLOR_DOWNLOADED));
 			}
 			v.clear();
 
-			// verified chunks
-			fileChunksInfo->getAllChunks(v, 2);
-			for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-				statusBar.FillRange(*i, *(i+1), SETTING(COLOR_VERIFIED));
-			}
+			//// verified chunks
+			//fileChunksInfo->getAllChunks(v, 2);
+			//for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
+			//	statusBar.FillRange(*i, *(i+1), SETTING(COLOR_VERIFIED));
+			//}
 
 			CDC cdc;
 			cdc.CreateCompatibleDC(cd->nmcd.hdc);
