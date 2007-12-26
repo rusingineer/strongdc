@@ -227,7 +227,7 @@ public:
 	DownloadList& getDownloads() { return downloads; }
 	
 	/** Next segment that is not done and not being downloaded, zero-sized segment returned if there is none is found */
-	Segment getNextSegment(int64_t blockSize) const;
+	Segment getNextSegment(int64_t blockSize, const PartialSource::Ptr partialSource) const;
 	
 	void addSegment(const Segment& segment);
 	

@@ -263,7 +263,9 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 					int64_t blockSize = HashManager::getInstance()->getBlockSize(qi->getTTH());
 					if(blockSize == 0)
 						blockSize = qi->getSize();
-					if(qi->getNextSegment(blockSize).getSize() == 0) {
+
+					QueueItem::SourceConstIter source = qi->getSource(aUser);
+					if(qi->getNextSegment(blockSize, source->getPartialSource()).getSize() == 0) {
 						dcdebug("No segment for %s in %s, block " I64_FMT "\n", aUser->getCID().toBase32().c_str(), qi->getTarget().c_str(), blockSize);
 						continue;
 					}
@@ -826,6 +828,7 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 
 	QueueItem* q = userQueue.getNext(aUser);
 
+again:
 	if(!q) {
 		dcdebug("none\n");
 		return 0;
@@ -839,7 +842,25 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 	//	goto again;
 	//}
 	
-	Download* d = new Download(aSource, *q, q->getSource(aUser)->isSet(QueueItem::Source::FLAG_PARTIAL));
+	QueueItem::SourceConstIter source = q->getSource(aUser);
+
+	if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
+		int64_t blockSize = HashManager::getInstance()->getBlockSize(q->getTTH());
+		if(blockSize == 0)
+			blockSize = q->getSize();
+		
+		if(q->getNextSegment(blockSize, source->getPartialSource()).getSize() == 0) {
+			// no other partial chunk from this user, remove him from queue
+			userQueue.remove(q, aUser);
+			q->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
+			aMessage = STRING(NO_NEEDED_PART);
+
+			q = userQueue.getNext(aUser);
+			goto again;
+		}
+	}
+
+	Download* d = new Download(aSource, *q, source);
 	
 	userQueue.addDownload(q, d);	
 
