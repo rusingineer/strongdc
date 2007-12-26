@@ -380,17 +380,13 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 		}
 
 		dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getPath().c_str(), d->getSize(), d->getPos());
-
-		if(BOOLSETTING(LOG_DOWNLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || d->getType() == Transfer::TYPE_FILE)) {
-			logDownload(aSource, d);
-		}
 	}
 
 	removeDownload(d);
 	fire(DownloadManagerListener::Complete(), d, d->getType() == Transfer::TYPE_TREE);
 
 	aSource->setDownload(NULL);
-	QueueManager::getInstance()->putDownload(d, true);	
+	QueueManager::getInstance()->putDownload(d, true, false);	
 	checkDownloads(aSource);
 }
 
@@ -402,12 +398,6 @@ int64_t DownloadManager::getRunningAverage() {
 		avg += static_cast<int64_t>(d->getAverageSpeed());
 	}
 	return avg;
-}
-
-void DownloadManager::logDownload(UserConnection* aSource, Download* d) {
-	StringMap params;
-	d->getParams(*aSource, params);
-	LOG(LogManager::DOWNLOAD, params);
 }
 
 void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSource, string param) throw() { 

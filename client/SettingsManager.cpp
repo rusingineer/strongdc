@@ -118,7 +118,7 @@ const string SettingsManager::settingTags[] =
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
-	"ColorRunning", "ColorDownloaded", "ColorVerified", "AutoRefreshTime", "UseTLS", "OpenWaitingUsers",
+	"ColorRunning", "ColorDownloaded", "AutoRefreshTime", "UseTLS", "OpenWaitingUsers",
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
@@ -529,8 +529,7 @@ SettingsManager::SettingsManager()
 	setDefault(PROGRESS_COMPRESS_COLOR, RGB(222, 160, 0));
 	setDefault(PROGRESS_SEGMENT_COLOR, RGB(49, 106, 197));
 	setDefault(COLOR_RUNNING, RGB(0, 150, 0));
-	setDefault(COLOR_DOWNLOADED, RGB(255, 255, 100));
-	setDefault(COLOR_VERIFIED, RGB(222, 160, 0));
+	setDefault(COLOR_DOWNLOADED, RGB(222, 160, 0));
 	
 #ifdef _WIN32
 	OSVERSIONINFO ver;

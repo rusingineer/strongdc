@@ -451,7 +451,6 @@
 		<String Name="ProgressDownloaded">Queue progressbar - downloaded chunks</String>
 		<String Name="ProgressRunning">Queue progressbar - running chunks</String>
 		<String Name="ProgressSegment">Transfer progressbar - actual segment</String>
-		<String Name="ProgressVerified">Queue progressbar - verified chunks</String>
 		<String Name="ProgressbarOdcStyle">Use oDC style of progressbar in Transfers</String>
 		<String Name="Properties">&amp;Properties</String>
 		<String Name="PublicHubs">Public Hubs</String>

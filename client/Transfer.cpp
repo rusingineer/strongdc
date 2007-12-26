@@ -24,6 +24,7 @@
 #include "UserConnection.h"
 #include "ResourceManager.h"
 #include "ClientManager.h"
+#include "Upload.h"
 
 const string Transfer::names[] = {
 	"file", "file", "list", "tthl", "file"
@@ -33,7 +34,7 @@ const string Transfer::USER_LIST_NAME = "files.xml";
 const string Transfer::USER_LIST_NAME_BZ = "files.xml.bz2";
 
 Transfer::Transfer(UserConnection& conn, const string& path_, const TTHValue& tth_) : segment(0, -1), type(TYPE_FILE), start(0),
-	path(path_), tth(tth_), actual(0), pos(0), fileSize(-1), userConnection(conn),
+	path(path_), tth(tth_), actual(0), pos(0), userConnection(conn),
 	lastTick(GET_TICK()) { }
 
 void Transfer::tick() {
@@ -53,6 +54,11 @@ double Transfer::getAverageSpeed() const {
 	int64_t bytes = samples.back().second - samples.front().second;
 
 	return ticks > 0 ? (static_cast<double>(bytes) / ticks) * 1000.0 : 0;
+}
+
+int64_t Transfer::getSecondsLeft(bool wholeFile) {
+	int64_t avg = static_cast<int64_t>(getAverageSpeed());
+	return (avg > 0) ? ((wholeFile ? ((Upload*)this)->getFileSize() : getBytesLeft()) / avg) : 0;
 }
 
 void Transfer::getParams(const UserConnection& aSource, StringMap& params) const {

@@ -1387,13 +1387,6 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
 				statusBar.FillRange(*i, *(i+1), SETTING(COLOR_DOWNLOADED));
 			}
-			v.clear();
-
-			//// verified chunks
-			//fileChunksInfo->getAllChunks(v, 2);
-			//for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-			//	statusBar.FillRange(*i, *(i+1), SETTING(COLOR_VERIFIED));
-			//}
 
 			CDC cdc;
 			cdc.CreateCompatibleDC(cd->nmcd.hdc);

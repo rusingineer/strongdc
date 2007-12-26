@@ -21,6 +21,7 @@ public:
 	void getParams(const UserConnection& aSource, StringMap& params) const;
 
 	GETSET(InputStream*, stream, Stream);
+	GETSET(int64_t, fileSize, FileSize);
 };
 
 #endif /*UPLOAD_H_*/

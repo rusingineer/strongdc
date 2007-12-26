@@ -7,6 +7,10 @@
 TODO:	reimplement all features of old-styled multisource code
 	do something with CID
 
+** svn346
+	fixed finished downloads logging
+	fixed downloading when segment speed limit was set
+
 ** svn345
 	partial file sharing should work again
 
