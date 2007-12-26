@@ -92,7 +92,7 @@ int64_t QueueItem::getAverageSpeed() const {
 	return totalSpeed;
 }
 
-Segment QueueItem::getNextSegment(int64_t  blockSize) const {
+Segment QueueItem::getNextSegment(int64_t  blockSize, const PartialSource::Ptr partialSource) const {
 	if(downloads.size() >= maxSegments ||
 		(BOOLSETTING(DONT_BEGIN_SEGMENT) && (size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED) * 1024) > getAverageSpeed()))
 	{
@@ -103,6 +103,21 @@ Segment QueueItem::getNextSegment(int64_t  blockSize) const {
 	if(getSize() == -1 || blockSize == 0) {
 		return Segment(0, -1);
 	}
+
+	/* added for PFS */
+	vector<int64_t> posArray;
+	vector<Segment> neededParts;
+
+	if(partialSource) {
+		posArray.reserve(partialSource->getPartialInfo().size());
+
+		// Convert block index to file position
+		for(PartsInfo::const_iterator i = partialSource->getPartialInfo().begin(); i != partialSource->getPartialInfo().end(); i++)
+			posArray.push_back(min(getSize(), (int64_t)(*i) * blockSize));
+	}
+
+	/***************************/
+
 	int64_t start = 0;
 	int64_t maxSize = std::max(blockSize, static_cast<int64_t>(1024 * 1024));
 	maxSize = ((maxSize + blockSize - 1) / blockSize) * blockSize; // Make sure we're on an even block boundary
@@ -130,7 +145,16 @@ Segment QueueItem::getNextSegment(int64_t  blockSize) const {
 		}
 		
 		if(!overlaps) {
-			return block;
+			if(partialSource) {
+				// store all chunks we could need
+				for(vector<int64_t>::const_iterator j = posArray.begin(); j < posArray.end(); j += 2){
+					if((*j) <= start && *(j+1) >= end) {					
+						neededParts.push_back(block);
+					}
+				}
+			} else {
+				return block;
+			}
 		}
 		
 		if(curSize > blockSize) {
@@ -139,6 +163,12 @@ Segment QueueItem::getNextSegment(int64_t  blockSize) const {
 			start = end;
 			curSize = maxSize;
 		}
+	}
+
+	if(!neededParts.empty()) {
+		// select random chunk for PFS
+		dcdebug("Found partial chunks: %d\n", neededParts.size());
+		return neededParts[Util::rand(0, neededParts.size())];
 	}
 	
 	return Segment(0, 0);

@@ -1,3 +1,15 @@
+*** WARNING ***
+  This version breaks information about downloaded parts of your queue.
+  It's recommended to finish all started downloads before update.
+  Queue won't be deleted, only everything will start from the beginning.
+*** WARNING ***
+
+TODO:	reimplement all features of old-styled multisource code
+	do something with CID
+
+** svn345
+	partial file sharing should work again
+
 ** svn344
 	removed FileChunksInfo
 	partial file sharing broken - i'll fix it later

@@ -6,6 +6,7 @@
 #include "MerkleTree.h"
 #include "Flags.h"
 #include "Streams.h"
+#include "QueueItem.h"
 
 /**
  * Comes as an argument in the DownloadManagerListener functions.
@@ -28,7 +29,7 @@ public:
 	};
 
 	Download(UserConnection& conn, const string& pfsDir) throw();
-	Download(UserConnection& conn, QueueItem& qi, bool partial) throw();
+	Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIter& source) throw();
 
 	void getParams(const UserConnection& aSource, StringMap& params);
 
