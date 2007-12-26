@@ -450,7 +450,6 @@ enum Strings { // @DontAdd
 	PROGRESS_DOWNLOADED, // "Queue progressbar - downloaded chunks"
 	PROGRESS_RUNNING, // "Queue progressbar - running chunks"
 	PROGRESS_SEGMENT, // "Transfer progressbar - actual segment"
-	PROGRESS_VERIFIED, // "Queue progressbar - verified chunks"
 	PROGRESSBAR_ODC_STYLE, // "Use oDC style of progressbar in Transfers"
 	PROPERTIES, // "&Properties"
 	PUBLIC_HUBS, // "Public Hubs"

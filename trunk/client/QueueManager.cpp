@@ -49,44 +49,6 @@
 #include <fnmatch.h>
 #endif
 
-namespace {
-	/**
-	* Convert space seperated number string to vector
-	*
-	* Created by RevConnect
-	*/
-	template <class T>
-	void toIntList(const string& freeBlocks, vector<T>& v)
-	{
-		if (freeBlocks.empty())
-			return;
-
-		StringTokenizer<string> t(freeBlocks, ' ');
-		StringList& sl = t.getTokens();
-
-		v.reserve(sl.size());
-
-		for(StringList::const_iterator i = sl.begin(); i != sl.end(); ++i) {
-			if(!i->empty()) {
-				int64_t offset = Util::toInt64(*i);
-				if(!v.empty() && offset < v.back()){
-					dcassert(0);
-					v.clear();
-					return;
-				}else{
-					v.push_back((T)offset);
-				}
-			}else{
-				dcassert(0);
-				v.clear();
-				return;
-			}
-		}
-
-		dcassert(!v.empty() && (v.size() % 2 == 0));
-	}
-}
-
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
 						  Flags::MaskType aFlags, QueueItem::Priority p, const string& aTempTarget, 
 						  time_t aAdded, const TTHValue& root) throw(QueueException, FileException)
@@ -108,7 +70,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 
 	QueueItem* qi = new QueueItem(aTarget, aSize, p, aFlags, aAdded, root);
 
-	if(!qi->isSet(QueueItem::FLAG_USER_LIST)) {
+	if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
 		qi->setMaxSegments(getMaxSegments(qi->getSize()));
 		
 		if(!aTempTarget.empty()) {
@@ -798,11 +760,11 @@ uint8_t QueueManager::FileQueue::getMaxSegments(int64_t filesize) const {
 		}
 	}
 
-#ifdef _DEBUG
-	return 200;
-#else
+//#ifdef _DEBUG
+//	return 200;
+//#else
 	return MaxSegments;
-#endif
+//#endif
 }
 
 void QueueManager::getTargets(const TTHValue& tth, StringList& sl) {
@@ -910,11 +872,13 @@ private:
 
 void QueueManager::setFile(Download* d) {
 	if(d->getType() == Transfer::TYPE_FILE) {
-		Lock l(cs);
+		{
+			Lock l(cs);
 
-		QueueItem* qi = fileQueue.find(d->getPath());
-		if(!qi) {
-			throw QueueException(STRING(TARGET_REMOVED));
+			QueueItem* qi = fileQueue.find(d->getPath());
+			if(!qi) {
+				throw QueueException(STRING(TARGET_REMOVED));
+			}
 		}
 		
 		string target = d->getDownloadTarget();
@@ -923,6 +887,18 @@ void QueueManager::setFile(Download* d) {
 		f->setPos(d->getSegment().getStart());
 		d->setFile(f);
 	} else if(d->getType() == Transfer::TYPE_FULL_LIST) {
+		{
+			Lock l(cs);
+
+			QueueItem* qi = fileQueue.find(d->getPath());
+			if(!qi) {
+				throw QueueException(STRING(TARGET_REMOVED));
+			}
+		
+			// set filelist's size
+			qi->setSize(d->getSize());
+		}
+
 		string target = d->getDownloadTarget();
 		File::ensureDirectory(target);
 
@@ -1047,7 +1023,13 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 							if( !aDownload->getTempTarget().empty() && (Util::stricmp(aDownload->getPath().c_str(), aDownload->getTempTarget().c_str()) != 0) ) {
 								moveFile(aDownload->getTempTarget(), aDownload->getPath());
 							}
-	
+
+							if(BOOLSETTING(LOG_DOWNLOADS) && (BOOLSETTING(LOG_FILELIST_TRANSFERS) || aDownload->getType() == Transfer::TYPE_FILE)) {
+								StringMap params;
+								aDownload->getParams(aDownload->getUserConnection(), params);
+								LOG(LogManager::DOWNLOAD, params);
+							}
+
 							fire(QueueManagerListener::Finished(), q, dir, static_cast<int64_t>(aDownload->getAverageSpeed()));
 							fire(QueueManagerListener::Removed(), q);
 	

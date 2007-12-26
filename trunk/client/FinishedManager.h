@@ -19,7 +19,7 @@
 #ifndef DCPLUSPLUS_CLIENT_FINISHED_MANAGER_H
 #define DCPLUSPLUS_CLIENT_FINISHED_MANAGER_H
 
-#include "DownloadManagerListener.h"
+#include "QueueManagerListener.h"
 #include "UploadManagerListener.h"
 
 #include "Speaker.h"
@@ -62,7 +62,7 @@ public:
 			case COLUMN_FILE: return Text::toT(Util::getFileName(getTarget()));
 			case COLUMN_DONE: return Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", getTime()));
 			case COLUMN_PATH: return Text::toT(Util::getFilePath(getTarget()));
-			case COLUMN_NICK: return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(getUser()->getCID())));
+			case COLUMN_NICK: return getUser() ? Text::toT(Util::toString(ClientManager::getInstance()->getNicks(getUser()->getCID()))) : Util::emptyStringT;
 			case COLUMN_HUB: return Text::toT(getHub());
 			case COLUMN_SIZE: return Util::formatBytesW(getSize());
 			case COLUMN_SPEED: return Util::formatBytesW(getAvgSpeed()) + _T("/s");
@@ -95,7 +95,7 @@ private:
 };
 
 class FinishedManager : public Singleton<FinishedManager>,
-	public Speaker<FinishedManagerListener>, private DownloadManagerListener, private UploadManagerListener
+	public Speaker<FinishedManagerListener>, private QueueManagerListener, private UploadManagerListener
 {
 public:
 	const FinishedItemList& lockList(bool upload = false) { cs.enter(); return upload ? uploads : downloads; }
@@ -108,14 +108,13 @@ public:
 	string getTarget(const string& aTTH);
 	bool handlePartialRequest(const TTHValue& tth, vector<uint16_t>& outPartialInfo);
 
-
 private:
 	friend class Singleton<FinishedManager>;
 	
 	FinishedManager();
 	~FinishedManager() throw();
 
-	void on(DownloadManagerListener::Complete, const Download* d, bool) throw();
+	void on(QueueManagerListener::Finished, const QueueItem*, const string&, int64_t) throw();
 	void on(UploadManagerListener::Complete, const Upload*) throw();
 
 	CriticalSection cs;

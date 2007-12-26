@@ -63,10 +63,7 @@ public:
 
 	double getAverageSpeed() const;
 
-	int64_t getSecondsLeft(bool wholeFile = false) {
-		int64_t avg = static_cast<int64_t>(getAverageSpeed());
-		return (avg > 0) ? ((wholeFile ? getFileSize() : getBytesLeft()) / avg) : 0;
-	}
+	int64_t getSecondsLeft(bool wholeFile = false);
 
 	int64_t getBytesLeft() const {
 		return getSize() - getPos();
@@ -87,7 +84,6 @@ public:
 	GETSET(Type, type, Type);
 	GETSET(uint64_t, start, Start);
 	GETSET(uint64_t, lastTick, LastTick);
-	GETSET(int64_t, fileSize, FileSize);
 private:
 	
 	typedef std::pair<uint64_t, int64_t> Sample;

@@ -94,7 +94,7 @@ int64_t QueueItem::getAverageSpeed() const {
 
 Segment QueueItem::getNextSegment(int64_t  blockSize, const PartialSource::Ptr partialSource) const {
 	if(downloads.size() >= maxSegments ||
-		(BOOLSETTING(DONT_BEGIN_SEGMENT) && (size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED) * 1024) > getAverageSpeed()))
+		(BOOLSETTING(DONT_BEGIN_SEGMENT) && (size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED) * 1024) < getAverageSpeed()))
 	{
 		// no other segments if we have reached the speed or segment limit
 		return Segment(0, 0);

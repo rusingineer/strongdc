@@ -25,19 +25,19 @@
 #include "FinishedManagerListener.h"
 #include "Download.h"
 #include "Upload.h"
-#include "DownloadManager.h"
+#include "QueueManager.h"
 #include "UploadManager.h"
 
 #include "LogManager.h"
 #include "ResourceManager.h"
 
 FinishedManager::FinishedManager() { 
-	DownloadManager::getInstance()->addListener(this);
+	QueueManager::getInstance()->addListener(this);
 	UploadManager::getInstance()->addListener(this);
 }
 	
 FinishedManager::~FinishedManager() throw() {
-	DownloadManager::getInstance()->removeListener(this);
+	QueueManager::getInstance()->removeListener(this);
 	UploadManager::getInstance()->removeListener(this);
 
 	Lock l(cs);
@@ -67,17 +67,22 @@ void FinishedManager::removeAll(bool upload /* = false */) {
 	}
 }
 
-void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, bool) throw()
+void FinishedManager::on(QueueManagerListener::Finished, const QueueItem* qi, const string&, int64_t speed) throw()
 {
-	if(d->getType() == Transfer::TYPE_FILE && !SETTING(FINISHFILE).empty() && !BOOLSETTING(SOUNDS_DISABLED)) {
+	bool isFile = !qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_TESTSUR);
+
+	if(isFile && !SETTING(FINISHFILE).empty() && !BOOLSETTING(SOUNDS_DISABLED)) {
 		PlaySound(Text::toT(SETTING(FINISHFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 	}
 		
-	if(d->getType() == Transfer::TYPE_FILE || (d->getType() == Transfer::TYPE_FULL_LIST && BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
+	if(isFile || (qi->isSet(QueueItem::FLAG_USER_LIST) && BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
+		uint64_t time = GET_TICK() - qi->getFileBegin();
+		UserPtr user = qi->getSources().size() == 1 ? qi->getSources()[0].getUser() : UserPtr();
+		
 		FinishedItemPtr item = new FinishedItem(
-			d->getPath(), d->getUser(),
-			Util::toString(ClientManager::getInstance()->getHubNames(d->getUser()->getCID())),
-			d->getSize(), d->getPos(), (GET_TICK() - d->getStart()), GET_TIME(), d->getTTH().toBase32());
+			qi->getTarget(), user,
+			user ? Util::toString(ClientManager::getInstance()->getHubNames(user->getCID())) : Util::emptyString,
+			qi->getSize(), (int64_t)(((double)time / 1000) * speed), time, GET_TIME(), qi->getTTH().toBase32());
 		{
 			Lock l(cs);
 			downloads.push_back(item);
@@ -87,8 +92,8 @@ void FinishedManager::on(DownloadManagerListener::Complete, const Download* d, b
 	
 		size_t BUF_SIZE = STRING(FINISHED_DOWNLOAD).size() + MAX_PATH + 128;
 		char* buf = new char[BUF_SIZE];
-		snprintf(buf, BUF_SIZE, CSTRING(FINISHED_DOWNLOAD), Util::getFileName(d->getPath()).c_str(), 
-			Util::toString(ClientManager::getInstance()->getNicks(d->getUser()->getCID())).c_str());
+		snprintf(buf, BUF_SIZE, CSTRING(FINISHED_DOWNLOAD), Util::getFileName(qi->getTarget()).c_str(), 
+			user ? Util::toString(ClientManager::getInstance()->getNicks(user->getCID())).c_str() : Util::emptyString.c_str());
 
 		LogManager::getInstance()->message(buf);
 		delete[] buf;

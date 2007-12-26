@@ -37,9 +37,6 @@ Download::Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIt
 {
 	conn.setDownload(this);
 	
-	setSize(qi.getSize());
-	setFileSize(qi.getSize());
-
 	if(qi.isSet(QueueItem::FLAG_USER_LIST)) {
 		setType(TYPE_FULL_LIST);
 	} else if(qi.isSet(QueueItem::FLAG_TESTSUR)) {
@@ -53,7 +50,7 @@ Download::Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIt
 	if(qi.isSet(QueueItem::FLAG_TESTSUR))
 		setFlag(Download::FLAG_TESTSUR);
 
-	if(qi.getSize() != -1) {
+	if(getType() == TYPE_FILE && qi.getSize() != -1) {
 		if(HashManager::getInstance()->getTree(getTTH(), getTigerTree())) {
 			setTreeValid(true);
 			setSegment(qi.getNextSegment(getTigerTree().getBlockSize(), source->getPartialSource()));

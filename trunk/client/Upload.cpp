@@ -24,7 +24,7 @@
 #include "UserConnection.h"
 #include "Streams.h"
 
-Upload::Upload(UserConnection& conn, const string& path, const TTHValue& tth) : Transfer(conn, path, tth), stream(0) { 
+Upload::Upload(UserConnection& conn, const string& path, const TTHValue& tth) : Transfer(conn, path, tth), stream(0), fileSize(-1) { 
 	conn.setUpload(this);
 }
 

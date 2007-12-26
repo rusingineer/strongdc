@@ -79,7 +79,6 @@ private:
 	void fileNotAvailable(UserConnection* aSource);
 	void noSlots(UserConnection* aSource, string param = Util::emptyString);
 	
-	void logDownload(UserConnection* aSource, Download* d);
 	int64_t getResumePos(const string& file, const TigerTree& tt, int64_t startPos);
 
 	void failDownload(UserConnection* aSource, const string& reason);
