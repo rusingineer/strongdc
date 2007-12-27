@@ -7,6 +7,9 @@
 TODO:	reimplement all features of old-styled multisource code
 	do something with CID
 
+** svn347
+	reimplemented settings for maximum simultaneous files
+
 ** svn346
 	fixed finished downloads logging
 	fixed downloading when segment speed limit was set
