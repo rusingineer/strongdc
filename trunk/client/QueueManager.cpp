@@ -213,8 +213,16 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 			dcassert(!i->second.empty());
 			for(QueueItem::Iter j = i->second.begin(); j != i->second.end(); ++j) {
 				QueueItem* qi = *j;
+
 				if(qi->isWaiting()) {
-					return qi;
+					// check maximum simultaneous files setting
+					if(SETTING(FILE_SLOTS) == 0 || qi->isSet(QueueItem::FLAG_TESTSUR) || qi->isSet(QueueItem::FLAG_USER_LIST) ||
+						QueueManager::getInstance()->getRunningFiles().size() < (size_t)SETTING(FILE_SLOTS)) 
+					{
+						return qi;
+					} else {
+						continue;
+					}
 				}
 				
 				// No segmented downloading when getting the tree
@@ -760,11 +768,7 @@ uint8_t QueueManager::FileQueue::getMaxSegments(int64_t filesize) const {
 		}
 	}
 
-//#ifdef _DEBUG
-//	return 200;
-//#else
 	return MaxSegments;
-//#endif
 }
 
 void QueueManager::getTargets(const TTHValue& tth, StringList& sl) {
@@ -796,14 +800,6 @@ again:
 		return 0;
 	}
 
-	// TODO
-	//if((SETTING(FILE_SLOTS) != 0) && (q->isWaiting()) && !q->isSet(QueueItem::FLAG_TESTSUR) &&
-	//	!q->isSet(QueueItem::FLAG_USER_LIST) && (getRunningFiles().size() >= (size_t)SETTING(FILE_SLOTS))) {
-	//	aMessage = STRING(ALL_FILE_SLOTS_TAKEN);
-	//	q = userQueue.getNext(aUser, QueueItem::LOWEST, q);
-	//	goto again;
-	//}
-	
 	QueueItem::SourceConstIter source = q->getSource(aUser);
 
 	if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {

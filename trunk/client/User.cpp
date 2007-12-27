@@ -90,10 +90,11 @@ const string Identity::get(const char* name) const {
 
 void Identity::set(const char* name, const string& val) {
 	Lock l(cs);
-	if(val.empty())
+	if(val.empty()) {
 		info.erase(*(short*)name);
-	else
+	} else {
 		info[*(short*)name] = val;
+	}
 }
 
 bool Identity::supports(const string& name) const {
