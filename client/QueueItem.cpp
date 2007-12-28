@@ -176,9 +176,17 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, const PartialSource::Ptr p
 
 int64_t QueueItem::getDownloadedBytes() const {
 	int64_t total = 0;
+
+	// count done segments
 	for(SegmentSet::const_iterator i = done.begin(); i != done.end(); ++i) {
 		total += i->getSize();
 	}
+
+	// count running segments
+	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
+		total += (*i)->getPos();
+	}
+
 	return total;
 }
 

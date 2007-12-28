@@ -170,7 +170,10 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 			return Util::toStringW(qi ? qi->getDownloads().size() : 0) + _T("/") + Util::toStringW(qi ? qi->getMaxSegments() : 0);
 		}
 		case COLUMN_SIZE: return (getSize() == -1) ? TSTRING(UNKNOWN) : Util::formatBytesW(getSize());
-		case COLUMN_DOWNLOADED: return (getSize() > 0) ? Util::formatBytesW(getDownloadedBytes()) + _T(" (") + Util::toStringW((double)getDownloadedBytes()*100.0/(double)getSize()) + _T("%)") : Util::emptyStringT;
+		case COLUMN_DOWNLOADED: {
+			int64_t downloadedBytes = getDownloadedBytes();
+			return (getSize() > 0) ? Util::formatBytesW(downloadedBytes) + _T(" (") + Util::toStringW((double)downloadedBytes*100.0/(double)getSize()) + _T("%)") : Util::emptyStringT;
+		}
 		case COLUMN_PRIORITY: {
 			tstring priority;
 			switch(getPriority()) {
