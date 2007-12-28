@@ -7,6 +7,11 @@
 TODO:	do something with CID
 	select segment size by last user speed
 
+** svn349
+	maximum search interval can be set up to 9999 seconds
+	fixed done segments loading from Queue.xml
+	finished uploads window display whole file size
+
 ** svn348
 	reimplemented exact displaying of downloaded size
 	displaying "User offline" instead of CID
