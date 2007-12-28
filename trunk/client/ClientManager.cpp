@@ -103,7 +103,8 @@ StringList ClientManager::getNicks(const CID& cid) const {
 	}
 	if(nicks.empty()) {
 		// Offline perhaps?
-		nicks.insert('{' + cid.toBase32() + '}');
+		nicks.insert(STRING(USER_OFFLINE));
+		//nicks.insert('{' + cid.toBase32() + '}');
 	}
 	return StringList(nicks.begin(), nicks.end());
 }

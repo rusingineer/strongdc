@@ -21,9 +21,9 @@
 #define VERSIONFLOAT 2.060
 
 #define DCVERSIONSTRING "0.704"
-#define DCVERSIONFLOAT 0.7041
+#define DCVERSIONFLOAT 0.7042
 
-#define SVNVERSION "svn347"
+#define SVNVERSION "svn348"
 
 /* Update the .rc file as well... */
 

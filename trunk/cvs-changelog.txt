@@ -4,8 +4,12 @@
   Queue won't be deleted, only everything will start from the beginning.
 *** WARNING ***
 
-TODO:	reimplement all features of old-styled multisource code
-	do something with CID
+TODO:	do something with CID
+	select segment size by last user speed
+
+** svn348
+	reimplemented exact displaying of downloaded size
+	displaying "User offline" instead of CID
 
 ** svn347
 	reimplemented settings for maximum simultaneous files
