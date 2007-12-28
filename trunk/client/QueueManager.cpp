@@ -1481,7 +1481,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			int64_t start = Util::toInt64(getAttrib(attribs, sStart, 0));
 			int64_t size = Util::toInt64(getAttrib(attribs, sSize, 1));
 			
-			if(size > 0 && start >= 0 && (start + size) < cur->getSize()) {
+			if(size > 0 && start >= 0 && (start + size) <= cur->getSize()) {
 				cur->addSegment(Segment(start, size));
 			}
 		} else if(cur && name == sSource) {

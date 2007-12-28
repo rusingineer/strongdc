@@ -119,7 +119,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, const PartialSource::Ptr p
 	/***************************/
 
 	int64_t start = 0;
-	int64_t maxSize = std::max(blockSize, static_cast<int64_t>(1024 * 1024));
+	int64_t maxSize = std::max(blockSize, static_cast<int64_t>(4 * 1024 * 1024));
 	maxSize = ((maxSize + blockSize - 1) / blockSize) * blockSize; // Make sure we're on an even block boundary
 	int64_t curSize = maxSize;
 	

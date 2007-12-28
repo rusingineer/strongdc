@@ -109,7 +109,7 @@ void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw
 		FinishedItemPtr item = new FinishedItem(
 			u->getPath(), u->getUser(),
 			Util::toString(ClientManager::getInstance()->getHubNames(u->getUser()->getCID())),
-			u->getSize(), u->getPos(), (GET_TICK() - u->getStart()), GET_TIME());
+			u->getFileSize(), u->getPos(), (GET_TICK() - u->getStart()), GET_TIME());
 		{
 			Lock l(cs);
 			uploads.push_back(item);
