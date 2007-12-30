@@ -1,3 +1,19 @@
+	-- StrongDC++ --
+
+*** VAROVÁNÍ ***
+  Tato verze poruší informace o stažených èástech ve vaší frontì.
+  Je doporuèeno dokonèit všechna zapoèatá stahování pøed aktualizací.
+  Fronta nebude smazána, pouze vše bude stahováno od zaèátku.
+*** VAROVÁNÍ ***
+
+* pøepsán kód segmentového stahování
+* místo CID se zobrazuje "Uživatel nepøipojen"
+* maximální interval pro vyhledávání lze nastavit až na 9999 sekund
+* v oknì Dokonèená odesílání se zobrazuje celá velikost souboru
+* v menu "Stáhnout do - Pøidat jako zdroj" se zobrazuje pouze název souboru
+* velikost segmentu je zvolena podle poslední rychlosti stahování od uživatele
+
+
 	-- StrongDC++ 2.06 --
 
 * opravena spousta pádù

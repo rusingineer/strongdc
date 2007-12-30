@@ -403,7 +403,7 @@ enum Strings { // @DontAdd
 	NO_USERS, // "No users"
 	NO_USERS_TO_DOWNLOAD_FROM, // "No users to download from"
 	NORMAL, // "Normal"
-	NOT_LISTENING, // "Not listening for connections - please restart DC++"
+	NOT_LISTENING, // "Not listening for connections - please restart StrongDC++"
 	NOTEPAD, // "Notepad"
 	NUMBER_OF_SEGMENTS, // "segment(s)"
 	OFFLINE, // "Offline"

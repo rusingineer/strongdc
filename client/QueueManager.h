@@ -260,11 +260,20 @@ private:
 		void setPriority(QueueItem* qi, QueueItem::Priority p);
 		
 		const QueueItem::UserMap& getRunning() const { return running; }
+
+		string getLastError() { 
+			string tmp = lastError;
+			lastError = Util::emptyString;
+			return tmp;
+		}
+
 	private:
 		/** QueueItems by priority and user (this is where the download order is determined) */
 		QueueItem::UserListMap userQueue[QueueItem::LAST];
 		/** Currently running downloads, a QueueItem is always either here or in the userQueue */
 		QueueItem::UserMap running;
+		/** Last error message to sent to TransferView */
+		string lastError;
 	};
 
 	friend class QueueLoader;

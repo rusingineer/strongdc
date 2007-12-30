@@ -23,7 +23,6 @@
 
 #include "ResourceManager.h"
 #include "QueueManager.h"
-#include "HashManager.h"
 #include "Download.h"
 #include "LogManager.h"
 #include "User.h"
@@ -32,7 +31,6 @@
 #include "MerkleCheckOutputStream.h"
 #include "UserConnection.h"
 #include "ZUtils.h"
-#include "UploadManager.h"
 
 #include <limits>
 
@@ -73,7 +71,7 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 
 		if(d->getPos() > 0) {
 			tickList.push_back(d);
-			(*i)->tick();
+			d->tick();
 		}
 
 		if (d->getType() == Transfer::TYPE_FILE) {
@@ -197,11 +195,13 @@ void DownloadManager::checkDownloads(UserConnection* aConn) {
 		return;
 	}
 
-	string aMessage = Util::emptyString;
-	Download* d = QueueManager::getInstance()->getDownload(*aConn, aMessage);
+	string errorMessage = Util::emptyString;
+	Download* d = QueueManager::getInstance()->getDownload(*aConn, errorMessage);
 
 	if(!d) {
-		if(!aMessage.empty()) fire(DownloadManagerListener::Status(), aConn, aMessage);
+		if(!errorMessage.empty()) {
+			fire(DownloadManagerListener::Status(), aConn, errorMessage);
+		}
 		aConn->setLastActivity(0);
 
 		Lock l(cs);
@@ -470,12 +470,12 @@ void DownloadManager::removeDownload(Download* d) {
 	}
 }
 
-void DownloadManager::abortDownload(const string& aTarget, const Download* except) {
+void DownloadManager::abortDownload(const string& aTarget) {
 	Lock l(cs);
 	
 	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
-		if(d != except && d->getPath() == aTarget) {
+		if(d->getPath() == aTarget) {
 			dcdebug("Trying to close connection for download 0x%X\n", d);
 			d->getUserConnection().disconnect(true);
 		}

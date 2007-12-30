@@ -26,6 +26,7 @@
 #include "DirectoryListing.h"
 #include "Download.h"
 #include "DownloadManager.h"
+#include "HashManager.h"
 #include "LogManager.h"
 #include "ResourceManager.h"
 #include "SearchManager.h"
@@ -130,11 +131,12 @@ void QueueManager::FileQueue::find(QueueItem::List& ql, const TTHValue& tth) {
 
 static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIter end, deque<string>& recent) {
 	QueueItem* cand = NULL;
+
 	for(QueueItem::StringIter i = start; i != end; ++i) {
 		QueueItem* q = i->second;
 
 		// We prefer to search for things that are not running...
-		if((cand != NULL) && q->isRunning()) 
+		if((cand != NULL) && q->getNextSegment(0, 0, NULL).getSize() == 0) 
 			continue;
 		// No user lists
 		if(q->isSet(QueueItem::FLAG_USER_LIST) || q->isSet(QueueItem::FLAG_TESTSUR) || q->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
@@ -151,13 +153,13 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 
 		cand = q;
 
-		if(cand->isWaiting())
+		if(cand->getNextSegment(0, 0, NULL).getSize() != 0)
 			break;
 	}
 
 	//check this again, if the first item we pick is running and there are no
 	//other suitable items this will be true
-	if((cand != NULL) && (cand->isRunning())) {
+	if((cand != NULL) && (cand->getNextSegment(0, 0, NULL).getSize() == 0)) {
 		cand = NULL;
 	}
 
@@ -174,9 +176,9 @@ QueueItem* QueueManager::FileQueue::findAutoSearch(deque<string>& recent) const 
 	QueueItem* cand = findCandidate(i, queue.end(), recent);
 	if(cand == NULL) {
 		cand = findCandidate(queue.begin(), i, recent);
-	} else if(cand->isRunning()) {
+	} else if(cand->getNextSegment(0, 0, NULL).getSize() == 0) {
 		QueueItem* cand2 = findCandidate(queue.begin(), i, recent);
-		if(cand2 != NULL && cand2->isWaiting()) {
+		if(cand2 != NULL && cand2->getNextSegment(0, 0, NULL).getSize() != 0) {
 			cand = cand2;
 		}
 	}
@@ -204,8 +206,10 @@ void QueueManager::UserQueue::add(QueueItem* qi, const UserPtr& aUser) {
 	}
 }
 
+// TODO: implement error message as a reason for no other segment
 QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Priority minPrio) {
 	int p = QueueItem::LAST - 1;
+	lastError = Util::emptyString;
 
 	do {
 		QueueItem::UserListIter i = userQueue[p].find(aUser);
@@ -213,6 +217,23 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 			dcassert(!i->second.empty());
 			for(QueueItem::Iter j = i->second.begin(); j != i->second.end(); ++j) {
 				QueueItem* qi = *j;
+				
+				QueueItem::SourceConstIter source = qi->getSource(aUser);
+				if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
+					// check partial source
+					int64_t blockSize = HashManager::getInstance()->getBlockSize(qi->getTTH());
+					if(blockSize == 0)
+						blockSize = qi->getSize();
+					
+					if(qi->getNextSegment(blockSize, aUser->getLastDownloadSpeed(), source->getPartialSource()).getSize() == 0) {
+						// no other partial chunk from this user, remove him from queue
+						remove(qi, aUser);
+						qi->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
+						lastError = STRING(NO_NEEDED_PART);
+						p++;
+						break;
+					}
+				}
 
 				if(qi->isWaiting()) {
 					// check maximum simultaneous files setting
@@ -221,6 +242,7 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 					{
 						return qi;
 					} else {
+						lastError = STRING(ALL_FILE_SLOTS_TAKEN);
 						continue;
 					}
 				}
@@ -234,8 +256,8 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 					if(blockSize == 0)
 						blockSize = qi->getSize();
 
-					QueueItem::SourceConstIter source = qi->getSource(aUser);
-					if(qi->getNextSegment(blockSize, source->getPartialSource()).getSize() == 0) {
+					if(qi->getNextSegment(blockSize, aUser->getLastDownloadSpeed(), source->getPartialSource()).getSize() == 0) {
+						lastError = STRING(NO_FREE_BLOCK);
 						dcdebug("No segment for %s in %s, block " I64_FMT "\n", aUser->getCID().toBase32().c_str(), qi->getTarget().c_str(), blockSize);
 						continue;
 					}
@@ -794,31 +816,13 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 
 	QueueItem* q = userQueue.getNext(aUser);
 
-again:
 	if(!q) {
+		aMessage = userQueue.getLastError();
 		dcdebug("none\n");
 		return 0;
 	}
 
-	QueueItem::SourceConstIter source = q->getSource(aUser);
-
-	if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
-		int64_t blockSize = HashManager::getInstance()->getBlockSize(q->getTTH());
-		if(blockSize == 0)
-			blockSize = q->getSize();
-		
-		if(q->getNextSegment(blockSize, source->getPartialSource()).getSize() == 0) {
-			// no other partial chunk from this user, remove him from queue
-			userQueue.remove(q, aUser);
-			q->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
-			aMessage = STRING(NO_NEEDED_PART);
-
-			q = userQueue.getNext(aUser);
-			goto again;
-		}
-	}
-
-	Download* d = new Download(aSource, *q, source);
+	Download* d = new Download(aSource, *q);
 	
 	userQueue.addDownload(q, d);	
 
@@ -1002,6 +1006,9 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						
 						if(aDownload->getType() != Transfer::TYPE_FILE || q->isFinished()) {
 
+							// For partial-share, abort upload first to move file correctly
+							UploadManager::getInstance()->abortUpload(q->getTempTarget());
+		
 							// Check if we're anti-fragging...
 							if(aDownload->isSet(Download::FLAG_ANTI_FRAG)) {
 								// Ok, rename the file to what we expect it to be...
@@ -1052,7 +1059,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						}
 					}
 
-					if(reportFinish && q->getPriority() != QueueItem::PAUSED) {
+					if(q->getPriority() != QueueItem::PAUSED) {
 						q->getOnlineUsers(getConn);
 					}
 	

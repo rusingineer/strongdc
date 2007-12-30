@@ -32,11 +32,13 @@ Download::Download(UserConnection& conn, const string& pfsDir) throw() : Transfe
 	setType(TYPE_PARTIAL_LIST);
 }
 
-Download::Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIter& source) throw() : Transfer(conn, qi.getTarget(), qi.getTTH()),
+Download::Download(UserConnection& conn, QueueItem& qi) throw() : Transfer(conn, qi.getTarget(), qi.getTTH()),
 	tempTarget(qi.getTempTarget()), file(0), lastTick(GET_TICK()), treeValid(false)
 {
 	conn.setDownload(this);
 	
+	QueueItem::SourceConstIter source = qi.getSource(getUser());
+
 	if(qi.isSet(QueueItem::FLAG_USER_LIST)) {
 		setType(TYPE_FULL_LIST);
 	} else if(qi.isSet(QueueItem::FLAG_TESTSUR)) {
@@ -53,7 +55,7 @@ Download::Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIt
 	if(getType() == TYPE_FILE && qi.getSize() != -1) {
 		if(HashManager::getInstance()->getTree(getTTH(), getTigerTree())) {
 			setTreeValid(true);
-			setSegment(qi.getNextSegment(getTigerTree().getBlockSize(), source->getPartialSource()));
+			setSegment(qi.getNextSegment(getTigerTree().getBlockSize(), getUser()->getLastDownloadSpeed(), source->getPartialSource()));
 		} else if(conn.isSet(UserConnection::FLAG_SUPPORTS_TTHL) && !qi.getSource(conn.getUser())->isSet(QueueItem::Source::FLAG_NO_TREE) && qi.getSize() > HashManager::MIN_BLOCK_SIZE) {
 			// Get the tree unless the file is small (for small files, we'd probably only get the root anyway)
 			setType(TYPE_TREE);
@@ -63,7 +65,7 @@ Download::Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIt
 			// Use the root as tree to get some sort of validation at least...
 			getTigerTree() = TigerTree(qi.getSize(), qi.getSize(), getTTH());
 			setTreeValid(true);
-			setSegment(qi.getNextSegment(getTigerTree().getBlockSize(), source->getPartialSource()));
+			setSegment(qi.getNextSegment(getTigerTree().getBlockSize(), getUser()->getLastDownloadSpeed(), source->getPartialSource()));
 		}
 	}
 }

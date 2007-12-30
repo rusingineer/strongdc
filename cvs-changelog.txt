@@ -5,7 +5,11 @@
 *** WARNING ***
 
 TODO:	do something with CID
-	select segment size by last user speed
+
+** svn350
+	fixed searching for alternate sources
+	"Download to - Add as source" menu displays filename only
+	segment size selected by last user speed
 
 ** svn349
 	maximum search interval can be set up to 9999 seconds

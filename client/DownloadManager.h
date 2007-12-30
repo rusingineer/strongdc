@@ -45,7 +45,7 @@ public:
 	void checkIdle(const UserPtr& user);
 
 	/** @internal */
-	void abortDownload(const string& aTarget, const Download* except = NULL);
+	void abortDownload(const string& aTarget);
 
 	/** @return Running average download speed in Bytes/s */
 	int64_t getRunningAverage();
