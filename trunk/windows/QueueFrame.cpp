@@ -1376,19 +1376,24 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			ctrlQueue.GetSubItemRect((int)cd->nmcd.dwItemSpec, COLUMN_PROGRESS, LVIR_BOUNDS, rc);
 			CBarShader statusBar(rc.Height(), rc.Width(), SETTING(PROGRESS_BACK_COLOR), qii->getSize());
 
-			// TODO: multisource
-			//FileChunksInfo::Ptr fileChunksInfo = qii->getChunksInfo();			
-			//// running chunks
-			//fileChunksInfo->getAllChunks(v, 1);
-			//for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-			//	statusBar.FillRange(*i, *(i+1), SETTING(COLOR_RUNNING));
-			//}
-			//v.clear();
+			vector<Segment> v;
 
-			// downloaded chunks
-			vector<int64_t> v = qii->getDownloadedChunks();
-			for(vector<int64_t>::const_iterator i = v.begin(); i < v.end(); i += 2) {
-				statusBar.FillRange(*i, *(i+1), SETTING(COLOR_DOWNLOADED));
+			// running chunks
+			v = qii->getChunksVisualisation(0);
+			for(vector<Segment>::const_iterator i = v.begin(); i < v.end(); ++i) {
+				statusBar.FillRange((*i).getStart(), (*i).getEnd(), SETTING(COLOR_RUNNING));
+			}
+
+			// downloaded bytes
+			v = qii->getChunksVisualisation(1);
+			for(vector<Segment>::const_iterator i = v.begin(); i < v.end(); ++i) {
+				statusBar.FillRange((*i).getStart(), (*i).getEnd(), SETTING(COLOR_DOWNLOADED));
+			}
+
+			// done chunks
+			v = qii->getChunksVisualisation(2);
+			for(vector<Segment>::const_iterator i = v.begin(); i < v.end(); ++i) {
+				statusBar.FillRange((*i).getStart(), (*i).getEnd(), SETTING(COLOR_DONE));
 			}
 
 			CDC cdc;

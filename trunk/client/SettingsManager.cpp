@@ -118,7 +118,7 @@ const string SettingsManager::settingTags[] =
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
-	"ColorRunning", "ColorDownloaded", "AutoRefreshTime", "UseTLS", "OpenWaitingUsers",
+	"ColorDownloaded", "ColorRunning", "ColorDone", "AutoRefreshTime", "UseTLS", "OpenWaitingUsers",
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
@@ -301,7 +301,6 @@ SettingsManager::SettingsManager()
 	setDefault(NUMBER_OF_SEGMENTS, 3);
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);
-	setDefault(TEXT_FONT, "Tahoma,-11,400,0");
 	setDefault(DEBUG_COMMANDS, false);
 	setDefault(UPDATE_URL, "http://dcaml.sourceforge.net/files/");	
 	setDefault(EXTRA_SLOTS, 3);
@@ -312,7 +311,6 @@ SettingsManager::SettingsManager()
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,-1,10,11,12,13,-1,14,15,16,17,-1,18,19,20,21");
-	setDefault(SEARCH_ALTERNATE_COLOUR, RGB(255,200,0));
 	setDefault(WEBSERVER, false);
 	setDefault(WEBSERVER_PORT, (int)Util::rand(80, 1024));
 	setDefault(WEBSERVER_FORMAT,"%Y-%m-%d %H:%M: %[ip] tried getting %[file]");
@@ -328,59 +326,6 @@ SettingsManager::SettingsManager()
 	setDefault(REMOVE_FORBIDDEN, true);
 	setDefault(THROTTLE_ENABLE, false);
 	setDefault(EXTRA_DOWNLOAD_SLOTS, 3);
-
-	setDefault(BACKGROUND_COLOR, RGB(37,60,120));
-	setDefault(TEXT_COLOR, RGB(255,255,255));
-
-	setDefault(TEXT_GENERAL_BACK_COLOR, RGB(37,60,120));
-	setDefault(TEXT_GENERAL_FORE_COLOR, RGB(255,255,255));
-	setDefault(TEXT_GENERAL_BOLD, false);
-	setDefault(TEXT_GENERAL_ITALIC, false);
-
-	setDefault(TEXT_MYOWN_BACK_COLOR, RGB(96,0,0));
-	setDefault(TEXT_MYOWN_FORE_COLOR, RGB(255,255,0));
-	setDefault(TEXT_MYOWN_BOLD, true);
-	setDefault(TEXT_MYOWN_ITALIC, false);
-
-	setDefault(TEXT_PRIVATE_BACK_COLOR, RGB(0,96,0));
-	setDefault(TEXT_PRIVATE_FORE_COLOR, RGB(255,255,255));
-	setDefault(TEXT_PRIVATE_BOLD, true);
-	setDefault(TEXT_PRIVATE_ITALIC, false);
-
-	setDefault(TEXT_SYSTEM_BACK_COLOR, RGB(0,0,0));
-	setDefault(TEXT_SYSTEM_FORE_COLOR, RGB(192,192,192));
-	setDefault(TEXT_SYSTEM_BOLD, true);
-	setDefault(TEXT_SYSTEM_ITALIC, true);
-
-	setDefault(TEXT_SERVER_BACK_COLOR, RGB(0,0,0));
-	setDefault(TEXT_SERVER_FORE_COLOR, RGB(128,255,128));
-	setDefault(TEXT_SERVER_BOLD, true);
-	setDefault(TEXT_SERVER_ITALIC, false);
-
-	setDefault(TEXT_TIMESTAMP_BACK_COLOR, RGB(0,0,0));
-	setDefault(TEXT_TIMESTAMP_FORE_COLOR, RGB(255,255,0));
-	setDefault(TEXT_TIMESTAMP_BOLD, false);
-	setDefault(TEXT_TIMESTAMP_ITALIC, false);
-
-	setDefault(TEXT_MYNICK_BACK_COLOR, RGB(37,60,120));
-	setDefault(TEXT_MYNICK_FORE_COLOR, RGB(255,255,0));
-	setDefault(TEXT_MYNICK_BOLD, true);
-	setDefault(TEXT_MYNICK_ITALIC, false);
-
-	setDefault(TEXT_FAV_BACK_COLOR, RGB(0,0,0));
-	setDefault(TEXT_FAV_FORE_COLOR, RGB(255,128,128));
-	setDefault(TEXT_FAV_BOLD, true);
-	setDefault(TEXT_FAV_ITALIC, true);
-
-	setDefault(TEXT_OP_BACK_COLOR, RGB(37,60,120));
-	setDefault(TEXT_OP_FORE_COLOR, RGB(200,0,0));
-	setDefault(TEXT_OP_BOLD, true);
-	setDefault(TEXT_OP_ITALIC, false);
-
-	setDefault(TEXT_URL_BACK_COLOR, RGB(192,192,192));
-	setDefault(TEXT_URL_FORE_COLOR, RGB(0,0,255));
-	setDefault(TEXT_URL_BOLD, false);
-	setDefault(TEXT_URL_ITALIC, false);
 
 	setDefault(BOLD_AUTHOR_MESS, true);
 	setDefault(KICK_MSG_RECENT_01, "");
@@ -404,19 +349,12 @@ SettingsManager::SettingsManager()
 	setDefault(KICK_MSG_RECENT_19, "");
 	setDefault(KICK_MSG_RECENT_20, "");
 	setDefault(WINAMP_FORMAT, "winamp(%[version]) %[state](%[title]) stats(%[percent] of %[length] %[bar])");
-	setDefault(PROGRESS_TEXT_COLOR_DOWN, RGB(255, 255, 255));
-	setDefault(PROGRESS_TEXT_COLOR_UP, RGB(255, 255, 255));
 	setDefault(SHOW_INFOTIPS, true);
 	setDefault(MINIMIZE_ON_STARTUP, false);
 	setDefault(FREE_SLOTS_DEFAULT, false);
 	setDefault(USE_EXTENSION_DOWNTO, true);
-	setDefault(ERROR_COLOR, RGB(255, 0, 0));
 	setDefault(EXPAND_QUEUE, true);
 	setDefault(TRANSFER_SPLIT_SIZE, 8000);
-	setDefault(MENUBAR_TWO_COLORS, true);
-	setDefault(MENUBAR_LEFT_COLOR, RGB(254, 157, 27));
-	setDefault(MENUBAR_RIGHT_COLOR, RGB(194, 78, 7));
-	setDefault(MENUBAR_BUMPED, true);
 
 	setDefault(PERCENT_FAKE_SHARE_TOLERATED, 20);
 	setDefault(CZCHARS_DISABLE, false);
@@ -477,26 +415,11 @@ SettingsManager::SettingsManager()
 	setDefault(MINIMUM_SEARCH_INTERVAL, 30);
 	setDefault(PROGRESSBAR_ODC_STYLE, true);
 
-	setDefault(PROGRESS_3DDEPTH, 4);
-	setDefault(PROGRESS_OVERRIDE_COLORS, true);
 	setDefault(MAX_AUTO_MATCH_SOURCES, 5);
 	setDefault(MULTI_CHUNK, true);
 	setDefault(USERLIST_DBLCLICK, 0);
 	setDefault(TRANSFERLIST_DBLCLICK, 0);
 	setDefault(CHAT_DBLCLICK, 0);	
-	setDefault(NORMAL_COLOUR, RGB(255,255,255));
-	setDefault(RESERVED_SLOT_COLOR, RGB(255,51,255));
-	setDefault(IGNORED_COLOR, RGB(192,192,192));	
-	setDefault(FAVORITE_COLOR, RGB(51,51,255));	
-	setDefault(FIREBALL_COLOR, RGB(255,100,0));
- 	setDefault(SERVER_COLOR, RGB(128,128,255));
-	setDefault(PASIVE_COLOR, RGB(255,255,255));
-	setDefault(OP_COLOR, RGB(255,255,0));
-	setDefault(CLIENT_CHECKED_COLOUR, RGB(160, 160, 160));
-	setDefault(FILELIST_CHECKED_COLOUR, RGB(0, 160, 255));
-	setDefault(FULL_CHECKED_COLOUR, RGB(0, 160, 0));
-	setDefault(BAD_CLIENT_COLOUR, RGB(204,0,0));
-	setDefault(BAD_FILELIST_COLOUR, RGB(204,0,204));	
 	setDefault(HUBFRAME_VISIBLE, "1,1,0,1,0,1,0,0,0,0,0,0");
 	setDefault(DIRECTORYLISTINGFRAME_VISIBLE, "1,1,0,1,1");	
 	setDefault(FINISHED_VISIBLE, "1,1,1,1,1,1,1,1");
@@ -523,13 +446,97 @@ SettingsManager::SettingsManager()
 	setDefault(MAIN_WINDOW_SIZE_Y, CW_USEDEFAULT);
 	setDefault(MAIN_WINDOW_POS_X, CW_USEDEFAULT);
 	setDefault(MAIN_WINDOW_POS_Y, CW_USEDEFAULT);
+
+	/* Theme settings */
+	setDefault(TEXT_FONT, "Tahoma,-11,400,0");
+
+	setDefault(BACKGROUND_COLOR, RGB(242,245,255));
+	setDefault(TEXT_COLOR, RGB(0,0,128));
+
+	setDefault(TEXT_GENERAL_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_GENERAL_FORE_COLOR, RGB(67,98,154));
+	setDefault(TEXT_GENERAL_BOLD, false);
+	setDefault(TEXT_GENERAL_ITALIC, false);
+
+	setDefault(TEXT_MYOWN_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_MYOWN_FORE_COLOR, RGB(128,0,0));
+	setDefault(TEXT_MYOWN_BOLD, true);
+	setDefault(TEXT_MYOWN_ITALIC, false);
+
+	setDefault(TEXT_PRIVATE_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_PRIVATE_FORE_COLOR, RGB(67,98,154));
+	setDefault(TEXT_PRIVATE_BOLD, true);
+	setDefault(TEXT_PRIVATE_ITALIC, false);
+
+	setDefault(TEXT_SYSTEM_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_SYSTEM_FORE_COLOR, RGB(0,128,64));
+	setDefault(TEXT_SYSTEM_BOLD, true);
+	setDefault(TEXT_SYSTEM_ITALIC, true);
+
+	setDefault(TEXT_SERVER_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_SERVER_FORE_COLOR, RGB(0,128,64));
+	setDefault(TEXT_SERVER_BOLD, true);
+	setDefault(TEXT_SERVER_ITALIC, false);
+
+	setDefault(TEXT_TIMESTAMP_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_TIMESTAMP_FORE_COLOR, RGB(67,98,154));
+	setDefault(TEXT_TIMESTAMP_BOLD, false);
+	setDefault(TEXT_TIMESTAMP_ITALIC, false);
+
+	setDefault(TEXT_MYNICK_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_MYNICK_FORE_COLOR, RGB(128,0,0));
+	setDefault(TEXT_MYNICK_BOLD, true);
+	setDefault(TEXT_MYNICK_ITALIC, false);
+
+	setDefault(TEXT_FAV_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_FAV_FORE_COLOR, RGB(255,128,64));
+	setDefault(TEXT_FAV_BOLD, true);
+	setDefault(TEXT_FAV_ITALIC, true);
+
+	setDefault(TEXT_OP_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_OP_FORE_COLOR, RGB(0,128,0));
+	setDefault(TEXT_OP_BOLD, true);
+	setDefault(TEXT_OP_ITALIC, false);
+
+	setDefault(TEXT_URL_BACK_COLOR, RGB(242,245,255));
+	setDefault(TEXT_URL_FORE_COLOR, RGB(0,0,255));
+	setDefault(TEXT_URL_BOLD, false);
+	setDefault(TEXT_URL_ITALIC, false);
+
+	setDefault(ERROR_COLOR, RGB(255, 0, 0));
+	setDefault(SEARCH_ALTERNATE_COLOUR, RGB(255,0,128));
+
+	setDefault(MENUBAR_TWO_COLORS, true);
+	setDefault(MENUBAR_LEFT_COLOR, RGB(254, 157, 27));
+	setDefault(MENUBAR_RIGHT_COLOR, RGB(194, 78, 7));
+	setDefault(MENUBAR_BUMPED, true);
+
+	setDefault(NORMAL_COLOUR, RGB(67,98,154));
+	setDefault(FAVORITE_COLOR, RGB(255,128,64));	
+	setDefault(RESERVED_SLOT_COLOR, RGB(128,0,0));
+	setDefault(IGNORED_COLOR, RGB(64,128,128));	
+	setDefault(FIREBALL_COLOR, RGB(255,0,0));
+ 	setDefault(SERVER_COLOR, RGB(0,128,192));
+	setDefault(OP_COLOR, RGB(0,128,0));
+	setDefault(PASIVE_COLOR, RGB(67,98,154));
+	setDefault(CLIENT_CHECKED_COLOUR, RGB(0, 0, 160));
+	setDefault(FILELIST_CHECKED_COLOUR, RGB(128, 0, 128));
+	setDefault(FULL_CHECKED_COLOUR, RGB(0, 128, 64));
+	setDefault(BAD_CLIENT_COLOUR, RGB(192,0,0));
+	setDefault(BAD_FILELIST_COLOUR, RGB(204,0,204));
+
+	setDefault(PROGRESS_3DDEPTH, 4);
+	setDefault(PROGRESS_OVERRIDE_COLORS, true);
+	setDefault(PROGRESS_TEXT_COLOR_DOWN, RGB(255, 255, 255));
+	setDefault(PROGRESS_TEXT_COLOR_UP, RGB(255, 255, 255));
 	setDefault(UPLOAD_BAR_COLOR, RGB(205, 60, 55));
 	setDefault(DOWNLOAD_BAR_COLOR, RGB(55, 170, 85));
 	setDefault(PROGRESS_BACK_COLOR, RGB(95, 95, 95));
 	setDefault(PROGRESS_COMPRESS_COLOR, RGB(222, 160, 0));
 	setDefault(PROGRESS_SEGMENT_COLOR, RGB(49, 106, 197));
 	setDefault(COLOR_RUNNING, RGB(0, 150, 0));
-	setDefault(COLOR_DOWNLOADED, RGB(222, 160, 0));
+	setDefault(COLOR_DOWNLOADED, RGB(255, 255, 100));
+	setDefault(COLOR_DONE, RGB(222, 160, 0));
 	
 #ifdef _WIN32
 	OSVERSIONINFO ver;

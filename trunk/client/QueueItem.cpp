@@ -258,3 +258,26 @@ void QueueItem::getPartialInfo(PartsInfo& partialInfo, int64_t blockSize) {
 		partialInfo.push_back(e);
 	}
 }
+
+vector<Segment> QueueItem::getChunksVisualisation(int type) const {  // type: 0 - downloaded bytes, 1 - running chunks, 2 - done chunks
+	vector<Segment> v;
+
+	switch(type) {
+	case 0:
+		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
+			v.push_back((*i)->getSegment());
+		}
+		break;
+	case 1:
+		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
+			v.push_back(Segment((*i)->getStartPos(), (*i)->getPos()));
+		}
+		break;
+	case 2:
+		for(SegmentSet::const_iterator i = done.begin(); i != done.end(); ++i) {
+			v.push_back(*i);
+		}
+		break;
+	}
+	return v;
+}

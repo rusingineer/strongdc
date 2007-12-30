@@ -39,8 +39,9 @@ PropPageTextStyles::clrs PropPageTextStyles::colours[] = {
 	{ResourceManager::PROGRESS_BACK,	SettingsManager::PROGRESS_BACK_COLOR, 0},
 	{ResourceManager::PROGRESS_COMPRESS,	SettingsManager::PROGRESS_COMPRESS_COLOR, 0},
 	{ResourceManager::PROGRESS_SEGMENT,	SettingsManager::PROGRESS_SEGMENT_COLOR, 0},
-	{ResourceManager::PROGRESS_DOWNLOADED,	SettingsManager::COLOR_DOWNLOADED, 0},
 	{ResourceManager::PROGRESS_RUNNING,	SettingsManager::COLOR_RUNNING, 0},
+	{ResourceManager::PROGRESS_DOWNLOADED,	SettingsManager::COLOR_DOWNLOADED, 0},
+	{ResourceManager::PROGRESS_DONE,	SettingsManager::COLOR_DONE, 0},
 };
 
 
@@ -499,6 +500,7 @@ LRESULT PropPageTextStyles::onImport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 			importData("ProgressBackColor", PROGRESS_BACK_COLOR);
 			importData("ProgressCompressColor", PROGRESS_COMPRESS_COLOR);
 			importData("ProgressSegmentColor", PROGRESS_SEGMENT_COLOR);
+			importData("ColorDone", COLOR_DONE);
 			importData("ColorDownloaded", COLOR_DOWNLOADED);
 			importData("ColorRunning", COLOR_RUNNING);
 			importData("ReservedSlotColor", RESERVED_SLOT_COLOR);
@@ -543,12 +545,9 @@ LRESULT PropPageTextStyles::onExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	xml.stepIn();
 
 	string type("type"), curType("string");
-	xml.addTag("Font", SETTING(TEXT_FONT));
-	xml.addChildAttrib(type, curType);
+	exportData("Font", TEXT_FONT);
 
 	curType = "int";
-
-	exportData("Font", TEXT_FONT);
 	exportData("BackgroundColor", BACKGROUND_COLOR);
 	exportData("TextColor", TEXT_COLOR);
 	exportData("DownloadBarColor", DOWNLOAD_BAR_COLOR);
@@ -608,6 +607,7 @@ LRESULT PropPageTextStyles::onExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	exportData("ProgressBackColor", PROGRESS_BACK_COLOR);
 	exportData("ProgressCompressColor", PROGRESS_COMPRESS_COLOR);
 	exportData("ProgressSegmentColor", PROGRESS_SEGMENT_COLOR);
+	exportData("ColorDone", COLOR_DONE);
 	exportData("ColorDownloaded", COLOR_DOWNLOADED);
 	exportData("ColorRunning", COLOR_RUNNING);
 	exportData("ReservedSlotColor", RESERVED_SLOT_COLOR);
