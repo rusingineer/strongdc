@@ -127,7 +127,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 					online++;
 			}
 
-			if(!isRunning()) {
+			if(isWaiting()) {
 				TCHAR buf[64];
 				if(online > 0) {
 					size_t size = QueueManager::getInstance()->getSourcesCount(qi);
@@ -154,7 +154,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 						return buf;
 					}
 				}
-			} else if(isRunning()) {
+			} else {
 				TCHAR buf[64];
 				size_t size = QueueManager::getInstance()->getSourcesCount(qi);
 				if(size == 1) {

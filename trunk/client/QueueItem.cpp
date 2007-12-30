@@ -92,7 +92,12 @@ int64_t QueueItem::getAverageSpeed() const {
 	return totalSpeed;
 }
 
-Segment QueueItem::getNextSegment(int64_t  blockSize, const PartialSource::Ptr partialSource) const {
+Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const PartialSource::Ptr partialSource) const {
+	if(!BOOLSETTING(MULTI_CHUNK) && isRunning()) {
+		// file is already running and segmented downloads are disabled
+		return Segment(0, 0);
+	}
+
 	if(downloads.size() >= maxSegments ||
 		(BOOLSETTING(DONT_BEGIN_SEGMENT) && (size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED) * 1024) < getAverageSpeed()))
 	{
@@ -119,10 +124,21 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, const PartialSource::Ptr p
 	/***************************/
 
 	int64_t start = 0;
-	int64_t maxSize = std::max(blockSize, static_cast<int64_t>(4 * 1024 * 1024));
+	int64_t maxSize = std::max(blockSize, static_cast<int64_t>(1024 * 1024));
+
+	if(userSpeed > 0) {
+		// get the speed of average chunk
+		int64_t averageChunkSpeed = downloads.size() > 0 ? getAverageSpeed() / downloads.size() : 25600;
+		if(averageChunkSpeed == 0) averageChunkSpeed = 25600;
+
+		// set maxSize according to user's lastSpeed
+		double x = max(1.0, (double)userSpeed / (double)averageChunkSpeed);
+		maxSize = (int64_t)((double)maxSize * x);
+	}
+
 	maxSize = ((maxSize + blockSize - 1) / blockSize) * blockSize; // Make sure we're on an even block boundary
 	int64_t curSize = maxSize;
-	
+
 	while(start < getSize()) {
 		int64_t end = std::min(getSize(), start + curSize);
 		Segment block(start, end - start);

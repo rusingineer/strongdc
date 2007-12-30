@@ -783,7 +783,6 @@ void TransferView::on(ConnectionManagerListener::Failed, const ConnectionQueueIt
 
 void TransferView::on(DownloadManagerListener::Starting, const Download* aDownload) {
 	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true);
-
 	ui->setStatus(ItemInfo::STATUS_RUNNING);
 	ui->setPos(aDownload->getPos());
 	ui->setActual(aDownload->getActual());
@@ -806,37 +805,20 @@ void TransferView::on(DownloadManagerListener::Starting, const Download* aDownlo
 }
 
 void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
-	AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
-
 	for(DownloadList::const_iterator j = dl.begin(); j != dl.end(); ++j) {
 		Download* d = *j;
 		
 		UpdateInfo* ui = new UpdateInfo(d->getUser(), true);
 		ui->setStatus(ItemInfo::STATUS_RUNNING);
+		ui->setActual(d->getActual());
+		ui->setPos(d->getPos());
+//			ui->setSize(d->getSize());
 		ui->setTimeLeft(d->getSecondsLeft());
 		ui->setSpeed(static_cast<int64_t>(d->getAverageSpeed()));
 
-		if(d->getType() == Transfer::TYPE_FILE) {
-			ui->setActual(d->getActual());
-			ui->setPos(d->getPos());
-			ui->setSize(d->getSize());
-			ui->setTimeLeft(d->getSecondsLeft());
-
-			double progress = (double)(d->getPos())*100.0/(double)ui->size;
-			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(d->getPos()).c_str(), 
-				progress, Util::formatSeconds((GET_TICK() - d->getStart())/1000).c_str());
-			if(progress > 100) {
-				// workaround to fix > 100% percentage
-				d->getUserConnection().disconnect();
-				continue;
-			}
-		} else {
-			ui->setActual(d->getStartPos() + d->getActual());
-			ui->setPos(d->getPos());
-
-			_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(d->getPos()).c_str(), 
-				(double)d->getPos()*100.0/(double)d->getSize(), Util::formatSeconds((GET_TICK() - d->getStart())/1000).c_str());
-		}
+		tstring pos = Util::formatBytesW(d->getPos());
+		double percent = (double)d->getPos()*100.0/(double)d->getSize();
+		tstring elapsed = Util::formatSeconds((GET_TICK() - d->getStart())/1000);
 
 		tstring statusString;
 
@@ -865,11 +847,8 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		if(!statusString.empty()) {
 			statusString += _T(" ");
 		}
-		statusString += buf;
+		statusString += Text::tformat(TSTRING(DOWNLOADED_BYTES), pos.c_str(), percent, elapsed.c_str());
 		ui->setStatusString(statusString);
-		//if((d->getAverageSpeed() < 1) && ((GET_TICK() - d->getStart()) > 1000)) {
-		//	d->getUserConnection().disconnect();
-		//}
 			
 		tasks.add(UPDATE_ITEM, ui);
 	}
@@ -936,8 +915,6 @@ void TransferView::on(UploadManagerListener::Starting, const Upload* aUpload) {
 }
 
 void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
-	AutoArray<TCHAR> buf(TSTRING(UPLOADED_BYTES).size() + 64);
-
 	for(UploadList::const_iterator j = ul.begin(); j != ul.end(); ++j) {
 		Upload* u = *j;
 
@@ -949,10 +926,10 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 		ui->setTimeLeft(u->getSecondsLeft(true)); // we are interested when whole file is finished and not only one chunk
 		ui->setSpeed(static_cast<int64_t>(u->getAverageSpeed()));
 
-		_stprintf(buf, CTSTRING(UPLOADED_BYTES), Util::formatBytesW(ui->pos).c_str(), 
-			(double)ui->pos * 100.0 / (double)(u->getType() == Transfer::TYPE_TREE ? u->getSize() : u->getFileSize()),
-			Util::formatSeconds((GET_TICK() - u->getStart())/1000).c_str());
-
+		tstring pos = Util::formatBytesW(ui->pos);
+		double percent = (double)ui->pos*100.0/(double)(u->getType() == Transfer::TYPE_TREE ? u->getSize() : u->getFileSize());
+		tstring elapsed = Util::formatSeconds((GET_TICK() - u->getStart())/1000); 
+		
 		tstring statusString;
 
 		if(u->isSet(Upload::FLAG_PARTIAL)) {
@@ -974,14 +951,11 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 		if(!statusString.empty()) {
 			statusString += _T(" ");
 		}			
-		statusString += buf;
+		statusString += Text::tformat(TSTRING(UPLOADED_BYTES), pos.c_str(), percent, elapsed.c_str());
 
 		ui->setStatusString(statusString);
 					
 		tasks.add(UPDATE_ITEM, ui);
-		//if((u->getAverageSpeed() < 1) && ((GET_TICK() - u->getStart()) > 1000)) {
-		//	u->getUserConnection().disconnect(true);
-		//}
 	}
 
 	PostMessage(WM_SPEAKER);

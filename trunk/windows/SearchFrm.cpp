@@ -1188,7 +1188,7 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 				if(targets.size() > 0) {
 					targetMenu.InsertSeparatorLast(TSTRING(ADD_AS_SOURCE));
 					for(StringIter i = targets.begin(); i != targets.end(); ++i) {
-						targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, Text::toT(*i).c_str());
+						targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + n, Text::toT(Util::getFileName(*i)).c_str());
 						n++;
 					}
 				}

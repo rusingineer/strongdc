@@ -400,7 +400,7 @@ string ResourceManager::strings[] = {
 "No users", 
 "No users to download from", 
 "Normal", 
-"Not listening for connections - please restart DC++", 
+"Not listening for connections - please restart StrongDC++", 
 "Notepad", 
 "segment(s)", 
 "Offline", 

@@ -246,7 +246,7 @@ private:
 		const TTHValue& getTTH() const { return qi->getTTH(); }
 
 		QueueItem::Priority getPriority() const { return qi->getPriority(); }
-		bool isRunning() const { return qi->isRunning(); }
+		bool isWaiting() const { return qi->isWaiting(); }
 
 		bool getAutoPriority() const { return qi->getAutoPriority(); }
 

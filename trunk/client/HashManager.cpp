@@ -176,7 +176,7 @@ bool HashManager::HashStore::getTree(const TTHValue& root, TigerTree& tt) {
 
 size_t HashManager::HashStore::getBlockSize(const TTHValue& root) const {
 	TreeMap::const_iterator i = treeIndex.find(root);
-	return i == treeIndex.end() ? 0 : i->second.getBlockSize();
+	return i == treeIndex.end() ? 0 : static_cast<size_t>(i->second.getBlockSize());
 }
 
 bool HashManager::HashStore::checkTTH(const string& aFileName, int64_t aSize, uint32_t aTimeStamp) {

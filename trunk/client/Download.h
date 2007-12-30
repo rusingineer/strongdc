@@ -29,7 +29,7 @@ public:
 	};
 
 	Download(UserConnection& conn, const string& pfsDir) throw();
-	Download(UserConnection& conn, QueueItem& qi, QueueItem::SourceConstIter& source) throw();
+	Download(UserConnection& conn, QueueItem& qi) throw();
 
 	void getParams(const UserConnection& aSource, StringMap& params);
 
