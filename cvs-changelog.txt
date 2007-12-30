@@ -6,6 +6,11 @@
 
 TODO:	do something with CID
 
+** svn351
+	added settings "Ask for magnet action"
+	light color theme set as default
+	reimplemented all queue progressbar colors -> downloaded bytes, running chunks, done chunks
+
 ** svn350
 	fixed searching for alternate sources
 	"Download to - Add as source" menu displays filename only

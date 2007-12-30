@@ -190,14 +190,7 @@ public:
 		return false;
 	}
 	
-	vector<int64_t> getDownloadedChunks() const {
-		vector<int64_t> v;
-		for(SegmentSet::const_iterator i = done.begin(); i != done.end(); ++i) {
-			v.push_back((*i).getStart());
-			v.push_back((*i).getEnd());
-		}
-		return v;
-	}
+	vector<Segment> getChunksVisualisation(int type) const;
 
 	bool isChunkDownloaded(int64_t start, int64_t bytes) const {
 		Segment s(start, bytes);
