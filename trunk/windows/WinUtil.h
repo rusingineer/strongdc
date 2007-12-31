@@ -120,13 +120,15 @@ public:
 	struct UserTraits {
 		UserTraits() : adcOnly(true), favOnly(true), nonFavOnly(true) { }
 		void operator()(UserInfoBase* ui) {
-			if(ui->getUser()->isSet(User::NMDC)) 
-				adcOnly = false;
-			bool fav = FavoriteManager::getInstance()->isFavoriteUser(ui->getUser());
-			if(fav)
-				nonFavOnly = false;
-			if(!fav)
-				favOnly = false;
+			if(ui->getUser()) {
+				if(ui->getUser()->isSet(User::NMDC)) 
+					adcOnly = false;
+				bool fav = FavoriteManager::getInstance()->isFavoriteUser(ui->getUser());
+				if(fav)
+					nonFavOnly = false;
+				if(!fav)
+					favOnly = false;
+			}
 		}
 
 		bool adcOnly;

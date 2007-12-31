@@ -265,6 +265,7 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ctrlFilterSel.SetCurSel(0);
 
 	SettingsManager::getInstance()->addListener(this);
+	TimerManager::getInstance()->addListener(this);
 
 	bHandled = FALSE;
 	return 1;
@@ -418,10 +419,6 @@ void SearchFrame::onEnter() {
 	::EnableWindow(GetDlgItem(IDC_SEARCH_PAUSE), TRUE);
 	ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
 			
-	// Start the countdown timer...
-	// Can this be done in a better way?
-	TimerManager::getInstance()->addListener(this);
-
 	searches++;
 	SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
 		(SearchManager::TypeModes)ftype, mode, "manual", (int*)this);
@@ -691,10 +688,7 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	if(!closed) {
 		SearchManager::getInstance()->stopSearch((int*)this);
 		SettingsManager::getInstance()->removeListener(this);
-		if(searches != 0) {
-			searches--;
-			TimerManager::getInstance()->removeListener(this);
-		}
+		TimerManager::getInstance()->removeListener(this);
 		SearchManager::getInstance()->removeListener(this);
  		ClientManager::getInstance()->removeListener(this);
 		frames.erase(m_hWnd);
@@ -1095,10 +1089,6 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			resultsCount = 0;
 
 			isHash = (aSearch->getTypeMode() == SearchManager::TYPE_TTH);
-
-			// Turn off the countdown timer if no more manual searches left
-			if(searches == 0)
-				TimerManager::getInstance()->removeListener(this);
 
 			// Update the status bar
 			ctrlStatus.SetText(1, Text::toT(STRING(SEARCHING_FOR) + aSearch->getTarget() + "...").c_str());
