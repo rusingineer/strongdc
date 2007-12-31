@@ -6,6 +6,11 @@
 
 TODO:	do something with CID
 
+** svn352
+	hopefully fixed rare crash when closing Search window
+	fixed crash #7898
+	added "Microsoft Text Service Module" to crash libraries
+
 ** svn351
 	added settings "Ask for magnet action"
 	light color theme set as default
