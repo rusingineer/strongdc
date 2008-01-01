@@ -240,7 +240,6 @@ private:
 
 		int64_t getSize() const { return qi->getSize(); }
 		int64_t getDownloadedBytes() const { return qi->getDownloadedBytes(); }
-		vector<Segment> getChunksVisualisation(int type) const { return qi->getChunksVisualisation(type); }
 
 		time_t getAdded() const { return qi->getAdded(); }
 		const TTHValue& getTTH() const { return qi->getTTH(); }

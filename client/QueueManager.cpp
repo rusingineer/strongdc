@@ -87,7 +87,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 
 	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && (p != QueueItem::HIGHEST) && (p != QueueItem::PAUSED)) {
 		qi->setAutoPriority(true);
-		qi->setPriority(qi->calculateAutoPriority());
+		// TODO: qi->setPriority(qi->calculateAutoPriority());
 	}
 
 	dcassert(find(aTarget) == NULL);

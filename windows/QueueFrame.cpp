@@ -1379,19 +1379,19 @@ LRESULT QueueFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 			vector<Segment> v;
 
 			// running chunks
-			v = qii->getChunksVisualisation(0);
+			v = QueueManager::getInstance()->getChunksVisualisation(qii->getQueueItem(), 0);
 			for(vector<Segment>::const_iterator i = v.begin(); i < v.end(); ++i) {
 				statusBar.FillRange((*i).getStart(), (*i).getEnd(), SETTING(COLOR_RUNNING));
 			}
 
 			// downloaded bytes
-			v = qii->getChunksVisualisation(1);
+			v = QueueManager::getInstance()->getChunksVisualisation(qii->getQueueItem(), 1);
 			for(vector<Segment>::const_iterator i = v.begin(); i < v.end(); ++i) {
 				statusBar.FillRange((*i).getStart(), (*i).getEnd(), SETTING(COLOR_DOWNLOADED));
 			}
 
 			// done chunks
-			v = qii->getChunksVisualisation(2);
+			v = QueueManager::getInstance()->getChunksVisualisation(qii->getQueueItem(), 2);
 			for(vector<Segment>::const_iterator i = v.begin(); i < v.end(); ++i) {
 				statusBar.FillRange((*i).getStart(), (*i).getEnd(), SETTING(COLOR_DONE));
 			}
