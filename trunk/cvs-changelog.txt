@@ -6,6 +6,9 @@
 
 TODO:	do something with CID
 
+** svn353
+	fixed possible crash in QueueFrame
+
 ** svn352
 	hopefully fixed rare crash when closing Search window
 	fixed crash #7898
