@@ -68,7 +68,7 @@ extern "C" void bz_internal_error(int errcode) {
 	dcdebug("bzip2 internal error: %d\n", errcode); 
 }
 
-#if defined(_WIN32) && _MSC_VER == 1400
+#if defined(_WIN32) && (_MSC_VER == 1400 || _MSC_VER == 1500)
 void WINAPI invalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t) {
 	//do nothing, this exist because vs2k5 crt needs it not to crash on errors.
 }
@@ -222,7 +222,7 @@ void Util::initialize() {
 		configPath = systemPath + configPath;
 	}
 
-#if _MSC_VER == 1400
+#if _MSC_VER == 1400 || _MSC_VER == 1500
 	_set_invalid_parameter_handler(reinterpret_cast<_invalid_parameter_handler>(invalidParameterHandler));
 #endif
 

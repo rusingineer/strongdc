@@ -103,7 +103,6 @@
 		<String Name="CopyNickIp">Kopírovat přezdívku a IP</String>
 		<String Name="CopyTag">Kopírovat TAG</String>
 		<String Name="CopyUrl">Kopírovat odkaz</String>
-		<String Name="CorruptionDetected">Chyba nalezena pro TTH: %s, na pozici %d</String>
 		<String Name="CouldNotOpenTargetFile">Nelze otevřít cílový soubor: </String>
 		<String Name="Count">Počet</String>
 		<String Name="Country">Země</String>
@@ -259,7 +258,6 @@
 		<String Name="CheckShowRealShare">, hlášené sdílení = %[shareshort], opravdové sdílení = %[realshareformat]</String>
 		<String Name="CheckingClient">Kontroluji klienta...</String>
 		<String Name="ChooseFolder">Zvolte složku</String>
-		<String Name="ChunkOverlapped">Segment překryt rychlejším uživatelem</String>
 		<String Name="IgnoreTthSearches">Ignorovat hledání TTH</String>
 		<String Name="IgnoreUser">Ignorovat uživatele</String>
 		<String Name="IgnoredMessage">Ignorovaná zpráva: </String>
@@ -296,6 +294,7 @@
 		<String Name="LogOff">Odpojit se</String>
 		<String Name="Low">Nízká</String>
 		<String Name="Lowest">Nejnižší</String>
+		<String Name="MagnetAsk">Zeptat se na akci při otevření MAGNET linku</String>		
 		<String Name="MagnetDlgFile">Název souboru:</String>
 		<String Name="MagnetDlgHash">Hash souboru:</String>
 		<String Name="MagnetDlgNothing">Nic nedělat</String>

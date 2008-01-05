@@ -536,7 +536,6 @@ int TransferView::ItemInfo::compareItems(const ItemInfo* a, const ItemInfo* b, u
 	}
 }
 
-#pragma optimize("t", on)
 TransferView::ItemInfo* TransferView::findItem(const UpdateInfo& ui, int& pos) const {
 	for(int j = 0; j < ctrlTransfers.GetItemCount(); ++j) {
 		ItemInfo* ii = ctrlTransfers.getItemData(j);
@@ -648,7 +647,6 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	
 	return 0;
 }
-#pragma optimize("", on)
 
 LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
@@ -872,10 +870,10 @@ void TransferView::on(DownloadManagerListener::Failed, const Download* aDownload
 		ui->setIP(Text::toT(country + " (" + ip + ")"), WinUtil::getFlagImage(country.c_str()));
 	}
 	if(BOOLSETTING(POPUP_DOWNLOAD_FAILED)) {
-		MainFrame::getMainFrame()->ShowBalloonTip((
+		MainFrame::getMainFrame()->ShowBalloonTip(
 			TSTRING(FILE) + _T(": ") + Util::getFileName(ui->target) + _T("\n")+
 			TSTRING(USER) + _T(": ") + WinUtil::getNicks(ui->user) + _T("\n")+
-			TSTRING(REASON) + _T(": ") + Text::toT(aReason)).c_str(), CTSTRING(DOWNLOAD_FAILED), NIIF_WARNING);
+			TSTRING(REASON) + _T(": ") + Text::toT(aReason), TSTRING(DOWNLOAD_FAILED), NIIF_WARNING);
 	}
 
 	speak(UPDATE_ITEM, ui);
@@ -968,18 +966,10 @@ void TransferView::onTransferComplete(const Transfer* aTransfer, bool isUpload, 
 	ui->setPos(0);
 	ui->setStatusString(isUpload ? TSTRING(UPLOAD_FINISHED_IDLE) : TSTRING(DOWNLOAD_FINISHED_IDLE));
 
-	if(!isUpload) {
-		if(BOOLSETTING(POPUP_DOWNLOAD_FINISHED) && !isTree) {
-			MainFrame::getMainFrame()->ShowBalloonTip((
-				TSTRING(FILE) + _T(": ") + Text::toT(aFileName) + _T("\n")+
-				TSTRING(USER) + _T(": ") + WinUtil::getNicks(aTransfer->getUser())).c_str(), CTSTRING(DOWNLOAD_FINISHED_IDLE));
-		}
-	} else {
-		if(BOOLSETTING(POPUP_UPLOAD_FINISHED) && !isTree) {
-			MainFrame::getMainFrame()->ShowBalloonTip((
-				TSTRING(FILE) + _T(": ") + Text::toT(aFileName) + _T("\n")+
-				TSTRING(USER) + _T(": ") + WinUtil::getNicks(aTransfer->getUser())).c_str(), CTSTRING(UPLOAD_FINISHED_IDLE));
-		}
+	if(isUpload && BOOLSETTING(POPUP_UPLOAD_FINISHED) && !isTree) {
+		MainFrame::getMainFrame()->ShowBalloonTip(
+			TSTRING(FILE) + _T(": ") + Text::toT(aFileName) + _T("\n")+
+			TSTRING(USER) + _T(": ") + WinUtil::getNicks(aTransfer->getUser()), TSTRING(UPLOAD_FINISHED_IDLE));
 	}
 	
 	speak(UPDATE_ITEM, ui);
@@ -1104,11 +1094,13 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 		int16_t segs = 0;
 
 		for(DownloadList::const_iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); i++) {
-			if((*i)->getStart() > 0) {
+			Download *d = *i;
+
+			if(d->getStart() > 0) {
 				segs++;
 
-				totalSpeed += static_cast<int64_t>((*i)->getAverageSpeed());
-				ratio += (*i)->getPos() > 0 ? (double)(*i)->getActual() / (double)(*i)->getPos() : 1.00;
+				totalSpeed += static_cast<int64_t>(d->getAverageSpeed());
+				ratio += d->getPos() > 0 ? (double)d->getActual() / (double)d->getPos() : 1.00;
 			}
 		}
 
@@ -1132,8 +1124,7 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 					PlaySound(Text::toT(SETTING(BEGINFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 				if(BOOLSETTING(POPUP_DOWNLOAD_START)) {
-					MainFrame::getMainFrame()->ShowBalloonTip((
-						TSTRING(FILE) + _T(": ") + Util::getFileName(ui->target)).c_str(), CTSTRING(DOWNLOAD_STARTING));
+					MainFrame::getMainFrame()->ShowBalloonTip(TSTRING(FILE) + _T(": ") + Util::getFileName(ui->target), TSTRING(DOWNLOAD_STARTING));
 				}
 			} else {
 				uint64_t time = GET_TICK() - qi->getFileBegin();
@@ -1167,6 +1158,10 @@ void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	ui->setRunning(0);
 	
+	if(BOOLSETTING(POPUP_DOWNLOAD_FINISHED)) {
+		MainFrame::getMainFrame()->ShowBalloonTip(TSTRING(FILE) + _T(": ") + Util::getFileName(ui->target), TSTRING(DOWNLOAD_FINISHED_IDLE));
+	}
+
 	speak(UPDATE_PARENT, ui);
 }
 

@@ -33,8 +33,6 @@
 
 #endif
 
-#pragma optimize("t", on)
-
 namespace Text {
 
 const string utf8 = "utf-8"; // optimization
@@ -444,5 +442,3 @@ string Text::toDOS(string tmp) {
 	}
 	return tmp;
 }
-
-#pragma optimize("", on)

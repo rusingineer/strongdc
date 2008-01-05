@@ -454,20 +454,20 @@ LRESULT DirectoryListingFrame::onDownloadDirTo(WORD , WORD , HWND , BOOL& ) {
 }
 
 void DirectoryListingFrame::downloadList(const tstring& aTarget, bool view /* = false */, QueueItem::Priority prio /* = QueueItem::Priority::DEFAULT */) {
+	string target = aTarget.empty() ? SETTING(DOWNLOAD_DIRECTORY) : Text::fromT(aTarget);
+
 	int i=-1;
 	while( (i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		const ItemInfo* ii = ctrlList.getItemData(i);
 
-		tstring target = aTarget.empty() ? Text::toT(SETTING(DOWNLOAD_DIRECTORY)) : aTarget;
-
 		try {
 			if(ii->type == ItemInfo::FILE) {
 				if(view) {
-					File::deleteFile(Text::fromT(target) + Util::validateFileName(ii->file->getName()));
+					File::deleteFile(target + Util::validateFileName(ii->file->getName()));
 				}
-				dl->download(ii->file, Text::fromT(target + ii->getText(COLUMN_FILENAME)), view, WinUtil::isShift() || view, prio);
+				dl->download(ii->file, target + Text::fromT(ii->getText(COLUMN_FILENAME)), view, WinUtil::isShift() || view, prio);
 			} else if(!view) {
-				dl->download(ii->dir, Text::fromT(target), WinUtil::isShift(), prio);
+				dl->download(ii->dir, target, WinUtil::isShift(), prio);
 			} 
 		} catch(const Exception& e) {
 			ctrlStatus.SetText(STATUS_TEXT, Text::toT(e.getError()).c_str());
@@ -673,7 +673,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 		priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGH, CTSTRING(HIGH));
 		priorityMenu.AppendMenu(MF_STRING, IDC_PRIORITY_HIGHEST, CTSTRING(HIGHEST));
 
-		int n = 1;
+		int n = 0;
 
 		const ItemInfo* ii = ctrlList.getItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
 
@@ -688,7 +688,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 				targetMenu.AppendMenu(MF_SEPARATOR);
 			}
 
-			n = 1;
+			n = 0;
 			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
 			targets.clear();
 			QueueManager::getInstance()->getTargets(ii->file->getTTH(), targets);
@@ -725,7 +725,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 				targetMenu.AppendMenu(MF_SEPARATOR);
 			}
 
-			n = 1;
+			n = 0;
 			targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOADTO, CTSTRING(BROWSE));
 			if(WinUtil::lastDirs.size() > 0) {
 				targetMenu.AppendMenu(MF_SEPARATOR);
@@ -781,7 +781,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 
 		// Strange, windows doesn't change the selection on right-click... (!)
 
-		int n = 1;
+		int n = 0;
 		//Append Favorite download dirs
 		StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 		if (spl.size() > 0) {
@@ -792,7 +792,7 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 			targetDirMenu.AppendMenu(MF_SEPARATOR);
 		}
 
-		n = 1;
+		n = 0;
 		targetDirMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIRTO, CTSTRING(BROWSE));
 
 		if(WinUtil::lastDirs.size() > 0) {
@@ -871,7 +871,7 @@ LRESULT DirectoryListingFrame::onDownloadTargetDir(WORD /*wNotifyCode*/, WORD wI
 	return 0;
 }
 LRESULT DirectoryListingFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int newId = wID - IDC_DOWNLOAD_FAVORITE_DIRS - 1;
+	int newId = wID - IDC_DOWNLOAD_FAVORITE_DIRS;
 	dcassert(newId >= 0);
 	StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 	
@@ -902,7 +902,7 @@ LRESULT DirectoryListingFrame::onDownloadFavoriteDirs(WORD /*wNotifyCode*/, WORD
 }
 
 LRESULT DirectoryListingFrame::onDownloadWholeFavoriteDirs(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int newId = wID - IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS - 1;
+	int newId = wID - IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS;
 	dcassert(newId >= 0);
 	
 	HTREEITEM t = ctrlTree.GetSelectedItem();

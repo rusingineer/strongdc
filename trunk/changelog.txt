@@ -1,4 +1,4 @@
-	-- StrongDC++ --
+	-- StrongDC++ 2.1 --
 
 *** VAROVÁNÍ ***
   Tato verze poruší informace o stažených èástech ve vaší frontì.

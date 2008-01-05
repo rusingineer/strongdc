@@ -78,21 +78,24 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 	{
 		Lock l(cs);
 
-		NickIter i = users.find(aNick);
+		NickIter i = users.find(const_cast<string*>(&aNick));
 		if(i != users.end())
 			return *i->second;
 	}
 
 	UserPtr p;
+	bool isMe = false;
 	if(aNick == getCurrentNick()) {
 		p = ClientManager::getInstance()->getMe();
+		isMe = true;
 	} else {
 		p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
 	}
 
 	{
 		Lock l(cs);
-		u = users.insert(make_pair(aNick, new OnlineUser(p, *this, 0))).first->second;
+		dcassert(isMe || (aNick == p->getFirstNick()));
+		u = users.insert(make_pair(const_cast<string*>(&(isMe ? getCurrentNick() : p->getFirstNick())), new OnlineUser(p, *this, 0))).first->second;
 		u->getIdentity().setNick(aNick);
 		if(u->getUser() == getMyIdentity().getUser()) {
 			setMyIdentity(u->getIdentity());
@@ -113,7 +116,7 @@ void NmdcHub::supports(const StringList& feat) {
 
 OnlineUser* NmdcHub::findUser(const string& aNick) const {
 	Lock l(cs);
-	NickIter i = users.find(aNick);
+	NickIter i = users.find(const_cast<string*>(&aNick));
 	return i == users.end() ? NULL : i->second;
 }
 
@@ -121,7 +124,7 @@ void NmdcHub::putUser(const string& aNick) {
 	OnlineUser* ou = NULL;
 	{
 		Lock l(cs);
-		NickMap::iterator i = users.find(aNick);
+		NickMap::iterator i = users.find(const_cast<string*>(&aNick));
 		if(i == users.end())
 			return;
 		ou = i->second;
@@ -815,11 +818,11 @@ string NmdcHub::checkNick(const string& aNick) {
 
 void NmdcHub::connectToMe(const OnlineUser& aUser) {
 	checkstate();
-	string userNick = aUser.getIdentity().getNick();
-	dcdebug("NmdcHub::connectToMe %s\n", userNick.c_str());
-	ConnectionManager::getInstance()->nmdcExpect(userNick, getMyNick(), getHubUrl());
+	dcdebug("NmdcHub::connectToMe %s\n", aUser.getIdentity().getNick().c_str());
+	string nick = fromUtf8(aUser.getIdentity().getNick());
+	ConnectionManager::getInstance()->nmdcExpect(nick, getMyNick(), getHubUrl());
 	ConnectionManager::iConnToMeCount++;
-	send("$ConnectToMe " + fromUtf8(userNick) + " " + getLocalIp() + ":" + Util::toString(ConnectionManager::getInstance()->getPort()) + "|");
+	send("$ConnectToMe " + nick + " " + getLocalIp() + ":" + Util::toString(ConnectionManager::getInstance()->getPort()) + "|");
 }
 
 void NmdcHub::revConnectToMe(const OnlineUser& aUser) {

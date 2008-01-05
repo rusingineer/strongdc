@@ -1,4 +1,4 @@
-	-- StrongDC++ --
+	-- StrongDC++ 2.1 --
 
 *** WARNING ***
   This version breaks information about downloaded parts of your queue.

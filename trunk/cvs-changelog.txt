@@ -1,10 +1,25 @@
-*** WARNING ***
-  This version breaks information about downloaded parts of your queue.
-  It's recommended to finish all started downloads before update.
-  Queue won't be deleted, only everything will start from the beginning.
-*** WARNING ***
+** svn355
+	fixed crashes #9252, #9358, #9620, #9622
+	try to fix crashes #9257, #9315, #9451
+	fixed a bug when minislots were aplied to chunk size and not file size
+	fixed file size in Upload queue window
+	fixed DNS resolving for favorite hub's IP
+	reverted storing user's first nick to have it for offline users
+	fixed storing partially downloaded chunks
+	fixed slow downloads disconnecting
+	fixed antifragment downloading
+	"Download finished" popup is displayed only when whole file is complete
+	Socks5 password field isn't readable
+	hopefully fixed some problems with downloading from filelists
+	switched to VS 2008
+	updated bzip2
+	fixed an issue with nick encodings and nmdc connections (DC++ SVN)
+	fixed autopriority for new files
+	added "Naomi web filter" to crash libraries
+	double-sized chunks for really fast users
 
-TODO:	do something with CID
+** svn354
+	released 2.1
 
 ** svn353
 	fixed possible crash in QueueFrame
@@ -44,6 +59,13 @@ TODO:	do something with CID
 	partial file sharing should work again
 
 ** svn344
+
+*** WARNING ***
+  This version breaks information about downloaded parts of your queue.
+  It's recommended to finish all started downloads before update.
+  Queue won't be deleted, only everything will start from the beginning.
+*** WARNING ***
+
 	removed FileChunksInfo
 	partial file sharing broken - i'll fix it later
 

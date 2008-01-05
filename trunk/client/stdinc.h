@@ -87,7 +87,7 @@ typedef unsigned __int64 uint64_t;
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
 
-#if _MSC_VER == 1400
+#if _MSC_VER == 1400 || _MSC_VER == 1500
 #define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
 //disable the deprecated warnings for the crt functions.
 #pragma warning(disable: 4996)

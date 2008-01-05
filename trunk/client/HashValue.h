@@ -20,24 +20,17 @@
 #define HASH_VALUE_H
 
 #include "FastAlloc.h"
+#include "Encoder.h"
 
 template<class Hasher>
 struct HashValue : FastAlloc<HashValue<Hasher> >{
 	static const size_t SIZE = Hasher::HASH_SIZE;
 
-	typedef HashValue* Ptr;
 	struct PtrHash {
-		size_t operator()(const Ptr rhs) const { return *(size_t*)rhs; }
-		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) == (*rhs); }
+		size_t operator()(const HashValue* rhs) const { return *(size_t*)rhs; }
+		bool operator()(const HashValue* lhs, const HashValue* rhs) const { return (*lhs) == (*rhs); }
 	};
-	struct PtrLess {
-		bool operator()(const Ptr lhs, const Ptr rhs) const { return (*lhs) < (*rhs); }
-	};
-
-	struct Hash {
-		size_t operator()(const HashValue& rhs) const { return *(size_t*)&rhs; }
-	};
-
+	
 	HashValue() { }
 	explicit HashValue(uint8_t* aData) { memcpy(data, aData, SIZE); }
 	explicit HashValue(const std::string& base32) { Encoder::fromBase32(base32.c_str(), data, SIZE); }
@@ -52,6 +45,13 @@ struct HashValue : FastAlloc<HashValue<Hasher> >{
 
 	uint8_t data[SIZE];
 };
+
+namespace std {
+template<typename T>
+struct hash<::HashValue<T> > {
+	size_t operator()(const ::HashValue<T>& rhs) const { return *(size_t*)rhs.data; }
+};
+}
 
 #endif // !defined(HASH_VALUE_H)
 

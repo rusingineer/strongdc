@@ -161,7 +161,7 @@ void ConnectionManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 					continue;
 				}
 
-				if(cqi->getLastAttempt() == 0 || (((cqi->getLastAttempt() + 60*1000) < aTick) && ((SETTING(DOWNCONN_PER_SEC)== 0) || (attempts < SETTING(DOWNCONN_PER_SEC))))) {
+				if(cqi->getLastAttempt() == 0 || (((cqi->getLastAttempt() + 60*1000) < aTick) && ((SETTING(DOWNCONN_PER_SEC) == 0) || (attempts < SETTING(DOWNCONN_PER_SEC))))) {
 					cqi->setLastAttempt(aTick);
 
 					QueueItem::Priority prio = QueueManager::getInstance()->hasDownload(cqi->getUser());
@@ -210,7 +210,7 @@ void ConnectionManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 	}
 }
 
-void ConnectionManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {	
+void ConnectionManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	Lock l(cs);
 
 	for(UserConnectionList::const_iterator j = userConnections.begin(); j != userConnections.end(); ++j) {
@@ -289,7 +289,7 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 bool ConnectionManager::checkIpFlood(const string& aServer, uint16_t aPort) {
 	Lock l(cs);
 
-	// We don't want to be used as flooding instruments
+	// We don't want to be used as a flooding instrument
 	uint8_t count = 0;
 	for(UserConnectionList::const_iterator j = userConnections.begin(); j != userConnections.end(); ++j) {
 		if((*j)->getRemoteIp() == aServer && (*j)->getPort() == aPort) {
@@ -423,7 +423,7 @@ void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aS
 	}
 
 	dcassert(aSource->getState() == UserConnection::STATE_CONNECT);
-	if (SETTING(GARBAGE_COMMAND_OUTGOING))
+	if (SETTING(GARBAGE_COMMAND_OUTGOING) && !aSource->isSet(UserConnection::FLAG_STEALTH))
 		aSource->garbageCommand();
 	if(aSource->isSet(UserConnection::FLAG_NMDC)) {
 		aSource->myNick(aSource->getToken());
@@ -460,8 +460,11 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 		}
         aSource->setToken(i.first);	
 		aSource->setHubUrl(i.second);
+		aSource->setEncoding(const_cast<string*>(&ClientManager::getInstance()->findHubEncoding(i.second)));
 	}
-	CID cid = ClientManager::getInstance()->makeCid(aNick, aSource->getHubUrl());
+
+	string nick = Text::toUtf8(aNick, *(aSource->getEncoding()));
+	CID cid = ClientManager::getInstance()->makeCid(nick, aSource->getHubUrl());
 
 	// First, we try looking in the pending downloads...hopefully it's one of them...
 	{
@@ -482,7 +485,7 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 
 		aSource->setUser(ClientManager::getInstance()->findUser(cid));
 		if(!aSource->getUser() || !ClientManager::getInstance()->isOnline(aSource->getUser())) {
-			dcdebug("CM::onMyNick Incoming connection from unknown user %s\n", aNick.c_str());
+			dcdebug("CM::onMyNick Incoming connection from unknown user %s\n", nick.c_str());
 			putConnection(aSource);
 			return;
 		}

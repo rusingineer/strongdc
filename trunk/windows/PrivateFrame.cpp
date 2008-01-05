@@ -99,7 +99,7 @@ void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const Use
 
 		if(BOOLSETTING(POPUP_NEW_PM)) {
 			pair<tstring, bool> hubs = WinUtil::getHubNames(replyTo);
-			MainFrame::getMainFrame()->ShowBalloonTip((WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first).c_str(), CTSTRING(PRIVATE_MESSAGE));
+			MainFrame::getMainFrame()->ShowBalloonTip(WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first, TSTRING(PRIVATE_MESSAGE));
 		}
 
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -113,7 +113,7 @@ void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const Use
 		if(!myPM) {
 			if(BOOLSETTING(POPUP_PM)) {
 				pair<tstring, bool> hubs = WinUtil::getHubNames(replyTo);
-				MainFrame::getMainFrame()->ShowBalloonTip((WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first).c_str(), CTSTRING(PRIVATE_MESSAGE));
+				MainFrame::getMainFrame()->ShowBalloonTip(WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first, TSTRING(PRIVATE_MESSAGE));
 			}
 
 			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {

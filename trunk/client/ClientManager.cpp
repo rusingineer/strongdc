@@ -103,8 +103,12 @@ StringList ClientManager::getNicks(const CID& cid) const {
 	}
 	if(nicks.empty()) {
 		// Offline perhaps?
-		nicks.insert(STRING(USER_OFFLINE));
-		//nicks.insert('{' + cid.toBase32() + '}');
+		UserMap::const_iterator i = users.find(cid);
+		if(i != users.end() && !i->second->getFirstNick().empty()) {
+			nicks.insert(i->second->getFirstNick());
+		} else {
+			nicks.insert('{' + cid.toBase32() + '}');
+		}
 	}
 	return StringList(nicks.begin(), nicks.end());
 }
@@ -197,11 +201,13 @@ UserPtr ClientManager::getUser(const string& aNick, const string& aHubUrl) throw
 
 	UserIter ui = users.find(cid);
 	if(ui != users.end()) {
+		ui->second->setFirstNick(aNick);	
 		ui->second->setFlag(User::NMDC);
 		return ui->second;
 	}
 
 	UserPtr p(new User(cid));
+	p->setFirstNick(aNick);
 	p->setFlag(User::NMDC);
 	users.insert(make_pair(cid, p));
 
@@ -496,6 +502,7 @@ UserPtr& ClientManager::getMe() {
 		Lock l(cs);
 		if(!me) {
 			me = new User(getMyCID());
+			me->setFirstNick(SETTING(NICK));
 			users.insert(make_pair(me->getCID(), me));
 		}
 	}

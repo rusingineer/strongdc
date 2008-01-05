@@ -79,7 +79,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
     
 	if(cmd == "$MyNick") {
 		if(!param.empty())
-			fire(UserConnectionListener::MyNick(), this, Text::toUtf8(param, *encoding));
+			fire(UserConnectionListener::MyNick(), this, param);
 	} else if(cmd == "$Direction") {
 		x = param.find(" ");
 		if(x != string::npos) {

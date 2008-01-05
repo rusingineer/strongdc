@@ -163,7 +163,7 @@ bool HashManager::HashStore::loadTree(File& f, const TreeInfo& ti, const TTHValu
 }
 
 bool HashManager::HashStore::getTree(const TTHValue& root, TigerTree& tt) {
-	TreeIter i = treeIndex.find(root);
+	TreeIterC i = treeIndex.find(root);
 	if(i == treeIndex.end())
 		return false;
 	try {
@@ -187,7 +187,7 @@ bool HashManager::HashStore::checkTTH(const string& aFileName, int64_t aSize, ui
 		FileInfoIter j = find(i->second.begin(), i->second.end(), fname);
 		if(j != i->second.end()) {
 			FileInfo& fi = *j;
-			TreeIter ti = treeIndex.find(fi.getRoot());
+			TreeIterC ti = treeIndex.find(fi.getRoot());
 			if(ti == treeIndex.end() || ti->second.getSize() != aSize || fi.getTimeStamp() != aTimeStamp) {
 				i->second.erase(j);
 				dirty = true;
@@ -219,14 +219,14 @@ void HashManager::HashStore::rebuild() {
 		DirMap newFileIndex;
 		TreeMap newTreeIndex;
 
-		for(DirIter i = fileIndex.begin(); i != fileIndex.end(); ++i) {
-			for(FileInfoIter j = i->second.begin(); j != i->second.end(); ++j) {
+		for(DirIterC i = fileIndex.begin(); i != fileIndex.end(); ++i) {
+			for(FileInfoIterC j = i->second.begin(); j != i->second.end(); ++j) {
 				if(!j->getUsed())
 					continue;
 
 				if(!Util::fileExists(i->first + j->getFileName())) continue;
 
-				TreeIter k = treeIndex.find(j->getRoot());
+				TreeIterC k = treeIndex.find(j->getRoot());
 				if(k != treeIndex.end()) {
 					newTreeIndex[j->getRoot()] = k->second;
 				}
@@ -253,18 +253,18 @@ void HashManager::HashStore::rebuild() {
 			}
 		}
 
-		for(DirIter i = fileIndex.begin(); i != fileIndex.end(); ++i) {
+		for(DirIterC i = fileIndex.begin(); i != fileIndex.end(); ++i) {
 			DirIter fi = newFileIndex.insert(make_pair(i->first, FileInfoList())).first;
 			
-			for(FileInfoIter j = i->second.begin(); j != i->second.end(); ++j) {
+			for(FileInfoIterC j = i->second.begin(); j != i->second.end(); ++j) {
 				if(newTreeIndex.find(j->getRoot()) != newTreeIndex.end()) {
 					fi->second.push_back(*j);
 				}
-		}
+			}
 
 			if(fi->second.empty())
 				newFileIndex.erase(fi);
-	}
+		}
 
 		File::deleteFile(origName);
 		File::renameFile(tmpName, origName);
@@ -291,7 +291,7 @@ void HashManager::HashStore::save() {
 
 			f.write(LIT("\t<Trees>\r\n"));
 
-			for(TreeIter i = treeIndex.begin(); i != treeIndex.end(); ++i) {
+			for(TreeIterC i = treeIndex.begin(); i != treeIndex.end(); ++i) {
 				const TreeInfo& ti = i->second;
 				f.write(LIT("\t\t<Hash Type=\"TTH\" Index=\""));
 				f.write(Util::toString(ti.getIndex()));
@@ -307,9 +307,9 @@ void HashManager::HashStore::save() {
 
 			f.write(LIT("\t</Trees>\r\n\t<Files>\r\n"));
 
-			for(DirIter i = fileIndex.begin(); i != fileIndex.end(); ++i) {
+			for(DirIterC i = fileIndex.begin(); i != fileIndex.end(); ++i) {
 				const string& dir = i->first;
-				for(FileInfoIter j = i->second.begin(); j != i->second.end(); ++j) {
+				for(FileInfoIterC j = i->second.begin(); j != i->second.end(); ++j) {
 					const FileInfo& fi = *j;
 					f.write(LIT("\t\t<File Name=\""));
 					f.write(SimpleXML::escape(dir + fi.getFileName(), tmp, true));

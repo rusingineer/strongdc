@@ -335,7 +335,7 @@ public:
 		anyMF->ctrlToolbar.CheckButton(IDC_AWAY, check);
 	}
 
-	void ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags=NIIF_INFO);
+	void ShowBalloonTip(tstring szMsg, tstring szTitle, DWORD dwInfoFlags=NIIF_INFO);
 
 	CImageList largeImages, largeImagesHot;
 	int run();

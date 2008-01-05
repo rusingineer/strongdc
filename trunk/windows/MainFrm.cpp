@@ -1130,7 +1130,7 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 	return 0;
 }
 
-void MainFrame::ShowBalloonTip(LPCTSTR szMsg, LPCTSTR szTitle, DWORD dwInfoFlags) {
+void MainFrame::ShowBalloonTip(tstring szMsg, tstring szTitle, DWORD dwInfoFlags) {
 	Popup* p = new Popup;
 	p->Title = szTitle;
 	p->Message = szMsg;

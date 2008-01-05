@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Language Name="Example Language" Author="BigMuscle" Version="2.06" Revision="1">
+<Language Name="Example Language" Author="BigMuscle" Version="2.11" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Accepted Disconnects</String>
 		<String Name="AcceptedTimeouts">Accepted Timeouts</String>
@@ -103,7 +103,6 @@
 		<String Name="CopyNickIp">Copy Nick+IP</String>
 		<String Name="CopyTag">Copy TAG</String>
 		<String Name="CopyUrl">Copy URL</String>
-		<String Name="CorruptionDetected">Corruption detected for TTH: %s, at position %d</String>
 		<String Name="CouldNotOpenTargetFile">Could not open target file: </String>
 		<String Name="Count">Count</String>
 		<String Name="Country">Country</String>
@@ -259,7 +258,6 @@
 		<String Name="CheckShowRealShare">, stated size = %[shareshort], real size = %[realshareformat]</String>
 		<String Name="CheckingClient">Checking client...</String>
 		<String Name="ChooseFolder">Choose folder</String>
-		<String Name="ChunkOverlapped">Chunk overlapped by faster user</String>
 		<String Name="IgnoreTthSearches">Ignore TTH searches</String>
 		<String Name="IgnoreUser">Ignore User</String>
 		<String Name="IgnoredMessage">Ignored message: </String>

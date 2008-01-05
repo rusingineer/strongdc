@@ -117,7 +117,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 					return false;
 				}
 
-				free = free || (size <= (int64_t)(SETTING(SET_MINISLOT_SIZE) * 1024) );
+				free = free || (fileSize <= (int64_t)(SETTING(SET_MINISLOT_SIZE) * 1024) );
 
 				f->setPos(start);
 				is = f;
@@ -262,7 +262,7 @@ ok:
 				extraSlot = true;
 			} else {
 				delete is;
-				aSource.maxedOut(addFailedUpload(aSource.getUser(), sourceFile, aStartPos, size));
+				aSource.maxedOut(addFailedUpload(aSource.getUser(), sourceFile, aStartPos, fileSize));
 				aSource.disconnect();
 				return false;
 			}

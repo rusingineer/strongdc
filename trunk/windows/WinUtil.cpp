@@ -240,34 +240,42 @@ COLORREF HLS_TRANSFORM (COLORREF rgb, int percent_L, int percent_S) {
 }
 
 void UserInfoBase::matchQueue() {
-	try {
-		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_MATCH_QUEUE);
-	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError());
+	if(getUser()) {
+		try {
+			QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_MATCH_QUEUE);
+		} catch(const Exception& e) {
+			LogManager::getInstance()->message(e.getError());
+		}
 	}
 }
 
 void UserInfoBase::getUserResponses() {
-	try {
-		QueueManager::getInstance()->addTestSUR(getUser(), false);
-	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError());		
+	if(getUser()) {
+		try {
+			QueueManager::getInstance()->addTestSUR(getUser(), false);
+		} catch(const Exception& e) {
+			LogManager::getInstance()->message(e.getError());		
+		}
 	}
 }
 
 void UserInfoBase::doReport() {
-	ClientManager::getInstance()->reportUser(getUser());
+	if(getUser()) {
+		ClientManager::getInstance()->reportUser(getUser());
+	}
 }
 
 void UserInfoBase::getList() {
-	try {
-		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CLIENT_VIEW);
-	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError());		
+	if(getUser()) {
+		try {
+			QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CLIENT_VIEW);
+		} catch(const Exception& e) {
+			LogManager::getInstance()->message(e.getError());		
+		}
 	}
 }
 void UserInfoBase::browseList() {
-	if(getUser()->getCID().isZero())
+	if(!getUser() || getUser()->getCID().isZero())
 		return;
 	try {
 		QueueManager::getInstance()->addPfs(getUser(), "");
@@ -276,41 +284,61 @@ void UserInfoBase::browseList() {
 	}
 }
 void UserInfoBase::checkList() {
-	try {
-		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CHECK_FILE_LIST);
-	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError());		
+	if(getUser()) {
+		try {
+			QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CHECK_FILE_LIST);
+		} catch(const Exception& e) {
+			LogManager::getInstance()->message(e.getError());		
+		}
 	}
 }
 void UserInfoBase::addFav() {
-	FavoriteManager::getInstance()->addFavoriteUser(getUser());
+	if(getUser()) {
+		FavoriteManager::getInstance()->addFavoriteUser(getUser());
+	}
 }
 void UserInfoBase::pm() {
-	PrivateFrame::openWindow(getUser());
+	if(getUser()) {
+		PrivateFrame::openWindow(getUser());
+	}
 }
 void UserInfoBase::connectFav() {
-	string url = FavoriteManager::getInstance()->getUserURL(getUser());
-	if(!url.empty()) {
-		HubFrame::openWindow(Text::toT(url));
+	if(getUser()) {
+		string url = FavoriteManager::getInstance()->getUserURL(getUser());
+		if(!url.empty()) {
+			HubFrame::openWindow(Text::toT(url));
+		}
 	}
 }
 void UserInfoBase::grant() {
-	UploadManager::getInstance()->reserveSlot(getUser(), 600);
+	if(getUser()) {
+		UploadManager::getInstance()->reserveSlot(getUser(), 600);
+	}
 }
 void UserInfoBase::removeAll() {
-	QueueManager::getInstance()->removeSource(getUser(), QueueItem::Source::FLAG_REMOVED);
+	if(getUser()) {
+		QueueManager::getInstance()->removeSource(getUser(), QueueItem::Source::FLAG_REMOVED);
+	}
 }
 void UserInfoBase::grantHour() {
-	UploadManager::getInstance()->reserveSlot(getUser(), 3600);
+	if(getUser()) {
+		UploadManager::getInstance()->reserveSlot(getUser(), 3600);
+	}
 }
 void UserInfoBase::grantDay() {
-	UploadManager::getInstance()->reserveSlot(getUser(), 24*3600);
+	if(getUser()) {
+		UploadManager::getInstance()->reserveSlot(getUser(), 24*3600);
+	}
 }
 void UserInfoBase::grantWeek() {
-	UploadManager::getInstance()->reserveSlot(getUser(), 7*24*3600);
+	if(getUser()) {
+		UploadManager::getInstance()->reserveSlot(getUser(), 7*24*3600);
+	}
 }
 void UserInfoBase::ungrant() {
-	UploadManager::getInstance()->unreserveSlot(getUser());
+	if(getUser()) {
+		UploadManager::getInstance()->unreserveSlot(getUser());
+	}
 }
 
 bool WinUtil::getVersionInfo(OSVERSIONINFOEX& ver) {

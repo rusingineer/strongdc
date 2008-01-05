@@ -274,7 +274,7 @@ public:
 		int i;
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 			FinishedItem *ii = ctrlList.getItemData(i);
-			if(ii->getUser()->isOnline()) {
+			if(ii->getUser() && ii->getUser()->isOnline()) {
 				try {
 					QueueManager::getInstance()->addList(ii->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 				} catch(const Exception&) {
@@ -290,7 +290,7 @@ public:
 		int i;
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 			FinishedItem *ii = ctrlList.getItemData(i);
-			if(ii->getUser()->isOnline()) {
+			if(ii->getUser() && ii->getUser()->isOnline()) {
 				UploadManager::getInstance()->reserveSlot(ii->getUser(), 600);
 			} else {
 				addStatusLine(TSTRING(USER_OFFLINE));
