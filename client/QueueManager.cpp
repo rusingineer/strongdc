@@ -77,19 +77,15 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		if(!aTempTarget.empty()) {
 			qi->setTempTarget(aTempTarget);
 		}
+
+		if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && (p != QueueItem::PAUSED)) {
+			qi->setAutoPriority(true);
+			qi->setPriority(QueueItem::LOW);
+		}
 	} else {
 		qi->setPriority(QueueItem::HIGHEST);
 	}
 	
-	if((qi->getDownloadedBytes() > 0))
-		qi->setFlag(QueueItem::FLAG_EXISTS);
-	
-
-	if(BOOLSETTING(AUTO_PRIORITY_DEFAULT) && !qi->isSet(QueueItem::FLAG_USER_LIST) && (p != QueueItem::HIGHEST) && (p != QueueItem::PAUSED)) {
-		qi->setAutoPriority(true);
-		// TODO: qi->setPriority(qi->calculateAutoPriority());
-	}
-
 	dcassert(find(aTarget) == NULL);
 	add(qi);
 	return qi;
@@ -659,7 +655,7 @@ QueueItem::Priority QueueManager::hasDownload(const UserPtr& aUser) throw() {
 	return qi->getPriority();
 }
 namespace {
-typedef unordered_map<TTHValue, const DirectoryListing::File*, TTHValue::Hash> TTHMap;
+typedef unordered_map<TTHValue, const DirectoryListing::File*> TTHMap;
 
 // *** WARNING *** 
 // Lock(cs) makes sure that there's only one thread accessing this
@@ -884,6 +880,9 @@ void QueueManager::setFile(Download* d) {
 		string target = d->getDownloadTarget();
 		File::ensureDirectory(target);
 		File* f = new File(target, File::WRITE, File::OPEN | File::CREATE | File::SHARED);
+		if(d->isSet(Download::FLAG_ANTI_FRAG)) {
+			f->setSize(d->getTigerTree().getFileSize());
+		}
 		f->setPos(d->getSegment().getStart());
 		d->setFile(f);
 	} else if(d->getType() == Transfer::TYPE_FULL_LIST) {
@@ -951,7 +950,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 		Lock l(cs);
 
 		delete aDownload->getFile();
-		aDownload->setFile(0);
+		aDownload->setFile(NULL);
 
 		if(aDownload->getType() == Transfer::TYPE_PARTIAL_LIST) {
 			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUser()->getCID());
@@ -1056,6 +1055,14 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						if(q->isSet(QueueItem::FLAG_USER_LIST)) {
 							// Blah...no use keeping an unfinished file list...
 							File::deleteFile(q->getListName());
+						}
+					} else {
+						// mark partially downloaded chunk, but align it to block size
+						int64_t downloaded = aDownload->getPos();
+						downloaded -= downloaded % aDownload->getTigerTree().getBlockSize();
+
+						if(downloaded > 0) {
+							q->addSegment(Segment(aDownload->getStartPos(), downloaded));
 						}
 					}
 
@@ -1371,6 +1378,8 @@ void QueueManager::saveQueue() throw() {
 					if(j->isSet(QueueItem::Source::FLAG_PARTIAL)) continue;
 					f.write(LIT("\t\t<Source CID=\""));
 					f.write(j->getUser()->getCID().toBase32());
+					f.write(LIT("\" Nick=\""));
+					f.write(SimpleXML::escape(j->getUser()->getFirstNick(), tmp, true));
 					f.write(LIT("\"/>\r\n"));
 				}
 
@@ -1473,7 +1482,9 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			if(qi == NULL) {
 				qi = qm->fileQueue.add(target, size, flags, p, tempTarget, added, TTHValue(tthRoot));
 				if(downloaded > 0) {
+					qi->setFlag(QueueItem::FLAG_EXISTS);
 					qi->addSegment(Segment(0, downloaded));
+					qi->setPriority(qi->calculateAutoPriority());
 				}
 
 				bool ap = Util::toInt(getAttrib(attribs, sAutoPriority, 6)) == 1;
@@ -1489,7 +1500,9 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			int64_t size = Util::toInt64(getAttrib(attribs, sSize, 1));
 			
 			if(size > 0 && start >= 0 && (start + size) <= cur->getSize()) {
+				cur->setFlag(QueueItem::FLAG_EXISTS);
 				cur->addSegment(Segment(start, size));
+				cur->setPriority(cur->calculateAutoPriority());
 			}
 		} else if(cur && name == sSource) {
 			const string& cid = getAttrib(attribs, sCID, 0);
@@ -1498,10 +1511,12 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 				return;
 			}
 			UserPtr user = ClientManager::getInstance()->getUser(CID(cid));
+			const string& nick = getAttrib(attribs, sNick, 1);
+			user->setFirstNick(nick);
 
 			try {
 				if(qm->addSource(cur, user, 0) && user->isOnline())
-				ConnectionManager::getInstance()->getDownloadConnection(user);
+					ConnectionManager::getInstance()->getDownloadConnection(user);
 			} catch(const Exception&) {
 				return;
 			}
@@ -1772,7 +1787,9 @@ bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth
 		}
 
 		// Update source's parts info
-		si->getPartialSource()->setPartialInfo(partialSource.getPartialInfo());
+		if(si->getPartialSource()) {
+			si->getPartialSource()->setPartialInfo(partialSource.getPartialInfo());
+		}
 	}
 	
 	// Connect to this user

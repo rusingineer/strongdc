@@ -74,8 +74,8 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 			d->tick();
 		}
 
-		if (d->getType() == Transfer::TYPE_FILE) {
-			if (d->getSize() > (SETTING(DISCONNECT_FILESIZE) * 1048576)) {
+		if (d->getType() == Transfer::TYPE_FILE && d->getStart() > 0) {
+			if (d->getTigerTree().getFileSize() > (SETTING(DISCONNECT_FILESIZE) * 1048576)) {
 				if((d->getAverageSpeed() < SETTING(DISCONNECT_SPEED) * 1024)) {
 					if(	(((aTick - d->getLastTick())/1000) > (uint32_t)SETTING(DISCONNECT_TIME)) &&
 						(!QueueManager::getInstance()->dropSource(d)))
@@ -209,7 +209,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn) {
 		return;
 	}
 
-	if(d->isSet(Download::FLAG_TESTSUR)) {
+	if(d->isSet(Download::FLAG_TESTSUR) && aConn->isSet(UserConnection::FLAG_NMDC)) {
 		aConn->getListLen();
 	}
 
@@ -270,7 +270,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t start, int64_
 	
 	if(d->getPos() >= d->getSize()) {
 		// Already finished? A zero-byte file list could cause this...
-		aSource->setDownload(NULL);
 		removeDownload(d);
 		QueueManager::getInstance()->putDownload(d, true);
 		removeConnection(aSource);
@@ -286,7 +285,6 @@ bool DownloadManager::prepareFile(UserConnection* aSource, int64_t start, int64_
 		failDownload(aSource, e.getError());
 		return false;
 	}
-
 
 	try {
 		if((d->getType() == Transfer::TYPE_FILE || d->getType() == Transfer::TYPE_FULL_LIST) && SETTING(BUFFER_SIZE) > 0 ) {
@@ -363,7 +361,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 
 			QueueManager::getInstance()->removeSource(d->getPath(), aSource->getUser(), QueueItem::Source::FLAG_BAD_TREE, false);
 
-			aSource->setDownload(NULL);
 			QueueManager::getInstance()->putDownload(d, false);
 
 			checkDownloads(aSource);
@@ -385,7 +382,6 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	removeDownload(d);
 	fire(DownloadManagerListener::Complete(), d, d->getType() == Transfer::TYPE_TREE);
 
-	aSource->setDownload(NULL);
 	QueueManager::getInstance()->putDownload(d, true, false);	
 	checkDownloads(aSource);
 }
@@ -534,10 +530,11 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	dcassert(d != NULL);
 	dcdebug("File Not Available: %s\n", d->getPath().c_str());
 
+	removeDownload(d);
 	fire(DownloadManagerListener::Failed(), d, d->getTargetFileName() + ": " + STRING(FILE_NOT_AVAILABLE));
+
 	if( d->isSet(Download::FLAG_TESTSUR) ) {
 		dcdebug("TestSUR File not available\n");
-		removeDownload(d);
 
 		ClientManager::getInstance()->setCheating(aSource->getUser(), "File Not Available", "", -1, false);
 		
@@ -547,9 +544,8 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	}
 	
 	QueueManager::getInstance()->removeSource(d->getPath(), aSource->getUser(), (Flags::MaskType)(d->getType() == Transfer::TYPE_TREE ? QueueItem::Source::FLAG_NO_TREE : QueueItem::Source::FLAG_FILE_NOT_AVAILABLE), false);
-	removeDownload(d);
 
-	QueueManager::getInstance()->putDownload(d, false, false);
+	QueueManager::getInstance()->putDownload(d, false);
 	checkDownloads(aSource);
 }
 

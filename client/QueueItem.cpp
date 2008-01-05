@@ -134,6 +134,11 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 		// set maxSize according to user's lastSpeed
 		double x = max(1.0, (double)userSpeed / (double)averageChunkSpeed);
 		maxSize = (int64_t)((double)maxSize * x);
+
+		// chunk is still too small for this user
+		if(maxSize / userSpeed <= 5) {
+			maxSize *= 2;
+		}
 	}
 
 	maxSize = ((maxSize + blockSize - 1) / blockSize) * blockSize; // Make sure we're on an even block boundary
@@ -187,6 +192,8 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 		return neededParts[Util::rand(0, neededParts.size())];
 	}
 	
+	// TODO: replace slow running downloads with fast user
+
 	return Segment(0, 0);
 }
 

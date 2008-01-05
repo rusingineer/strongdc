@@ -262,7 +262,7 @@ private:
 	// Map real name to directory structure
 	Directory::Map directories;
 
-	typedef unordered_map<TTHValue, Directory::File::Set::const_iterator, TTHValue::Hash> HashFileMap;
+	typedef unordered_map<TTHValue, Directory::File::Set::const_iterator> HashFileMap;
 	typedef HashFileMap::const_iterator HashFileIter;
 
 	HashFileMap tthIndex;

@@ -79,7 +79,7 @@ public:
 		};
 		typedef vector<Ptr> List;
 		typedef List::const_iterator Iter;
-		typedef unordered_set<TTHValue, TTHValue::Hash> TTHSet;
+		typedef unordered_set<TTHValue> TTHSet;
 		
 		List directories;
 		File::List files;

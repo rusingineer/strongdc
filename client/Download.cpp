@@ -67,6 +67,13 @@ Download::Download(UserConnection& conn, QueueItem& qi) throw() : Transfer(conn,
 			setTreeValid(true);
 			setSegment(qi.getNextSegment(getTigerTree().getBlockSize(), getUser()->getLastDownloadSpeed(), source->getPartialSource()));
 		}
+
+		int64_t start = File::getSize((getTempTarget().empty() ? getPath() : getTempTarget()));
+
+		// Only use antifrag if we don't have a previous non-antifrag part
+		if( BOOLSETTING(ANTI_FRAG) && (start == -1) && (getSize() != -1) ) {
+			setFlag(Download::FLAG_ANTI_FRAG);
+		}
 	}
 }
 

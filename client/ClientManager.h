@@ -177,10 +177,10 @@ public:
 	void setCheating(const UserPtr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
 
 private:
-	typedef unordered_map<CID, UserPtr, CID::Hash> UserMap;
+	typedef unordered_map<CID, UserPtr> UserMap;
 	typedef UserMap::iterator UserIter;
 
-	typedef unordered_multimap<CID, OnlineUser*, CID::Hash> OnlineMap;
+	typedef unordered_multimap<CID, OnlineUser*> OnlineMap;
 	typedef OnlineMap::iterator OnlineIter;
 	typedef OnlineMap::const_iterator OnlineIterC;
 	typedef pair<OnlineIter, OnlineIter> OnlinePair;

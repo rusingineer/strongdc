@@ -57,6 +57,15 @@ void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
 	// Get the RichEdit container site
 	IOleClientSite *pOleClientSite;	
 	pRichEditOle->GetClientSite(&pOleClientSite);
+
+	if(pOleClientSite == NULL) {
+		DeleteObject(hBitmap);
+		pRichEditOle->Release();	
+		lpLockBytes->Release();
+		lpLockBytes = NULL;
+		dcdebug("pOleClientSite is NULL\n");
+		return;
+	}
 		
 	// The final ole object which will be inserted in the richedit control
 	IOleObject* pOleObject = pods.GetOleObject(pOleClientSite, pStorage);

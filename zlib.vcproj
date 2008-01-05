@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9,00"
 	Name="zlib"
 	ProjectGUID="{DFBBE42A-45F4-4188-89C2-17F5DFE50673}"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -18,7 +19,6 @@
 			OutputDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
 			IntermediateDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -96,7 +96,6 @@
 			OutputDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
 			IntermediateDirectory="$(SolutionDir)vc7\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"

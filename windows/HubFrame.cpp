@@ -663,7 +663,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					PlaySound(Text::toT(SETTING(SOUND_FAVUSER)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 				if(isFavorite && BOOLSETTING(POPUP_FAVORITE_CONNECTED)) {
-					MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u.onlineUser->getIdentity().getNick() + " - " + client->getHubName()).c_str(), CTSTRING(FAVUSER_ONLINE));
+					MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(u.onlineUser->getIdentity().getNick() + " - " + client->getHubName()), TSTRING(FAVUSER_ONLINE));
 				}
 
 				if (showJoins || (favShowJoins && isFavorite)) {
@@ -691,7 +691,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 							snwprintf(buf, sizeof(buf), _T("*** %s %s - %s"), TSTRING(USER).c_str(), Text::toT(u.onlineUser->getIdentity().getNick()).c_str(), detectString.c_str());
 
 							if(BOOLSETTING(POPUP_CHEATING_USER)) {
-								MainFrame::getMainFrame()->ShowBalloonTip(buf, CTSTRING(CHEATING_USER));
+								MainFrame::getMainFrame()->ShowBalloonTip(tstring(buf), TSTRING(CHEATING_USER));
 							}
 
 							if(BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT)) {
@@ -732,7 +732,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			unsetIconState();
 
 			if(BOOLSETTING(POPUP_HUB_CONNECTED)) {
-				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(client->getAddress()).c_str(), CTSTRING(CONNECTED));
+				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(client->getAddress()), TSTRING(CONNECTED));
 			}
 
 			if ((!SETTING(SOUND_HUBCON).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -745,7 +745,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				PlaySound(Text::toT(SETTING(SOUND_HUBDISCON)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 			if(BOOLSETTING(POPUP_HUB_DISCONNECTED)) {
-				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(client->getAddress()).c_str(), CTSTRING(DISCONNECTED));
+				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(client->getAddress()), TSTRING(DISCONNECTED));
 			}
 		} else if(i->first == ADD_CHAT_LINE) {
     		const MessageTask& msg = *static_cast<MessageTask*>(i->second);
@@ -850,7 +850,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 
 			tstring msg = Text::toT(static_cast<StringTask*>(i->second)->str);
 			if(BOOLSETTING(POPUP_CHEATING_USER) && msg.length() < 256) {
-				MainFrame::getMainFrame()->ShowBalloonTip(msg.c_str(), CTSTRING(CHEATING_USER));
+				MainFrame::getMainFrame()->ShowBalloonTip(msg, TSTRING(CHEATING_USER));
 			}
 
 			addLine(Text::toT(static_cast<StringTask*>(i->second)->str), cf);
@@ -1631,6 +1631,8 @@ LRESULT HubFrame::onFollow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 		ClientManager::getInstance()->putClient(client);
 		clearTaskList();
 		client = ClientManager::getInstance()->getClient(Text::fromT(server));
+
+		ctrlClient.setClient(client);
 
 		RecentHubEntry r;
 		r.setName("*");

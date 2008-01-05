@@ -174,7 +174,7 @@ void Client::updateCounts(bool aRemove) {
 string Client::getLocalIp() const {
 	// Favorite hub Ip
 	if(!getFavIp().empty())
-		return getFavIp();
+		return Socket::resolve(getFavIp());
 
 	// Best case - the server detected it
 	if((!BOOLSETTING(NO_IP_OVERRIDE) || SETTING(EXTERNAL_IP).empty()) && !getMyIdentity().getIp().empty()) {

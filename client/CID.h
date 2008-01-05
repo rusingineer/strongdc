@@ -26,9 +26,6 @@ class CID {
 public:
 	enum { SIZE = 192 / 8 };
 
-	struct Hash {
-		size_t operator()(const CID& c) const { return c.toHash(); }
-	};
 	CID() { memzero(cid, sizeof(cid)); }
 	explicit CID(const uint8_t* data) { memcpy(cid, data, sizeof(cid)); }
 	explicit CID(const string& base32) { Encoder::fromBase32(base32.c_str(), cid, sizeof(cid)); }
@@ -55,6 +52,15 @@ public:
 private:
 	uint8_t cid[SIZE];
 };
+
+namespace std {
+template<>
+struct hash<::CID> {
+	size_t operator()(const ::CID& rhs) const {
+		return *reinterpret_cast<const size_t*>(rhs.data());
+	}
+};
+}
 
 #endif // !defined(CID_H)
 

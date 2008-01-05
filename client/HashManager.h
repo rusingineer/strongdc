@@ -180,12 +180,15 @@ private:
 
 		typedef vector<FileInfo> FileInfoList;
 		typedef FileInfoList::iterator FileInfoIter;
+		typedef FileInfoList::const_iterator FileInfoIterC;
 
 		typedef unordered_map<string, FileInfoList> DirMap;
 		typedef DirMap::iterator DirIter;
+		typedef DirMap::const_iterator DirIterC;
 
-		typedef unordered_map<TTHValue, TreeInfo, TTHValue::Hash> TreeMap;
+		typedef unordered_map<TTHValue, TreeInfo> TreeMap;
 		typedef TreeMap::iterator TreeIter;
+		typedef TreeMap::const_iterator TreeIterC;
 
 		friend class HashLoader;
 

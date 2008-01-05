@@ -52,7 +52,7 @@ public:
 		size_t operator()(const UserPtr& x) const { return ((size_t)(&(*x)))/sizeof(User); }
 	};
 
-	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0) { }
+	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0), firstNick(Util::emptyString) { }
 
 	~User() throw() { }
 
@@ -62,6 +62,7 @@ public:
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
 
+	GETSET(string, firstNick, FirstNick);
 	GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
 private:
 	User(const User&);
@@ -84,17 +85,32 @@ public:
 	
 	Identity() { }
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
-	Identity(const Identity& rhs) : user(rhs.user), info(rhs.info) { }
+	Identity(const Identity& rhs) : user(rhs.user) { Lock l(rhs.cs); info = rhs.info; }
 	Identity& operator=(const Identity& rhs) { Lock l1(cs); Lock l2(rhs.cs); user = rhs.user; info = rhs.info; return *this; }
 	~Identity() { }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
-	GS(Nick, "NI")
 	GS(Description, "DE")
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
 	GS(Status, "ST")
+
+	void setNick(const string& aNick) {
+		if(!user || !user->isSet(User::NMDC)) {
+			set("NI", aNick);
+		}
+	}
+
+	const string& getNick() const {
+		if(user && user->isSet(User::NMDC)) {
+			return user->getFirstNick();
+		} else {
+			Lock l(cs);
+			InfMap::const_iterator i = info.find(*(short*)"NI");
+			return i == info.end() ? Util::emptyString : i->second;
+		}
+	}
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
