@@ -50,7 +50,7 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(" (c) Copyright 2004-2007 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2007 Jacek Sieka\n\nhttp://strongdc.sf.net"));
+		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(" (c) Copyright 2004-2008 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2008 Jacek Sieka\n\nhttp://strongdc.sf.net"));
 		CEdit ctrlThanks(GetDlgItem(IDC_THANKS));
 		ctrlThanks.FmtLines(TRUE);
 		ctrlThanks.AppendText(thanks, TRUE);

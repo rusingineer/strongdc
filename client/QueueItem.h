@@ -108,17 +108,15 @@ public:
 			FLAG_FILE_NOT_AVAILABLE = 0x01,
 			FLAG_PASSIVE			= 0x02,
 			FLAG_REMOVED			= 0x04,
-			FLAG_CRC_FAILED			= 0x08,
-			FLAG_CRC_WARN			= 0x10,
-			FLAG_NO_TTHF			= 0x20,
-			FLAG_BAD_TREE			= 0x40,
-			FLAG_SLOW				= 0x80,
-			FLAG_NO_TREE			= 0x100,
-			FLAG_NO_NEED_PARTS		= 0x200,
-			FLAG_PARTIAL			= 0x400,
-			FLAG_TTH_INCONSISTENCY	= 0x800,
+			FLAG_NO_TTHF			= 0x08,
+			FLAG_BAD_TREE			= 0x10,
+			FLAG_SLOW				= 0x20,
+			FLAG_NO_TREE			= 0x40,
+			FLAG_NO_NEED_PARTS		= 0x80,
+			FLAG_PARTIAL			= 0x100,
+			FLAG_TTH_INCONSISTENCY	= 0x200,
 			FLAG_MASK				= FLAG_FILE_NOT_AVAILABLE
-				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_CRC_FAILED | FLAG_CRC_WARN | FLAG_BAD_TREE
+				| FLAG_PASSIVE | FLAG_REMOVED | FLAG_BAD_TREE
 				| FLAG_SLOW | FLAG_NO_TREE | FLAG_TTH_INCONSISTENCY
 		};
 
@@ -192,11 +190,15 @@ public:
 	
 	vector<Segment> getChunksVisualisation(int type) const;
 
-	bool isChunkDownloaded(int64_t start, int64_t bytes) const {
-		Segment s(start, bytes);
+	bool isChunkDownloaded(int64_t startPos, int64_t& len) const {
+		if(len <= 0) return false;
 
 		for(SegmentSet::const_iterator i = done.begin(); i != done.end(); ++i) {
-			if((*i).getStart() <= start && (*i).getSize() >= bytes) {
+			int64_t first  = (*i).getStart();
+			int64_t second = (*i).getEnd();
+
+			if(first <= startPos && startPos < second){
+				len = min(len, second - startPos);
 				return true;
 			}
 		}

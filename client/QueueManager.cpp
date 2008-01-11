@@ -500,14 +500,14 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 		Lock l(cs);
 
 		QueueItem* q = fileQueue.find(target);
-		//if(q == NULL && root) {
-		//	QueueItem::List ql;
-		//	fileQueue.find(ql, root);
-		//	if(!ql.empty()){
-		//		dcassert(ql.size() == 1);
-		//		q = ql[0];
-		//	}
-		//}
+		if(q == NULL && !((aFlags & QueueItem::FLAG_USER_LIST) || (aFlags & QueueItem::FLAG_TESTSUR))) {
+			QueueItem::List ql;
+			fileQueue.find(ql, root);
+			if(!ql.empty()){
+				dcassert(ql.size() == 1);
+				q = ql[0];
+			}
+		}
 				
 		if(q == NULL) {
 			q = fileQueue.add(target, aSize, aFlags, QueueItem::DEFAULT, Util::emptyString, GET_TIME(), root);
@@ -524,11 +524,11 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 			q->setFlag(aFlags);
 
 			// We don't add any more sources to user list downloads, but we want their flags updated
-			if(q->isSet(QueueItem::FLAG_USER_LIST))
+			if(q->isSet(QueueItem::FLAG_USER_LIST) || q->isSet(QueueItem::FLAG_TESTSUR))
 				return;
 		}
 
-		wantConnection = addSource(q, aUser, (Flags::MaskType)(addBad ? QueueItem::Source::FLAG_MASK : 0));
+		wantConnection = aUser && addSource(q, aUser, (Flags::MaskType)(addBad ? QueueItem::Source::FLAG_MASK : 0));
 	}
 
 	if(wantConnection && aUser->isOnline())
@@ -1205,17 +1205,6 @@ void QueueManager::removeSource(const string& aTarget, const UserPtr& aUser, Fla
 			return;
 		}
 
-		if(reason == QueueItem::Source::FLAG_CRC_WARN) {
-			// Already flagged?
-			QueueItem::SourceIter s = q->getSource(aUser);
-			if(s->isSet(QueueItem::Source::FLAG_CRC_WARN)) {
-				reason = QueueItem::Source::FLAG_CRC_FAILED;
-			} else {
-				s->setFlag(reason);
-				return;
-			}
-		}
-
 		if(q->isRunning() && userQueue.getRunning(aUser) == q) {
 			isRunning = true;
 			userQueue.removeDownload(q, aUser);
@@ -1310,7 +1299,7 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 }
 
 void QueueManager::setAutoPriority(const string& aTarget, bool ap) throw() {
-	UserList ul;
+	vector<pair<string, QueueItem::Priority>> priorities;
 
 	{
 		Lock l(cs);
@@ -1319,11 +1308,15 @@ void QueueManager::setAutoPriority(const string& aTarget, bool ap) throw() {
 		if( (q != NULL) && (q->getAutoPriority() != ap) ) {
 			q->setAutoPriority(ap);
 			if(ap) {
-				setPriority(q->getTarget(), q->calculateAutoPriority());
+				priorities.push_back(make_pair(q->getTarget(), q->calculateAutoPriority()));
 			}
 			setDirty();
 			fire(QueueManagerListener::StatusUpdated(), q);
 		}
+	}
+
+	for(vector<pair<string, QueueItem::Priority>>::const_iterator p = priorities.begin(); p != priorities.end(); p++) {
+		setPriority((*p).first, (*p).second);
 	}
 }
 
@@ -1397,7 +1390,7 @@ void QueueManager::saveQueue() throw() {
 		File::renameFile(getQueueFile() + ".tmp", getQueueFile());
 
 		dirty = false;
-	} catch(const FileException&) {
+	} catch(...) {
 		// ...
 	}
 	// Put this here to avoid very many saves tries when disk is full...
@@ -1652,44 +1645,6 @@ void QueueManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 
 }
 
-bool QueueManager::add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException) 
-{	
-	if(aFile == Transfer::USER_LIST_NAME_BZ || aFile == Transfer::USER_LIST_NAME) return false;
-	if(aSize == 0) return false;
-
-	string target = SETTING(DOWNLOAD_DIRECTORY) + aFile;
-	string tempTarget = Util::emptyString;
-
-	Flags::MaskType flag = QueueItem::FLAG_RESUME;
-
-	try {
-		target = checkTarget(target, aSize, flag);
-		if(target.empty()) return false;
-	} catch(const Exception&) {
-		return false;
-	}
-	
-	{
-		Lock l(cs);
-
-		if(fileQueue.find(target)) return false;
-
-		TTHValue root(tth);
-		QueueItem::List ql;
-		fileQueue.find(ql, root);
-		if(ql.size()) return false;
-
-		QueueItem* q = fileQueue.add(target, aSize, flag, QueueItem::DEFAULT, Util::emptyString, GET_TIME(), root);
-		fire(QueueManagerListener::Added(), q);
-	}
-
-	if(BOOLSETTING(AUTO_SEARCH)){
-		SearchManager::getInstance()->search(tth, 0, SearchManager::TYPE_TTH, SearchManager::SIZE_DONTCARE, Util::emptyString);
-	}
-
-	return true;
-}
-
 bool QueueManager::dropSource(Download* d) {
 	size_t activeSegments, onlineUsers;
 	uint64_t overallSpeed;
@@ -1828,7 +1783,7 @@ bool QueueManager::handlePartialSearch(const TTHValue& tth, PartsInfo& _outParts
 // compare nextQueryTime, get the oldest ones
 void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl) 
 {
-	typedef multimap<time_t, pair<QueueItem::SourceIter, QueueItem*> > Buffer;
+	typedef multimap<time_t, pair<QueueItem::SourceConstIter, QueueItem*> > Buffer;
 	Buffer buffer;
 	uint64_t now = GET_TICK();
 
@@ -1837,10 +1792,10 @@ void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl)
 
 		if(q->getSize() < PARTIAL_SHARE_MIN_SIZE) continue;
 
-		QueueItem::SourceList& sources = q->getSources();
-		QueueItem::SourceList& badSources = q->getBadSources();
+		const QueueItem::SourceList& sources = q->getSources();
+		const QueueItem::SourceList& badSources = q->getBadSources();
 
-		for(QueueItem::SourceIter j = sources.begin(); j != sources.end(); ++j) {
+		for(QueueItem::SourceConstIter j = sources.begin(); j != sources.end(); ++j) {
 			if(	(*j).isSet(QueueItem::Source::FLAG_PARTIAL) && (*j).getPartialSource()->getNextQueryTime() <= now &&
 				(*j).getPartialSource()->getPendingQueryCount() < 10)
 			{
@@ -1848,7 +1803,7 @@ void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl)
 			}
 		}
 
-		for(QueueItem::SourceIter j = badSources.begin(); j != badSources.end(); ++j) {
+		for(QueueItem::SourceConstIter j = badSources.begin(); j != badSources.end(); ++j) {
 			if(	(*j).isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY) == false && (*j).isSet(QueueItem::Source::FLAG_PARTIAL) &&
 				(*j).getPartialSource()->getNextQueryTime() <= now && (*j).getPartialSource()->getPendingQueryCount() < 10 )
 			{

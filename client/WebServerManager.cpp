@@ -516,7 +516,7 @@ int WebServerSocket::run(){
 					WebServerManager::getInstance()->reset();
 				}
 				if(m["name"] != Util::emptyString) {
-					QueueManager::getInstance()->add(Util::encodeURI(m["name"], true), Util::toInt64(m["size"]), m["tth"]);
+					QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Util::encodeURI(m["name"], true), Util::toInt64(m["size"]), TTHValue(m["tth"]), UserPtr());
 				}
 			}
 
