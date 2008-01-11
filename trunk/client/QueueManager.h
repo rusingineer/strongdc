@@ -72,8 +72,6 @@ class QueueManager : public Singleton<QueueManager>, public Speaker<QueueManager
 	private SearchManagerListener, private ClientManagerListener
 {
 public:
-	/** Add a file with hash to the queue. */
-	bool add(const string& aFile, int64_t aSize, const string& tth) throw(QueueException, FileException); 
 	/** Add a file to the queue. */
 	void add(const string& aTarget, int64_t aSize, const TTHValue& root, UserPtr aUser,
 		Flags::MaskType aFlags = QueueItem::FLAG_RESUME, bool addBad = true) throw(QueueException, FileException);
@@ -170,7 +168,7 @@ public:
 		return true;
 	}
 
-	bool isChunkDownloaded(const TTHValue& tth, int64_t startPos, int64_t bytes, string& tempTarget, int64_t& size) {
+	bool isChunkDownloaded(const TTHValue& tth, int64_t startPos, int64_t& bytes, string& tempTarget, int64_t& size) {
 		Lock l(cs);
 		QueueItem::List ql;
 		fileQueue.find(ql, tth);
@@ -209,7 +207,7 @@ public:
 
 	typedef unordered_map<CID, string> PfsQueue;
 	typedef PfsQueue::iterator PfsIter;
-	typedef vector<pair<QueueItem::SourceIter, QueueItem*> > PFSSourceList;
+	typedef vector<pair<QueueItem::SourceConstIter, QueueItem*> > PFSSourceList;
 
 	/** All queue items by target */
 	class FileQueue {

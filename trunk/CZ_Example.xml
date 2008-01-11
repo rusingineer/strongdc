@@ -728,7 +728,7 @@
 		<String Name="SettingsUseSystemIcons">Použít systémové ikonky při prohlížení souborů</String>
 		<String Name="SettingsUseTls">Použít šifrované připojení TLS, pokud to klient podporuje</String>
 		<String Name="SettingsUseVerticalView">Standardně používat vodorovné zobrazení</String>
-		<String Name="SettingsUserColors">Barvy a písma</String>
+		<String Name="SettingsUserColors">Seznam uživatelů</String>
 		<String Name="SettingsUserCommands">Uživatelské příkazy</String>
 		<String Name="SettingsUserMenu">Položky uživatelského menu</String>
 		<String Name="SettingsWebserver">Zapnout Webserver</String>
