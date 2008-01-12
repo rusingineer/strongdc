@@ -1,3 +1,8 @@
+** svn357
+	fixed crashes when adding files through magnet links
+	fixed unavailable filelist reporting (THX redsaq)
+	workaround for some lagging routers (THX klirik)
+
 ** svn356
 	improved PFS a bit (to the state before removing FileChunksInfo)
 	reverted only unique TTHs in queue (there was some reason to removed it, but I can't remember it)

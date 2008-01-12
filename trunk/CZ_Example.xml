@@ -820,7 +820,7 @@ Výchozí: %H:%M:%S</String>
 		<String Name="Total">Celkem: </String>
 		<String Name="Transferlistdblclickaction">Dvojklik v okně přenosů</String>
 		<String Name="Transferred">Přeneseno</String>
-		<String Name="TthAlreadyShared">Soubor se stejným datovým obsahem již existuje</String>
+		<String Name="TthAlreadyShared">Soubor se stejným datovým obsahem již existuje ve Vašem sdílení.</String>
 		<String Name="TthInconsistency">Nesouhlasí TTH</String>
 		<String Name="TthRoot">TTH Root</String>
 		<String Name="TwoColors">Dvoubarevný</String>

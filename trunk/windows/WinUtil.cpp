@@ -1443,7 +1443,11 @@ void WinUtil::parseMagnetUri(const tstring& aUrl, bool /*aOverride*/) {
 			if(!BOOLSETTING(MAGNET_ASK) && fsize > 0 && fname.length() > 0) {
 				switch(SETTING(MAGNET_ACTION)) {
 					case SettingsManager::MAGNET_AUTO_DOWNLOAD:
-						QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(fname), fsize, TTHValue(Text::fromT(fhash)), UserPtr());
+						try {
+							QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(fname), fsize, TTHValue(Text::fromT(fhash)), UserPtr());
+						} catch(const QueueException& e) {
+							LogManager::getInstance()->message(e.getError());
+						}
 						break;
 					case SettingsManager::MAGNET_AUTO_SEARCH:
 						SearchFrame::openWindow(fhash, 0, SearchManager::SIZE_DONTCARE, SearchManager::TYPE_TTH);
