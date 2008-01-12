@@ -424,15 +424,8 @@ void DownloadManager::failDownload(UserConnection* aSource, const string& reason
 		removeDownload(d);
 		fire(DownloadManagerListener::Failed(), d, reason);
 
-		if ( d->getType() == Transfer::TYPE_FULL_LIST ) {
-			if (reason.find("File Not Available") != string::npos || reason.find("File non disponibile") != string::npos ) {
-				ClientManager::getInstance()->setCheating(aSource->getUser(), "", "filelist not available", SETTING(FILELIST_UNAVAILABLE), false);
-				QueueManager::getInstance()->putDownload(d, true);
-				removeConnection(aSource);
-				return;
-			} else if(reason == STRING(DISCONNECTED)) {
-				ClientManager::getInstance()->fileListDisconnected(aSource->getUser());
-			}
+		if (d->getType() == Transfer::TYPE_FULL_LIST && reason == STRING(DISCONNECTED)) {
+			ClientManager::getInstance()->fileListDisconnected(aSource->getUser());
 		} else if( d->isSet(Download::FLAG_TESTSUR) ) {
 			if(reason == STRING(NO_SLOTS_AVAILABLE))
 				ClientManager::getInstance()->setCheating(aSource->getUser(), "MaxedOut", "No slots for TestSUR. User is using slotlocker.", -1, true);
@@ -533,7 +526,12 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	removeDownload(d);
 	fire(DownloadManagerListener::Failed(), d, d->getTargetFileName() + ": " + STRING(FILE_NOT_AVAILABLE));
 
-	if( d->isSet(Download::FLAG_TESTSUR) ) {
+	if (d->getType() == Transfer::TYPE_FULL_LIST) {
+		ClientManager::getInstance()->setCheating(aSource->getUser(), "", "Filelist Not Available", SETTING(FILELIST_UNAVAILABLE), false);
+		QueueManager::getInstance()->putDownload(d, true);
+		removeConnection(aSource);
+		return;
+	} else if (d->isSet(Download::FLAG_TESTSUR)) {
 		dcdebug("TestSUR File not available\n");
 
 		ClientManager::getInstance()->setCheating(aSource->getUser(), "File Not Available", "", -1, false);

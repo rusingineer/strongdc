@@ -73,8 +73,12 @@ LRESULT MagnetDlg::onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 			TTHValue tmphash(Text::fromT(mHash));
 			WinUtil::searchHash(tmphash); 
 		} else if(IsDlgButtonChecked(IDC_MAGNET_QUEUE)) {
-			string target = SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(mFileName);
-			QueueManager::getInstance()->add(target, mSize, TTHValue(Text::fromT(mHash)), UserPtr());
+			try {
+				string target = SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(mFileName);
+				QueueManager::getInstance()->add(target, mSize, TTHValue(Text::fromT(mHash)), UserPtr());
+			} catch(const QueueException& e) {
+				LogManager::getInstance()->message(e.getError());
+			}
 		} 
 	}
 	EndDialog(wID);
