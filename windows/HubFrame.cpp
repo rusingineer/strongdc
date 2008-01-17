@@ -2130,12 +2130,12 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu& pMe
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK_IP, CTSTRING(COPY_NICK_IP));
 
 	copyMenu.AppendMenu(MF_STRING, IDC_COPY_ALL, CTSTRING(COPY_ALL));
-	copyMenu.InsertSeparator(0, TRUE, TSTRING(COPY));
+	copyMenu.InsertSeparatorFirst(TSTRING(COPY));
 
     bool bIsChat = (pCtrl == ((CWindow*)&ctrlClient));
 	if(bIsChat && sNick.empty()) {
 		if(!ChatCtrl::sSelectedIP.empty()) {
-			pMenu.InsertSeparator(0, TRUE, ChatCtrl::sSelectedIP);
+			pMenu.InsertSeparatorFirst(ChatCtrl::sSelectedIP);
 			pMenu.AppendMenu(MF_STRING, IDC_WHOIS_IP, (CTSTRING(WHO_IS) + ChatCtrl::sSelectedIP).c_str() );
 			if ( client->isOp() ) {
 				pMenu.AppendMenu(MF_SEPARATOR);
@@ -2144,7 +2144,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu& pMe
 				pMenu.AppendMenu(MF_STRING, IDC_UNBAN_IP, (_T("!unban ") + ChatCtrl::sSelectedIP).c_str());
 				pMenu.AppendMenu(MF_SEPARATOR);
 			}
-		} else pMenu.InsertSeparator(0, TRUE, _T("Text"));
+		} else pMenu.InsertSeparatorFirst(_T("Text"));
 		pMenu.AppendMenu(MF_STRING, ID_EDIT_COPY, CTSTRING(COPY));
 		pMenu.AppendMenu(MF_STRING, IDC_COPY_ACTUAL_LINE,  CTSTRING(COPY_LINE));
 		if(!sSelectedURL.empty()) 
@@ -2161,7 +2161,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu& pMe
 		if(!sNick.empty()) {
 		    bool bIsMe = (sNick == Text::toT(client->getMyNick()));
 			// Jediny nick
-			pMenu.InsertSeparator(0, TRUE, sNick);
+			pMenu.InsertSeparatorFirst(sNick);
 
 			if(bIsChat) {
 				if(!BOOLSETTING(LOG_PRIVATE_CHAT)) {
@@ -2210,7 +2210,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, const tstring& sNick, OMenu& pMe
 			if(bIsChat == false) {
 				// Pocet oznacenych
 				int iCount = ctrlUsers.GetSelectedCount();
-				pMenu.InsertSeparator(0, TRUE, Util::toStringW(iCount) + _T(" ") + TSTRING(HUB_USERS));
+				pMenu.InsertSeparatorFirst(Util::toStringW(iCount) + _T(" ") + TSTRING(HUB_USERS));
 			}
 			if (ctrlUsers.GetSelectedCount() <= 25) {
 				pMenu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));

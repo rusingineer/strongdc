@@ -1686,7 +1686,7 @@ int WinUtil::SetupPreviewMenu(CMenu &previewMenu, string extension){
 	return PreviewAppsSize;
 }
 
-void WinUtil::RunPreviewCommand(unsigned int index, string target){
+void WinUtil::RunPreviewCommand(unsigned int index, string target) {
 	PreviewApplication::List lst = FavoriteManager::getInstance()->getPreviewApps();
 
 	if(index <= lst.size()) {
@@ -1694,6 +1694,15 @@ void WinUtil::RunPreviewCommand(unsigned int index, string target){
 		string arguments = lst[index]->getArguments();
 		StringMap ucParams;				
 	
+		if(!Util::fileExists(target)) {
+			// file not exists, using antifrag???
+			target += Download::ANTI_FRAG_EXT;
+			if(!Util::fileExists(target)) {
+				// neither antifrag exists, quit
+				return;
+			}
+		}
+
 		ucParams["file"] = "\"" + target + "\"";
 		ucParams["dir"] = "\"" + Util::getFilePath(target) + "\"";
 

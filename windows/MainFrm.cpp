@@ -697,8 +697,8 @@ void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, 
 		}
 
 		xml.resetCurrentChild();
-		if(xml.findChild("DCVersion")) {
-			if(Util::toDouble(xml.getChildData()) > DCVERSIONFLOAT) {
+		if(xml.findChild("Version")) {
+			if(Util::toDouble(xml.getChildData()) > VERSIONFLOAT) {
 				xml.resetCurrentChild();
 				xml.resetCurrentChild();
 				if(xml.findChild("Title")) {
