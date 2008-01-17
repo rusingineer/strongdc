@@ -662,7 +662,7 @@ string ResourceManager::strings[] = {
 "Open private messages from bots in their own window", 
 "Open private messages in their own window", 
 "Ports", 
-"Autoprio settings - Auto priority option must be OFF!", 
+"Priority settings - has higher priority than Autopriority", 
 "High prio max size", 
 "Highest prio max size", 
 "Low prio max size", 

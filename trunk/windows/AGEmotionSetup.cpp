@@ -28,8 +28,10 @@ CAGEmotion::CAGEmotion(const tstring& strEmotionText, const string& strEmotionBm
 	m_EmotionText(strEmotionText), m_EmotionBmpPath(strEmotionBmpPath)
 {
 	m_EmotionBmp = (HBITMAP) ::LoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+	if(!m_EmotionBmp)
+		return;
 	
-	BITMAP bm;
+	BITMAP bm = { 0 };
 	GetObject(m_EmotionBmp, sizeof(bm), &bm);
 	
 	if(bm.bmBitsPixel == 32) {
@@ -55,10 +57,13 @@ CAGEmotion::CAGEmotion(const tstring& strEmotionText, const string& strEmotionBm
 }
 
 HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
+	if(!m_EmotionBmp)
+		return NULL;
+
 	HDC DirectDC = CreateCompatibleDC(NULL);
 	HDC memDC = CreateCompatibleDC(DirectDC);
 	
-	BITMAP bm;
+	BITMAP bm = { 0 };
 	GetObject(m_EmotionBmp, sizeof(bm), &bm);
 
 	HBITMAP DirectBitmap = CreateBitmap(bm.bmWidth, bm.bmHeight, 1, 32, NULL);

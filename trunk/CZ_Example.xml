@@ -666,7 +666,7 @@
 		<String Name="SettingsPopupHubPms">Otevírat soukromé zprávy od botů ve vlastním okně</String>
 		<String Name="SettingsPopupPms">Otevřít soukromou zprávu ve vlastním okně(jinak se zobrazí v okně chatu)</String>
 		<String Name="SettingsPorts">Porty</String>
-		<String Name="SettingsPrioAutoprio">Nastavení autopriority - možnost Autopriorita musí být VYPNUTA!</String>
+		<String Name="SettingsPrioAutoprio">Nastavení priority - má vyšší prioritu než Autopriorita</String>
 		<String Name="SettingsPrioHigh">Vysoká priorita</String>
 		<String Name="SettingsPrioHighest">Nejvyšší priorita</String>
 		<String Name="SettingsPrioLow">Nízká priorita</String>

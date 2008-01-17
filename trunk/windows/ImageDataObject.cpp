@@ -22,7 +22,7 @@
 // Static member functions
 void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap) {
 	
-	if(!pRichEditOle)
+	if(!pRichEditOle || !hBitmap)
 		return;
 
 	LPLOCKBYTES lpLockBytes = NULL;

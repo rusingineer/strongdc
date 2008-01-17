@@ -758,8 +758,8 @@ public:
 		}
 
 		pp->children.push_back(item);
+		parent->hits++;
 		item->parent = parent;
-		item->parent->hits = static_cast<int16_t>(pp->children.size());
 
 		if(pos != -1) {
 			if(!parent->collapsed) {
@@ -774,7 +774,7 @@ public:
 		if(pp) {
 			for(vector<T*>::iterator i = pp->children.begin(); i != pp->children.end(); i++) {
 				deleteItem(*i);
-				(*i)->deleteSelf();
+				delete *i;
 			}
 			pp->children.clear();
 			parents.erase(const_cast<key*>(&parent->getGroupCond()));
@@ -794,18 +794,18 @@ public:
 			vector<T*>::iterator n = find(pp->children.begin(), pp->children.end(), item);
 			if(n != pp->children.end()) {
 				pp->children.erase(n);
-				parent->hits = static_cast<int16_t>(pp->children.size());
+				pp->parent->hits--;
 			}
 	
 			if(uniqueParent) {
 				dcassert(!pp->children.empty());
 				if(pp->children.size() == 1) {
-					T* oldParent = parent;
+					const T* oldParent = parent;
 					parent = pp->children.front();
 
 					deleteItem(oldParent);
 					parents.erase(const_cast<key*>(&oldParent->getGroupCond()));
-					oldParent->deleteSelf();
+					delete oldParent;
 
 					ParentPair newPP = { parent };
 					parents.insert(make_pair(const_cast<key*>(&parent->getGroupCond()), newPP));
@@ -824,7 +824,7 @@ public:
 		}
 
 		if(removeFromMemory)
-			item->deleteSelf();
+			delete item;
 	}
 
 	void deleteAllItems() {
@@ -833,14 +833,14 @@ public:
 			T* ti = (*i).second.parent;
 			for(vector<T*>::iterator j = (*i).second.children.begin(); j != (*i).second.children.end(); j++) {
 				deleteItem(*j);
-				(*j)->deleteSelf();
+				delete *j;
 			}
 			deleteItem(ti);
-			ti->deleteSelf();
+			delete ti;
 		}
 		for(int i = 0; i < GetItemCount(); i++) {
 			T* si = getItemData(i);
-			si->deleteSelf();
+			delete si;
 		}
 
  		parents.clear();
