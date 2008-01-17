@@ -61,7 +61,7 @@ size_t HashBloom::pos(const TTHValue& tth, size_t n) const {
 		size_t pos = bit % 8;
 		
 		if(tth.data[byte] & (1 << pos)) {
-			x |= (1 << i);
+			x |= (1i64 << i);
 		}
 	}
 	return x % bloom.size();

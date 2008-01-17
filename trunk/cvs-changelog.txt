@@ -1,5 +1,7 @@
-TODO:	fix preview when antifrag is enabled
-	fix app startup from magnetlink
+** svn359
+	added user menu items to nick's context menu in PM
+	workaround for preview antifrag files
+	changes in Version update routine
 
 ** svn358
 	fixed some problems with emoticons

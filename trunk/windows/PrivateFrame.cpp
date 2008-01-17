@@ -616,6 +616,18 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 		tabMenu.CreatePopupMenu();
 		
 		tabMenu.InsertSeparatorFirst(nick);
+
+		if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
+			tabMenu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG,  CTSTRING(OPEN_USER_LOG));
+			tabMenu.AppendMenu(MF_SEPARATOR);
+		}
+		tabMenu.AppendMenu(MF_STRING, ID_EDIT_CLEAR_ALL, CTSTRING(CLEAR));
+		tabMenu.AppendMenu(MF_SEPARATOR);
+		tabMenu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
+		tabMenu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
+		tabMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
+		tabMenu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
+
 		prepareMenu(tabMenu, UserCommand::CONTEXT_CHAT, ClientManager::getInstance()->getHubs(replyTo->getCID()));
 		if(!(tabMenu.GetMenuState(tabMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 			tabMenu.AppendMenu(MF_SEPARATOR);
@@ -626,6 +638,7 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	} else {
 		OMenu textMenu;
 		textMenu.CreatePopupMenu();
+		textMenu.InsertSeparatorFirst(_T("Text"));
 		textMenu.AppendMenu(MF_STRING, ID_EDIT_COPY, CTSTRING(COPY));
 		textMenu.AppendMenu(MF_STRING, IDC_COPY_ACTUAL_LINE,  CTSTRING(COPY_LINE));
 		if(pSelectedURL != _T(""))

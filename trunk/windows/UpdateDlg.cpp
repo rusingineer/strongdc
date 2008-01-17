@@ -107,35 +107,26 @@ void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, s
 			PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new tstring(TSTRING(DATA_RETRIEVED) + _T("!")));
 			string sText;
 			try {
-				string s_latestVersion;
 				double latestVersion;
-				double oldVersion;
-				string versionURL;
-				string updateURL;
+
 				SimpleXML xml;
 				xml.fromXML(xmldata);
 				xml.stepIn();
-				if (xml.findChild("DCVersion")) {
-					s_latestVersion = xml.getChildData();
-					latestVersion = Util::toDouble(s_latestVersion);
-					xml.resetCurrentChild();
-				} else
-					throw Exception();
+
 				if (xml.findChild("Version")) {
-					s_latestVersion = xml.getChildData();
+					string ver = xml.getChildData();
+					
+					PostMessage(WM_SPEAKER, UPDATE_LATEST_VERSION, (LPARAM)new tstring(Text::toT(ver)));
+
+					latestVersion = Util::toDouble(ver);
 					xml.resetCurrentChild();
 				} else
 					throw Exception();
 
-				PostMessage(WM_SPEAKER, UPDATE_LATEST_VERSION, (LPARAM)new tstring(Text::toT(s_latestVersion)));
-				if (xml.findChild("VeryOldVersion")) {
-					oldVersion = Util::toDouble(xml.getChildData());					
-				}
-				xml.resetCurrentChild();
 				if (xml.findChild("URL")) {
 					downloadURL = xml.getChildData();
 					xml.resetCurrentChild();
-					if (latestVersion > DCVERSIONFLOAT)
+					if (latestVersion > VERSIONFLOAT)
 						ctrlDownload.EnableWindow(TRUE);
 				} else
 					throw Exception();
