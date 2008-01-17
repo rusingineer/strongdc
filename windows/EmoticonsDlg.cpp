@@ -47,6 +47,11 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 
 		const CAGEmotion::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
 
+		if(Emoticons.empty()) {
+			PostMessage(WM_CLOSE);
+			return 0;
+		}
+
 		unsigned int pocet = 0;
 		string lastEmotionPath = "";
 		CAGEmotion::Iter pEmotion;
@@ -82,7 +87,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 			else nY = i;
 		}
 
-		BITMAP bm;
+		BITMAP bm = {0};
 		HBITMAP hbm = (*Emoticons.begin())->getEmotionBmp(GetSysColor(COLOR_BTNFACE));
 		GetObject(hbm, sizeof(BITMAP), &bm);
 		int bW = bm.bmWidth;

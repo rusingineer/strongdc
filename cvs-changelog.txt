@@ -1,3 +1,12 @@
+TODO:	fix preview when antifrag is enabled
+	fix app startup from magnetlink
+
+** svn358
+	fixed some problems with emoticons
+	autopriority enabled only when other priority not selected
+	fixed some problem with search results
+	bloom filters changed (DC++ SVN)
+
 ** svn357
 	fixed crashes when adding files through magnet links
 	fixed unavailable filelist reporting (THX redsaq)

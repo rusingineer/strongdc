@@ -666,7 +666,7 @@
 		<String Name="SettingsPopupHubPms">Open private messages from bots in their own window</String>
 		<String Name="SettingsPopupPms">Open private messages in their own window</String>
 		<String Name="SettingsPorts">Ports</String>
-		<String Name="SettingsPrioAutoprio">Autoprio settings - Auto priority option must be OFF!</String>
+		<String Name="SettingsPrioAutoprio">Priority settings - has higher priority than Autopriority</String>
 		<String Name="SettingsPrioHigh">High prio max size</String>
 		<String Name="SettingsPrioHighest">Highest prio max size</String>
 		<String Name="SettingsPrioLow">Low prio max size</String>

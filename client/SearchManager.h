@@ -38,30 +38,12 @@
 class SearchManager;
 class SocketException;
 
-class SearchResult : public FastAlloc<SearchResult>, public UserInfoBase {
+class SearchResult : public FastAlloc<SearchResult> {
 public:	
 
 	enum Types {
 		TYPE_FILE,
 		TYPE_DIRECTORY
-	};
-
-	enum {
-		COLUMN_FIRST,
-		COLUMN_FILENAME = COLUMN_FIRST,
-		COLUMN_HITS,
-		COLUMN_NICK,
-		COLUMN_TYPE,
-		COLUMN_SIZE,
-		COLUMN_PATH,
-		COLUMN_SLOTS,
-		COLUMN_CONNECTION,
-		COLUMN_HUB,
-		COLUMN_EXACT_SIZE,
-		COLUMN_UPLOAD,
-		COLUMN_IP,		
-		COLUMN_TTH,
-		COLUMN_LAST
 	};
 
 	typedef SearchResult* Ptr;
@@ -72,7 +54,10 @@ public:
 
 	SearchResult(const UserPtr& aUser, Types aType, uint8_t aSlots, uint8_t aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
-		const string& ip, TTHValue aTTH, const string& aToken);
+		const string& ip, TTHValue aTTH, const string& aToken) :
+	file(aFile), hubName(aHubName), user(aUser),
+	size(aSize), type(aType), slots(aSlots), freeSlots(aFreeSlots), IP(ip),
+	tth(aTTH), token(aToken), ref(1) { }
 
 	string getFileName() const;
 	string toSR(const Client& client) const;
@@ -87,7 +72,6 @@ public:
 	Types getType() const { return type; }
 	uint8_t getSlots() const { return slots; }
 	uint8_t getFreeSlots() const { return freeSlots; }
-	
 	const TTHValue& getTTH() const { return tth; }
 	
 	const string& getIP() const { return IP; }
@@ -98,104 +82,6 @@ public:
 		if(Thread::safeDec(ref) == 0) 
 			delete this; 
 	}
-
-	bool collapsed;
-	size_t hits;
-	SearchResult* parent;
-
-	void getList();
-	void browseList();
-
-	void view();
-    
-	const tstring getText(uint8_t col) const {
-		switch(col) {
-			case COLUMN_FILENAME:
-				if(getType() == SearchResult::TYPE_FILE) {
-					if(getFile().rfind(_T('\\')) == tstring::npos) {
-						return Text::toT(getFile());
-					} else {
-    					return Text::toT(Util::getFileName(getFile()));
-					}      
-				} else {
-					return Text::toT(getFileName());
-				}
-			case COLUMN_HITS: return hits == 0 ? Util::emptyStringT : Util::toStringW(hits + 1) + _T(' ') + TSTRING(USERS);
-			case COLUMN_NICK: return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(getUser()->getCID())));
-			case COLUMN_TYPE:
-				if(getType() == SearchResult::TYPE_FILE) {
-					tstring type = Text::toT(Util::getFileExt(Text::fromT(getText(COLUMN_FILENAME))));
-					if(!type.empty() && type[0] == _T('.'))
-						type.erase(0, 1);
-					return type;
-				} else {
-					return TSTRING(DIRECTORY);
-				}
-			case COLUMN_SIZE: return getSize() > 0 ? Util::formatBytesW(getSize()) : Util::emptyStringT;
-			case COLUMN_PATH:
-				if(getType() == SearchResult::TYPE_FILE) {
-					return Text::toT(Util::getFilePath(getFile()));
-				} else {
-					return Text::toT(getFile());
-				}
-			case COLUMN_SLOTS: return Text::toT(getSlotString());
-			case COLUMN_CONNECTION: return Text::toT(ClientManager::getInstance()->getConnection(getUser()->getCID()));
-			case COLUMN_HUB: return Text::toT(getHubName());
-			case COLUMN_EXACT_SIZE: return getSize() > 0 ? Util::formatExactSize(getSize()) : Util::emptyStringT;
-			case COLUMN_UPLOAD:
-				if (getUser()->getLastDownloadSpeed() > 0) {
-					return Util::formatBytesW(getUser()->getLastDownloadSpeed()) + _T("/s");
-				} else if(getUser()->isSet(User::FIREBALL)) {
-					return _T(">=100 kB/s");
-				} else {
-					return _T("N/A");
-				}		
-			case COLUMN_IP: {
-				string ip = getIP();
-				if (!ip.empty()) {
-					// Only attempt to grab a country mapping if we actually have an IP address
-					string tmpCountry = Util::getIpCountry(ip);
-					if(!tmpCountry.empty()) {
-						ip = tmpCountry + " (" + ip + ")";
-					}
-				}
-				return Text::toT(ip);
-			}
-			case COLUMN_TTH: return getType() == SearchResult::TYPE_FILE ? Text::toT(getTTH().toBase32()) : Util::emptyStringT;
-			default: return Util::emptyStringT;
-		}
-	}
-
-	static int compareItems(const SearchResult* a, const SearchResult* b, uint8_t col) {
-		if(!a || !b)
-			return 0;
-
-		switch(col) {
-			case COLUMN_TYPE: 
-				if(a->getType() == b->getType())
-					return lstrcmpi(a->getText(COLUMN_TYPE).c_str(), b->getText(COLUMN_TYPE).c_str());
-				else
-					return(a->getType() == SearchResult::TYPE_DIRECTORY) ? -1 : 1;
-			case COLUMN_HITS: return compare(a->hits, b->hits);
-			case COLUMN_SLOTS: 
-				if(a->getFreeSlots() == b->getFreeSlots())
-					return compare(a->getSlots(), b->getSlots());
-				else
-					return compare(a->getFreeSlots(), b->getFreeSlots());
-			case COLUMN_SIZE:
-			case COLUMN_EXACT_SIZE: return compare(a->getSize(), b->getSize());
-			case COLUMN_UPLOAD: return compare(a->getText(COLUMN_UPLOAD), b->getText(COLUMN_UPLOAD));
-			default: return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
-		}
-	}
-
-	int imageIndex() const;
-
-	inline SearchResult* createParent() { return this; }
-	inline const TTHValue& getGroupCond() const { return getTTH(); }
-	inline void deleteSelf() { decRef(); }
-
-	GETSET(uint8_t, flagImage, FlagImage);
 
 private:
 	friend class SearchManager;

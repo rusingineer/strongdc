@@ -252,7 +252,6 @@ private:
 		}
 
 		inline const tstring& getGroupCond() const { return target; }
-		inline void deleteSelf() { delete this; }
 	};
 
 	struct UpdateInfo : public Task {

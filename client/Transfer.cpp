@@ -35,7 +35,7 @@ const string Transfer::USER_LIST_NAME_BZ = "files.xml.bz2";
 
 Transfer::Transfer(UserConnection& conn, const string& path_, const TTHValue& tth_) : segment(0, -1), type(TYPE_FILE), start(0),
 	path(path_), tth(tth_), actual(0), pos(0), userConnection(conn),
-	lastTick(GET_TICK()) { }
+	lastTick(GET_TICK()) { tick(); }
 
 void Transfer::tick() {
 	Lock l(cs);

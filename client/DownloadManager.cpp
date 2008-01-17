@@ -380,7 +380,7 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	}
 
 	removeDownload(d);
-	fire(DownloadManagerListener::Complete(), d, d->getType() == Transfer::TYPE_TREE);
+	//fire(DownloadManagerListener::Complete(), d, d->getType() == Transfer::TYPE_TREE);
 
 	QueueManager::getInstance()->putDownload(d, true, false);	
 	checkDownloads(aSource);

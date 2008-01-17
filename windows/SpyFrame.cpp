@@ -61,6 +61,10 @@ LRESULT SpyFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 
 	ShareManager::getInstance()->setHits(0);
 
+	ClientManager::getInstance()->addListener(this);
+	TimerManager::getInstance()->addListener(this);
+	SettingsManager::getInstance()->addListener(this);
+
 	bHandled = FALSE;
 	return 1;
 }
