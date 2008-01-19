@@ -1,3 +1,28 @@
+	-- StrongDC++ 2.11 --
+
+* opravena spousta pádù
+* opraven problém s minisloty
+* opravena velikost souboru ve frontì èekatelù na slot
+* opraven pøeklad DNS pro IP u oblíbených hubù
+* navráceno ukládání privní pøezdívky uživatele, aby byla známa i když se odpojí
+* opraveno ukládání èásteènì stažených segmentù
+* opraveno antifragmentaèní stahování
+* oznámení o dokonèeném stahování je zobrazeno pouze pokud je stažen celý soubor
+* pole pro heslo Socks5 není èitelné
+* snad opraveny problémy se stahováním ze seznamù souborù
+* nyní kompilováno pod VS 2008
+* aktualizace bzip2
+* opraven problém s kódováním pøezdívek v nmdc pøipojeních (DC++ SVN)
+* autopriota je zapnuta pouze pokud není zvolena jiná priorita
+* pro velmi rychlé uživatele se použije dvojnásobná velikost segmentu
+* opìt dovoleno pouze jedineèné TTH ve frontì
+* opraveno nahlášení neexistujícího seznamu souborù (THX redsaq)
+* oprava pro pomalé routery (THX klirik)
+* zmìna bloom filtrù (DC++ SVN)
+* opraven problém s výsledky hledání
+* pøidány položky menu uživatele do kontextové nabídky v oknì PM
+
+
 	-- StrongDC++ 2.1 --
 
 *** VAROVÁNÍ ***

@@ -82,7 +82,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 				qi->setAutoPriority(true);
 				qi->setPriority(QueueItem::LOW);
 			} else {
-				p = QueueItem::NORMAL;
+				qi->setPriority(QueueItem::NORMAL);
 			}
 		}
 	} else {
