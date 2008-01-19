@@ -1,3 +1,29 @@
+	-- StrongDC++ 2.11 --
+
+* fixed many crashes
+* fixed problem with minislots
+* fixed file size in Upload queue window
+* fixed DNS resolving for favorite hub's IP
+* reverted storing user's first nick to have it for offline users
+* fixed storing partially downloaded chunks
+* fixed slow downloads disconnecting
+* fixed antifragment downloading
+* "Download finished" popup is displayed only when whole file is complete
+* Socks5 password field isn't readable
+* hopefully fixed some problems with downloading from filelists
+* switched to VS 2008
+* updated bzip2
+* fixed an issue with nick encodings and nmdc connections (DC++ SVN)
+* autopriority enabled only when other priority not selected
+* double-sized chunks for really fast users
+* reverted only unique TTHs in queue
+* fixed unavailable filelist reporting (THX redsaq)
+* workaround for some lagging routers (THX klirik)
+* bloom filters changed (DC++ SVN)
+* fixed some problem with search results
+* added user menu items to nick's context menu in PM
+
+
 	-- StrongDC++ 2.1 --
 
 *** WARNING ***

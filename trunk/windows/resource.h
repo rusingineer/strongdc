@@ -709,8 +709,8 @@
 #define IDC_PROGRESS_TEXT_COLOR_UP      10103
 #define IDC_CZDC_PM_SOUND               10107
 #define IDC_CZDC_TRANSFER_LIMITING      10108
-#define IDC_CZDC_UP_SPEED              10109
-#define IDC_CZDC_DW_SPEED              10110
+#define IDC_CZDC_UP_SPEED               10109
+#define IDC_CZDC_DW_SPEED               10110
 #define IDC_CZDC_TO                     10111
 #define IDC_CZDC_SECONDARY_TRANSFER     10112
 #define IDC_CZDC_UP_NOTE                10113
@@ -722,8 +722,8 @@
 #define IDC_CZDC_WINAMP                 10120
 #define IDC_SETCZDC_PM_LINES            10121
 #define IDC_CZDC_PREVIEW                10123
-#define IDC_CZDC_DW_SPEED1             10124
-#define IDC_CZDC_UP_SPEED1             10125
+#define IDC_CZDC_DW_SPEED1              10124
+#define IDC_CZDC_UP_SPEED1              10125
 #define IDC_SETTINGS_KBPS1              10126
 #define IDC_SETTINGS_KBPS2              10127
 #define IDC_SETTINGS_KBPS3              10128
@@ -784,7 +784,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        301
+#define _APS_NEXT_RESOURCE_VALUE        304
 #define _APS_NEXT_COMMAND_VALUE         32795
 #define _APS_NEXT_CONTROL_VALUE         1306
 #define _APS_NEXT_SYMED_VALUE           134
