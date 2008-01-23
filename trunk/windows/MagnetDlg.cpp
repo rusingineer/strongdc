@@ -76,7 +76,7 @@ LRESULT MagnetDlg::onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 			try {
 				string target = SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(mFileName);
 				QueueManager::getInstance()->add(target, mSize, TTHValue(Text::fromT(mHash)), UserPtr());
-			} catch(const QueueException& e) {
+			} catch(const Exception& e) {
 				LogManager::getInstance()->message(e.getError());
 			}
 		} 

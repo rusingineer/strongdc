@@ -218,7 +218,7 @@ void TransferView::runUserCommand(UserCommand& uc) {
 	int i = -1;
 	while((i = ctrlTransfers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 		const ItemInfo* itemI = ctrlTransfers.getItemData(i);
-		if(!itemI->user->isOnline())
+		if(!itemI->user || !itemI->user->isOnline())
 			continue;
 
 		StringMap tmp = ucParams;

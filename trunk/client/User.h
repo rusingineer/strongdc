@@ -28,7 +28,7 @@
 #include "forward.h"
 
 /** A user connected to one or more hubs. */
-class User : public FastAlloc<User>, public PointerBase, public Flags
+class User : public FastAlloc<User>, public intrusive_ptr_base, public Flags
 {
 public:
 	/** Each flag is set if it's true in at least one hub */
@@ -163,7 +163,7 @@ private:
 class NmdcHub;
 #include "UserInfoBase.h"
 
-class OnlineUser : public FastAlloc<OnlineUser>, public PointerBase, public UserInfoBase {
+class OnlineUser : public FastAlloc<OnlineUser>, public intrusive_ptr_base, public UserInfoBase {
 public:
 	enum {
 		COLUMN_FIRST,

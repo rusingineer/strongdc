@@ -433,21 +433,25 @@ HWND MainFrame::createToolbar() {
 	StringTokenizer<string> t(SETTING(TOOLBAR), ',');
 	StringList& l = t.getTokens();
 	
+	int buttonsCount = sizeof(ToolbarButtons) / sizeof(ToolbarButtons[0]);
 	for(StringList::const_iterator k = l.begin(); k != l.end(); ++k) {
 		int i = Util::toInt(*k);		
 		
 		TBBUTTON nTB;
 		memzero(&nTB, sizeof(TBBUTTON));
 
-		if((i == INT_MAX) || (i == -1)) {
+		if(i == -1) {
 			nTB.fsStyle = TBSTYLE_SEP;			
-		} else {
-			nTB.iBitmap = WinUtil::ToolbarButtons[i].image;
-			nTB.idCommand = WinUtil::ToolbarButtons[i].id;
+		} else if(i >= 0 && i < buttonsCount) {
+			nTB.iBitmap = ToolbarButtons[i].image;
+			nTB.idCommand = ToolbarButtons[i].id;
 			nTB.fsState = TBSTATE_ENABLED;
-			nTB.fsStyle = TBSTYLE_AUTOSIZE | ((WinUtil::ToolbarButtons[i].check == true)? TBSTYLE_CHECK : TBSTYLE_BUTTON);
-			nTB.iString = ctrlToolbar.AddStrings(CTSTRING_I((ResourceManager::Strings)WinUtil::ToolbarButtons[i].tooltip));
+			nTB.fsStyle = TBSTYLE_AUTOSIZE | ((ToolbarButtons[i].check == true)? TBSTYLE_CHECK : TBSTYLE_BUTTON);
+			nTB.iString = ctrlToolbar.AddStrings(CTSTRING_I((ResourceManager::Strings)ToolbarButtons[i].tooltip));
+		} else {
+			continue;
 		}
+
 		ctrlToolbar.AddButtons(1, &nTB);
 	}	
 

@@ -30,7 +30,7 @@
 SearchResult::SearchResult(Types aType, int64_t aSize, const string& aFile, const TTHValue& aTTH) :
 	file(aFile), user(ClientManager::getInstance()->getMe()), size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), 
 	freeSlots(UploadManager::getInstance()->getFreeSlots()),  
-	tth(aTTH), ref(1) { }
+	tth(aTTH) { inc(); }
 
 string SearchResult::toSR(const Client& c) const {
 	// File:		"$SR %s %s%c%s %d/%d%c%s (%s)|"
@@ -339,7 +339,7 @@ int SearchManager::ResultsQueue::run() {
 			SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
 				file, hubName, remoteIp, TTHValue(tth), Util::emptyString);
 			SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
-			sr->decRef();
+			sr->dec();
 		}
 		Thread::sleep(10);
 	}
@@ -482,7 +482,7 @@ void SearchManager::onRES(const AdcCommand& cmd, const UserPtr& from, const stri
 		SearchResult* sr = new SearchResult(from, type, 0, (uint8_t)freeSlots, size, 
 			file, hubName, remoteIp, TTHValue(tth), token);
 			fire(SearchManagerListener::SR(), sr);
-			sr->decRef();
+			sr->dec();
 	}
 }
 
@@ -510,7 +510,7 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from) {
 		if(!token.empty())
 			cmd.addParam("TO", token);
 		ClientManager::getInstance()->send(cmd, from);
-		(*i)->decRef();
+		(*i)->dec();
 	}
 }
 
