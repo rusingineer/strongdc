@@ -574,6 +574,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\intrusive_ptr.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\LogManager.h"
 				>
 			</File>

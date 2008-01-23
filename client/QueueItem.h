@@ -29,7 +29,7 @@ class Download;
 #include "forward.h"
 #include "Segment.h"
 
-class QueueItem : public Flags, public FastAlloc<QueueItem>, public PointerBase {
+class QueueItem : public Flags, public FastAlloc<QueueItem>, public intrusive_ptr_base {
 public:
 	typedef QueueItem* Ptr;
 	typedef deque<Ptr> List;
@@ -83,14 +83,14 @@ public:
 	 * Source parts info
 	 * Meaningful only when Source::FLAG_PARTIAL is set
 	 */
-	class PartialSource : public FastAlloc<PartialSource>, public PointerBase {
+	class PartialSource : public FastAlloc<PartialSource>, public intrusive_ptr_base {
 	public:
 		PartialSource(const string& aMyNick, const string& aHubIpPort, const string& aIp, uint16_t udp) : 
 		  myNick(aMyNick), hubIpPort(aHubIpPort), ip(aIp), udpPort(udp), nextQueryTime(0), pendingQueryCount(0) { }
 		
 		~PartialSource() { }
 
-		typedef Pointer<PartialSource> Ptr;
+		typedef boost::intrusive_ptr<PartialSource> Ptr;
 
 		GETSET(PartsInfo, partialInfo, PartialInfo);
 		GETSET(string, myNick, MyNick);

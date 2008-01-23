@@ -49,7 +49,7 @@ private:
 
 // CAGEmotionSetup
 
-class CAGEmotionSetup : public PointerBase {
+class CAGEmotionSetup : public intrusive_ptr_base {
 public:
 	CAGEmotionSetup() { Load(); }
 	~CAGEmotionSetup() { Unload(); }

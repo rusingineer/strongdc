@@ -32,9 +32,10 @@ class BufferedSocket;
 class CID;
 
 typedef std::vector<uint16_t> PartsInfo;
+/*
 typedef map<uint16_t, uint16_t> BlockMap;
 typedef BlockMap::const_iterator BlockIter;
-
+*/
 class Client;
 
 class ClientManager;
@@ -85,7 +86,7 @@ typedef std::vector<UploadPtr> UploadList;
 class UploadQueueItem;
 
 class User;
-typedef Pointer<User> UserPtr;
+typedef boost::intrusive_ptr<User> UserPtr;
 typedef std::vector<UserPtr> UserList;
 
 class UserCommand;

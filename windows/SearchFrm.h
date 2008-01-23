@@ -309,7 +309,7 @@ private:
 		SearchInfo::List subItems;
 
 		SearchInfo(SearchResult* aSR) : sr(aSR), collapsed(true), parent(NULL), flagImage(0), hits(0) { 
-			sr->incRef();
+			sr->inc();
 
 			if (!sr->getIP().empty()) {
 				// Only attempt to grab a country mapping if we actually have an IP address
@@ -321,7 +321,7 @@ private:
 		}
 
 		~SearchInfo() {
-			sr->decRef(); 
+			sr->dec(); 
 		}
 
 		const UserPtr& getUser() const { return sr->getUser(); }

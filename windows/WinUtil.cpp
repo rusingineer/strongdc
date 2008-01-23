@@ -89,32 +89,6 @@ CHARFORMAT2 WinUtil::m_TextStyleURL;
 CHARFORMAT2 WinUtil::m_ChatTextPrivate;
 CHARFORMAT2 WinUtil::m_ChatTextLog;
 
-WinUtil::tbIDImage WinUtil::ToolbarButtons[] = {
-	{ID_FILE_CONNECT, 0, true, ResourceManager::MENU_PUBLIC_HUBS},
-	{ID_FILE_RECONNECT, 1, false, ResourceManager::MENU_RECONNECT},
-	{IDC_FOLLOW, 2, false, ResourceManager::MENU_FOLLOW_REDIRECT},
-	{IDC_FAVORITES, 3, true, ResourceManager::MENU_FAVORITE_HUBS},
-	{IDC_FAVUSERS, 4, true, ResourceManager::MENU_FAVORITE_USERS},
-	{IDC_RECENTS, 5, true, ResourceManager::MENU_FILE_RECENT_HUBS},
-	{IDC_QUEUE, 6, true, ResourceManager::MENU_DOWNLOAD_QUEUE},
-	{IDC_FINISHED, 7, true, ResourceManager::FINISHED_DOWNLOADS},
-	{IDC_UPLOAD_QUEUE, 8, true, ResourceManager::WAITING_USERS},
-	{IDC_FINISHED_UL, 9, true, ResourceManager::FINISHED_UPLOADS},
-	{ID_FILE_SEARCH, 10, false, ResourceManager::MENU_SEARCH},
-	{IDC_FILE_ADL_SEARCH, 11, true, ResourceManager::MENU_ADL_SEARCH},
-	{IDC_SEARCH_SPY, 12, true, ResourceManager::MENU_SEARCH_SPY},
-	{IDC_NET_STATS, 13, true, ResourceManager::NETWORK_STATISTICS},
-	{IDC_OPEN_FILE_LIST, 14, false, ResourceManager::MENU_OPEN_FILE_LIST},
-	{ID_FILE_SETTINGS, 15, false, ResourceManager::MENU_SETTINGS},
-	{IDC_NOTEPAD, 16, true, ResourceManager::MENU_NOTEPAD},
-	{IDC_AWAY, 17, true, ResourceManager::AWAY},
-	{IDC_SHUTDOWN, 18, true, ResourceManager::SHUTDOWN},
-	{IDC_LIMITER, 19, true, ResourceManager::SETCZDC_ENABLE_LIMITING},
-	{IDC_UPDATE, 20, false, ResourceManager::UPDATE_CHECK},
-	{IDC_DISABLE_SOUNDS, 21, true, ResourceManager::DISABLE_SOUNDS},
-	{0, 0, false, ResourceManager::MENU_NOTEPAD}
-};
-
 static const char* CountryNames[] = { "ANDORRA", "UNITED ARAB EMIRATES", "AFGHANISTAN", "ANTIGUA AND BARBUDA", 
 "ANGUILLA", "ALBANIA", "ARMENIA", "NETHERLANDS ANTILLES", "ANGOLA", "ANTARCTICA", "ARGENTINA", "AMERICAN SAMOA", 
 "AUSTRIA", "AUSTRALIA", "ARUBA", "ALAND", "AZERBAIJAN", "BOSNIA AND HERZEGOVINA", "BARBADOS", "BANGLADESH", 
@@ -1445,7 +1419,7 @@ void WinUtil::parseMagnetUri(const tstring& aUrl, bool /*aOverride*/) {
 					case SettingsManager::MAGNET_AUTO_DOWNLOAD:
 						try {
 							QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(fname), fsize, TTHValue(Text::fromT(fhash)), UserPtr());
-						} catch(const QueueException& e) {
+						} catch(const Exception& e) {
 							LogManager::getInstance()->message(e.getError());
 						}
 						break;

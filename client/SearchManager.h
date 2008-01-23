@@ -38,7 +38,7 @@
 class SearchManager;
 class SocketException;
 
-class SearchResult : public FastAlloc<SearchResult> {
+class SearchResult : public FastAlloc<SearchResult>, public intrusive_ptr_base {
 public:	
 
 	enum Types {
@@ -57,7 +57,7 @@ public:
 		const string& ip, TTHValue aTTH, const string& aToken) :
 	file(aFile), hubName(aHubName), user(aUser),
 	size(aSize), type(aType), slots(aSlots), freeSlots(aFreeSlots), IP(ip),
-	tth(aTTH), token(aToken), ref(1) { }
+	tth(aTTH), token(aToken) { inc(); }
 
 	string getFileName() const;
 	string toSR(const Client& client) const;
@@ -76,12 +76,6 @@ public:
 	
 	const string& getIP() const { return IP; }
 	const string& getToken() const { return token; }
-
-	void incRef() { Thread::safeInc(ref); }
-	void decRef() { 
-		if(Thread::safeDec(ref) == 0) 
-			delete this; 
-	}
 
 private:
 	friend class SearchManager;
@@ -105,8 +99,6 @@ private:
 
 	uint8_t slots;
 	uint8_t freeSlots;
-	
-	volatile long ref;
 };
 
 class SearchQueueItem {
