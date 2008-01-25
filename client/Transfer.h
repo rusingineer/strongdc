@@ -61,13 +61,12 @@ public:
 	int64_t getSize() const { return getSegment().getSize(); }
 	void setSize(int64_t size) { segment.setSize(size); }
 
+	bool getOverlapped() const { return getSegment().getOverlapped(); }
+	void setOverlapped(bool overlap) { segment.setOverlapped(overlap); }
+
 	double getAverageSpeed() const;
 
-	int64_t getSecondsLeft(bool wholeFile = false);
-
-	int64_t getBytesLeft() const {
-		return getSize() - getPos();
-	}
+	int64_t getSecondsLeft(bool wholeFile = false) const;
 
 	void getParams(const UserConnection& aSource, StringMap& params) const;
 

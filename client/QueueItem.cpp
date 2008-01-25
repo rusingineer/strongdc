@@ -161,7 +161,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 			}
 		}
 		
-		for(DownloadList::const_iterator i = downloads.begin(); !overlaps && i !=downloads.end(); ++i) {
+		for(DownloadList::const_iterator i = downloads.begin(); !overlaps && i != downloads.end(); ++i) {
 			overlaps = block.overlaps((*i)->getSegment());
 		}
 		
@@ -192,7 +192,33 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 		return neededParts[Util::rand(0, neededParts.size())];
 	}
 	
-	// TODO: replace slow running downloads with fast user
+	if(userSpeed > 10*1024) {
+		// overlap slow running chunk only when new speed is more than 10 kB/s
+
+		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
+			Download* d = *i;
+			
+			// current chunk mustn't be already overlapped
+			if(d->getOverlapped())
+				continue;
+
+			// current chunk must be running at least for 5 seconds
+			if(d->getStart() == 0 || GET_TIME() - d->getStart() < 5000) 
+				continue;
+
+			// current chunk mustn't be finished in next 15 seconds
+			if(d->getSecondsLeft() < 15)
+				continue;
+
+			// new user should finish this chunk at least 3x faster
+			int64_t newChunkLeft = (d->getSize() - d->getStartPos()) / userSpeed;
+			if(3 * newChunkLeft > d->getSecondsLeft()) {
+				d->setOverlapped(true);
+
+				// TODO: replace current chunk with this user
+			}
+		}
+	}
 
 	return Segment(0, 0);
 }

@@ -51,7 +51,6 @@ enum Strings { // @DontAdd
 	B, // "B"
 	BALLOON_POPUPS, // "Balloon popups"
 	BITZI_LOOKUP, // "Bitzi Lookup"
-	BLOCK_FINISHED, // "Segment Block Finished, waiting..."
 	BOTH_USERS_OFFLINE, // "Both users offline"
 	BROWSE, // "Browse..."
 	BROWSE_ACCEL, // "&Browse..."

@@ -52,7 +52,6 @@
 		<String Name="B">B</String>
 		<String Name="BalloonPopups">Balloon popups</String>
 		<String Name="BitziLookup">Bitzi Lookup</String>
-		<String Name="BlockFinished">Segment Block Finished, waiting...</String>
 		<String Name="BothUsersOffline">Both users offline</String>
 		<String Name="Browse">Browse...</String>
 		<String Name="BrowseAccel">&amp;Browse...</String>

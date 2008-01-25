@@ -739,6 +739,7 @@ public:
 				parent->parent = NULL; // ensure that parent of this item is really NULL
 				oldParent->parent = parent;
 				pp->children.push_back(oldParent); // mark old parent item as a child
+				parent->hits++;
 
 				pos = insertItem(getSortPos(parent), parent, parent->imageIndex());
 			} else {
