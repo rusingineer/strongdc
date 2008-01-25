@@ -1339,7 +1339,7 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 				break;
 			case IDC_COPY_LINK:
 				if(sr->getType() == SearchResult::TYPE_FILE) {
-					WinUtil::copyMagnet(sr->getTTH(), Text::toT(sr->getFileName()), sr->getSize());
+					WinUtil::copyMagnet(sr->getTTH(), sr->getFileName(), sr->getSize());
 				}
 				break;
 			case IDC_COPY_TTH:

@@ -56,9 +56,11 @@ double Transfer::getAverageSpeed() const {
 	return ticks > 0 ? (static_cast<double>(bytes) / ticks) * 1000.0 : 0;
 }
 
-int64_t Transfer::getSecondsLeft(bool wholeFile) {
+int64_t Transfer::getSecondsLeft(bool wholeFile) const {
 	int64_t avg = static_cast<int64_t>(getAverageSpeed());
-	return (avg > 0) ? ((wholeFile ? ((Upload*)this)->getFileSize() : getBytesLeft()) / avg) : 0;
+	int64_t bytesLeft =  (wholeFile ? ((Upload*)this)->getFileSize() : getSize()) - getPos();
+
+	return (avg > 0) ? (bytesLeft / avg) : 0;
 }
 
 void Transfer::getParams(const UserConnection& aSource, StringMap& params) const {

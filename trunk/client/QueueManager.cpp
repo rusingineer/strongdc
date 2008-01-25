@@ -878,6 +878,26 @@ void QueueManager::setFile(Download* d) {
 			if(!qi) {
 				throw QueueException(STRING(TARGET_REMOVED));
 			}
+			
+			// TODO: check slow segments
+			if(d->getOverlapped()) {
+				bool found = false;
+				for(DownloadList::const_iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); ++i) {
+					if((*i) != d && d->getStartPos() == (*i)->getStartPos()) {
+						found = true;
+
+						// disconnect slow chunk
+						(*i)->getUserConnection().disconnect();
+
+						dcassert("Feature not finished yet, so this code shouldn't be executed!" == (char*)NULL);
+					}
+				}
+
+				if(!found) {
+					// slow chunk already finished ???
+					throw QueueException(STRING(DOWNLOAD_FINISHED_IDLE));
+				}
+			}
 		}
 		
 		string target = d->getDownloadTarget();

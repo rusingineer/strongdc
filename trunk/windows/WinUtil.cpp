@@ -1077,10 +1077,14 @@ void WinUtil::bitziLink(const TTHValue& aHash) {
 	openLink(_T("http://bitzi.com/lookup/tree:tiger:") + Text::toT(aHash.toBase32()));
 }
 
- void WinUtil::copyMagnet(const TTHValue& aHash, const tstring& aFile, int64_t aSize) {
+tstring WinUtil::getMagnet(const TTHValue& aHash, const string& aFile, int64_t aSize) {
+	return _T("magnet:?xt=urn:tree:tiger:") + Text::toT(aHash.toBase32()) + _T("&xl=") + Util::toStringW(aSize) + _T("&dn=") + Text::toT(Util::encodeURI(aFile));
+}
+
+void WinUtil::copyMagnet(const TTHValue& aHash, const string& aFile, int64_t aSize) {
 	if(!aFile.empty()) {
-		setClipboard(Text::toT("magnet:?xt=urn:tree:tiger:" + aHash.toBase32() + "&xl=" + Util::toString(aSize) + "&dn=" + Util::encodeURI(Text::fromT(aFile))));
-	}
+		setClipboard(getMagnet(aHash, aFile, aSize));
+ 	}
 }
 
  void WinUtil::searchHash(const TTHValue& aHash) {

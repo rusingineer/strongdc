@@ -713,7 +713,6 @@ HRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 			prepareMenu(fileMenu, UserCommand::CONTEXT_FILELIST, ClientManager::getInstance()->getHubs(dl->getUser()->getCID()));
 			fileMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		} else {
-			fileMenu.EnableMenuItem((UINT)(HMENU)copyMenu, MF_BYCOMMAND | MFS_DISABLED);
 			fileMenu.EnableMenuItem(IDC_SEARCH_ALTERNATES, MF_BYCOMMAND | MFS_DISABLED);
 			//Append Favorite download dirs
 			StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
@@ -1166,11 +1165,16 @@ void DirectoryListingFrame::closeAll(){
 }
 
 LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	tstring sCopy;
-	if(ctrlList.GetSelectedCount() == 1) {
-		const ItemInfo* ii = ctrlList.getSelectedItem();
+	tstring sdata;
+	int i = -1;
+
+	while( (i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
+		const ItemInfo* ii = (ItemInfo*)ctrlList.getItemData(i);
+		tstring sCopy;
+		
 		if(ii->type != ItemInfo::FILE)
-			return 0;
+			continue;
+
 		switch (wID) {
 			case IDC_COPY_NICK:
 				sCopy = WinUtil::getNicks(dl->getUser());
@@ -1182,21 +1186,27 @@ LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 				sCopy = Util::formatBytesW(ii->file->getSize());
 				break;
 			case IDC_COPY_LINK:
-				if(ii->type == ItemInfo::FILE) {
-					WinUtil::copyMagnet(ii->file->getTTH(), Text::toT(ii->file->getName()), ii->file->getSize());
-				}
+				sCopy = WinUtil::getMagnet(ii->file->getTTH(), ii->file->getName(), ii->file->getSize());
 				break;
 			case IDC_COPY_TTH:
-				if(ii->type == ItemInfo::FILE)
-					sCopy = Text::toT(ii->file->getTTH().toBase32());
+				sCopy = Text::toT(ii->file->getTTH().toBase32());
 				break;
 			default:
 				dcdebug("DIRECTORYLISTINGFRAME DON'T GO HERE\n");
 				return 0;
 		}
-		if (!sCopy.empty())
-			WinUtil::setClipboard(sCopy);
+
+		if (!sCopy.empty()) {
+			if (sdata.empty())
+				sdata = sCopy;
+			else
+				sdata = sdata + _T("\r\n") + sCopy;
+		}
 	}
+
+	if (!sdata.empty())
+		WinUtil::setClipboard(sdata);
+
 	return S_OK;
 }
 
