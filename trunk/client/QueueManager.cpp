@@ -887,6 +887,7 @@ void QueueManager::setFile(Download* d) {
 				d->setOverlapped(false);
 
 				bool found = false;
+				// ok, we got a fast slot, so it's possible to disconnect original user now
 				for(DownloadList::const_iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); ++i) {
 					if((*i) != d && (*i)->getSegment().contains(d->getSegment())) {
 						found = true;

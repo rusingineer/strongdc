@@ -1,3 +1,7 @@
+** svn365
+	fixed some comments
+	fixed svn version number
+
 ** svn364
 	continuing work on slow segments overlapping (it needs many testing now)
 	returned usernicks to Finished downloads frame
