@@ -633,6 +633,19 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 			if(!pp) 
 				continue;
 
+			if(ui->user) {
+				int pos = -1;
+				ItemInfo* ii = findItem(*ui, pos);
+				if(ii) {
+					ii->status = ui->status;
+					ii->statusString = ui->statusString;
+
+					if(!pp->parent->collapsed) {
+						updateItem(ctrlTransfers.findItem(ii), ui->updateMask);
+					}
+				}
+			}
+
 			pp->parent->update(*ui);
 			updateItem(ctrlTransfers.findItem(pp->parent), ui->updateMask);
 		}
@@ -1148,8 +1161,10 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 	speak(UPDATE_PARENT, ui);
 }
 
-void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const string&, int64_t) throw() {
+void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const string&, const Download* download) throw() {
 	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true, true);
+	ui->user = download->getUser();
+
 	ui->setTarget(Text::toT(qi->getTarget()));
 	ui->setPos(0);
 	ui->setActual(0);

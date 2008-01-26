@@ -457,7 +457,7 @@ private:
 	void on(WebServerListener::ShutdownPC, int);
 
 	// QueueManagerListener
-	void on(QueueManagerListener::Finished, const QueueItem* qi, const string& dir, int64_t speed) throw();
+	void on(QueueManagerListener::Finished, const QueueItem* qi, const string& dir, const Download*) throw();
 	void on(PartialList, const UserPtr&, const string& text) throw();
 
 	// UPnP connectors

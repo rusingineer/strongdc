@@ -202,20 +202,23 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 			if(d->getOverlapped())
 				continue;
 
-			// current chunk must be running at least for 5 seconds
-			if(d->getStart() == 0 || GET_TIME() - d->getStart() < 5000) 
+			// current chunk must be running at least for 2 seconds
+			if(d->getStart() == 0 || GET_TIME() - d->getStart() < 2000) 
 				continue;
 
-			// current chunk mustn't be finished in next 15 seconds
-			if(d->getSecondsLeft() < 15)
+			// current chunk mustn't be finished in next 10 seconds
+			if(d->getSecondsLeft() < 10)
 				continue;
+
+			// overlap current chunk at last block boundary
+			int64_t pos = d->getPos() - (d->getPos() % blockSize);
+			int64_t size = d->getSize() - pos;
 
 			// new user should finish this chunk at least 3x faster
-			int64_t newChunkLeft = (d->getSize() - d->getStartPos()) / userSpeed;
-			if(3 * newChunkLeft > d->getSecondsLeft()) {
-				d->setOverlapped(true);
-
-				// TODO: replace current chunk with this user
+			int64_t newChunkLeft = size / userSpeed;
+			if(2 * newChunkLeft < d->getSecondsLeft()) {
+				dcdebug("Old user: %I64d s, new user: %I64d s\n", d->getSecondsLeft(), newChunkLeft);
+				return Segment(d->getStartPos() + pos, size, true);
 			}
 		}
 	}
@@ -240,6 +243,7 @@ int64_t QueueItem::getDownloadedBytes() const {
 }
 
 void QueueItem::addSegment(const Segment& segment) {
+	dcassert(segment.getOverlapped() == false);
 	done.insert(segment);
 
 	// Consilidate segments

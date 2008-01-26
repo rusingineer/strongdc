@@ -1,7 +1,13 @@
+** svn364
+	continuing work on slow segments overlapping (it needs many testing now)
+	returned usernicks to Finished downloads frame
+	[NMDC] usernicks CPU optimization
+	fixed last segment status in TransferView
+
 ** svn363
 	hopefully fixed TypedTreeListView children counting
 	hopefully fixed upload timeleft
-	added multiple items info copying in filelists
+	added multiple items info copying in filelists (THX klirik)
 	begun work on slow segments overlapping
 
 ** svn362
