@@ -114,7 +114,7 @@ private:
 	FinishedManager();
 	~FinishedManager() throw();
 
-	void on(QueueManagerListener::Finished, const QueueItem*, const string&, int64_t) throw();
+	void on(QueueManagerListener::Finished, const QueueItem*, const string&, const Download*) throw();
 	void on(UploadManagerListener::Complete, const Upload*) throw();
 
 	CriticalSection cs;

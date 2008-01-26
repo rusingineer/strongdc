@@ -57,6 +57,10 @@ public:
 		size = rhs.getStart() - start;
 	}
 	
+	bool contains(const Segment& rhs) const {
+		return getStart() <= rhs.getStart() && getEnd() == rhs.getEnd();
+	}
+
 	bool operator==(const Segment& rhs) const {
 		return getStart() == rhs.getStart() && getSize() == rhs.getSize();
 	}

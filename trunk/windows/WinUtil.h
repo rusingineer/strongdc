@@ -399,7 +399,7 @@ public:
 	static bool getUCParams(HWND parent, const UserCommand& cmd, StringMap& sm) throw();
 
 	static tstring getNicks(const CID& cid) throw();
-	static tstring getNicks(const UserPtr& u) { return getNicks(u->getCID()); }
+	static tstring getNicks(const UserPtr& u) { return u->isNMDC() ? Text::toT(u->getFirstNick()) : getNicks(u->getCID()); }
 	
 	/** @return Pair of hubnames as a string and a bool representing the user's online status */
 	static pair<tstring, bool> getHubNames(const CID& cid) throw();

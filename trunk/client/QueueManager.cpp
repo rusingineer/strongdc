@@ -789,7 +789,11 @@ uint8_t QueueManager::FileQueue::getMaxSegments(int64_t filesize) const {
 		}
 	}
 
+#ifdef _DEBUG
+	return 30;
+#else
 	return MaxSegments;
+#endif
 }
 
 void QueueManager::getTargets(const TTHValue& tth, StringList& sl) {
@@ -879,17 +883,17 @@ void QueueManager::setFile(Download* d) {
 				throw QueueException(STRING(TARGET_REMOVED));
 			}
 			
-			// TODO: check slow segments
 			if(d->getOverlapped()) {
+				d->setOverlapped(false);
+
 				bool found = false;
 				for(DownloadList::const_iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); ++i) {
-					if((*i) != d && d->getStartPos() == (*i)->getStartPos()) {
+					if((*i) != d && (*i)->getSegment().contains(d->getSegment())) {
 						found = true;
 
 						// disconnect slow chunk
 						(*i)->getUserConnection().disconnect();
-
-						dcassert("Feature not finished yet, so this code shouldn't be executed!" == (char*)NULL);
+						break;
 					}
 				}
 
@@ -1054,8 +1058,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 								aDownload->getParams(aDownload->getUserConnection(), params);
 								LOG(LogManager::DOWNLOAD, params);
 							}
-
-							fire(QueueManagerListener::Finished(), q, dir, static_cast<int64_t>(aDownload->getAverageSpeed()));
+							
+							fire(QueueManagerListener::Finished(), q, dir, aDownload);
 							fire(QueueManagerListener::Removed(), q);
 	
 							userQueue.remove(q);

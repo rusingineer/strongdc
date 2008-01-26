@@ -271,7 +271,7 @@ private:
 		bool operator==(const ItemInfo& ii) const { return download == ii.download && user == ii.user; }
 
 		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), queueItem(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0) { }
-		UpdateInfo(QueueItem* qi, bool isDownload, bool isTransferFailed = false) : updateMask(0), queueItem(qi), download(isDownload), transferFailed(isTransferFailed), flagImage(0) { qi->inc(); }
+		UpdateInfo(QueueItem* qi, bool isDownload, bool isTransferFailed = false) : updateMask(0), queueItem(qi), user(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0) { qi->inc(); }
 
 		~UpdateInfo() { if(queueItem) queueItem->dec(); }
 
@@ -335,7 +335,7 @@ private:
 
 	void on(QueueManagerListener::StatusUpdated, const QueueItem*) throw();
 	void on(QueueManagerListener::Removed, const QueueItem*) throw();
-	void on(QueueManagerListener::Finished, const QueueItem*, const string&, int64_t) throw();
+	void on(QueueManagerListener::Finished, const QueueItem*, const string&, const Download*) throw();
 
 	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 
