@@ -214,7 +214,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 			int64_t pos = d->getPos() - (d->getPos() % blockSize);
 			int64_t size = d->getSize() - pos;
 
-			// new user should finish this chunk at least 3x faster
+			// new user should finish this chunk more than 2x faster
 			int64_t newChunkLeft = size / userSpeed;
 			if(2 * newChunkLeft < d->getSecondsLeft()) {
 				dcdebug("Old user: %I64d s, new user: %I64d s\n", d->getSecondsLeft(), newChunkLeft);
