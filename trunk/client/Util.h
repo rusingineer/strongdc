@@ -370,7 +370,7 @@ public:
 
 	static wstring toStringW( int64_t val ) {
 		wchar_t buf[32];
-		snwprintf(buf, sizeof(buf), L"%ld", val);
+		snwprintf(buf, sizeof(buf), _T(I64_FMT), val);
 		return buf;
 	}
 

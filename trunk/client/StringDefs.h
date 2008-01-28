@@ -415,6 +415,7 @@ enum Strings { // @DontAdd
 	OPEN_FOLDER, // "Open folder"
 	OPEN_HUB_LOG, // "Open hub log"
 	OPEN_USER_LOG, // "Open user log"
+	OVERLAPPED_SLOW_SEGMENT, // "Overlapped slow chunk"
 	PARTS, // "Parts: "
 	PASSIVE_USER, // "Passive user"
 	PASSWORD, // "Password"

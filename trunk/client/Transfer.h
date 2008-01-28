@@ -82,7 +82,6 @@ public:
 	GETSET(Segment, segment, Segment);
 	GETSET(Type, type, Type);
 	GETSET(uint64_t, start, Start);
-	GETSET(uint64_t, lastTick, LastTick);
 private:
 	
 	typedef std::pair<uint64_t, int64_t> Sample;

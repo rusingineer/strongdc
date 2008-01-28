@@ -23,9 +23,10 @@ public:
 		FLAG_TTH_CHECK			= 0x08,
 		FLAG_TESTSUR			= 0x10,
 		FLAG_CHECK_FILE_LIST	= 0x20,
-		FLAG_OVERLAPPED			= 0x40,
+		FLAG_SLOWUSER			= 0x40,
 		FLAG_XML_BZ_LIST		= 0x80,
-		FLAG_PARTIAL			= 0x100
+		FLAG_PARTIAL			= 0x100,
+		FLAG_OVERLAP			= 0x200
 	};
 
 	Download(UserConnection& conn, const string& pfsDir) throw();

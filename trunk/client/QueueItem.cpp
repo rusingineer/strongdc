@@ -192,7 +192,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 		return neededParts[Util::rand(0, neededParts.size())];
 	}
 	
-	if(userSpeed > 10*1024) {
+	if(partialSource == NULL && userSpeed > 10*1024) {
 		// overlap slow running chunk only when new speed is more than 10 kB/s
 
 		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
@@ -281,7 +281,7 @@ bool QueueItem::isSource(const PartsInfo& partsInfo, int64_t blockSize)
 
 }
 
-void QueueItem::getPartialInfo(PartsInfo& partialInfo, int64_t blockSize) {
+void QueueItem::getPartialInfo(PartsInfo& partialInfo, int64_t blockSize) const {
 	size_t maxSize = min(done.size() * 2, (size_t)510);
 	partialInfo.reserve(maxSize);
 
