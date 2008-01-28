@@ -790,7 +790,7 @@ uint8_t QueueManager::FileQueue::getMaxSegments(int64_t filesize) const {
 	}
 
 #ifdef _DEBUG
-	return 30;
+	return 20;
 #else
 	return MaxSegments;
 #endif
@@ -1028,6 +1028,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						}
 
 						if(aDownload->getType() == Transfer::TYPE_FILE) {
+							aDownload->setOverlapped(false);
 							q->addSegment(aDownload->getSegment());
 						}
 						
@@ -1099,7 +1100,17 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 					}
 	
 					userQueue.removeDownload(q, aDownload->getUser());
-					fire(QueueManagerListener::StatusUpdated(), q);						
+					fire(QueueManagerListener::StatusUpdated(), q);
+
+					if(aDownload->isSet(Download::FLAG_OVERLAP)) {
+						// overlapping segment disconnected, unoverlap original segment
+						for(DownloadList::const_iterator i = q->getDownloads().begin(); i != q->getDownloads().end(); ++i) {
+							if((*i)->getSegment().contains(aDownload->getSegment())) {
+								(*i)->setOverlapped(false);
+								break;
+							}
+						}
+					}
 				}
 			} else if(aDownload->getType() != Transfer::TYPE_TREE) {
 				if(!aDownload->getTempTarget().empty() && (aDownload->getType() == Transfer::TYPE_FULL_LIST || aDownload->getTempTarget() != aDownload->getPath())) {
@@ -1673,7 +1684,7 @@ void QueueManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 
 }
 
-bool QueueManager::dropSource(Download* d) {
+void QueueManager::dropSource(Download* d) {
 	size_t activeSegments, onlineUsers;
 	uint64_t overallSpeed;
 
@@ -1682,11 +1693,13 @@ bool QueueManager::dropSource(Download* d) {
 
 		QueueItem* q = userQueue.getRunning(d->getUser());
 
-		if(!q) return false;
+		if(!q)
+			return;
 
    		dcassert(q->isSource(d->getUser()));
 
-		if(!q->isSet(QueueItem::FLAG_AUTODROP)) return true;
+		if(!q->isSet(QueueItem::FLAG_AUTODROP))
+			return;
 
 		activeSegments = q->getDownloads().size();
 		onlineUsers = q->countOnlineUsers();
@@ -1695,19 +1708,18 @@ bool QueueManager::dropSource(Download* d) {
 
 	if(!SETTING(DROP_MULTISOURCE_ONLY) || (activeSegments >= 2)) {
 		size_t iHighSpeed = SETTING(DISCONNECT_FILE_SPEED);
-		if((iHighSpeed == 0) || (overallSpeed > iHighSpeed*1024)) {
-			if(onlineUsers > 2) {
-				d->getUser()->setLastDownloadSpeed(static_cast<size_t>(d->getAverageSpeed()));
-				if(d->getAverageSpeed() < SETTING(REMOVE_SPEED)*1024) {
-					removeSource(d->getPath(), d->getUser(), QueueItem::Source::FLAG_SLOW);
-				} else {
-					d->getUserConnection().disconnect();
-				}
-				return false;
+
+		if((iHighSpeed == 0 || overallSpeed > iHighSpeed * 1024) && onlineUsers > 2) {
+			d->setFlag(Download::FLAG_SLOWUSER);
+			d->getUser()->setLastDownloadSpeed(static_cast<size_t>(d->getAverageSpeed()));
+
+			if(d->getAverageSpeed() < SETTING(REMOVE_SPEED)*1024) {
+				removeSource(d->getPath(), d->getUser(), QueueItem::Source::FLAG_SLOW);
+			} else {
+				d->getUserConnection().disconnect();
 			}
 		}
 	}
-	return true;
 }
 
 bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth, const QueueItem::PartialSource& partialSource, PartsInfo& outPartialInfo) {

@@ -1,3 +1,10 @@
+** svn366
+	try to fix a crash in Identity
+	fixed converting 64bit integer to unicode string
+	fixed crash #10605
+	fixed overlapping when faster segment is disconnected (no slots etc.)
+	hopefully fixed crash #10690, #10772, #10795, #10796, #10828, #10856
+
 ** svn365
 	fixed some comments
 	fixed svn version number

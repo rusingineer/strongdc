@@ -26,7 +26,7 @@
 #include "HashManager.h"
 
 Download::Download(UserConnection& conn, const string& pfsDir) throw() : Transfer(conn, pfsDir, TTHValue()),
-	file(0), treeValid(false)
+	file(0), treeValid(false), lastTick(GET_TICK())
 {
 	conn.setDownload(this);
 	setType(TYPE_PARTIAL_LIST);
@@ -56,16 +56,6 @@ Download::Download(UserConnection& conn, QueueItem& qi) throw() : Transfer(conn,
 		if(HashManager::getInstance()->getTree(getTTH(), getTigerTree())) {
 			setTreeValid(true);
 			setSegment(qi.getNextSegment(getTigerTree().getBlockSize(), getUser()->getLastDownloadSpeed(), source->getPartialSource()));
-
-			if(getSegment().getOverlapped()) {
-				// set overlapped flag to original segment
-				for(DownloadList::const_iterator i = qi.getDownloads().begin(); i != qi.getDownloads().end(); ++i) {
-					if((*i)->getSegment().contains(getSegment())) {
-						(*i)->setOverlapped(true);
-						break;
-					}
-				}
-			}
 		} else if(conn.isSet(UserConnection::FLAG_SUPPORTS_TTHL) && !qi.getSource(conn.getUser())->isSet(QueueItem::Source::FLAG_NO_TREE) && qi.getSize() > HashManager::MIN_BLOCK_SIZE) {
 			// Get the tree unless the file is small (for small files, we'd probably only get the root anyway)
 			setType(TYPE_TREE);
@@ -76,6 +66,18 @@ Download::Download(UserConnection& conn, QueueItem& qi) throw() : Transfer(conn,
 			getTigerTree() = TigerTree(qi.getSize(), qi.getSize(), getTTH());
 			setTreeValid(true);
 			setSegment(qi.getNextSegment(getTigerTree().getBlockSize(), getUser()->getLastDownloadSpeed(), source->getPartialSource()));
+		}
+
+		if(getSegment().getOverlapped()) {
+			setFlag(Download::FLAG_OVERLAP);
+
+			// set overlapped flag to original segment
+			for(DownloadList::const_iterator i = qi.getDownloads().begin(); i != qi.getDownloads().end(); ++i) {
+				if((*i)->getSegment().contains(getSegment())) {
+					(*i)->setOverlapped(true);
+					break;
+				}
+			}
 		}
 
 		int64_t start = File::getSize((getTempTarget().empty() ? getPath() : getTempTarget()));

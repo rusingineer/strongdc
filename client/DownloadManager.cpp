@@ -74,25 +74,25 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 			d->tick();
 		}
 
-		if (d->getType() == Transfer::TYPE_FILE && d->getStart() > 0) {
-			if (d->getTigerTree().getFileSize() > (SETTING(DISCONNECT_FILESIZE) * 1048576)) {
-				if((d->getAverageSpeed() < SETTING(DISCONNECT_SPEED) * 1024)) {
-					if(	(((aTick - d->getLastTick())/1000) > (uint32_t)SETTING(DISCONNECT_TIME)) &&
-						(!QueueManager::getInstance()->dropSource(d)))
+		if (d->getType() == Transfer::TYPE_FILE && d->getStart() > 0)
+		{
+			if (d->getTigerTree().getFileSize() > (SETTING(DISCONNECT_FILESIZE) * 1048576))
+			{
+				if((d->getAverageSpeed() < SETTING(DISCONNECT_SPEED) * 1024))
+				{
+					if(aTick - d->getLastTick() > (uint32_t)SETTING(DISCONNECT_TIME) * 1000)
 					{
-							fire(DownloadManagerListener::Failed(), d, STRING(SLOW_USER) + " - " + STRING(DISCONNECTED));
-							continue;
+						QueueManager::getInstance()->dropSource(d);
 					}
 				} else {
 					d->setLastTick(aTick);
 				}
 			}
-		}
-		
-		if(tickList.size() > 0)
-			fire(DownloadManagerListener::Tick(), tickList);
-			
+		}			
 	}
+
+	if(tickList.size() > 0)
+		fire(DownloadManagerListener::Tick(), tickList);
 }
 
 void QueueManager::FileMover::moveFile(const string& source, const string& target) {
@@ -418,6 +418,12 @@ void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource
 }
 
 void DownloadManager::failDownload(UserConnection* aSource, const string& reason) {
+
+	{
+		Lock l(cs);
+ 		idlers.erase(remove(idlers.begin(), idlers.end(), aSource), idlers.end());
+	}
+
 	Download* d = aSource->getDownload();
 
 	if(d) {
@@ -438,7 +444,10 @@ void DownloadManager::failDownload(UserConnection* aSource, const string& reason
 
 		QueueManager::getInstance()->putDownload(d, false);
 	}
-	removeConnection(aSource);
+
+	dcassert(aSource->getDownload() == NULL);
+	aSource->removeListener(this);
+	aSource->disconnect();
 }
 
 void DownloadManager::removeDownload(Download* d) {

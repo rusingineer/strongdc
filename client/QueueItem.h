@@ -214,7 +214,7 @@ public:
 	/**
 	 * Get shared parts info, max 255 parts range pairs
 	 */
-	void getPartialInfo(PartsInfo& partialInfo, int64_t blockSize);
+	void getPartialInfo(PartsInfo& partialInfo, int64_t blockSize) const;
 
 	int64_t getDownloadedBytes() const;
 	double getDownloadedFraction() const { return static_cast<double>(getDownloadedBytes()) / getSize(); }

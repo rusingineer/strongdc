@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Language Name="Example Language" Author="BigMuscle" Version="2.11" Revision="1">
+<Language Name="Example Language" Author="BigMuscle" Version="2.12" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Accepted Disconnects</String>
 		<String Name="AcceptedTimeouts">Accepted Timeouts</String>
@@ -416,6 +416,7 @@
 		<String Name="OpenFolder">Open folder</String>
 		<String Name="OpenHubLog">Open hub log</String>
 		<String Name="OpenUserLog">Open user log</String>
+		<String Name="OverlappedSlowSegment">Overlapped slow chunk</String>
 		<String Name="Parts">Parts: </String>
 		<String Name="PassiveUser">Passive user</String>
 		<String Name="Password">Password</String>

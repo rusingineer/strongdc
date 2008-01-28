@@ -85,9 +85,9 @@ public:
 	
 	Identity() { }
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
-	Identity(const Identity& rhs) : user(rhs.user) { Lock l(rhs.cs); info = rhs.info; }
+	Identity(const Identity& rhs) : user(rhs.user) { Lock l1(cs); Lock l2(rhs.cs); info = rhs.info; }
 	Identity& operator=(const Identity& rhs) { Lock l1(cs); Lock l2(rhs.cs); user = rhs.user; info = rhs.info; return *this; }
-	~Identity() { }
+	~Identity() { Lock l(cs); /* let's try it again :) */ }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Description, "DE")

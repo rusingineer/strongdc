@@ -852,7 +852,7 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		if(d->isSet(Download::FLAG_CHUNKED)) {
 			statusString += _T("[C]");
 		}
-		if(d->isSet(Download::FLAG_OVERLAPPED)) {
+		if(d->getOverlapped()) {
 			statusString += _T("[O]");
 		}
 		if(!statusString.empty()) {
@@ -871,7 +871,18 @@ void TransferView::on(DownloadManagerListener::Failed, const Download* aDownload
 	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true, true);
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	ui->setPos(0);
-	ui->setStatusString(Text::toT(aReason));
+
+	tstring tmpReason;
+	if(aDownload->isSet(Download::FLAG_SLOWUSER)) {
+		tmpReason = TSTRING(SLOW_USER) + _T(": ") + Text::toT(aReason);
+	} else if(aDownload->getOverlapped()) {
+		tmpReason = TSTRING(OVERLAPPED_SLOW_SEGMENT) + _T(": ") + Text::toT(aReason);
+	} else {
+		tmpReason = Text::toT(aReason);
+	}
+
+	ui->setStatusString(tmpReason);
+	
 	ui->setSize(aDownload->getSize());
 	ui->setTarget(Text::toT(aDownload->getPath()));
 

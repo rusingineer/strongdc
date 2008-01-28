@@ -45,12 +45,14 @@ public:
 			cur.update(buf, bufPos);
 		bufPos = 0;
 
-		cur.finalize();
-		if(cur.getLeaves().size() == real.getLeaves().size()) {
-			if (cur.getRoot() != real.getRoot())
-				throw FileException(STRING(TTH_INCONSISTENCY));
-		} else {
-			checkTrees();
+		if(cur.getLeaves().size() > 0) {
+			cur.finalize();
+			if(cur.getLeaves().size() == real.getLeaves().size()) {
+				if (cur.getRoot() != real.getRoot())
+					throw FileException(STRING(TTH_INCONSISTENCY));
+			} else {
+				checkTrees();
+			}
 		}
 		return s->flush();
 	}
