@@ -74,7 +74,12 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		qi->setMaxSegments(getMaxSegments(qi->getSize()));
 		
 		if(!aTempTarget.empty()) {
-			qi->setTempTarget(aTempTarget);
+			if(!Util::fileExists(aTempTarget) && Util::fileExists(aTempTarget + ".antifrag")) {
+				// load old antifrag files
+				qi->setTempTarget(aTempTarget + ".antifrag");
+			} else {
+				qi->setTempTarget(aTempTarget);
+			}
 		}
 		
 		if(p == QueueItem::DEFAULT) {
@@ -908,7 +913,9 @@ void QueueManager::setFile(Download* d) {
 		string target = d->getDownloadTarget();
 		File::ensureDirectory(target);
 		File* f = new File(target, File::WRITE, File::OPEN | File::CREATE | File::SHARED);
-		if(d->isSet(Download::FLAG_ANTI_FRAG)) {
+
+		// Only use antifrag if we don't have a previous non-antifrag part
+		if(BOOLSETTING(ANTI_FRAG) && f->getSize() == 0) {
 			f->setSize(d->getTigerTree().getFileSize());
 		}
 		f->setPos(d->getSegment().getStart());
@@ -1034,22 +1041,34 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						
 						if(aDownload->getType() != Transfer::TYPE_FILE || q->isFinished()) {
 
-							// For partial-share, abort upload first to move file correctly
-							UploadManager::getInstance()->abortUpload(q->getTempTarget());
-		
-							// Check if we're anti-fragging...
-							if(aDownload->isSet(Download::FLAG_ANTI_FRAG)) {
-								// Ok, rename the file to what we expect it to be...
+							if(aDownload->getType() == Transfer::TYPE_FILE) {
+								// For partial-share, abort upload first to move file correctly
+								UploadManager::getInstance()->abortUpload(q->getTempTarget());
+
+#ifdef _DEBUG
 								try {
-									const string& tgt = aDownload->getTempTarget().empty() ? aDownload->getPath() : aDownload->getTempTarget();
-									File::renameFile(aDownload->getDownloadTarget(), tgt);
-									aDownload->unsetFlag(Download::FLAG_ANTI_FRAG);
-								} catch(const FileException& e) {
-									dcdebug("AntiFrag: %s\n", e.getError().c_str());
-									// Now what?
-								}
+									// last TTH verification only in debug mode
+									AutoArray<char> buf(512*1024);
+						   
+									File f(aDownload->getDownloadTarget(), File::READ, File::OPEN);
+									TigerTree tth(TigerTree::calcBlockSize(aDownload->getSize(), 1));
+						   
+									if(aDownload->getSize() > 0) {
+										size_t n = 512*1024;
+										while( (n = f.read(buf, n)) > 0) {
+											tth.update(buf, n);
+											n = 512*1024;
+										}
+									} else {
+										tth.update("", 0);
+									}
+									tth.finalize();
+						   
+									dcassert(tth.getRoot() == aDownload->getTTH());
+								} catch(...) { }
+#endif
 							}
-							
+						
 							// Check if we need to move the file
 							if( !aDownload->getTempTarget().empty() && (Util::stricmp(aDownload->getPath().c_str(), aDownload->getTempTarget().c_str()) != 0) ) {
 								moveFile(aDownload->getTempTarget(), aDownload->getPath());
@@ -1114,7 +1133,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 				}
 			} else if(aDownload->getType() != Transfer::TYPE_TREE) {
 				if(!aDownload->getTempTarget().empty() && (aDownload->getType() == Transfer::TYPE_FULL_LIST || aDownload->getTempTarget() != aDownload->getPath())) {
-					File::deleteFile(aDownload->getTempTarget() + Download::ANTI_FRAG_EXT);
 					File::deleteFile(aDownload->getTempTarget());
 				}
 			}
@@ -1205,7 +1223,6 @@ void QueueManager::remove(const string& aTarget) throw() {
 				dirMap.erase((*i)->getUser()->getCID().toBase32());
 			}
 		} else if(!q->getTempTarget().empty() && q->getTempTarget() != q->getTarget()) {
-			File::deleteFile(q->getTempTarget() + Download::ANTI_FRAG_EXT);
 			File::deleteFile(q->getTempTarget());
 		}
 

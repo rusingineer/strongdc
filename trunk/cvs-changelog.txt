@@ -1,3 +1,7 @@
+** svn367
+	removed special extension from antifrag files
+	added last TTH check to debug build
+
 ** svn366
 	try to fix a crash in Identity
 	fixed converting 64bit integer to unicode string

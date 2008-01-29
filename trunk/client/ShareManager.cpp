@@ -733,7 +733,7 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 			if( (Util::stricmp(name.c_str(), "DCPlusPlus.xml") != 0) && 
 				(Util::stricmp(name.c_str(), "Favorites.xml") != 0) &&
 				(Util::stricmp(Util::getFileExt(name).c_str(), ".dctmp") != 0) &&
-				(Util::stricmp(Util::getFileExt(name).c_str(), Download::ANTI_FRAG_EXT) != 0) ){
+				(Util::stricmp(Util::getFileExt(name).c_str(), ".antifrag") != 0) ){
 
 				int64_t size = i->getSize();
 				string fileName = aName + name;
