@@ -446,7 +446,7 @@ public:
 
 	static void ClearPreviewMenu(OMenu &previewMenu);
 	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
-	static void RunPreviewCommand(unsigned int index, string target);
+	static void RunPreviewCommand(unsigned int index, const string& target);
 	static string formatTime(uint64_t rest);
 	static uint8_t getFlagImage(const char* country, bool fullname = false);
 	static string generateStats();

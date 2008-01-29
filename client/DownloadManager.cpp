@@ -40,7 +40,6 @@
 #endif
 
 static const string DOWNLOAD_AREA = "Downloads";
-const string Download::ANTI_FRAG_EXT = ".antifrag";
 
 DownloadManager::DownloadManager() : mDownloadLimit(0), mBytesSpokenFor(0),
 	mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)) {
