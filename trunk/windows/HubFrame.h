@@ -269,6 +269,10 @@ public:
 	}
 
 	TypedListViewCtrl<OnlineUser, IDC_USERS>& getUserList() { return ctrlUsers; }
+
+	typedef unordered_set<UserPtr, User::Hash> IgnoreMap;
+	static IgnoreMap ignoreList;
+
 private:
 	enum Tasks { UPDATE_USER_JOIN, UPDATE_USER, REMOVE_USER, ADD_CHAT_LINE,
 		ADD_STATUS_LINE, ADD_SILENT_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
@@ -368,9 +372,6 @@ private:
 	TStringList prevCommands;
 	tstring currentCommand;
 	TStringList::size_type curCommandPosition;		//can't use an iterator because StringList is a vector, and vector iterators become invalid after resizing
-
-	typedef unordered_set<UserPtr, User::Hash> IgnoreMap;
-	static IgnoreMap ignoreList;
 
 	tstring currentNeedle;		// search in chat window
 	int currentNeedlePos;		// search in chat window

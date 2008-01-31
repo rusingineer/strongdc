@@ -63,6 +63,9 @@ void ChatCtrl::AdjustTextSize() {
 		SetRedraw(FALSE);
 		SetSel(0, LineIndex(LineFromChar(2000)));
 		ReplaceSel(_T(""));
+
+		// scroll to bottom
+		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
 		SetRedraw(TRUE);
 	}
 }
@@ -570,6 +573,17 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		menu.AppendMenu(MF_SEPARATOR);
 		
 		if(!isMe) {
+			
+			const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+			if (client->isOp() || !ou->getIdentity().isOp()) {
+				if(HubFrame::ignoreList.find(ou->getUser()) == HubFrame::ignoreList.end()) {
+					menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
+				} else {    
+					menu.AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
+				}
+				menu.AppendMenu(MF_SEPARATOR);
+			}
+
 			menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
 			menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
 			menu.AppendMenu(MF_SEPARATOR);
@@ -785,6 +799,22 @@ LRESULT ChatCtrl::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 	return 0;
 }
 
+LRESULT ChatCtrl::onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/){
+	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou)
+		HubFrame::ignoreList.insert(ou->getUser());
+
+	return 0;
+}
+
+LRESULT ChatCtrl::onUnignore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/){
+	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou)
+		HubFrame::ignoreList.erase(ou->getUser());
+
+	return 0;
+}
+
 LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring sCopy;
 	
@@ -850,4 +880,22 @@ LRESULT ChatCtrl::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 	}
 	
 	return 0;
+}
+
+void ChatCtrl::runUserCommand(UserCommand& uc) {
+	StringMap ucParams;
+
+	if(!WinUtil::getUCParams(m_hWnd, uc, ucParams))
+		return;
+
+	client->getMyIdentity().getParams(ucParams, "my", true);
+	client->getHubIdentity().getParams(ucParams, "hub", false);
+
+	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou->getUser()->isOnline()) {
+		StringMap tmp = ucParams;
+		ou->getIdentity().getParams(tmp, "user", true);
+		client->escapeParams(tmp);
+		client->sendUserCmd(Util::formatParams(uc.getCommand(), tmp, false));
+	}
 }
