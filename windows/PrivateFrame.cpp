@@ -271,12 +271,12 @@ void PrivateFrame::onEnter()
 			} else if((Util::stricmp(s.c_str(), _T("clear")) == 0) || (Util::stricmp(s.c_str(), _T("cls")) == 0)) {
 				ctrlClient.SetWindowText(_T(""));
 			} else if(Util::stricmp(s.c_str(), _T("grant")) == 0) {
-				UploadManager::getInstance()->reserveSlot(getUser(), 600);
+				UploadManager::getInstance()->reserveSlot(replyTo, 600);
 				addClientLine(TSTRING(SLOT_GRANTED));
 			} else if(Util::stricmp(s.c_str(), _T("close")) == 0) {
 				PostMessage(WM_CLOSE);
 			} else if((Util::stricmp(s.c_str(), _T("favorite")) == 0) || (Util::stricmp(s.c_str(), _T("fav")) == 0)) {
-				FavoriteManager::getInstance()->addFavoriteUser(getUser());
+				FavoriteManager::getInstance()->addFavoriteUser(replyTo);
 				addClientLine(TSTRING(FAVORITE_USER_ADDED));
 			} else if(Util::stricmp(s.c_str(), _T("getlist")) == 0) {
 				BOOL bTmp;
@@ -380,28 +380,6 @@ void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMA
 	if (BOOLSETTING(BOLD_PM)) {
 		setDirty();
 	}
-}
-
-LRESULT PrivateFrame::onEditCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	ctrlClient.Copy();
-	return 0;
-}
-
-LRESULT PrivateFrame::onEditSelectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	ctrlClient.SetSelAll();
-	return 0;
-}
-
-LRESULT PrivateFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	ctrlClient.SetWindowText(_T(""));
-	return 0;
-}
-
-LRESULT PrivateFrame::onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if (pSelectedLine != _T("")) {
-		WinUtil::setClipboard(pSelectedLine);
-	}
-	return 0;
 }
 
 LRESULT PrivateFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
@@ -547,32 +525,20 @@ void PrivateFrame::updateTitle() {
 }
 
 LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
-	bHandled = FALSE;
-
-	POINT p;
-	p.x = GET_X_LPARAM(lParam);
-	p.y = GET_Y_LPARAM(lParam);
-	::ScreenToClient(ctrlClient.m_hWnd, &p);
-
-	POINT cpt;
-	GetCursorPos(&cpt);
-
-	CRect rc;            // client area of window 
-	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
-	OMenu Mnu;
-
-	pSelectedLine = _T("");
-
-	bool bHitURL = ctrlClient.HitURL();
-	if (!bHitURL)
-		pSelectedURL = _T("");
-
-	if(reinterpret_cast<HWND>(wParam) == ctrlEmoticons) { 
-		if(emoMenu != NULL) emoMenu.DestroyMenu();
-		emoMenu.CreatePopupMenu();
+	if(reinterpret_cast<HWND>(wParam) == ctrlEmoticons) {
+		POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
 		menuItems = 0;
+
+		if(emoMenu != NULL)
+			emoMenu.DestroyMenu();
+
+		emoMenu.CreatePopupMenu();
+		emoMenu.InsertSeparatorFirst(_T("Emoticons Pack"));
 		emoMenu.AppendMenu(MF_STRING, IDC_EMOMENU, _T("Disabled"));
-		if (SETTING(EMOTICONS_FILE)=="Disabled") emoMenu.CheckMenuItem( IDC_EMOMENU, MF_BYCOMMAND | MF_CHECKED );
+		
+		if (SETTING(EMOTICONS_FILE) == "Disabled")
+			emoMenu.CheckMenuItem( IDC_EMOMENU, MF_BYCOMMAND | MF_CHECKED );
+		
 		// nacteme seznam emoticon packu (vsechny *.xml v adresari EmoPacks)
 		WIN32_FIND_DATA data;
 		HANDLE hFind;
@@ -589,97 +555,13 @@ LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 			} while(FindNextFile(hFind, &data));
 			FindClose(hFind);
 		}
-		emoMenu.InsertSeparatorFirst(_T("Emoticons Pack"));
-		if(menuItems>0) emoMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
-		emoMenu.RemoveFirstItem();
-		return TRUE;
-	}
-
-	int i = ctrlClient.CharFromPos(p);
-	int line = ctrlClient.LineFromChar(i);
-	int c = LOWORD(i) - ctrlClient.LineIndex(line);
-	int len = ctrlClient.LineLength(i) + 1;
-	if ( len < 3 )
-		return 0;
-	TCHAR* buf = new TCHAR[len];
-	ctrlClient.GetLine(line, buf, len);
-	tstring x = tstring(buf, len-1);
-	delete[] buf;
-	string::size_type start = x.find_last_of(_T(" <\t\r\n"), c);
-	if (start == string::npos) { start = 0; }
-	tstring nick = Text::toT(ClientManager::getInstance()->getNicks(replyTo->getCID())[0]);
-	if (x.substr(start, (nick.length() + 2) ) == (_T("<") + nick + _T(">"))) {
-		if(!replyTo->isOnline()) {
-			return S_OK;
-		}
-		OMenu tabMenu;
-		tabMenu.CreatePopupMenu();
 		
-		tabMenu.InsertSeparatorFirst(nick);
+		if(menuItems>0)
+			emoMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
-		if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
-			tabMenu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG,  CTSTRING(OPEN_USER_LOG));
-			tabMenu.AppendMenu(MF_SEPARATOR);
-		}
-		tabMenu.AppendMenu(MF_STRING, ID_EDIT_CLEAR_ALL, CTSTRING(CLEAR));
-		tabMenu.AppendMenu(MF_SEPARATOR);
-		tabMenu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
-		tabMenu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
-		tabMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
-		tabMenu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
-
-		prepareMenu(tabMenu, UserCommand::CONTEXT_CHAT, ClientManager::getInstance()->getHubs(replyTo->getCID()));
-		if(!(tabMenu.GetMenuState(tabMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
-			tabMenu.AppendMenu(MF_SEPARATOR);
-		}
-		tabMenu.AppendMenu(MF_STRING, IDC_CLOSE_WINDOW, CTSTRING(CLOSE));
-		tabMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, cpt.x, cpt.y, m_hWnd);
-		bHandled = TRUE;
-	} else {
-		OMenu textMenu;
-		textMenu.CreatePopupMenu();
-		textMenu.InsertSeparatorFirst(_T("Text"));
-		textMenu.AppendMenu(MF_STRING, ID_EDIT_COPY, CTSTRING(COPY));
-		textMenu.AppendMenu(MF_STRING, IDC_COPY_ACTUAL_LINE,  CTSTRING(COPY_LINE));
-		if(pSelectedURL != _T(""))
-			textMenu.AppendMenu(MF_STRING, IDC_COPY_URL, CTSTRING(COPY_URL));
-		textMenu.AppendMenu(MF_SEPARATOR);
-		textMenu.AppendMenu(MF_STRING, ID_EDIT_SELECT_ALL, CTSTRING(SELECT_ALL));
-		textMenu.AppendMenu(MF_STRING, ID_EDIT_CLEAR_ALL, CTSTRING(CLEAR));
-
-		pSelectedLine = ctrlClient.LineFromPos(p);
-		textMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, cpt.x, cpt.y, m_hWnd);
-		bHandled = TRUE;
+		emoMenu.RemoveFirstItem();
 	}
-	return S_OK;
-}
 
-LRESULT PrivateFrame::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
-	ENLINK* pEL = (ENLINK*)pnmh;
-
-	if ( pEL->msg == WM_LBUTTONUP ) {
-		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
-		if(sURLTemp) {
-			ctrlClient.GetTextRange(lBegin, lEnd, sURLTemp);
-			tstring sURL = sURLTemp;
-			WinUtil::openLink(sURL);
-			delete[] sURLTemp;
-		}
-	} else if ( pEL->msg == WM_RBUTTONUP ) {
-		pSelectedURL = _T("");
-		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
-		if(sURLTemp) {
-			ctrlClient.GetTextRange(lBegin, lEnd, sURLTemp);
-			pSelectedURL = sURLTemp;
-			delete[] sURLTemp;
-		}
-
-		ctrlClient.SetSel( lBegin, lEnd );
-		ctrlClient.InvalidateRect( NULL );
-		return 0;
-	}
 	return 0;
 }
 
@@ -755,13 +637,6 @@ LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 	return 0;
 }
 
-LRESULT PrivateFrame::onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if (pSelectedURL != _T("")) {
-		WinUtil::setClipboard(pSelectedURL);
-	}
-	return 0;
-}
-
 void PrivateFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	ctrlClient.SetBackgroundColor(WinUtil::bgColor);
 	RedrawWindow(NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
@@ -774,6 +649,28 @@ LRESULT PrivateFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 		SettingsManager::getInstance()->set(SettingsManager::EMOTICONS_FILE, Text::fromT(buf));
 		g_pEmotionsSetup->Unload();
 		g_pEmotionsSetup->Load();
+	}
+	return 0;
+}
+
+LRESULT PrivateFrame::onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled) {
+	if (hWndCtl != ctrlEmoticons.m_hWnd) {
+		bHandled = false;
+        return 0;
+    }
+ 
+	EmoticonsDlg dlg;
+	ctrlEmoticons.GetWindowRect(dlg.pos);
+	dlg.DoModal(m_hWnd);
+	if (!dlg.result.empty()) {
+		TCHAR* message = new TCHAR[ctrlMessage.GetWindowTextLength()+1];
+		ctrlMessage.GetWindowText(message, ctrlMessage.GetWindowTextLength()+1);
+		tstring s(message, ctrlMessage.GetWindowTextLength());
+		delete[] message;
+		
+		ctrlMessage.SetWindowText((s+dlg.result).c_str());
+		ctrlMessage.SetFocus();
+		ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
 	}
 	return 0;
 }

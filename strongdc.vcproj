@@ -73,8 +73,8 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				Description="Deleting old pdb file..."
-				CommandLine="cmd.exe /c del &quot;$(SolutionDir)compiled\$(ProjectName).pdb&quot;"
+				Description=""
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"

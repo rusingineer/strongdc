@@ -36,7 +36,6 @@
 -- Turn it off in settings =&gt; StrongDC++ =&gt; Always use Passive Mode for Search --
 </String>
 		<String Name="Any">Any</String>
-		<String Name="AscrollChat">Autoscroll chat</String>
 		<String Name="AtLeast">At least</String>
 		<String Name="AtMost">At most</String>
 		<String Name="Audio">Audio</String>

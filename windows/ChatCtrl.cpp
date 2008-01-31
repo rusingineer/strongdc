@@ -32,12 +32,13 @@ CAGEmotionSetup* g_pEmotionsSetup = NULL;
 tstring ChatCtrl::sSelectedLine = Util::emptyStringT;
 tstring ChatCtrl::sSelectedIP = Util::emptyStringT;
 tstring ChatCtrl::sSelectedUser = Util::emptyStringT;
+tstring ChatCtrl::sSelectedURL = Util::emptyStringT;
 
 static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
 	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
 	_T("adc://"), _T("adcs://") };
 
-ChatCtrl::ChatCtrl() : m_boAutoScroll(true), client(NULL) {
+ChatCtrl::ChatCtrl() : client(NULL) {
 	if(g_pEmotionsSetup == NULL) {
 		g_pEmotionsSetup = new CAGEmotionSetup();
 	}
@@ -64,14 +65,20 @@ void ChatCtrl::AdjustTextSize() {
 	}
 }
 
-void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, const LPCTSTR sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
+void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, const TCHAR* sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
 	SetRedraw(FALSE);
-	long lSelBeginSaved, lSelEndSaved;
-	GetSel(lSelBeginSaved, lSelEndSaved);
-	POINT cr;
-	GetScrollPos(&cr);
+
+	SCROLLINFO si = { 0 };
+	POINT pt = { 0 };
+
+	si.cbSize = sizeof(si);
+	si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
+	GetScrollInfo(SB_VERT, &si);
+	GetScrollPos(&pt);
 
 	long lSelBegin = 0, lSelEnd = 0;
+	long lSelBeginSaved, lSelEndSaved;
+	GetSel(lSelBeginSaved, lSelEndSaved);
 
 	// Insert TimeStamp and format with default style
 	if(!sTime.empty()) {
@@ -216,15 +223,19 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 		AppendTextOnly(sMyNick, sText, cf, bMyMess, sAuthor);
 	}
 	SetSel(lSelBeginSaved, lSelEndSaved);
-	SetScrollPos(&cr);
-	GoToEnd();
+	
+	if (lSelBeginSaved == lSelEndSaved && (si.nPage == 0 || (size_t)si.nPos >= (size_t)si.nMax - si.nPage - 5)) {
+		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
+	} else {
+		SetScrollPos(&pt);
+	}
 
 	// Force window to redraw
 	SetRedraw(TRUE);
 	InvalidateRect(NULL);
 }
 
-void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const LPCTSTR sText, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor) {
+void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor) {
 	// Insert text at the end
 	long lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 	long lSelBegin = lSelEnd;
@@ -449,25 +460,6 @@ tstring ChatCtrl::LineFromPos(POINT p) const {
 	return x;
 }
 
-void ChatCtrl::GoToEnd() {
-/** TODO make auto-scroll dependent on scrollbar position
-	SCROLLINFO si;
-	si.cbSize = sizeof(si);
-	si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
-	GetScrollInfo(SB_VERT, &si);
-
-	if (si.nPos >= si.nMax - si.nPage- 14)
-*/
-	if(m_boAutoScroll)
-		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
-}
-
-void ChatCtrl::SetAutoScroll(bool boAutoScroll) {
-	m_boAutoScroll = boAutoScroll;
-	 if(boAutoScroll)
-		GoToEnd();
-}
-
 LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
 	long lSelBegin = 0, lSelEnd = 0; tstring sSel;
 
@@ -500,4 +492,277 @@ LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
 		InvalidateRect(NULL);
 	}
 	return 1;
+}
+
+LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
+	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click
+
+	if(pt.x == -1 && pt.y == -1) {
+		CRect erc;
+		GetRect(&erc);
+		pt.x = erc.Width() / 2;
+		pt.y = erc.Height() / 2;
+		ClientToScreen(&pt);
+	}
+
+	POINT ptCl = pt;
+	ScreenToClient(&ptCl); 
+	OnRButtonDown(ptCl);
+
+	bool boHitURL = HitURL();
+	if (!boHitURL)
+		sSelectedURL = _T("");
+
+	OMenu menu;
+	menu.CreatePopupMenu();
+
+	if (copyMenu.m_hMenu != NULL) {
+		// delete copy menu if it exists
+		copyMenu.DestroyMenu();
+		copyMenu.m_hMenu = NULL;
+	}
+
+	if(sSelectedUser.empty()) {
+
+		if(!sSelectedIP.empty()) {
+			menu.InsertSeparatorFirst(sSelectedIP);
+			menu.AppendMenu(MF_STRING, IDC_WHOIS_IP, (CTSTRING(WHO_IS) + sSelectedIP).c_str() );
+			if (client && client->isOp()) {
+				menu.AppendMenu(MF_SEPARATOR);
+				menu.AppendMenu(MF_STRING, IDC_BAN_IP, (_T("!banip ") + sSelectedIP).c_str());
+				menu.SetMenuDefaultItem(IDC_BAN_IP);
+				menu.AppendMenu(MF_STRING, IDC_UNBAN_IP, (_T("!unban ") + sSelectedIP).c_str());
+				menu.AppendMenu(MF_SEPARATOR);
+			}
+		} else {
+			menu.InsertSeparatorFirst(_T("Text"));
+		}
+
+		menu.AppendMenu(MF_STRING, ID_EDIT_COPY, CTSTRING(COPY));
+		menu.AppendMenu(MF_STRING, IDC_COPY_ACTUAL_LINE,  CTSTRING(COPY_LINE));
+
+		if(!sSelectedURL.empty()) 
+  			menu.AppendMenu(MF_STRING, IDC_COPY_URL, CTSTRING(COPY_URL));
+	} else {
+		// click on nick
+		copyMenu.CreatePopupMenu();
+		copyMenu.InsertSeparatorFirst(TSTRING(COPY));
+		copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK, CTSTRING(COPY_NICK));
+		copyMenu.AppendMenu(MF_STRING, IDC_COPY_EXACT_SHARE, CTSTRING(COPY_EXACT_SHARE));
+		copyMenu.AppendMenu(MF_STRING, IDC_COPY_DESCRIPTION, CTSTRING(COPY_DESCRIPTION));
+		copyMenu.AppendMenu(MF_STRING, IDC_COPY_TAG, CTSTRING(COPY_TAG));
+		copyMenu.AppendMenu(MF_STRING, IDC_COPY_EMAIL_ADDRESS, CTSTRING(COPY_EMAIL_ADDRESS));
+		copyMenu.AppendMenu(MF_STRING, IDC_COPY_IP, CTSTRING(COPY_IP));
+
+		menu.InsertSeparatorFirst(sSelectedUser);
+
+		if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
+			menu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG,  CTSTRING(OPEN_USER_LOG));
+			menu.AppendMenu(MF_SEPARATOR);
+		}		
+
+		menu.AppendMenu(MF_STRING, IDC_SELECT_USER, CTSTRING(SELECT_USER_LIST));
+		menu.AppendMenu(MF_SEPARATOR);
+		menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
+		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
+		menu.AppendMenu(MF_SEPARATOR);
+		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyMenu, CTSTRING(COPY));
+		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
+		menu.AppendMenu(MF_SEPARATOR);
+		menu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
+		menu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
+		menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
+
+		// TODO add user commands
+
+		// default doubleclick action
+		switch(SETTING(CHAT_DBLCLICK)) {
+        case 0:
+			menu.SetMenuDefaultItem(IDC_SELECT_USER);
+			break;
+        case 1:
+			menu.SetMenuDefaultItem(IDC_PUBLIC_MESSAGE);
+			break;
+        case 2:
+			menu.SetMenuDefaultItem(IDC_PRIVATEMESSAGE);
+			break;
+        case 3:
+			menu.SetMenuDefaultItem(IDC_GETLIST);
+			break;
+        case 4:
+			menu.SetMenuDefaultItem(IDC_MATCH_QUEUE);
+			break;
+        case 6:
+			menu.SetMenuDefaultItem(IDC_ADD_TO_FAVORITES);
+			break;
+		} 
+	}
+
+	menu.AppendMenu(MF_SEPARATOR);
+	menu.AppendMenu(MF_STRING, ID_EDIT_SELECT_ALL, CTSTRING(SELECT_ALL));
+	menu.AppendMenu(MF_STRING, ID_EDIT_CLEAR_ALL, CTSTRING(CLEAR));
+	menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
+
+	return 0;
+}
+
+LRESULT ChatCtrl::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+	if(wParam != SIZE_MINIMIZED && HIWORD(lParam) > 0) {
+		SCROLLINFO si = { 0 };
+		POINT pt = { 0 };
+
+		si.cbSize = sizeof(si);
+		si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
+		GetScrollInfo(SB_VERT, &si);
+		GetScrollPos(&pt);
+
+		if (si.nPage == 0 || (size_t)si.nPos >= (size_t)si.nMax - si.nPage - 5)
+			PostMessage(EM_SCROLL, SB_BOTTOM, 0);
+		else
+			SetScrollPos(&pt);
+
+		InvalidateRect(NULL);
+	}
+
+	bHandled = FALSE;
+	return 0;
+}
+
+LRESULT ChatCtrl::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+	ENLINK* pEL = (ENLINK*)pnmh;
+
+	if ( pEL->msg == WM_LBUTTONUP ) {
+		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
+		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
+		if(sURLTemp) {
+			GetTextRange(lBegin, lEnd, sURLTemp);
+			tstring sURL = sURLTemp;
+
+			WinUtil::openLink(sURL);
+
+			delete[] sURLTemp;
+		}
+	} else if(pEL->msg == WM_RBUTTONUP) {
+		sSelectedURL = _T("");
+		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
+		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
+		if(sURLTemp) {
+			GetTextRange(lBegin, lEnd, sURLTemp);
+			sSelectedURL = sURLTemp;
+			delete[] sURLTemp;
+		}
+
+		SetSel(lBegin, lEnd);
+		InvalidateRect(NULL);
+	}
+
+	return 0;
+}
+
+LRESULT ChatCtrl::onEditCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	Copy();
+	return 0;
+}
+
+LRESULT ChatCtrl::onEditSelectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	SetSelAll();
+	return 0;
+}
+
+LRESULT ChatCtrl::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	SetWindowText(Util::emptyStringT.c_str());
+	return 0;
+}
+
+LRESULT ChatCtrl::onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!sSelectedLine.empty()) {
+		WinUtil::setClipboard(sSelectedLine);
+	}
+	return 0;
+}
+
+LRESULT ChatCtrl::onBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!sSelectedIP.empty()) {
+		tstring s = _T("!banip ") + sSelectedIP;
+
+		// TODO client->hubMessage(Text::fromT(s));
+	}
+	return 0;
+}
+
+LRESULT ChatCtrl::onUnBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!sSelectedIP.empty()) {
+		tstring s = _T("!unban ") + sSelectedIP;
+
+		// TODO client->hubMessage(Text::fromT(s));
+	}
+	return 0;
+}
+
+LRESULT ChatCtrl::onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!sSelectedURL.empty()) {
+		WinUtil::setClipboard(sSelectedURL);
+	}
+	return 0;
+}
+
+LRESULT ChatCtrl::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!sSelectedIP.empty()) {
+ 		WinUtil::openLink(_T("http://www.ripe.net/perl/whois?form_type=simple&full_query_string=&searchtext=") + sSelectedIP);
+ 	}
+	return 0;
+}
+
+LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	return 0;
+}
+
+LRESULT ChatCtrl::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	return 0;
+}
+
+LRESULT ChatCtrl::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	return 0;
+}
+
+LRESULT ChatCtrl::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	return 0;
+}
+
+LRESULT ChatCtrl::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	return 0;
+}
+
+LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	tstring sCopy;
+	if(!sSelectedUser.empty()) {
+/*		const OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
+		if(ui) {
+			switch (wID) {
+				case IDC_COPY_NICK:
+					sCopy += Text::toT(ui->getNick());
+					break;
+				case IDC_COPY_EXACT_SHARE:
+					sCopy += Util::formatExactSize(ui->getIdentity().getBytesShared());
+					break;
+				case IDC_COPY_DESCRIPTION:
+					sCopy += Text::toT(ui->getIdentity().getDescription());
+					break;
+				case IDC_COPY_TAG:
+					sCopy += Text::toT(ui->getIdentity().getTag());
+					break;
+				case IDC_COPY_EMAIL_ADDRESS:
+					sCopy += Text::toT(ui->getIdentity().getEmail());
+					break;
+				case IDC_COPY_IP:
+					sCopy += Text::toT(ui->getIdentity().getIp());
+					break;
+			}
+		}*/
+	}
+
+	if (!sCopy.empty())
+		WinUtil::setClipboard(sCopy);
+
+	return 0;
 }

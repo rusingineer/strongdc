@@ -677,7 +677,6 @@
 #define IDC_COPY_ACTUAL_LINE            10052
 #define IDC_COPY_DESCRIPTION            10053
 #define IDC_COPY_EMAIL_ADDRESS          10054
-#define IDC_AUTOSCROLL_CHAT             10055
 #define IDC_WHOIS_IP                    10056
 #define IDC_BAN_IP                      10057
 #define IDC_UNBAN_IP                    10058
