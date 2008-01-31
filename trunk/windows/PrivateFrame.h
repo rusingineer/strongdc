@@ -65,6 +65,7 @@ public:
 		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(FTM_CONTEXTMENU, onTabContextMenu)
+		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
 		COMMAND_ID_HANDLER(IDC_MATCH_QUEUE, onMatchQueue)
 		COMMAND_ID_HANDLER(IDC_GRANTSLOT, onGrantSlot)
@@ -75,12 +76,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
 		COMMAND_ID_HANDLER(IDC_SEND_MESSAGE, onSendMessage)
 		COMMAND_ID_HANDLER(IDC_CLOSE_WINDOW, onCloseWindow)
-		COMMAND_ID_HANDLER(ID_EDIT_COPY, onEditCopy)
-		COMMAND_ID_HANDLER(ID_EDIT_SELECT_ALL, onEditSelectAll)
-		COMMAND_ID_HANDLER(ID_EDIT_CLEAR_ALL, onEditClearAll)
-		COMMAND_ID_HANDLER(IDC_COPY_ACTUAL_LINE, onCopyActualLine)
-		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
-		COMMAND_ID_HANDLER(IDC_COPY_URL, onCopyURL)
 		COMMAND_ID_HANDLER(IDC_EMOT, onEmoticons)
 		COMMAND_RANGE_HANDLER(IDC_EMOMENU, IDC_EMOMENU + menuItems, onEmoPackChange);
 		CHAIN_COMMANDS(ucBase)
@@ -100,36 +95,10 @@ public:
 	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT onEditCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onEditSelectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
+	LRESULT onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) { return ctrlClient.onClientEnLink(idCtrl, pnmh, bHandled); }
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-
-  	LRESULT onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled) {
-  		if (hWndCtl != ctrlEmoticons.m_hWnd) {
-  			bHandled = false;
-  	        return 0;
-  	    }
-  	 
-  		EmoticonsDlg dlg;
-  		ctrlEmoticons.GetWindowRect(dlg.pos);
-  		dlg.DoModal(m_hWnd);
-  		if (!dlg.result.empty()) {
-  			TCHAR* message = new TCHAR[ctrlMessage.GetWindowTextLength()+1];
-  			ctrlMessage.GetWindowText(message, ctrlMessage.GetWindowTextLength()+1);
-  			tstring s(message, ctrlMessage.GetWindowTextLength());
-  			delete[] message;
-  			
-			ctrlMessage.SetWindowText((s+dlg.result).c_str());
-  			ctrlMessage.SetFocus();
-  			ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
-  		}
-  		return 0;
-  	}
+  	LRESULT onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled);
 
 	void addLine(const tstring& aLine, CHARFORMAT2& cf);
 	void addLine(const Identity&, const tstring& aLine);
@@ -170,7 +139,6 @@ public:
 
 	LRESULT onFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		ctrlMessage.SetFocus();
-		ctrlClient.GoToEnd();
 		return 0;
 	}
 	
@@ -185,8 +153,7 @@ public:
 	}
 	
 	void sendMessage(const tstring& msg);
-	
-	const UserPtr& getUser() const { return replyTo; }
+
 private:
 	PrivateFrame(const UserPtr& replyTo_) : replyTo(replyTo_), 
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  

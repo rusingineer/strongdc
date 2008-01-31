@@ -35,7 +35,6 @@ enum Strings { // @DontAdd
 	ALTERNATES_SEND, // "Searching TTH alternates for: "
 	ANTI_PASSIVE_SEARCH, // "-- WARNING --\r\n-- You are in active mode, but have activated passive search. --\r\n-- Don't use passive search if you have search results without this option --\r\n-- because you don't get search result from passive clients !!! --\r\n-- Turn it off in settings => StrongDC++ => Always use Passive Mode for Search --\r\n"
 	ANY, // "Any"
-	ASCROLL_CHAT, // "Autoscroll chat"
 	AT_LEAST, // "At least"
 	AT_MOST, // "At most"
 	AUDIO, // "Audio"
