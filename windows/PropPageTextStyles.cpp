@@ -212,7 +212,8 @@ void PropPageTextStyles::RefreshPreview() {
 
 	CHARFORMAT2 old = WinUtil::m_TextStyleMyNick;
 	CHARFORMAT2 old2 = WinUtil::m_TextStyleTimestamp;
-	m_Preview.SetTextStyleMyNick( TextStyles[ TS_MYNICK ] );
+	
+	WinUtil::m_TextStyleMyNick = TextStyles[ TS_MYNICK ];
 	WinUtil::m_TextStyleTimestamp = TextStyles[ TS_TIMESTAMP ];
 	m_Preview.SetWindowText(_T(""));
 
@@ -222,7 +223,8 @@ void PropPageTextStyles::RefreshPreview() {
 		m_Preview.AppendText(id, _T("My nick"), _T("12:34 "), Text::toT(TextStyles[i].m_sPreviewText).c_str(), TextStyles[i], false);
 	}
 	m_Preview.InvalidateRect( NULL );
-	m_Preview.SetTextStyleMyNick(old);
+
+	WinUtil::m_TextStyleMyNick = old;
 	WinUtil::m_TextStyleTimestamp = old2;
 }
 

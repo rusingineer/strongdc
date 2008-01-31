@@ -81,7 +81,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	return 1;
 }
 
-void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo, const tstring& aMessage) {
+void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo,  Client* client, const tstring& aMessage) {
 	PrivateFrame* p = NULL;
 	bool myPM = replyTo == ClientManager::getInstance()->getMe();
 	const UserPtr& user = myPM ? to : replyTo;
@@ -91,7 +91,10 @@ void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const Use
 		if(frames.size() > 200) return;
 		p = new PrivateFrame(user);
 		frames[user] = p;
+		
+		p->ctrlClient.setClient(client);
 		p->addLine(from, aMessage);
+
 		if(Util::getAway()) {
 			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->isSet(User::BOT)))
 				p->sendMessage(Text::toT(Util::getAwayMessage()));
@@ -128,7 +131,7 @@ void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const Use
 	}
 }
 
-void PrivateFrame::openWindow(const UserPtr& replyTo, const tstring& msg) {
+void PrivateFrame::openWindow(const UserPtr& replyTo, Client* client, const tstring& msg) {
 	PrivateFrame* p = NULL;
 	FrameIter i = frames.find(replyTo);
 	if(i == frames.end()) {
@@ -136,6 +139,10 @@ void PrivateFrame::openWindow(const UserPtr& replyTo, const tstring& msg) {
 		p = new PrivateFrame(replyTo);
 		frames[replyTo] = p;
 		p->CreateEx(WinUtil::mdiClient);
+		
+		if(client)
+			p->ctrlClient.setClient(client);
+
 	} else {
 		p = i->second;
 		if(::IsIconic(p->m_hWnd))
@@ -520,6 +527,7 @@ void PrivateFrame::updateTitle() {
 			addClientLine(status);
 		}
 		isoffline = true;
+		ctrlClient.setClient(NULL);
 	}
 	SetWindowText((WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first).c_str());
 }

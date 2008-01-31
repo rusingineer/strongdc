@@ -1,3 +1,6 @@
+** svn369
+	chat menu code rewritten... now must find what doesn't work :)
+
 ** svn368
 	changed the way of chat autoscrolling
 	begun work on main/PM chat menu reworking (chat menus don't work at this time)

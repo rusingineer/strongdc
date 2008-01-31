@@ -356,14 +356,14 @@ void HubFrame::onEnter() {
 
 					if(ui) {
 						if(param.size() > j + 1)
-							PrivateFrame::openWindow(ui->getUser(), param.substr(j+1));
+							PrivateFrame::openWindow(ui->getUser(), client, param.substr(j+1));
 						else
-							PrivateFrame::openWindow(ui->getUser());
+							PrivateFrame::openWindow(ui->getUser(), client);
 					}
 				} else if(!param.empty()) {
 					const OnlineUser* ui = client->findUser(Text::fromT(param));
 					if(ui) {
-						PrivateFrame::openWindow(ui->getUser());
+						PrivateFrame::openWindow(ui->getUser(), client);
 					}
 				}
 			} else if(Util::stricmp(cmd.c_str(), _T("me")) == 0) {
@@ -784,7 +784,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					if(BOOLSETTING(IGNORE_HUB_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), false);
 					} else if(BOOLSETTING(POPUP_HUB_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
@@ -792,13 +792,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					if(BOOLSETTING(IGNORE_BOT_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), WinUtil::m_ChatTextPrivate, false);
 					} else if(BOOLSETTING(POPUP_BOT_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 				} else {
 					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
@@ -1067,7 +1067,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 			if(ui) {
 				bHandled = true;
 				if (wParam & MK_CONTROL) { // MK_CONTROL = 0x0008
-					PrivateFrame::openWindow(ui->getUser());
+					PrivateFrame::openWindow(ui->getUser(), client);
 				} else if (wParam & MK_SHIFT) {
 					try {
 						QueueManager::getInstance()->addList(ui->getUser(), QueueItem::FLAG_CLIENT_VIEW);
@@ -2041,14 +2041,16 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 			menu.AppendMenu(MF_SEPARATOR);
 		}
 
-		const OnlineUser* ou = client->findUser(Text::fromT(sNick));
-		if (client->isOp() || !ou->getIdentity().isOp()) {
-			if(ignoreList.find(ou->getUser()) == ignoreList.end()) {
-				menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
-			} else {    
-				menu.AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
+		if(!isMe) {
+			const OnlineUser* ou = client->findUser(Text::fromT(sNick));
+			if (client->isOp() || !ou->getIdentity().isOp()) {
+				if(ignoreList.find(ou->getUser()) == ignoreList.end()) {
+					menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
+				} else {    
+					menu.AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
+				}
+				menu.AppendMenu(MF_SEPARATOR);
 			}
-			menu.AppendMenu(MF_SEPARATOR);
 		}
 	} else {
 		menu.InsertSeparatorFirst(Util::toStringW(count) + _T(" ") + TSTRING(HUB_USERS));
@@ -2090,12 +2092,12 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 }
 
 LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	/*if(ChatCtrl::sSelectedUser.empty()) {
+	if(ChatCtrl::getSelectedUser().empty()) {
 		// No nick selected
 		return 0;
 	}
 
-	int pos = ctrlUsers.findItem(ChatCtrl::sSelectedUser);
+	int pos = ctrlUsers.findItem(ChatCtrl::getSelectedUser());
 	if ( pos == -1 ) {
 		// User not found is list
 		return 0;
@@ -2107,7 +2109,17 @@ LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 		ctrlUsers.SetItemState(i, (i == pos) ? LVIS_SELECTED | LVIS_FOCUSED : 0, LVIS_SELECTED | LVIS_FOCUSED);
 	}
 	ctrlUsers.SetRedraw(TRUE);
-	ctrlUsers.EnsureVisible(pos, FALSE);*/
+	ctrlUsers.EnsureVisible(pos, FALSE);
+
+	return 0;
+}
+
+LRESULT HubFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	int i = -1;
+	while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
+		PrivateFrame::openWindow(((OnlineUser*)ctrlUsers.getItemData(i))->getUser(), client);
+	}
+
 	return 0;
 }
 
@@ -2118,10 +2130,14 @@ LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	if(!client->isConnected())
 		return 0;
 
-	while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		if (!sUsers.empty())
-			sUsers += _T(", ");
-		sUsers += Text::toT(((OnlineUser*)ctrlUsers.getItemData(i))->getNick());
+	if(ChatCtrl::getSelectedUser().empty()) {
+		while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
+			if (!sUsers.empty())
+				sUsers += _T(", ");
+			sUsers += Text::toT(((OnlineUser*)ctrlUsers.getItemData(i))->getNick());
+		}
+	} else {
+		sUsers = ChatCtrl::getSelectedUser();
 	}
 
 	int iSelBegin, iSelEnd;
