@@ -41,8 +41,8 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 	private ClientManagerListener, public UCHandler<PrivateFrame>, private SettingsManagerListener
 {
 public:
-	static void gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo, const tstring& aMessage);
-	static void openWindow(const UserPtr& replyTo, const tstring& aMessage = Util::emptyStringT);
+	static void gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo,  Client* client, const tstring& aMessage);
+	static void openWindow(const UserPtr& replyTo, Client* client = NULL, const tstring& aMessage = Util::emptyStringT);
 	static bool isOpen(const UserPtr u) { return frames.find(u) != frames.end(); }
 	static void closeAll();
 	static void closeAllOffline();

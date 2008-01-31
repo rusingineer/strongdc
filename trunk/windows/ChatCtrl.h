@@ -27,6 +27,7 @@
 
 #include "TypedListViewCtrl.h"
 #include "ImageDataObject.h"
+#include "UCHandler.h"
 
 #ifndef _RICHEDIT_VER
 # define _RICHEDIT_VER 0x0300
@@ -34,9 +35,12 @@
 
 class UserInfo;
 
-class ChatCtrl: public CWindowImpl<ChatCtrl, CRichEditCtrl>
+class ChatCtrl: public CWindowImpl<ChatCtrl, CRichEditCtrl>, public UCHandler<ChatCtrl>
 {
 public:
+
+	typedef UCHandler<ChatCtrl> ucBase;
+
 	BEGIN_MSG_MAP(ChatCtrl)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_SIZE, onSize)
@@ -54,6 +58,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_WHOIS_IP, onWhoisIP)
 
 		COMMAND_ID_HANDLER(IDC_OPEN_USER_LOG, onOpenUserLog)
+		COMMAND_ID_HANDLER(IDC_PRIVATEMESSAGE, onPrivateMessage)
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
 		COMMAND_ID_HANDLER(IDC_MATCH_QUEUE, onMatchQueue)
 		COMMAND_ID_HANDLER(IDC_GRANTSLOT, onGrantSlot)
@@ -69,6 +74,13 @@ public:
 		COMMAND_ID_HANDLER(IDC_COPY_DESCRIPTION, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_EMAIL_ADDRESS, onCopyUserInfo)
 		COMMAND_ID_HANDLER(IDC_COPY_IP, onCopyUserInfo)
+
+		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
+		COMMAND_ID_HANDLER(IDC_CHECKLIST, onCheckList)
+		COMMAND_ID_HANDLER(IDC_GET_USER_RESPONSES, onGetUserResponses)
+		CHAIN_COMMANDS(ucBase)
+
+		MESSAGE_HANDLER(WM_COMMAND, onCommand)
 	END_MSG_MAP()
 
 	ChatCtrl();
@@ -77,6 +89,7 @@ public:
 	LRESULT OnRButtonDown(POINT pt);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) { return SendMessage(GetParent(), uMsg, wParam, lParam); }
 	LRESULT onClientEnLink(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 
 	LRESULT onEditCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -89,6 +102,7 @@ public:
 	LRESULT onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -96,21 +110,28 @@ public:
 
 	LRESULT onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
-	bool HitNick(POINT p, tstring& sNick, int& iBegin , int& iEnd);
-	bool HitIP(POINT p, tstring& sIP, int& iBegin, int& iEnd);
-	bool HitURL();
+	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
-	tstring LineFromPos(POINT p) const;
+	void setClient(Client* pClient) { client = pClient; }
+	void runUserCommand(UserCommand& uc) { }
 
 	void AdjustTextSize();
 	void AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, const TCHAR* sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
+
+	static const tstring& getSelectedUser() { return sSelectedUser; }
+
+private:
+	bool HitNick(const POINT& p, tstring& sNick, int& iBegin , int& iEnd);
+	bool HitIP(const POINT& p, tstring& sIP, int& iBegin, int& iEnd);
+	bool HitURL();
+
+	tstring LineFromPos(const POINT& p) const;
+
 	void AppendTextOnly(const tstring& sMyNick, const TCHAR* sMsg, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor);
 
-	void SetTextStyleMyNick(CHARFORMAT2 ts) { WinUtil::m_TextStyleMyNick = ts; };
-	void setClient(const Client* pClient) { client = pClient; }
-	
-private:
-    const Client* client;
+    Client* client;
 
 	OMenu copyMenu;
 

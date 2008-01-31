@@ -94,7 +94,7 @@ public:
 		((T*)this)->getUserList().forEachSelected(&UserInfoBase::addFav);
 		return 0;
 	}
-	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	virtual LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		((T*)this)->getUserList().forEachSelected(&UserInfoBase::pm);
 		return 0;
 	}

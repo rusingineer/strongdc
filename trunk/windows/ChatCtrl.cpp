@@ -20,9 +20,11 @@
 #include "Resource.h"
 #include "../client/DCPlusPlus.h"
 #include "../client/FavoriteManager.h"
+#include "../client/UploadManager.h"
 
 #include "ChatCtrl.h"
 #include "AGEmotionSetup.h"
+#include "PrivateFrame.h"
 #include "atlstr.h"
 
 CAGEmotionSetup* g_pEmotionsSetup = NULL;
@@ -306,7 +308,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 	}
 }
 
-bool ChatCtrl::HitNick(POINT p, tstring& sNick, int& iBegin, int& iEnd) {
+bool ChatCtrl::HitNick(const POINT& p, tstring& sNick, int& iBegin, int& iEnd) {
 	if(client == NULL) return false;
 	
 	int iCharPos = CharFromPos(p), line = LineFromChar(iCharPos), len = LineLength(iCharPos) + 1;
@@ -391,7 +393,7 @@ bool ChatCtrl::HitNick(POINT p, tstring& sNick, int& iBegin, int& iEnd) {
 	return false;
 }
 
-bool ChatCtrl::HitIP(POINT p, tstring& sIP, int& iBegin, int& iEnd) {
+bool ChatCtrl::HitIP(const POINT& p, tstring& sIP, int& iBegin, int& iEnd) {
 	int iCharPos = CharFromPos(p), len = LineLength(iCharPos) + 1;
 	if(len < 3)
 		return false;
@@ -449,15 +451,16 @@ bool ChatCtrl::HitURL() {
 	return boOK;
 }
 
-tstring ChatCtrl::LineFromPos(POINT p) const {
+tstring ChatCtrl::LineFromPos(const POINT& p) const {
 	int iCharPos = CharFromPos(p), line = LineFromChar(iCharPos), len = LineLength(iCharPos) + 1;
 	if(len < 3) {
 		return Util::emptyStringT;
 	}
+
 	AutoArray<TCHAR> buf(len+1);
 	GetLine(line, buf, len);
-	tstring x(buf, len-1);
-	return x;
+
+	return tstring(buf, len - 1);
 }
 
 LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
@@ -544,6 +547,8 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		if(!sSelectedURL.empty()) 
   			menu.AppendMenu(MF_STRING, IDC_COPY_URL, CTSTRING(COPY_URL));
 	} else {
+		bool isMe = (sSelectedUser == Text::toT(client->getMyNick()));
+
 		// click on nick
 		copyMenu.CreatePopupMenu();
 		copyMenu.InsertSeparatorFirst(TSTRING(COPY));
@@ -563,17 +568,25 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 
 		menu.AppendMenu(MF_STRING, IDC_SELECT_USER, CTSTRING(SELECT_USER_LIST));
 		menu.AppendMenu(MF_SEPARATOR);
-		menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
-		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
-		menu.AppendMenu(MF_SEPARATOR);
+		
+		if(!isMe) {
+			menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
+			menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
+			menu.AppendMenu(MF_SEPARATOR);
+		}
+		
 		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyMenu, CTSTRING(COPY));
-		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
-		menu.AppendMenu(MF_SEPARATOR);
-		menu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
-		menu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
-		menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
-
-		// TODO add user commands
+		
+		if(!isMe) {
+			menu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
+			menu.AppendMenu(MF_SEPARATOR);
+			menu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
+			menu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
+			menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
+			
+			// add user commands
+			prepareMenu(menu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
+		}
 
 		// default doubleclick action
 		switch(SETTING(CHAT_DBLCLICK)) {
@@ -684,8 +697,7 @@ LRESULT ChatCtrl::onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 LRESULT ChatCtrl::onBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(!sSelectedIP.empty()) {
 		tstring s = _T("!banip ") + sSelectedIP;
-
-		// TODO client->hubMessage(Text::fromT(s));
+		client->hubMessage(Text::fromT(s));
 	}
 	return 0;
 }
@@ -693,8 +705,7 @@ LRESULT ChatCtrl::onBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, 
 LRESULT ChatCtrl::onUnBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(!sSelectedIP.empty()) {
 		tstring s = _T("!unban ") + sSelectedIP;
-
-		// TODO client->hubMessage(Text::fromT(s));
+		client->hubMessage(Text::fromT(s));
 	}
 	return 0;
 }
@@ -714,55 +725,129 @@ LRESULT ChatCtrl::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 }
 
 LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou) {
+	}
+
+	return 0;
+}
+
+LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou)
+		PrivateFrame::openWindow(ou->getUser(), client);
+
 	return 0;
 }
 
 LRESULT ChatCtrl::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou)
+		ou->getList();
+
 	return 0;
 }
 
 LRESULT ChatCtrl::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou)
+		ou->matchQueue();
+
 	return 0;
 }
 
-LRESULT ChatCtrl::onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT ChatCtrl::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou) {
+		uint64_t time = 0;
+		switch(wID) {
+			case IDC_GRANTSLOT:			time = 600; break;
+			case IDC_GRANTSLOT_DAY:		time = 3600; break;
+			case IDC_GRANTSLOT_HOUR:	time = 24*3600; break;
+			case IDC_GRANTSLOT_WEEK:	time = 7*24*3600; break;
+			case IDC_UNGRANTSLOT:		time = 0; break;
+		}
+		
+		if(time > 0)
+			UploadManager::getInstance()->reserveSlot(ou->getUser(), time);
+		else
+			UploadManager::getInstance()->unreserveSlot(ou->getUser());
+	}
+
 	return 0;
 }
 
 LRESULT ChatCtrl::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou)
+		ou->addFav();
+
 	return 0;
 }
 
 LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring sCopy;
-	if(!sSelectedUser.empty()) {
-/*		const OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
-		if(ui) {
-			switch (wID) {
-				case IDC_COPY_NICK:
-					sCopy += Text::toT(ui->getNick());
-					break;
-				case IDC_COPY_EXACT_SHARE:
-					sCopy += Util::formatExactSize(ui->getIdentity().getBytesShared());
-					break;
-				case IDC_COPY_DESCRIPTION:
-					sCopy += Text::toT(ui->getIdentity().getDescription());
-					break;
-				case IDC_COPY_TAG:
-					sCopy += Text::toT(ui->getIdentity().getTag());
-					break;
-				case IDC_COPY_EMAIL_ADDRESS:
-					sCopy += Text::toT(ui->getIdentity().getEmail());
-					break;
-				case IDC_COPY_IP:
-					sCopy += Text::toT(ui->getIdentity().getIp());
-					break;
-			}
-		}*/
+	
+	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou) {
+		switch (wID) {
+			case IDC_COPY_NICK:
+				sCopy += Text::toT(ou->getNick());
+				break;
+			case IDC_COPY_EXACT_SHARE:
+				sCopy += Util::formatExactSize(ou->getIdentity().getBytesShared());
+				break;
+			case IDC_COPY_DESCRIPTION:
+				sCopy += Text::toT(ou->getIdentity().getDescription());
+				break;
+			case IDC_COPY_TAG:
+				sCopy += Text::toT(ou->getIdentity().getTag());
+				break;
+			case IDC_COPY_EMAIL_ADDRESS:
+				sCopy += Text::toT(ou->getIdentity().getEmail());
+				break;
+			case IDC_COPY_IP:
+				sCopy += Text::toT(ou->getIdentity().getIp());
+				break;
+		}
 	}
 
 	if (!sCopy.empty())
 		WinUtil::setClipboard(sCopy);
 
+	return 0;
+}
+
+LRESULT ChatCtrl::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou)
+		ClientManager::getInstance()->reportUser(ou->getUser());
+
+	return 0;
+}
+
+LRESULT ChatCtrl::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou) {
+		try {
+			QueueManager::getInstance()->addTestSUR(ou->getUser(), false);
+		} catch(const Exception& e) {
+			LogManager::getInstance()->message(e.getError());		
+		}
+	}
+
+	return 0;
+}
+
+LRESULT ChatCtrl::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	if(ou) {
+		try {
+			QueueManager::getInstance()->addList(ou->getUser(), QueueItem::FLAG_CHECK_FILE_LIST);
+		} catch(const Exception& e) {
+			LogManager::getInstance()->message(e.getError());		
+		}
+	}
+	
 	return 0;
 }
