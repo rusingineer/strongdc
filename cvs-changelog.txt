@@ -1,3 +1,9 @@
+** svn370
+	scroll to bottom when cutting down the chat buffer
+	fixed ignore/unignore in chat
+	fixed losing item focus when closing favorite hub properties
+	fixed user commands in chat
+
 ** svn369
 	chat menu code rewritten... now must find what doesn't work :)
 
