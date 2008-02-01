@@ -1,3 +1,16 @@
+	-- StrongDC++ 2.12 --
+
+* opraveno pár vzácných pádù
+* opraveno poèítání položek ve stromech (hledání, pøenosy)
+* opraven zbývající èas u uploadù
+* pøidáno pøekrývání pomalých segmentù když se stahování souboru blíží ke konci
+* optimalizace CPU pro uživatelské pøezdívky
+* opraven stav posledního segmentu v oknì pøenosù
+* už se nepoužívá pøípona .antifrag (staré doèasné soubory jsou stále podporovány)
+* zmìnìn zpùsob automatického skrolování chatu
+* pøepsán kód menu v chatu
+
+
 	-- StrongDC++ 2.11 --
 
 * opravena spousta pádù

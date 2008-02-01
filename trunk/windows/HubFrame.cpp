@@ -46,7 +46,7 @@ int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 100, 100, 50, 40, 40, 
 int HubFrame::columnIndexes[] = { OnlineUser::COLUMN_NICK, OnlineUser::COLUMN_SHARED, OnlineUser::COLUMN_EXACT_SHARED,
 	OnlineUser::COLUMN_DESCRIPTION, OnlineUser::COLUMN_TAG,	OnlineUser::COLUMN_CONNECTION, OnlineUser::COLUMN_IP, OnlineUser::COLUMN_EMAIL,
 	OnlineUser::COLUMN_VERSION, OnlineUser::COLUMN_MODE, OnlineUser::COLUMN_HUBS, OnlineUser::COLUMN_SLOTS };
-static ResourceManager::Strings columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
+ResourceManager::Strings HubFrame::columnNames[] = { ResourceManager::NICK, ResourceManager::SHARED, ResourceManager::EXACT_SHARED, 
 	ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::IP_BARE, ResourceManager::EMAIL,
 	ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS };
 
@@ -466,57 +466,17 @@ LRESULT HubFrame::onCopyHubInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/
 }
 
 LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	tstring sCopy;/* TODO
-	if(!ChatCtrl::sSelectedUser.empty()) {
-		const OnlineUser* ui = client->findUser(Text::fromT(ChatCtrl::sSelectedUser));
-		if(ui) {
-			switch (wID) {
-				case IDC_COPY_NICK:
-					sCopy += Text::toT(ui->getNick());
-					break;
-				case IDC_COPY_EXACT_SHARE:
-					sCopy += Util::formatExactSize(ui->getIdentity().getBytesShared());
-					break;
-				case IDC_COPY_DESCRIPTION:
-					sCopy += Text::toT(ui->getIdentity().getDescription());
-					break;
-				case IDC_COPY_TAG:
-					sCopy += Text::toT(ui->getIdentity().getTag());
-					break;
-				case IDC_COPY_EMAIL_ADDRESS:
-					sCopy += Text::toT(ui->getIdentity().getEmail());
-					break;
-				case IDC_COPY_IP:
-					sCopy += Text::toT(ui->getIdentity().getIp());
-					break;
-				case IDC_COPY_NICK_IP:
-					sCopy += _T("Info User:\r\n")
-						_T("\tNick: ") + Text::toT(ui->getIdentity().getNick()) + _T("\r\n") + 
-						_T("\tIP: ") +  Text::toT(ui->getIdentity().getIp()) + _T("\r\n"); 
-					break;
-				case IDC_COPY_ALL:
-					sCopy += _T("Info User:\r\n")
-						_T("\tNick: ") + Text::toT(ui->getIdentity().getNick()) + _T("\r\n") + 
-						_T("\tShare: ") + Util::formatBytesW(ui->getIdentity().getBytesShared()) + _T("\r\n") + 
-						_T("\tDescription: ") + Text::toT(ui->getIdentity().getDescription()) + _T("\r\n") +
-						_T("\tTag: ") + Text::toT(ui->getIdentity().getTag()) + _T("\r\n") +
-						_T("\tConnection: ") + Text::toT(ui->getIdentity().getConnection()) + _T("\r\n") + 
-						_T("\tE-Mail: ") + Text::toT(ui->getIdentity().getEmail()) + _T("\r\n") +
-						_T("\tClient: ") + Text::toT(ui->getIdentity().get("CL")) + _T("\r\n") + 
-						_T("\tVersion: ") + Text::toT(ui->getIdentity().get("VE")) + _T("\r\n") +
-						_T("\tMode: ") + ui->getText(OnlineUser::COLUMN_MODE) + _T("\r\n") +
-						_T("\tHubs: ") + ui->getText(OnlineUser::COLUMN_HUBS) + _T("\r\n") +
-						_T("\tSlots: ") + ui->getText(OnlineUser::COLUMN_SLOTS) + _T("\r\n") +
-						_T("\tIP: ") + Text::toT(ui->getIdentity().getIp()) + _T("\r\n") +
-						_T("\tLock: " )+ Text::toT(ui->getIdentity().get("LO")) + _T("\r\n")+
-						_T("\tSupports: ") + Text::toT(ui->getIdentity().get("SU"));
-					break;		
-				default:
-					dcdebug("HUBFRAME DON'T GO HERE\n");
-					return 0;
-			}
-		}
-	}*/
+	tstring sCopy;
+
+	int sel = -1;
+	while((sel = ctrlUsers.GetNextItem(sel, LVNI_SELECTED)) != -1) {
+		const OnlineUser* ou = ctrlUsers.getItemData(sel);
+	
+		if(!sCopy.empty())
+			sCopy += _T("\r\n");
+
+		sCopy += ou->getText(static_cast<uint8_t>(wID - IDC_COPY));
+	}
 	if (!sCopy.empty())
 		WinUtil::setClipboard(sCopy);
 
@@ -2017,15 +1977,10 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 
 	copyMenu.CreatePopupMenu();
 	copyMenu.InsertSeparatorFirst(TSTRING(COPY));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK, CTSTRING(COPY_NICK));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_EXACT_SHARE, CTSTRING(COPY_EXACT_SHARE));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_DESCRIPTION, CTSTRING(COPY_DESCRIPTION));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_TAG, CTSTRING(COPY_TAG));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_EMAIL_ADDRESS, CTSTRING(COPY_EMAIL_ADDRESS));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_IP, CTSTRING(COPY_IP));
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK_IP, CTSTRING(COPY_NICK_IP));
-	copyMenu.AppendMenu(MF_SEPARATOR);
-	copyMenu.AppendMenu(MF_STRING, IDC_COPY_ALL, CTSTRING(COPY_ALL));
+
+	for(int j=0; j < OnlineUser::COLUMN_LAST; j++) {
+		copyMenu.AppendMenu(MF_STRING, IDC_COPY + j, CTSTRING_I(columnNames[j]));
+	}
 
 	size_t count = ctrlUsers.GetSelectedCount();
 	bool isMe = false;
@@ -2040,9 +1995,17 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 			menu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG,  CTSTRING(OPEN_USER_LOG));
 			menu.AppendMenu(MF_SEPARATOR);
 		}
+	} else {
+		menu.InsertSeparatorFirst(Util::toStringW(count) + _T(" ") + TSTRING(HUB_USERS));
+	}
 
-		if(!isMe) {
-			const OnlineUser* ou = client->findUser(Text::fromT(sNick));
+	if(!isMe) {
+		menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
+		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
+		menu.AppendMenu(MF_SEPARATOR);
+
+		if(count == 1) {
+			const OnlineUser* ou = ctrlUsers.getItemData(ctrlUsers.GetNextItem(-1, LVNI_SELECTED));
 			if (client->isOp() || !ou->getIdentity().isOp()) {
 				if(ignoreList.find(ou->getUser()) == ignoreList.end()) {
 					menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
@@ -2052,14 +2015,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 				menu.AppendMenu(MF_SEPARATOR);
 			}
 		}
-	} else {
-		menu.InsertSeparatorFirst(Util::toStringW(count) + _T(" ") + TSTRING(HUB_USERS));
-	}
 
-	if(!isMe) {
-		menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
-		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
-		menu.AppendMenu(MF_SEPARATOR);
 		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyMenu, CTSTRING(COPY));
 		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
 		menu.AppendMenu(MF_SEPARATOR);

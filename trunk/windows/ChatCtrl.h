@@ -44,10 +44,11 @@ public:
 	BEGIN_MSG_MAP(ChatCtrl)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_SIZE, onSize)
+		MESSAGE_HANDLER(WM_LBUTTONDOWN, onLButtonDown)
 		MESSAGE_HANDLER_HWND(WM_INITMENUPOPUP, OMenu::onInitMenuPopup)
 		MESSAGE_HANDLER_HWND(WM_MEASUREITEM, OMenu::onMeasureItem)
 		MESSAGE_HANDLER_HWND(WM_DRAWITEM, OMenu::onDrawItem)
-		
+
 		COMMAND_ID_HANDLER(IDC_COPY_ACTUAL_LINE, onCopyActualLine)
 		COMMAND_ID_HANDLER(ID_EDIT_COPY, onEditCopy)
 		COMMAND_ID_HANDLER(ID_EDIT_SELECT_ALL, onEditSelectAll)
@@ -70,12 +71,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_IGNORE, onIgnore)
 		COMMAND_ID_HANDLER(IDC_UNIGNORE, onUnignore)
 
-		COMMAND_ID_HANDLER(IDC_COPY_NICK, onCopyUserInfo)
-		COMMAND_ID_HANDLER(IDC_COPY_EXACT_SHARE, onCopyUserInfo)
-		COMMAND_ID_HANDLER(IDC_COPY_TAG, onCopyUserInfo)
-		COMMAND_ID_HANDLER(IDC_COPY_DESCRIPTION, onCopyUserInfo)
-		COMMAND_ID_HANDLER(IDC_COPY_EMAIL_ADDRESS, onCopyUserInfo)
-		COMMAND_ID_HANDLER(IDC_COPY_IP, onCopyUserInfo)
+		COMMAND_RANGE_HANDLER(IDC_COPY, IDC_COPY + OnlineUser::COLUMN_LAST, onCopyUserInfo)
 
 		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
 		COMMAND_ID_HANDLER(IDC_CHECKLIST, onCheckList)
@@ -91,6 +87,7 @@ public:
 	LRESULT OnRButtonDown(POINT pt);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) { return SendMessage(GetParent(), uMsg, wParam, lParam); }
 	LRESULT onClientEnLink(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 

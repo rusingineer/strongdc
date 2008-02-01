@@ -31,7 +31,6 @@
 #define IDC_COLLAPSED                   125
 #define IDC_USER_CMD_PREVIEW            126
 #define IDC_CLEAR                       127
-#define IDC_COPY                        128
 #define IDR_HUB                         129
 #define IDC_PUB_LIST_DROPDOWN           130
 #define IDC_SEARCH_PAUSE                130
@@ -648,7 +647,6 @@
 #define IDC_SMALL_FILE_SIZE_SPIN        10023
 #define IDC_BLACK_AND_WHITE             10024
 #define IDC_DEFAULT_STYLES              10025
-#define IDC_COPY_TAG                    10026
 #define IDC_COPY_FILENAME               10027
 #define IDC_COPY_PATH                   10028
 #define IDC_TIME_DOWN                   10029
@@ -675,8 +673,6 @@
 #define IDC_SELECT_USER                 10051
 #define IDC_REMOVE_SPIN                 10051
 #define IDC_COPY_ACTUAL_LINE            10052
-#define IDC_COPY_DESCRIPTION            10053
-#define IDC_COPY_EMAIL_ADDRESS          10054
 #define IDC_WHOIS_IP                    10056
 #define IDC_BAN_IP                      10057
 #define IDC_UNBAN_IP                    10058
@@ -732,11 +728,7 @@
 #define IDC_CZDC_NOTE_SMALL             10132
 #define IDC_USER_CMD_DESCRIPTION        10140
 #define IDC_USER_CMD_EXAMPLE            10141
-#define IDC_COPY_EXACT_SHARE            10145
-#define IDC_COPY_IP                     10146
-#define IDC_COPY_NICK_IP                10147
 #define IDC_PM_LINES                    10147
-#define IDC_COPY_ALL                    10148
 #define IDC_PM_LINESSPIN                10148
 #define IDC_CHECKLIST                   10150
 #define ID_GET_TTH                      10151
@@ -774,6 +766,7 @@
 #define IDC_FILTER_FOCUS                32788
 #define IDC_GET_USER_RESPONSES          32789
 #define IDC_REPORT                      32790
+#define IDC_COPY                        32791
 #define ID_WINDOW_MINIMIZE_ALL          57654
 #define ID_WINDOW_RESTORE_ALL           57655
 #define IDC_CHATCOLORS                  65535

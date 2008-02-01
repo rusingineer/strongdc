@@ -89,17 +89,10 @@
 		<String Name="ConnectionTimeout">Connection timeout</String>
 		<String Name="ContinueSearch">Continue Search</String>
 		<String Name="Copy">Copy</String>
-		<String Name="CopyAll">Copy All</String>
-		<String Name="CopyDescription">Copy description</String>
-		<String Name="CopyEmailAddress">Copy email address</String>
-		<String Name="CopyExactShare">Copy Exact Share</String>
 		<String Name="CopyHub">Copy address to clipboard</String>
-		<String Name="CopyIp">Copy IP</String>
 		<String Name="CopyLine">Copy actual line</String>
 		<String Name="CopyMagnetLink">Copy magnet link to clipboard</String>
 		<String Name="CopyNick">Copy nick</String>
-		<String Name="CopyNickIp">Copy Nick+IP</String>
-		<String Name="CopyTag">Copy TAG</String>
 		<String Name="CopyUrl">Copy URL</String>
 		<String Name="CouldNotOpenTargetFile">Could not open target file: </String>
 		<String Name="Count">Count</String>

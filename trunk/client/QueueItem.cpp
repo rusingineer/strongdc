@@ -217,7 +217,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 			// new user should finish this chunk more than 2x faster
 			int64_t newChunkLeft = size / userSpeed;
 			if(2 * newChunkLeft < d->getSecondsLeft()) {
-				dcdebug("Old user: %I64d s, new user: %I64d s\n", d->getSecondsLeft(), newChunkLeft);
+				dcdebug("Overlapping... old user: %I64d s, new user: %I64d s\n", d->getSecondsLeft(), newChunkLeft);
 				return Segment(d->getStartPos() + pos, size, true);
 			}
 		}
