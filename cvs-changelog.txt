@@ -1,3 +1,7 @@
+** svn371
+	hopefully fixed autoscrolling when nick/ip/url is selected with rightclick
+	redesigned menu code - it allows copying according to userlist columns
+
 ** svn370
 	scroll to bottom when cutting down the chat buffer
 	fixed ignore/unignore in chat

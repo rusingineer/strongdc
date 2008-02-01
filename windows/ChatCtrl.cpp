@@ -229,7 +229,9 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	}
 	SetSel(lSelBeginSaved, lSelEndSaved);
 	
-	if (lSelBeginSaved == lSelEndSaved && (si.nPage == 0 || (size_t)si.nPos >= (size_t)si.nMax - si.nPage - 5)) {
+	if(	(si.nPage == 0 || (size_t)si.nPos >= (size_t)si.nMax - si.nPage - 5) &&
+		(lSelBeginSaved == lSelEndSaved || !sSelectedUser.empty() || !sSelectedIP.empty() || !sSelectedURL.empty()))
+	{
 		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
 	} else {
 		SetScrollPos(&pt);
@@ -517,7 +519,7 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 
 	bool boHitURL = HitURL();
 	if (!boHitURL)
-		sSelectedURL = _T("");
+		sSelectedURL = Util::emptyStringT;
 
 	OMenu menu;
 	menu.CreatePopupMenu();
@@ -555,12 +557,10 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		// click on nick
 		copyMenu.CreatePopupMenu();
 		copyMenu.InsertSeparatorFirst(TSTRING(COPY));
-		copyMenu.AppendMenu(MF_STRING, IDC_COPY_NICK, CTSTRING(COPY_NICK));
-		copyMenu.AppendMenu(MF_STRING, IDC_COPY_EXACT_SHARE, CTSTRING(COPY_EXACT_SHARE));
-		copyMenu.AppendMenu(MF_STRING, IDC_COPY_DESCRIPTION, CTSTRING(COPY_DESCRIPTION));
-		copyMenu.AppendMenu(MF_STRING, IDC_COPY_TAG, CTSTRING(COPY_TAG));
-		copyMenu.AppendMenu(MF_STRING, IDC_COPY_EMAIL_ADDRESS, CTSTRING(COPY_EMAIL_ADDRESS));
-		copyMenu.AppendMenu(MF_STRING, IDC_COPY_IP, CTSTRING(COPY_IP));
+
+		for(int j=0; j < OnlineUser::COLUMN_LAST; j++) {
+			copyMenu.AppendMenu(MF_STRING, IDC_COPY + j, CTSTRING_I(HubFrame::columnNames[j]));
+		}
 
 		menu.InsertSeparatorFirst(sSelectedUser);
 
@@ -573,6 +573,9 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		menu.AppendMenu(MF_SEPARATOR);
 		
 		if(!isMe) {
+			menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
+			menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
+			menu.AppendMenu(MF_SEPARATOR);
 			
 			const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
 			if (client->isOp() || !ou->getIdentity().isOp()) {
@@ -583,10 +586,6 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 				}
 				menu.AppendMenu(MF_SEPARATOR);
 			}
-
-			menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
-			menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
-			menu.AppendMenu(MF_SEPARATOR);
 		}
 		
 		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyMenu, CTSTRING(COPY));
@@ -655,6 +654,16 @@ LRESULT ChatCtrl::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	return 0;
 }
 
+LRESULT ChatCtrl::onLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	sSelectedLine = Util::emptyStringT;
+	sSelectedIP = Util::emptyStringT;
+	sSelectedUser = Util::emptyStringT;
+	sSelectedURL = Util::emptyStringT;
+
+	bHandled = FALSE;
+	return 0;
+}
+
 LRESULT ChatCtrl::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	ENLINK* pEL = (ENLINK*)pnmh;
 
@@ -670,7 +679,7 @@ LRESULT ChatCtrl::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*
 			delete[] sURLTemp;
 		}
 	} else if(pEL->msg == WM_RBUTTONUP) {
-		sSelectedURL = _T("");
+		sSelectedURL = Util::emptyStringT;
 		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
 		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
 		if(sURLTemp) {
@@ -820,26 +829,7 @@ LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 	
 	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
-		switch (wID) {
-			case IDC_COPY_NICK:
-				sCopy += Text::toT(ou->getNick());
-				break;
-			case IDC_COPY_EXACT_SHARE:
-				sCopy += Util::formatExactSize(ou->getIdentity().getBytesShared());
-				break;
-			case IDC_COPY_DESCRIPTION:
-				sCopy += Text::toT(ou->getIdentity().getDescription());
-				break;
-			case IDC_COPY_TAG:
-				sCopy += Text::toT(ou->getIdentity().getTag());
-				break;
-			case IDC_COPY_EMAIL_ADDRESS:
-				sCopy += Text::toT(ou->getIdentity().getEmail());
-				break;
-			case IDC_COPY_IP:
-				sCopy += Text::toT(ou->getIdentity().getIp());
-				break;
-		}
+		sCopy = ou->getText(static_cast<uint8_t>(wID - IDC_COPY));
 	}
 
 	if (!sCopy.empty())

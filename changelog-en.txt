@@ -1,3 +1,16 @@
+	-- StrongDC++ 2.12 --
+
+* fixed some rare crashes
+* fixed tree list children counting (search, transfers)
+* fixed upload timeleft
+* added slow segments overlapping when file download is going to be finished
+* usernicks CPU optimization for NMDC
+* fixed last segmet status in Transfer window
+* no more .antifrag extension (old temp files still supported)
+* changed the way of chat autoscrolling
+* rewritten chat menu code
+
+
 	-- StrongDC++ 2.11 --
 
 * fixed many crashes
