@@ -61,11 +61,9 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::GARBAGE_COMMAND_INCOMING, ResourceManager::GARBAGE_INCOMING },
 	{ SettingsManager::GARBAGE_COMMAND_OUTGOING, ResourceManager::GARBAGE_OUTGOING },
 	{ SettingsManager::WEBSERVER, ResourceManager::SETTINGS_WEBSERVER }, 
-	{ SettingsManager::DETECT_BADSOFT, ResourceManager::SETTINGS_BAD_SOFTWARE },
 	{ SettingsManager::DONT_ANNOUNCE_NEW_VERSIONS, ResourceManager::SETTINGS_DISPLAY_DC_UPDATE },
 	{ SettingsManager::FILTER_ENTER, ResourceManager::SETTINGS_FILTER_ENTER },
 	{ SettingsManager::SHOW_SHELL_MENU, ResourceManager::SETTINGS_SHOW_SHELL_MENU },
-	{ SettingsManager::ENABLE_REAL_UPLOAD_QUEUE, ResourceManager::ENABLE_REAL_UPLOAD_QUEUE },
 	{ SettingsManager::MAGNET_ASK, ResourceManager::MAGNET_ASK },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };

@@ -130,7 +130,7 @@ private:
 
 	tstring LineFromPos(const POINT& p) const;
 
-	void AppendTextOnly(const tstring& sMyNick, const TCHAR* sMsg, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor);
+	void AppendTextOnly(const tstring& sMyNick, const TCHAR* sMsg, CHARFORMAT2& cf, bool isMyMessage, const tstring& sAuthor);
 
     Client* client;
 

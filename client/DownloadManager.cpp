@@ -94,42 +94,6 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		fire(DownloadManagerListener::Tick(), tickList);
 }
 
-void QueueManager::FileMover::moveFile(const string& source, const string& target) {
-	Lock l(cs);
-	files.push_back(make_pair(source, target));
-	if(!active) {
-		active = true;
-		start();
-	}
-}
-
-int QueueManager::FileMover::run() {
-	for(;;) {
-		FilePair next;
-		{
-			Lock l(cs);
-			if(files.empty()) {
-				active = false;
-				return 0;
-			}
-			next = files.back();
-			files.pop_back();
-		}
-		try {
-			File::renameFile(next.first, next.second);
-		} catch(const FileException&) {
-			try {
-				// Try to just rename it to the correct name  at least
-				string newTarget = Util::getFilePath(next.first) + Util::getFileName(next.second);
-				File::renameFile(next.first, newTarget);
-				LogManager::getInstance()->message(next.first + STRING(RENAMED_TO) + newTarget);
-			} catch(const FileException& e) {
-				LogManager::getInstance()->message(STRING(UNABLE_TO_RENAME) + next.first + ": " + e.getError());
-			}
-		}
-	}
-}
-
 void DownloadManager::removeConnection(UserConnectionPtr aConn) {
 	dcassert(aConn->getDownload() == NULL);
 	aConn->removeListener(this);
@@ -379,7 +343,9 @@ void DownloadManager::handleEndData(UserConnection* aSource) {
 	}
 
 	removeDownload(d);
-	//fire(DownloadManagerListener::Complete(), d, d->getType() == Transfer::TYPE_TREE);
+
+	if(d->getType() == Transfer::TYPE_TREE)
+		fire(DownloadManagerListener::Complete(), d, d->getType() == Transfer::TYPE_TREE);
 
 	QueueManager::getInstance()->putDownload(d, true, false);	
 	checkDownloads(aSource);

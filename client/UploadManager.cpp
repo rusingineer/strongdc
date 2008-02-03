@@ -253,7 +253,7 @@ ok:
 	if(!aSource.isSet(UserConnection::FLAG_HASSLOT)) {
 		bool hasReserved = (reservedSlots.find(aSource.getUser()) != reservedSlots.end());
 		bool isFavorite = FavoriteManager::getInstance()->hasSlot(aSource.getUser());
-		bool hasFreeSlot = (getFreeSlots() > 0) && (!BOOLSETTING(ENABLE_REAL_UPLOAD_QUEUE) || (waitingUsers.empty() && connectingUsers.empty()) || isConnecting(aSource.getUser()));
+		bool hasFreeSlot = (getFreeSlots() > 0) && ((waitingUsers.empty() && connectingUsers.empty()) || isConnecting(aSource.getUser()));
 			
 		if(!(hasReserved || isFavorite || getAutoSlot() || hasFreeSlot)) {
 			bool supportsFree = aSource.isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS);
@@ -555,7 +555,7 @@ void UploadManager::removeConnection(UserConnection* aSource) {
 }
 
 void UploadManager::notifyQueuedUsers() {
-	if (!BOOLSETTING(ENABLE_REAL_UPLOAD_QUEUE) || waitingUsers.empty()) return;		//no users to notify
+	if (waitingUsers.empty()) return;		//no users to notify
 
 	int freeslots = getFreeSlots();
 	if(freeslots > 0)

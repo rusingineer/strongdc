@@ -51,8 +51,8 @@ template<typename T> struct TypeTraits {
 
 #define GETSET(type, name, name2) \
 private: type name; \
-public: inline TypeTraits<type>::ParameterType get##name2() const { return name; } \
-	inline void set##name2(TypeTraits<type>::ParameterType a##name2) { name = a##name2; }
+public: TypeTraits<type>::ParameterType get##name2() const { return name; } \
+	void set##name2(TypeTraits<type>::ParameterType a##name2) { name = a##name2; }
 
 #define LIT(x) x, (sizeof(x)-1)
 
@@ -76,20 +76,6 @@ public:
 private:
 	CompareSecond& operator=(const CompareSecond&);
 	const T2& a;
-};
-
-template<class T>
-struct PointerHash {
-#ifdef _MSC_VER
-	static const size_t bucket_size = 4; 
-	static const size_t min_buckets = 8; 
-#endif 
-	size_t operator()(const T* a) const { return ((size_t)a)/sizeof(T); }
-	bool operator()(const T* a, const T* b) { return a < b; }
-};
-template<>
-struct PointerHash<void> {
-	size_t operator()(const void* a) const { return ((size_t)a)>>2; }
 };
 
 /** 
@@ -242,7 +228,7 @@ public:
 	}
 	
 	static string formatBytes(const string& aString) { return formatBytes(toInt64(aString)); }
-	static string formatMessage(const string& nick, const string& message);
+	static string formatMessage(const string& nick, const string& message, bool thirdPerson);
 
 	static string getShortTimeString();
 
@@ -560,22 +546,6 @@ struct noCaseStringEq {
 		return Util::stricmp(a, b) == 0;
 	}
 };
-
-/** Case insensitive string ordering */
-//struct noCaseStringLess {
-//	bool operator()(const string* a, const string* b) const {
-//		return Util::stricmp(*a, *b) < 0;
-//	}
-//	bool operator()(const string& a, const string& b) const {
-//		return Util::stricmp(a, b) < 0;
-//	}
-//	bool operator()(const wstring* a, const wstring* b) const {
-//		return Util::stricmp(*a, *b) < 0;
-//	}
-//	bool operator()(const wstring& a, const wstring& b) const {
-//		return Util::stricmp(a, b) < 0;
-//	}
-//};
 
 #endif // !defined(UTIL_H)
 

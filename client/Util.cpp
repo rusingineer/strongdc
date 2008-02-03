@@ -1034,13 +1034,10 @@ string Util::getIpCountry (const string& IP) {
 	return Util::emptyString; //if doesn't returned anything already, something is wrong...
 }
 
-string Util::formatMessage(const string& nick, const string& message) {
-	string tmp;
-	if(Util::strnicmp(message, "/me ", 4) == 0) {
-		tmp = "* " + nick + message.substr(3);
-	} else {
-		tmp = '<' + nick + "> " + message;
-	}
+string Util::formatMessage(const string& nick, const string& message, bool thirdPerson) {
+	// let's *not* obey the spec here and add a space after the star. :P
+	string tmp = (thirdPerson ? "* " + nick + " " : "<" + nick + "> ") + message;
+	
 	// Check all '<' and '[' after newlines as they're probably pasts...
 	size_t i = 0;
 	while( (i = tmp.find('\n', i)) != string::npos) {
@@ -1052,6 +1049,7 @@ string Util::formatMessage(const string& nick, const string& message) {
 		}
 		i++;
 	}
+
 	return Text::toDOS(tmp);
 }
 

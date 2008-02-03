@@ -219,9 +219,15 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			return;
 		}
 
+		bool thirdPerson = false;
+		if(Util::strnicmp(message, "/me ", 4) == 0) {
+			thirdPerson = true;
+			message = message.substr(4);
+		}
+
 		OnlineUser* ou = findUser(nick);
 		if(ou) {
-			fire(ClientListener::Message(), this, *ou, unescape(message));
+			fire(ClientListener::Message(), this, *ou, unescape(message), thirdPerson);
 		} else {
 			OnlineUser& o = getUser(nick);
 			// Assume that messages from unknown users come from the hub
@@ -229,7 +235,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			o.getIdentity().setHidden(true);
 			fire(ClientListener::UserUpdated(), this, o);
 
-			fire(ClientListener::Message(), this, o, unescape(message));
+			fire(ClientListener::Message(), this, o, unescape(message), thirdPerson);
 		}
 		return;
     }
@@ -787,8 +793,14 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			from = findUser(fromNick);
 		}
 
+		bool thirdPerson = false;
+		if(Util::strnicmp(msg, "/me ", 4) == 0) {
+			thirdPerson = true;
+			msg = msg.substr(4);
+		}
+
 		const OnlineUser& to = getUser(getMyNick());
-		fire(ClientListener::PrivateMessage(), this, *from, to, *replyTo, unescape(msg));
+		fire(ClientListener::PrivateMessage(), this, *from, to, *replyTo, unescape(msg), thirdPerson);
 	} else if(cmd == "$GetPass") {
 		OnlineUser& ou = getUser(getMyNick());
 		ou.getIdentity().set("RG", "1");

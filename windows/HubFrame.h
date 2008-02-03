@@ -460,9 +460,9 @@ private:
 	void on(Failed, const Client*, const string&) throw();
 	void on(GetPassword, const Client*) throw();
 	void on(HubUpdated, const Client*) throw();
-	void on(Message, const Client*, const OnlineUser&, const string&) throw();
+	void on(Message, const Client*, const OnlineUser&, const string&, bool = false) throw();
 	void on(StatusMessage, const Client*, const string&) throw();
-	void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&) throw();
+	void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&, bool = false) throw();
 	void on(NickTaken, const Client*) throw();
 	void on(SearchFlood, const Client*, const string&) throw();
 	void on(CheatMessage, const Client*, const string&) throw();	

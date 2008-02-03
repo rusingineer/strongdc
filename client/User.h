@@ -85,9 +85,8 @@ public:
 	
 	Identity() { }
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
-	Identity(const Identity& rhs) : user(rhs.user) { Lock l1(cs); Lock l2(rhs.cs); info = rhs.info; }
-	Identity& operator=(const Identity& rhs) { Lock l1(cs); Lock l2(rhs.cs); user = rhs.user; info = rhs.info; return *this; }
-	~Identity() { Lock l(cs); /* let's try it again :) */ }
+	Identity(const Identity& rhs) { *this = rhs; } // Use operator= since we have to lock before reading...
+	Identity& operator=(const Identity& rhs) { FastLock l(cs); user = rhs.user; info = rhs.info; return *this; }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Description, "DE")
@@ -106,7 +105,7 @@ public:
 		if(user && user->isSet(User::NMDC)) {
 			return user->getFirstNick();
 		} else {
-			Lock l(cs);
+			FastLock l(cs);
 			InfMap::const_iterator i = info.find(*(short*)"NI");
 			return i == info.end() ? Util::emptyString : i->second;
 		}
@@ -124,16 +123,17 @@ public:
 	void setHidden(bool hidden) { set("HI", hidden ? "1" : Util::emptyString); }
 	const string getTag() const;
 	bool supports(const string& name) const;
-	bool isHub() const { return isClientType(CT_HUB) || !get("HU").empty(); }
-	bool isOp() const { return isClientType(CT_OP) || !get("OP").empty(); }
-	bool isRegistered() const { return isClientType(CT_REGGED) || !get("RG").empty(); }
-	bool isHidden() const { return !get("HI").empty(); }
-	bool isBot() const { return isClientType(CT_BOT) || !get("BO").empty(); }
-	bool isAway() const { return !get("AW").empty(); }
+	bool isHub() const { return isClientType(CT_HUB) || isSet("HU"); }
+	bool isOp() const { return isClientType(CT_OP) || isSet("OP"); }
+	bool isRegistered() const { return isClientType(CT_REGGED) || isSet("RG"); }
+	bool isHidden() const { return isSet("HI"); }
+	bool isBot() const { return isClientType(CT_BOT) || isSet("BO"); }
+	bool isAway() const { return isSet("AW"); }
 	bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
 	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 	const string get(const char* name) const;
 	void set(const char* name, const string& val);
+	bool isSet(const char* name) const;	
 	string getSIDString() const { uint32_t sid = getSID(); return string((const char*)&sid, 4); }
 	
 	uint32_t getSID() const { return Util::toUInt32(get("SI")); }
@@ -153,8 +153,8 @@ private:
 	typedef std::tr1::unordered_map<short, string> InfMap;
 	typedef InfMap::const_iterator InfIter;
 	InfMap info;
-	/** @todo there are probably more threading issues here ...*/
-	mutable CriticalSection cs;
+
+	static FastCriticalSection cs;
 	
 	string getVersion(const string& aExp, const string& aTag) const;
 	string splitVersion(const string& aExp, const string& aTag, const int part) const;
