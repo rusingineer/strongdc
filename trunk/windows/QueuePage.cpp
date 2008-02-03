@@ -67,6 +67,7 @@ PropPage::ListItem QueuePage::optionItems[] = {
 	{ SettingsManager::DONT_DL_ALREADY_SHARED, ResourceManager::SETTINGS_DONT_DL_ALREADY_SHARED },
 	{ SettingsManager::ANTI_FRAG, ResourceManager::SETTINGS_ANTI_FRAG },
 	{ SettingsManager::AUTO_PRIORITY_DEFAULT ,ResourceManager::SETTINGS_AUTO_PRIORITY_DEFAULT },
+	{ SettingsManager::OVERLAP_CHUNKS ,ResourceManager::OVERLAP_CHUNKS },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

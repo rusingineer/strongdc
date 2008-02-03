@@ -1,3 +1,12 @@
+** svn372
+	removed option to disable real upload queue
+	removed bad software detection (it is unuseful now)
+	added option to enable/disable slow chunks overlapping
+	some stuff about /me message (DC++ SVN)
+	applied arne's MerkleTree crash fix
+	Identity crash fix proposed by arne
+	always scroll chat to bottom when posting own message
+
 ** svn371
 	hopefully fixed autoscrolling when nick/ip/url is selected with rightclick
 	redesigned menu code - it allows copying according to userlist columns

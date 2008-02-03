@@ -1679,14 +1679,14 @@ void HubFrame::on(HubUpdated, const Client*) throw() {
 #endif
 	speak(SET_WINDOW_TITLE, hubName);
 }
-void HubFrame::on(Message, const Client*, const OnlineUser& from, const string& msg) throw() {
+void HubFrame::on(Message, const Client*, const OnlineUser& from, const string& msg, bool thirdPerson) throw() {
 	if(SETTING(FILTER_MESSAGES) && from.getIdentity().isOp()) {
 		if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos)) {
-			speak(KICK_MSG, Identity(NULL, 0), Util::formatMessage(from.getIdentity().getNick(), msg));
+			speak(KICK_MSG, Identity(NULL, 0), Util::formatMessage(from.getIdentity().getNick(), msg, thirdPerson));
 			return;
 		}	
 	}
-	speak(ADD_CHAT_LINE, from.getIdentity(), Util::formatMessage(from.getIdentity().getNick(), msg));
+	speak(ADD_CHAT_LINE, from.getIdentity(), Util::formatMessage(from.getIdentity().getNick(), msg, thirdPerson));
 }	
 
 void HubFrame::on(StatusMessage, const Client*, const string& line) {
@@ -1703,8 +1703,8 @@ void HubFrame::on(StatusMessage, const Client*, const string& line) {
 	}
 }
 
-void HubFrame::on(PrivateMessage, const Client*, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) throw() { 
-	speak(PRIVATE_MESSAGE, from, to, replyTo, Util::formatMessage(from.getIdentity().getNick(), line));
+void HubFrame::on(PrivateMessage, const Client*, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line, bool thirdPerson) throw() { 
+	speak(PRIVATE_MESSAGE, from, to, replyTo, Util::formatMessage(from.getIdentity().getNick(), line, thirdPerson));
 }
 void HubFrame::on(NickTaken, const Client*) throw() {
 	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));

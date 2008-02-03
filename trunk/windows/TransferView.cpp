@@ -179,7 +179,7 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 				string ext = Util::getFileExt(target);
 				if(ext.size()>1) ext = ext.substr(1);
 				PreviewAppsSize = WinUtil::SetupPreviewMenu(previewMenu, ext);
-				if(previewMenu.GetMenuItemCount() > 0) {
+				if(previewMenu.GetMenuItemCount() > 1) {
 					transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_ENABLED);
 				} else {
 					transferMenu.EnableMenuItem((UINT)(HMENU)previewMenu, MFS_DISABLED);
@@ -852,9 +852,6 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		if(d->isSet(Download::FLAG_CHUNKED)) {
 			statusString += _T("[C]");
 		}
-		if(d->getOverlapped()) {
-			statusString += _T("[O]");
-		}
 		if(!statusString.empty()) {
 			statusString += _T(" ");
 		}
@@ -872,13 +869,11 @@ void TransferView::on(DownloadManagerListener::Failed, const Download* aDownload
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 	ui->setPos(0);
 
-	tstring tmpReason;
+	tstring tmpReason = Text::toT(aReason);
 	if(aDownload->isSet(Download::FLAG_SLOWUSER)) {
-		tmpReason = TSTRING(SLOW_USER) + _T(": ") + Text::toT(aReason);
-	} else if(aDownload->getOverlapped()) {
-		tmpReason = TSTRING(OVERLAPPED_SLOW_SEGMENT) + _T(": ") + Text::toT(aReason);
-	} else {
-		tmpReason = Text::toT(aReason);
+		tmpReason += _T(": ") + TSTRING(SLOW_USER);
+	} else if(aDownload->getOverlapped() && !aDownload->isSet(Download::FLAG_OVERLAP)) {
+		tmpReason += _T(": ") + TSTRING(OVERLAPPED_SLOW_SEGMENT);
 	}
 
 	ui->setStatusString(tmpReason);

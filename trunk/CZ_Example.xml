@@ -36,7 +36,6 @@
 -- Vypněte pasivní vyhledávání zde =&gt; StrongDC++ =&gt; Vždy používat pasivní mod k hledání --
 </String>
 		<String Name="Any">Vše</String>
-		<String Name="AscrollChat">Automaticky posouvat chat</String>
 		<String Name="AtLeast">Nejméně</String>
 		<String Name="AtMost">Nejvíce</String>
 		<String Name="Audio">Audio</String>
@@ -52,7 +51,6 @@
 		<String Name="B">B</String>
 		<String Name="BalloonPopups">Bublinové oznámení</String>
 		<String Name="BitziLookup">Bitzi Lookup</String>
-		<String Name="BlockFinished">Blok segmentu dokončen, čekám...</String>
 		<String Name="BothUsersOffline">Oba uživatelé jsou odpojeni</String>
 		<String Name="Browse">Procházet..</String>
 		<String Name="BrowseAccel">&amp;Procházet..</String>
@@ -91,17 +89,10 @@
 		<String Name="ConnectionTimeout">Vypršel čas pro připojení</String>
 		<String Name="ContinueSearch">Hledat další</String>
 		<String Name="Copy">Kopírovat</String>
-		<String Name="CopyAll">Kopírovat všechno</String>
-		<String Name="CopyDescription">Kopírovat Popis</String>
-		<String Name="CopyEmailAddress">Kopírovat mail</String>
-		<String Name="CopyExactShare">Kopírovat přesné sdílení</String>
 		<String Name="CopyHub">Kopírovat adresu(hub)</String>
-		<String Name="CopyIp">Kopírovat IP</String>
 		<String Name="CopyLine">Kopírovat celý řádek</String>
 		<String Name="CopyMagnetLink">Kopírovat magnet link</String>
 		<String Name="CopyNick">Kopírovat přezdívku</String>
-		<String Name="CopyNickIp">Kopírovat přezdívku a IP</String>
-		<String Name="CopyTag">Kopírovat TAG</String>
 		<String Name="CopyUrl">Kopírovat odkaz</String>
 		<String Name="CouldNotOpenTargetFile">Nelze otevřít cílový soubor: </String>
 		<String Name="Count">Počet</String>
@@ -147,7 +138,6 @@
 		<String Name="EditAccel">&amp;Upravit</String>
 		<String Name="Email">E-Mail</String>
 		<String Name="EnableMultiSource">Stahování z více zdrojů</String>
-		<String Name="EnableRealUploadQueue">Zapnout skutečnou frontu na sloty pro odesílání</String>		
 		<String Name="EnterNick">Zadejte v nastavení vaši přezdívku!</String>
 		<String Name="EnterPassword">Prosím zadejte heslo</String>
 		<String Name="EnterSearchString">Zadejte hledaný výraz</String>
@@ -381,7 +371,6 @@
 		<String Name="MoveDown">&amp;Dolu</String>
 		<String Name="MoveUp">&amp;Nahoru</String>
 		<String Name="MynickInChat">Vlastní přezdívka v chatu</String>
-		<String Name="NetlimiterWarning">StrongDC++ detekoval nainstalovaný netlimiter. Tento program může způsobit problémy s aplikaci StrongDC++. odpojování uživatelů a nízkou přenosovou rychlost. Prosím odinstalujte jej a použijte limiter obsažený v tomto programu..</String>
 		<String Name="NetworkStatistics">Statistiky sítě</String>
 		<String Name="New">&amp;Nový...</String>
 		<String Name="NewDisconnect">Odstranit uživatele z fronty, je li rychlost pod</String>
@@ -417,6 +406,8 @@
 		<String Name="OpenFolder">Otevřít složku</String>
 		<String Name="OpenHubLog">Otevřít záznam hubu</String>
 		<String Name="OpenUserLog">Otevřít záznam uživatele</String>
+		<String Name="OverlapChunks">Překrýt pomalé segmenty rychlejším uživatelem když se soubor blíží ke konci</String>
+		<String Name="OverlappedSlowSegment">Nahrazeno rychlejším uživatelem</String>
 		<String Name="Parts">Odchod: </String>
 		<String Name="PassiveUser">Pasivní uživatel</String>
 		<String Name="Password">Heslo</String>
@@ -564,7 +555,6 @@
 		<String Name="SettingsAutoSearchAutoMatch">Automaticky porovnávání fronty stahování</String>
 		<String Name="SettingsAutoSearchLimit">Max zdrojů pro auto-hledání</String>
 		<String Name="SettingsAvipreview">Náhled souboru</String>
-		<String Name="SettingsBadSoftware">Povolit detekci špatného softwaru</String>
 		<String Name="SettingsBindAddress">Rozhraní sítě</String>
 		<String Name="SettingsBindAddressHelp">Rozhraní sítě pro všechny připojení</String>
 		<String Name="SettingsBoldOptions">Označit tučně při změně</String>
@@ -899,6 +889,5 @@ Výchozí: %H:%M:%S</String>
 Prázdné = výchozí nastavení -&gt; winamp(%[version]) %[state](%[title]) stats(%[percent] of %[length] %[bar])</String>
 		<String Name="WinampHelpDesc">Winamp Nápověda</String>
 		<String Name="Yes">Ano</String>
-		<String Name="ZonealarmWarning">ZoneAlarm byl detekován na vašem PC, je příčinou mnohých problémů s nefunkčními staženými soubory. Prosíme, odinstalujte ho a použijte jiný produkt. </String>
 	</Strings>
 </Language>

@@ -192,7 +192,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 		return neededParts[Util::rand(0, neededParts.size())];
 	}
 	
-	if(partialSource == NULL && userSpeed > 10*1024) {
+	if(partialSource == NULL && BOOLSETTING(OVERLAP_CHUNKS) && userSpeed > 10*1024) {
 		// overlap slow running chunk only when new speed is more than 10 kB/s
 
 		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {

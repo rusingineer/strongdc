@@ -138,7 +138,6 @@
 		<String Name="EditAccel">&amp;Edit</String>
 		<String Name="Email">E-Mail</String>
 		<String Name="EnableMultiSource">Enable multi-source</String>
-		<String Name="EnableRealUploadQueue">Enable real upload queue</String>
 		<String Name="EnterNick">Please enter a nickname in the settings dialog!</String>
 		<String Name="EnterPassword">Please enter a password</String>
 		<String Name="EnterSearchString">Enter search string</String>
@@ -372,7 +371,6 @@
 		<String Name="MoveDown">Move &amp;Down</String>
 		<String Name="MoveUp">Move &amp;Up</String>
 		<String Name="MynickInChat">My nick in mainchat</String>
-		<String Name="NetlimiterWarning">NetLimiter was detected in your computer. It is frequently responsible for StrongDC++ crash, upload disconnecting and slow download speed. Please uninstall it and use an alternate product, or built-in limiter.</String>
 		<String Name="NetworkStatistics">Network Statistics</String>
 		<String Name="New">&amp;New...</String>
 		<String Name="NewDisconnect">Remove user from queue, if speed is below</String>
@@ -408,7 +406,8 @@
 		<String Name="OpenFolder">Open folder</String>
 		<String Name="OpenHubLog">Open hub log</String>
 		<String Name="OpenUserLog">Open user log</String>
-		<String Name="OverlappedSlowSegment">Overlapped slow chunk</String>
+		<String Name="OverlapChunks">Overlap slow chunks by faster user when file is going to be finished</String>
+		<String Name="OverlappedSlowSegment">Overlapped by faster user</String>
 		<String Name="Parts">Parts: </String>
 		<String Name="PassiveUser">Passive user</String>
 		<String Name="Password">Password</String>
@@ -556,7 +555,6 @@
 		<String Name="SettingsAutoSearchAutoMatch">Automatically match queue for auto search hits</String>
 		<String Name="SettingsAutoSearchLimit">Max sources for autosearch</String>
 		<String Name="SettingsAvipreview">File Preview</String>
-		<String Name="SettingsBadSoftware">Enable bad software detection</String>
 		<String Name="SettingsBindAddress">Bind address</String>
 		<String Name="SettingsBindAddressHelp">Network interface for all connections</String>
 		<String Name="SettingsBoldOptions">Tab highlight on content change</String>
@@ -891,6 +889,5 @@ Default: %H:%M:%S</String>
 Empty = Default String -&gt; winamp(%[version]) %[state](%[title]) stats(%[percent] of %[length] %[bar])</String>
 		<String Name="WinampHelpDesc">Winamp Help</String>
 		<String Name="Yes">Yes</String>
-		<String Name="ZonealarmWarning">ZoneAlarm was detected in your computer.  It is frequently responsible for corrupted downloads and is the cause of many ""rollback inconsistency"" errors.  Please uninstall it and use an alternate product.  </String>
 	</Strings>
 </Language>

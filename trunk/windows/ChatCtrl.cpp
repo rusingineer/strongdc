@@ -103,7 +103,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 
 	CAtlString sText;
 	tstring sAuthor = Text::toT(i.getNick());
-	bool bMyMess = i.getUser() == ClientManager::getInstance()->getMe();
+	bool isMyMessage = i.getUser() == ClientManager::getInstance()->getMe();
 	if(!sAuthor.empty()) {
 		size_t iLen = (sMsg[0] == _T('*')) ? 1 : 0;
 		size_t iAuthorLen = _tcslen(sAuthor.c_str())+1;
@@ -111,7 +111,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 		lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
 		SetSel(lSelEnd, lSelEnd);
 		ReplaceSel(((tstring)sMsg).substr(0, iAuthorLen+iLen).c_str(), false);
-		if(bMyMess) {
+		if(isMyMessage) {
 			SetSel(lSelBegin, lSelBegin+iLen+1);
 			SetSelectionCharFormat(WinUtil::m_ChatTextMyOwn);
 			SetSel(lSelBegin+iLen+1, lSelBegin+iLen+iAuthorLen);
@@ -209,28 +209,28 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 			}
 
 			if(rpl && (smiles < MAX_EMOTICONS)) {
-				AppendTextOnly(sMyNick, sText.Left(rpl - sText), cf, bMyMess, sAuthor);
+				AppendTextOnly(sMyNick, sText.Left(rpl - sText), cf, isMyMessage, sAuthor);
 				lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 				SetSel(lSelEnd, lSelEnd);
 				CImageDataObject::InsertBitmap(GetOleInterface(), 
-					pFoundEmotion->getEmotionBmp(bMyMess ? WinUtil::m_ChatTextMyOwn.crBackColor : WinUtil::m_ChatTextGeneral.crBackColor));
+					pFoundEmotion->getEmotionBmp(isMyMessage ? WinUtil::m_ChatTextMyOwn.crBackColor : WinUtil::m_ChatTextGeneral.crBackColor));
 
 				sText = rpl + pFoundEmotion->getEmotionText().size();
 				smiles++;
 			} else {
 				if(_tcslen(sText) > 0) {
-					AppendTextOnly(sMyNick, sText, cf, bMyMess, sAuthor);
+					AppendTextOnly(sMyNick, sText, cf, isMyMessage, sAuthor);
 				}
 				break;
 			}
 		}
 	} else {
-		AppendTextOnly(sMyNick, sText, cf, bMyMess, sAuthor);
+		AppendTextOnly(sMyNick, sText, cf, isMyMessage, sAuthor);
 	}
 	SetSel(lSelBeginSaved, lSelEndSaved);
 	
-	if(	(si.nPage == 0 || (size_t)si.nPos >= (size_t)si.nMax - si.nPage - 5) &&
-		(lSelBeginSaved == lSelEndSaved || !sSelectedUser.empty() || !sSelectedIP.empty() || !sSelectedURL.empty()))
+	if(	isMyMessage || ((si.nPage == 0 || (size_t)si.nPos >= (size_t)si.nMax - si.nPage - 5) &&
+		(lSelBeginSaved == lSelEndSaved || !sSelectedUser.empty() || !sSelectedIP.empty() || !sSelectedURL.empty())))
 	{
 		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
 	} else {
@@ -242,7 +242,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	InvalidateRect(NULL);
 }
 
-void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFORMAT2& cf, bool bMyMess, const tstring& sAuthor) {
+void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFORMAT2& cf, bool isMyMessage, const tstring& sAuthor) {
 	// Insert text at the end
 	long lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 	long lSelBegin = lSelEnd;
@@ -255,7 +255,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 
 	lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
 	SetSel(lSelBegin, lSelEnd);
-	SetSelectionCharFormat(bMyMess ? WinUtil::m_ChatTextMyOwn : cf);
+	SetSelectionCharFormat(isMyMessage ? WinUtil::m_ChatTextMyOwn : cf);
 	
 	// Zvyrazneni vsech URL a nastaveni "klikatelnosti"
 	long lSearchFrom = 0;

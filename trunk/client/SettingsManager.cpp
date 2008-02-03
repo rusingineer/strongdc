@@ -113,7 +113,7 @@ const string SettingsManager::settingTags[] =
 	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "AdcDebug",
 	"ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
-	"BadSoftDetections", "DetectBadSoft", "AcceptedDisconnects", "AcceptedTimeouts",
+	"AcceptedDisconnects", "AcceptedTimeouts",
 	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
@@ -122,7 +122,7 @@ const string SettingsManager::settingTags[] =
 	"BoldWaitingUsers", "AutoSearchLimit", "AutoKickNoFavs", "PromptPassword", "SpyFrameIgnoreTthSearches",
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
-	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "EnableRealUploadQueue", "SendBloom",
+	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -368,8 +368,6 @@ SettingsManager::SettingsManager()
 	setDefault(DONT_BEGIN_SEGMENT, true);
 	setDefault(DONT_BEGIN_SEGMENT_SPEED, 512);
 
-	setDefault(DETECT_BADSOFT, true);
-	setDefault(BADSOFT_DETECTIONS, 0);
 	setDefault(DISCONNECT_RAW, 0);
 	setDefault(TIMEOUT_RAW, 0);
 	setDefault(FAKESHARE_RAW, 0);
@@ -432,7 +430,6 @@ SettingsManager::SettingsManager()
 	setDefault(DONT_ANNOUNCE_NEW_VERSIONS, false);
 	setDefault(DOWNCONN_PER_SEC, 2);
 	setDefault(FILTER_ENTER, false);
-	setDefault(ENABLE_REAL_UPLOAD_QUEUE, true);
 
 	setDefault(DROP_MULTISOURCE_ONLY, true);
 	setDefault(DISCONNECT_SPEED, 5);
@@ -440,6 +437,7 @@ SettingsManager::SettingsManager()
 	setDefault(DISCONNECT_TIME, 40);
 	setDefault(DISCONNECT_FILESIZE, 50);
     setDefault(REMOVE_SPEED, 2);
+	setDefault(OVERLAP_CHUNKS, true);
 
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);
