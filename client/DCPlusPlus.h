@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(DC_PLUS_PLUS_H)
-#define DC_PLUS_PLUS_H
+#ifndef DCPP_DCPLUSPLUS_H
+#define DCPP_DCPLUSPLUS_H
 
 #ifdef _WIN32
 # define snprintf _snprintf
@@ -73,6 +73,8 @@ _CrtDbgBreak(); } } while(false)
 #ifdef max
 #undef max
 #endif
+
+namespace dcpp {
 
 typedef vector<string> StringList;
 typedef StringList::iterator StringIter;
@@ -162,6 +164,8 @@ typedef StringMapIter TStringMapIter;
 
 extern void startup(void (*f)(void*, const tstring&), void* p);
 extern void shutdown();
+
+} // namespace dcpp
 
 #endif // !defined(DC_PLUS_PLUS_H)
 

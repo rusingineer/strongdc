@@ -21,6 +21,10 @@
 
 #include "LogManager.h"
 
+namespace dcpp {
+
+} // namespace dcpp
+
 /**
  * @file
  * $Id$

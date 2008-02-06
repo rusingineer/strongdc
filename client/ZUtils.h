@@ -25,6 +25,8 @@
 #include <zlib.h>
 #endif
 
+namespace dcpp {
+
 class ZFilter {
 public:
 	ZFilter();
@@ -71,6 +73,8 @@ public:
 private:
 	uint32_t crc;
 };
+
+} // namespace dcpp
 
 #endif // !defined(_Z_UTILS_H)
 

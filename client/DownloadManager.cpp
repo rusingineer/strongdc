@@ -39,6 +39,8 @@
 #undef ff
 #endif
 
+namespace dcpp {
+
 static const string DOWNLOAD_AREA = "Downloads";
 
 DownloadManager::DownloadManager() : mDownloadLimit(0), mBytesSpokenFor(0),
@@ -567,6 +569,8 @@ void DownloadManager::throttleSetup() {
 	}
 	mBytesSpokenFor = 0;
 }
+
+} // namespace dcpp
 
 /**
  * @file

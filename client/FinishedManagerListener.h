@@ -16,10 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_FINISHED_MANAGER_LISTENER_H
-#define DCPLUSPLUS_CLIENT_FINISHED_MANAGER_LISTENER_H
+#ifndef DCPLUSPLUS_DCPP_FINISHED_MANAGER_LISTENER_H
+#define DCPLUSPLUS_DCPP_FINISHED_MANAGER_LISTENER_H
 
 #include "forward.h"
+
+namespace dcpp {
 
 class FinishedManagerListener {
 public:
@@ -34,4 +36,6 @@ public:
 
 };
 
-#endif // !defined(DCPLUSPLUS_CLIENT_FINISHED_MANAGER_LISTENER_H)
+} // namespace dcpp
+
+#endif // !defined(DCPLUSPLUS_DCPP_FINISHED_MANAGER_LISTENER_H)

@@ -19,6 +19,8 @@
 #if !defined(ENCODER_H)
 #define ENCODER_H
 
+namespace dcpp {
+
 class Encoder
 {
 public:
@@ -33,6 +35,8 @@ private:
 	static const int8_t base32Table[];
 	static const char base32Alphabet[];
 };
+
+} // namespace dcpp
 
 #endif // !defined(ENCODER_H)
 

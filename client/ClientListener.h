@@ -3,6 +3,8 @@
 
 #include "forward.h"
 
+namespace dcpp {
+
 class ClientListener
 {
 public:
@@ -52,5 +54,6 @@ public:
 	virtual void on(HubTopic, const Client*, const string&) throw() { }
 };
 
+} // namespace dcpp
 
 #endif /*CLIENTLISTENER_H_*/

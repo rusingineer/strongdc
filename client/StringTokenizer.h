@@ -16,8 +16,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_STRING_TOKENIZER_H
-#define DCPLUSPLUS_CLIENT_STRING_TOKENIZER_H
+#ifndef DCPLUSPLUS_DCPP_STRING_TOKENIZER_H
+#define DCPLUSPLUS_DCPP_STRING_TOKENIZER_H
+
+namespace dcpp {
 
 template<class T>
 class StringTokenizer
@@ -52,6 +54,8 @@ public:
 
 	~StringTokenizer() { }
 };
+
+} // namespace dcpp
 
 #endif // !defined(STRING_TOKENIZER_H)
 

@@ -17,14 +17,14 @@
  */
 
 #include "stdafx.h"
+
 #include "../client/DCPlusPlus.h"
-#include "Resource.h"
-
-#include "AdvancedPage.h"
-#include "CommandDlg.h"
-
 #include "../client/SettingsManager.h"
 #include "../client/FavoriteManager.h"
+
+#include "Resource.h"
+#include "AdvancedPage.h"
+#include "CommandDlg.h"
 #include "WinUtil.h"
 
 PropPage::TextItem AdvancedPage::texts[] = {

@@ -21,6 +21,8 @@
 
 #include "CriticalSection.h"
 
+namespace dcpp {
+
 template<typename Listener>
 class Speaker {
 	typedef vector<Listener*> ListenerList;
@@ -133,6 +135,8 @@ protected:
 	ListenerList tmp;
 	CriticalSection listenerCS;
 };
+
+} // namespace dcpp
 
 #endif // !defined(SPEAKER_H)
 

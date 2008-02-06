@@ -28,6 +28,8 @@
 #include "Transfer.h"
 #include "DebugManager.h"
 
+namespace dcpp {
+
 const string UserConnection::FEATURE_GET_ZBLOCK = "GetZBlock";
 const string UserConnection::FEATURE_MINISLOTS = "MiniSlots";
 const string UserConnection::FEATURE_XML_BZLIST = "XmlBZList";
@@ -210,6 +212,8 @@ void UserConnection::on(Failed, const string& aLine) throw() {
 
 	delete this;	
 }
+
+} // namespace dcpp
 
 /**
  * @file

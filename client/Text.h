@@ -16,8 +16,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_TEXT_H
-#define DCPLUSPLUS_CLIENT_TEXT_H
+#ifndef DCPLUSPLUS_DCPP_TEXT_H
+#define DCPLUSPLUS_DCPP_TEXT_H
+
+namespace dcpp {
 
 /**
  * Text handling routines for DC++. DC++ internally uses UTF-8 for
@@ -150,5 +152,7 @@ namespace Text {
 		return ret;
 	}
 }
+
+} // namespace dcpp
 
 #endif

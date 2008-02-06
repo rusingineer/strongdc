@@ -35,6 +35,8 @@
 #include "QueueManager.h"
 #include "ZUtils.h"
 
+namespace dcpp {
+
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), supportFlags(0),
 	lastBytesShared(0), lastUpdate(0)
 {
@@ -1034,6 +1036,8 @@ void NmdcHub::on(Second, uint64_t aTick) throw() {
 		send("|", 1);
 	}
 }
+
+} // namespace dcpp
 
 /**
  * @file

@@ -48,6 +48,8 @@
 
 #include <limits>
 
+namespace dcpp {
+
 ShareManager::ShareManager() : hits(0), xmlListLen(0), bzXmlListLen(0),
 	xmlDirty(true), refreshDirs(false), update(false), initial(true), listN(0), refreshing(0),
 	lastXmlUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0)
@@ -368,7 +370,7 @@ bool ShareManager::loadCache() throw() {
 	try {
 		ShareLoader loader(directories);
 		string txt;
-		::File ff(Util::getConfigPath() + "files.xml.bz2", ::File::READ, ::File::OPEN);
+		dcpp::File ff(Util::getConfigPath() + "files.xml.bz2", dcpp::File::READ, dcpp::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
 		const size_t BUF_SIZE = 64*1024;
 		AutoArray<char> buf(BUF_SIZE);
@@ -1581,6 +1583,8 @@ int64_t ShareManager::removeExcludeFolder(const string &path, bool returnSize /*
 	
 	return bytesAdded;
 }
+
+} // namespace dcpp
 
 /**
  * @file

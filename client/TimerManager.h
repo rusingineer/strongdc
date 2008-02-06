@@ -28,6 +28,8 @@
 #include <sys/time.h>
 #endif
 
+namespace dcpp {
+
 class TimerManagerListener {
 public:
 	virtual ~TimerManagerListener() { }
@@ -80,6 +82,8 @@ private:
 
 #define GET_TICK() TimerManager::getTick()
 #define GET_TIME() TimerManager::getTime()
+
+} // namespace dcpp
 
 #endif // !defined(TIMER_MANAGER_H)
 

@@ -24,6 +24,8 @@
 #include "ResourceManager.h"
 #include "SettingsManager.h"
 
+namespace dcpp {
+
 ZFilter::ZFilter() : totalIn(0), totalOut(0), compressing(true) {
 	memzero(&zs, sizeof(zs));
 
@@ -124,6 +126,8 @@ bool UnZFilter::operator()(const void* in, size_t& insize, void* out, size_t& ou
 	insize = insize - zs.avail_in;
 	return err == Z_OK;
 }
+
+} // namespace dcpp
 
 /**
  * @file

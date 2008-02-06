@@ -21,6 +21,8 @@
 
 #include "Text.h"
 
+namespace dcpp {
+
 /**
  * A class that implements a fast substring search algo suited for matching
  * one pattern against many strings (currently Quick Search, a variant of
@@ -108,6 +110,8 @@ private:
 		}
 	}
 };
+
+} // namespace dcpp
 
 #endif // !defined(STRING_SEARCH_H)
 

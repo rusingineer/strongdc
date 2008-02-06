@@ -17,11 +17,12 @@
  */
 
 #include "stdafx.h"
-#include "../client/DCPlusPlus.h"
-#include "Resource.h"
 
-#include "Popups.h"
+#include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
+
+#include "Resource.h"
+#include "Popups.h"
 #include "WinUtil.h"
 #include "MainFrm.h"
 

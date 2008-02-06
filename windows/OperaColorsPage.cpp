@@ -17,14 +17,14 @@
  */
 
 #include "stdafx.h"
-#include "../client/DCPlusPlus.h"
-#include "Resource.h"
 
-#include "OperaColorsPage.h"
+#include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
+
+#include "Resource.h"
+#include "OperaColorsPage.h"
 #include "WinUtil.h"
 #include "PropertiesDlg.h"
-
 #include "BarShader.h"
 
 PropPage::TextItem OperaColorsPage::texts[] = {

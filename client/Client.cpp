@@ -28,6 +28,8 @@
 #include "ResourceManager.h"
 #include "ClientManager.h"
 
+namespace dcpp {
+
 Client::Counts Client::counts;
 
 Client::Client(const string& hubURL, char separator_, bool secure_) : 
@@ -205,6 +207,8 @@ void Client::on(Second, uint64_t aTick) throw() {
 		connect();
 	}
 }
+
+} // namespace dcpp
 
 /**
  * @file

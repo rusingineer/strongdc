@@ -32,6 +32,8 @@
 using namespace yaSSL;
 #endif
 
+namespace dcpp {
+
 class CryptoManager;
 
 class SSLSocket : public Socket {
@@ -63,5 +65,7 @@ private:
 
 	int checkSSL(int ret) throw(SocketException);
 };
+
+} // namespace dcpp
 
 #endif // SSLSOCKET_H

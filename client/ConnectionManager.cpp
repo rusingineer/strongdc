@@ -31,6 +31,8 @@
 
 #include "UserConnection.h"
 
+namespace dcpp {
+
 uint16_t ConnectionManager::iConnToMeCount = 0;
 
 ConnectionManager::ConnectionManager() : floodCounter(0), server(0), secureServer(0), shuttingDown(false) {
@@ -795,6 +797,8 @@ void ConnectionManager::on(UserConnectionListener::Supports, UserConnection* con
 	if(conn->getUser())
 		ClientManager::getInstance()->setSupports(conn->getUser(), sup);
 }
+
+} // namespace dcpp
 
 /**
  * @file

@@ -7,10 +7,10 @@
 
 #include "PropPage.h"
 #include "ExListViewCtrl.h"
+
+#include "../client/ClientProfileManager.h"
 #include "../client/HttpConnection.h"
 #include "../client/File.h"
-
-class ClientProfile;
 
 class ClientsPage : public CPropertyPage<IDD_CLIENTS_PAGE>, public PropPage, private HttpConnectionListener
 {

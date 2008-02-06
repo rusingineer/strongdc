@@ -17,12 +17,12 @@
  */
 
 #include "stdafx.h"
+
 #include "../client/DCPlusPlus.h"
-#include "Resource.h"
-
-#include "PropPage.h"
-
 #include "../client/SettingsManager.h"
+
+#include "Resource.h"
+#include "PropPage.h"
 #include "WinUtil.h"
 
 #define SETTING_STR_MAXLEN 1024

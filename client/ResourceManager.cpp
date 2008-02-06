@@ -25,6 +25,8 @@
 #include "File.h"
 #include "Text.h"
 
+namespace dcpp {
+	
 wstring ResourceManager::wstrings[ResourceManager::LAST];
 
 void ResourceManager::loadLanguage(const string& aFile) {
@@ -67,6 +69,8 @@ void ResourceManager::createWide() {
 		Text::utf8ToWide(strings[i], wstrings[i]);
 	}
 }
+
+} // namespace dcpp
 
 /**
  * @file

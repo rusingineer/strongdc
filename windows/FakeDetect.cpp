@@ -17,11 +17,12 @@
  */
 
 #include "stdafx.h"
-#include "../client/DCPlusPlus.h"
-#include "Resource.h"
 
-#include "FakeDetect.h"
+#include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
+
+#include "Resource.h"
+#include "FakeDetect.h"
 #include "WinUtil.h"
 
 PropPage::TextItem FakeDetect::texts[] = {

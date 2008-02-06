@@ -1,11 +1,12 @@
 
 #include "stdafx.h"
+
 #include "../client/DCPlusPlus.h"
-#include "Resource.h"
+#include "../client/SettingsManager.h"
 #include "../client/SimpleXML.h"
 
+#include "Resource.h"
 #include "PropPageTextStyles.h"
-#include "../client/SettingsManager.h"
 #include "WinUtil.h"
 #include "OperaColorsPage.h"
 #include "PropertiesDlg.h"

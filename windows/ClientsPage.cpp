@@ -1,13 +1,13 @@
 
 #include "stdafx.h"
+
 #include "../client/DCPlusPlus.h"
-#include "Resource.h"
-
-#include "ClientsPage.h"
-#include "ClientProfileDlg.h"
-
 #include "../client/SettingsManager.h"
 #include "../client/ClientProfileManager.h"
+
+#include "Resource.h"
+#include "ClientsPage.h"
+#include "ClientProfileDlg.h"
 
 PropPage::TextItem ClientsPage::texts[] = {
 	{ IDC_MOVE_CLIENT_UP, ResourceManager::MOVE_UP },

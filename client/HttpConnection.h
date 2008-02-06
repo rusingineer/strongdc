@@ -21,6 +21,8 @@
 
 #include "BufferedSocket.h"
 
+namespace dcpp {
+
 class HttpConnection;
 
 class HttpConnectionListener {
@@ -81,6 +83,8 @@ private:
 	void onLine(const string& aLine);
 	
 };
+
+} // namespace dcpp
 
 #endif // !defined(HTTP_CONNECTION_H)
 

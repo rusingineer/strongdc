@@ -24,6 +24,8 @@
 #include "SettingsManager.h"
 #include "version.h"
 
+namespace dcpp {
+
 /**
  * Downloads a file and returns it as a string
  * @todo Report exceptions
@@ -158,6 +160,8 @@ void HttpConnection::on(BufferedSocketListener::ModeChange) throw() {
 void HttpConnection::on(BufferedSocketListener::Data, uint8_t* aBuf, size_t aLen) throw() {
 	fire(HttpConnectionListener::Data(), this, aBuf, aLen);
 }
+
+} // namespace dcpp
 
 /**
  * @file

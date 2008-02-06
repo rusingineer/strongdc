@@ -35,6 +35,10 @@
 #include <bzlib.h>
 #endif
 
+namespace dcpp {
+
+
+
 CryptoManager::CryptoManager() 
 :	
 	certsLoaded(false), 
@@ -430,6 +434,8 @@ string CryptoManager::makeKey(const string& aLock) {
 	
 	return keySubst(temp, aLock.length(), extra);
 }
+
+} // namespace dcpp
 
 /**
  * @file

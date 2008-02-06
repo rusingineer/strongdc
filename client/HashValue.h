@@ -16,11 +16,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(HASH_VALUE_H)
-#define HASH_VALUE_H
+#ifndef DCPLUSPLUS_DCPP_HASH_VALUE_H
+#define DCPLUSPLUS_DCPP_HASH_VALUE_H
 
 #include "FastAlloc.h"
 #include "Encoder.h"
+
+namespace dcpp {
 
 template<class Hasher>
 struct HashValue : FastAlloc<HashValue<Hasher> >{
@@ -47,10 +49,12 @@ struct HashValue : FastAlloc<HashValue<Hasher> >{
 	uint8_t data[BYTES];
 };
 
+} // namespace dcpp
+
 namespace std {
 template<typename T>
-struct hash<::HashValue<T> > {
-	size_t operator()(const ::HashValue<T>& rhs) const { return *(size_t*)rhs.data; }
+struct hash<dcpp::HashValue<T> > {
+	size_t operator()(const dcpp::HashValue<T>& rhs) const { return *(size_t*)rhs.data; }
 };
 }
 

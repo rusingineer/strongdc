@@ -21,6 +21,8 @@
 
 #include "TimerManager.h"
 
+namespace dcpp {
+
 #ifdef _WIN32
 DWORD TimerManager::lastTick = 0;
 uint32_t TimerManager::cycles = 0;
@@ -66,6 +68,8 @@ uint64_t TimerManager::getTick() {
 	return static_cast<uint64_t>(((tv2.tv_sec - tv.tv_sec) * 1000 ) + ( (tv2.tv_usec - tv.tv_usec) / 1000));
 #endif
 }
+
+} // namespace dcpp
 
 /**
  * @file

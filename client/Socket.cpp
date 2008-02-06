@@ -25,6 +25,8 @@
 #include "ResourceManager.h"
 #include "TimerManager.h"
 
+namespace dcpp {
+
 string Socket::udpServer;
 uint16_t Socket::udpPort;
 
@@ -643,6 +645,8 @@ const string Socket::getRemoteHost(const string& aIp) {
 		return h->h_name;
 	}
 }
+
+} // namespace dcpp
 
 /**
  * @file

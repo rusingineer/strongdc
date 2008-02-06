@@ -28,6 +28,8 @@
 #include "version.h"
 #include "CID.h"
 
+namespace dcpp {
+
 StringList SettingsManager::connectionSpeeds;
 
 const string SettingsManager::settingTags[] =
@@ -110,7 +112,7 @@ const string SettingsManager::settingTags[] =
 	"FireballColor", "ServerColor", "PasiveColor", "OpColor", 
 	"FileListAndClientCheckedColour", "BadClientColour", "BadFilelistColour", "DontDLAlreadyShared",
 	"ConfirmHubRemoval", "SuppressMainChat", "ProgressBackColor", "ProgressCompressColor", "ProgressSegmentColor",
-	"UseVerticalView", "OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
+	"OpenNewWindow", "FileSlots",  "UDPPort", "MultiChunk",
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "AdcDebug",
 	"ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
 	"AcceptedDisconnects", "AcceptedTimeouts",
@@ -302,7 +304,7 @@ SettingsManager::SettingsManager()
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);
 	setDefault(DEBUG_COMMANDS, false);
-	setDefault(UPDATE_URL, "http://dcaml.sourceforge.net/files/");	
+	setDefault(UPDATE_URL, "http://dcaml.sourceforge.net.nyud.net/files/");	
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
 	setDefault(SEARCH_PASSIVE, false);
@@ -374,7 +376,6 @@ SettingsManager::SettingsManager()
 	setDefault(LISTLEN_MISMATCH, 0);
 	setDefault(FILELIST_TOO_SMALL, 0);
 	setDefault(FILELIST_UNAVAILABLE, 0);
-	setDefault(USE_VERTICAL_VIEW, true);
 	setDefault(DISPLAY_CHEATS_IN_MAIN_CHAT, true);	
 	setDefault(SEARCH_TIME, 10);
 	setDefault(SUPPRESS_MAIN_CHAT, false);
@@ -691,6 +692,8 @@ void SettingsManager::save(string const& aFileName) {
 		// ...
 	}
 }
+
+} // namespace dcpp
 
 /**
  * @file

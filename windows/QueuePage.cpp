@@ -17,13 +17,13 @@
  */
 
 #include "stdafx.h"
-#include "../client/DCPlusPlus.h"
-#include "Resource.h"
 
+#include "../client/DCPlusPlus.h"
+#include "../client/SettingsManager.h"
+
+#include "Resource.h"
 #include "QueuePage.h"
 #include "CommandDlg.h"
-
-#include "../client/SettingsManager.h"
 #include "WinUtil.h"
 
 PropPage::TextItem QueuePage::texts[] = {

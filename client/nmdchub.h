@@ -31,6 +31,8 @@
 #include "StringTokenizer.h"
 #include "ZUtils.h"
 
+namespace dcpp {
+
 class ClientManager;
 
 class NmdcHub : public Client, private Flags
@@ -134,6 +136,8 @@ private:
 	void on(Failed, const string&) throw();
 
 };
+
+} // namespace dcpp
 
 #endif // !defined(NMDC_HUB_H)
 

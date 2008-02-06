@@ -37,6 +37,8 @@
 #include "QueueManager.h"
 #include "FinishedManager.h"
 
+namespace dcpp {
+
 static const string UPLOAD_AREA = "Uploads";
 
 UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), mUploadLimit(0), 
@@ -666,6 +668,7 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 				if((aTick - u->getStart()) > 15000) {
 					logUpload(u);
 					delete u;
+
 					delayUploads.erase(i);
 					i = delayUploads.begin();
 				} else
@@ -813,6 +816,8 @@ void UploadManager::abortUpload(const string& aFile, bool waiting){
 	if(!nowait)
 		dcdebug("abort upload timeout %s\n", aFile.c_str());
 }
+
+} // namespace dcpp
 
 /**
  * @file

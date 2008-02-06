@@ -24,6 +24,8 @@
 #include <sys/time.h>
 #endif
 
+namespace dcpp {
+
 class Semaphore  
 {
 #ifdef _WIN32
@@ -90,6 +92,8 @@ private:
 	Semaphore& operator=(const Semaphore&);
 
 };
+
+} // namespace dcpp
 
 #endif // !defined(SEMAPHORE_H)
 

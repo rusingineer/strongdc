@@ -16,11 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(QUEUE_ITEM_H)
-#define QUEUE_ITEM_H
-
-class QueueManager;
-class Download;
+#ifndef DCPLUSPLUS_DCPP_QUEUE_ITEM_H
+#define DCPLUSPLUS_DCPP_QUEUE_ITEM_H
 
 #include "User.h"
 #include "FastAlloc.h"
@@ -28,6 +25,11 @@ class Download;
 #include "Flags.h"
 #include "forward.h"
 #include "Segment.h"
+
+namespace dcpp {
+
+class QueueManager;
+class Download;
 
 class QueueItem : public Flags, public FastAlloc<QueueItem>, public intrusive_ptr_base {
 public:
@@ -304,6 +306,8 @@ private:
 	void addSource(const UserPtr& aUser);
 	void removeSource(const UserPtr& aUser, Flags::MaskType reason);
 };
+
+} // namespace dcpp
 
 #endif // !defined(QUEUE_ITEM_H)
 

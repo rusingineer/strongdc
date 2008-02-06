@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_FINISHED_MANAGER_H
-#define DCPLUSPLUS_CLIENT_FINISHED_MANAGER_H
+#ifndef DCPLUSPLUS_DCPP_FINISHED_MANAGER_H
+#define DCPLUSPLUS_DCPP_FINISHED_MANAGER_H
 
 #include "QueueManagerListener.h"
 #include "UploadManagerListener.h"
@@ -30,6 +30,8 @@
 #include "User.h"
 #include "MerkleTree.h"
 #include "ClientManager.h"
+
+namespace dcpp {
 
 class FinishedItem
 {
@@ -120,6 +122,8 @@ private:
 	CriticalSection cs;
 	FinishedItemList downloads, uploads;
 };
+
+} // namespace dcpp
 
 #endif // !defined(FINISHED_MANAGER_H)
 

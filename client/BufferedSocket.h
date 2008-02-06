@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_BUFFERED_SOCKET_H
-#define DCPLUSPLUS_CLIENT_BUFFERED_SOCKET_H
+#ifndef DCPLUSPLUS_DCPP_BUFFERED_SOCKET_H
+#define DCPLUSPLUS_DCPP_BUFFERED_SOCKET_H
 
 #include "forward.h"
 #include "BufferedSocketListener.h"
@@ -26,6 +26,8 @@
 #include "Speaker.h"
 #include "Util.h"
 #include "Socket.h"
+
+namespace dcpp {
 
 class BufferedSocket : public Speaker<BufferedSocketListener>, public Thread
 {
@@ -153,6 +155,8 @@ private:
 	void shutdown();
 	void addTask(Tasks task, TaskData* data) { tasks.push_back(make_pair(task, data)); taskSem.signal(); }
 };
+
+} // namespace dcpp
 
 #endif // !defined(BUFFERED_SOCKET_H)
 

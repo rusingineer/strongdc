@@ -32,6 +32,8 @@
 #include "ResourceManager.h"
 #include "LogManager.h"
 
+namespace dcpp {
+
 const string AdcHub::CLIENT_PROTOCOL("ADC/1.0");
 const string AdcHub::CLIENT_PROTOCOL_TEST("ADC/0.10");
 const string AdcHub::SECURE_CLIENT_PROTOCOL_TEST("ADCS/0.10");
@@ -783,6 +785,8 @@ void AdcHub::on(Second s, uint64_t aTick) throw() {
 		send("\n", 1);
 	}
 }
+
+} // namespace dcpp
 
 /**
  * @file

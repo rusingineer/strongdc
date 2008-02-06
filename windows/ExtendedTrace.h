@@ -26,7 +26,6 @@
 #define EXTENDEDTRACEINITIALIZE( IniSymbolPath )	InitSymInfo( IniSymbolPath )
 #define EXTENDEDTRACEUNINITIALIZE()			         UninitSymInfo()
 #define STACKTRACE2(file, eip, esp, ebp) StackTrace(GetCurrentThread(), _T(""), file, eip, esp, ebp)
-class File;
 
 BOOL InitSymInfo( PCSTR );
 BOOL UninitSymInfo();

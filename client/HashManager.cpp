@@ -29,6 +29,8 @@
 #include <sys/mman.h> // mmap, munmap, madvise
 #endif
 
+namespace dcpp {
+
 #define HASH_FILE_VERSION_STRING "2"
 static const uint32_t HASH_FILE_VERSION=2;
 const int64_t HashManager::MIN_BLOCK_SIZE = 64*1024;
@@ -776,6 +778,8 @@ int HashManager::Hasher::run() {
 	}
 	return 0;
 }
+
+} // namespace dcpp
 
 /**
  * @file

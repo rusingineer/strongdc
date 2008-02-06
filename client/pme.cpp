@@ -16,7 +16,9 @@
 
 #include "pme.h"
 #include "Text.h"
-	
+
+namespace dcpp {
+
 unsigned int PME::DeterminePcreOptions ( const std::string & opts ///< perl style character modifiers -- i.e. "gi" is global, case-insensitive
  )
 {
@@ -612,3 +614,5 @@ void PME::Init(const std::wstring & s, const std::wstring & opts )
 {
 	Init( Text::wideToAcp( s ), Text::wideToAcp(opts) );
 }
+
+} // namespace pme

@@ -11,6 +11,8 @@
 #include "CriticalSection.h"
 #include "Singleton.h"
 
+namespace dcpp {
+
 class ClientProfile {
 public:
 	typedef vector<ClientProfile> List;
@@ -278,5 +280,7 @@ private:
 	
 	void loadClientProfiles(SimpleXML* aXml);
 };
+
+} // namespace dcpp
 
 #endif // !defined(__CLIENT_PROFILE_MANAGER_H)

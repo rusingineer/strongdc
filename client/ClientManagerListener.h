@@ -16,10 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_CLIENT_MANAGER_LISTENER_H
-#define DCPLUSPLUS_CLIENT_CLIENT_MANAGER_LISTENER_H
+#ifndef DCPLUSPLUS_DCPP_CLIENT_MANAGER_LISTENER_H
+#define DCPLUSPLUS_DCPP_CLIENT_MANAGER_LISTENER_H
 
 #include "forward.h"
+
+namespace dcpp {
 
 class ClientManagerListener {
 public:
@@ -44,6 +46,8 @@ public:
 	virtual void on(ClientUpdated, const Client*) throw() { }
 	virtual void on(ClientDisconnected, const Client*) throw() { }
 };
+
+} // namespace dcpp
 
 #endif // !defined(CLIENT_MANAGER_LISTENER_H)
 

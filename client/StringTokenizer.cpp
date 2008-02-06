@@ -21,6 +21,10 @@
 
 #include "StringTokenizer.h"
 
+namespace dcpp {
+
+} // namespace dcpp
+
 /**
  * @file
  * $Id$

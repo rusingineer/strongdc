@@ -33,10 +33,6 @@
 #pragma once
 
 #include <string>
-#ifndef tstring
-typedef std::basic_string< TCHAR > tstring;
-#endif
-
 #include <AtlCrack.h>
 
 class CDimEdit : public CWindowImpl< CDimEdit, CEdit > {

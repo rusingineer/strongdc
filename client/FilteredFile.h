@@ -22,6 +22,8 @@
 #include "Streams.h"
 #include "Util.h"
 
+namespace dcpp {
+
 template<bool managed>
 class CountOutputStream : public OutputStream {
 public:
@@ -203,6 +205,8 @@ private:
 	size_t valid;
 	bool more;
 };
+
+} // namespace dcpp
 
 #endif // !defined(FILTERED_FILE_H)
 

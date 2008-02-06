@@ -26,6 +26,8 @@
 #include "StringTokenizer.h"
 #include "ResourceManager.h"
 
+namespace dcpp {
+
 WebServerManager* Singleton<WebServerManager>::instance = NULL;
 
 //static const string WEBSERVER_AREA = "WebServer";
@@ -566,3 +568,4 @@ void WebServerManager::onSearchResult(const SearchResult* aResult) {
 	//PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)i);	
 }
 
+} // namespace dcpp

@@ -17,12 +17,13 @@
  */
 
 #include "stdafx.h"
-#include "../client/DCPlusPlus.h"
-#include "Resource.h"
 
-#include "NetworkPage.h"
+#include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
 #include "../client/Socket.h"
+
+#include "Resource.h"
+#include "NetworkPage.h"
 #include "WinUtil.h"
 
 #include <IPHlpApi.h>

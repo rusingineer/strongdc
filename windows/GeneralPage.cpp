@@ -17,12 +17,13 @@
  */
 
 #include "stdafx.h"
-#include "../client/DCPlusPlus.h"
-#include "Resource.h"
 
-#include "GeneralPage.h"
+#include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
 #include "../client/Socket.h"
+
+#include "Resource.h"
+#include "GeneralPage.h"
 #include "WinUtil.h"
 
 PropPage::TextItem GeneralPage::texts[] = {

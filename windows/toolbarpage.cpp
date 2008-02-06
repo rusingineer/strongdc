@@ -17,13 +17,14 @@
  */
 
 #include "stdafx.h"
-#include "../client/DCPlusPlus.h"
-#include "Resource.h"
 
-#include "ToolbarPage.h"
+#include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
 #include "../client/StringTokenizer.h"
 #include "../client/Util.h"
+
+#include "Resource.h"
+#include "ToolbarPage.h"
 #include "WinUtil.h"
 #include "MainFrm.h"
 

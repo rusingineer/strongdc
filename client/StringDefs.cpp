@@ -1,7 +1,7 @@
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 #include "ResourceManager.h"
-string ResourceManager::strings[] = {
+std::string dcpp::ResourceManager::strings[] = {
 "Accepted Disconnects", 
 "Accepted Timeouts", 
 "Active", 
@@ -713,7 +713,6 @@ string ResourceManager::strings[] = {
 "Use old sharing user interface", 
 "Use system icons when browsing files (slows browsing down a bit)", 
 "Use TLS when remote client supports it", 
-"Use vertical view by default", 
 "User List Colors", 
 "User Commands", 
 "User Menu Items", 
@@ -850,7 +849,7 @@ string ResourceManager::strings[] = {
 "Winamp Help", 
 "Yes", 
 };
-string ResourceManager::names[] = {
+std::string dcpp::ResourceManager::names[] = {
 "AcceptedDisconnects", 
 "AcceptedTimeouts", 
 "Active", 
@@ -1562,7 +1561,6 @@ string ResourceManager::names[] = {
 "SettingsUseOldSharingUi", 
 "SettingsUseSystemIcons", 
 "SettingsUseTls", 
-"SettingsUseVerticalView", 
 "SettingsUserColors", 
 "SettingsUserCommands", 
 "SettingsUserMenu", 

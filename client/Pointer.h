@@ -16,11 +16,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(DCPLUSPLUS_CLIENT_POINTER_H)
-#define DCPLUSPLUS_CLIENT_POINTER_H
+#ifndef DCPLUSPLUS_DCPP_POINTER_H
+#define DCPLUSPLUS_DCPP_POINTER_H
 
 #include "intrusive_ptr.hpp"
 #include "Thread.h"
+
+namespace dcpp {
 
 class intrusive_ptr_base
 {
@@ -60,6 +62,8 @@ struct DeleteFunction {
 	template<typename T>
 	void operator()(const T& p) const { delete p; }
 };
+
+} // namespace dcpp
 
 #endif // !defined(POINTER_H)
 

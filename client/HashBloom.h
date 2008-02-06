@@ -3,6 +3,7 @@
 
 #include "MerkleTree.h"
 
+namespace dcpp {
 /**
  * According to http://www.eecs.harvard.edu/~michaelm/NEWWORK/postscripts/BloomFilterSurvey.pdf
  * the optimal number of hashes k is (m/n)*ln(2), m = number of bits in the filter and n = number
@@ -36,5 +37,7 @@ private:
 	size_t k;
 	size_t h;
 };
+
+}
 
 #endif /*HASHBLOOM_H_*/

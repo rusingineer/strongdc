@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_USER_CONNECTION_H
-#define DCPLUSPLUS_CLIENT_USER_CONNECTION_H
+#ifndef DCPLUSPLUS_DCPP_USER_CONNECTION_H
+#define DCPLUSPLUS_DCPP_USER_CONNECTION_H
 
 #include "forward.h"
 #include "TimerManager.h"
@@ -31,6 +31,8 @@
 #include "MerkleTree.h"
 #include "DebugManager.h"
 #include "ClientManager.h"
+
+namespace dcpp {
 
 class UserConnection : public Speaker<UserConnectionListener>, 
 	private BufferedSocketListener, public Flags, private CommandHandler<UserConnection>
@@ -244,6 +246,8 @@ private:
 	void on(TransmitDone) throw();
 	void on(Failed, const string&) throw();
 };
+
+} // namespace dcpp
 
 #endif // !defined(USER_CONNECTION_H)
 

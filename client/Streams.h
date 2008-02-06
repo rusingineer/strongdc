@@ -16,11 +16,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(STREAMS_H)
-#define STREAMS_H
+#ifndef DCPLUSPLUS_DCPP_STREAMS_H
+#define DCPLUSPLUS_DCPP_STREAMS_H
 
 #include "SettingsManager.h"
 #include "Exception.h"
+
+namespace dcpp {
 
 STANDARD_EXCEPTION(FileException);
 
@@ -187,6 +189,7 @@ private:
 	string& str;
 };
 
+} // namespace dcpp
 
 #endif // !defined(STREAMS_H)
 

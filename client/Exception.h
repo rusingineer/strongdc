@@ -19,6 +19,8 @@
 #if !defined(EXCEPTION_H)
 #define EXCEPTION_H
 
+namespace dcpp {
+
 class Exception  
 {
 public:
@@ -48,6 +50,8 @@ public:\
 	virtual ~name() throw() { } \
 }
 #endif
+
+} // namespace dcpp
 
 #endif // !defined(EXCEPTION_H)
 

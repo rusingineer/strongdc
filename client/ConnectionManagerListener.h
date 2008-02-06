@@ -19,6 +19,8 @@
 #if !defined(CONNECTION_MANAGER_LISTENER_H)
 #define CONNECTION_MANAGER_LISTENER_H
 
+namespace dcpp {
+
 class ConnectionQueueItem;
 
 class ConnectionManagerListener {
@@ -38,6 +40,8 @@ public:
 	virtual void on(Failed, const ConnectionQueueItem*, const string&) throw() { }
 	virtual void on(StatusChanged, const ConnectionQueueItem*) throw() { }
 };
+
+} // namespace dcpp
 
 #endif // !defined(CONNECTION_MANAGER_LISTENER_H)
 

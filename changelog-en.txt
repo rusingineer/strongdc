@@ -9,6 +9,9 @@
 * no more .antifrag extension (old temp files still supported)
 * changed the way of chat autoscrolling
 * rewritten chat menu code
+* updated client profiles URL
+* removed option to disable real upload queue
+* removed bad software detection
 
 
 	-- StrongDC++ 2.11 --
