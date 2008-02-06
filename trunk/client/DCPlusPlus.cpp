@@ -50,6 +50,8 @@ void __stl_debug_terminate() {
 #endif
 */
 
+namespace dcpp {
+
 void startup(void (*f)(void*, const tstring&), void* p) {
 	// "Dedicated to the near-memory of Nev. Let's start remembering people while they're still alive."
 	// Nev's great contribution to dc++
@@ -141,6 +143,8 @@ void shutdown() {
 	::WSACleanup();
 #endif
 }
+
+} // namespace dcpp
 
 /**
  * @file

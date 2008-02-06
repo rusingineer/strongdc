@@ -3,6 +3,8 @@
 
 #include "forward.h"
 
+namespace dcpp {
+
 class UploadManagerListener {
 	friend class UploadQueueItem; 
 public:
@@ -28,5 +30,7 @@ public:
 	virtual void on(QueueUpdate) throw() { }
 
 };
+
+} // namespace dcpp
 
 #endif /*UPLOADMANAGERLISTENER_H_*/

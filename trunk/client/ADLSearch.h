@@ -38,6 +38,8 @@
 #include "Singleton.h"
 #include "DirectoryListing.h"
 
+namespace dcpp {
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Class that represent an ADL search
@@ -128,13 +130,16 @@ public:
 	// Negative values means do not check.
 	int64_t minFileSize;
 	int64_t maxFileSize;
+
 	enum SizeType {
 		SizeBytes     = TypeFirst,
 		SizeKiloBytes,
 		SizeMegaBytes,
 		SizeGigaBytes
 	};
+
 	SizeType typeFileSize;
+
 	SizeType StringToSizeType(const string& s) {
 		if(Util::stricmp(s.c_str(), "B") == 0) {
 			return SizeBytes;
@@ -148,6 +153,7 @@ public:
 			return SizeBytes;
 		}
 	}
+
 	string SizeTypeToString(SizeType t) {
 		switch(t) {
 		default:
@@ -157,6 +163,7 @@ public:
 		case SizeGigaBytes:	return "GB";
 		}
 	}
+	
 	tstring SizeTypeToDisplayString(SizeType t) {
 		switch(t) {
 		default:
@@ -166,6 +173,7 @@ public:
 		case SizeGigaBytes:	return CTSTRING(GB);
 		}
 	}
+
 	int64_t GetSizeBase() {
 		switch(typeFileSize) {
 		default:
@@ -318,6 +326,8 @@ private:
 
 	string getConfigFile() { return Util::getConfigPath() + "ADLSearch.xml"; }
 };
+
+} // namespace dcpp
 
 #endif // !defined(ADL_SEARCH_H)
 

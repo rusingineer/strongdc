@@ -16,10 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_QUEUE_MANAGER_LISTENER_H
-#define DCPLUSPLUS_CLIENT_QUEUE_MANAGER_LISTENER_H
+#ifndef DCPLUSPLUS_DCPP_QUEUE_MANAGER_LISTENER_H
+#define DCPLUSPLUS_DCPP_QUEUE_MANAGER_LISTENER_H
 
 #include "forward.h"
+
+namespace dcpp {
 
 class QueueManagerListener {
 public:
@@ -42,6 +44,8 @@ public:
 	virtual void on(StatusUpdated, const QueueItem*) throw() { }
 	virtual void on(PartialList, const UserPtr&, const string&) throw() { }
 };
+
+} // namespace dcpp
 
 #endif // !defined(QUEUE_MANAGER_LISTENER_H)
 

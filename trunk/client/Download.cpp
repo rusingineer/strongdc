@@ -25,6 +25,8 @@
 #include "QueueItem.h"
 #include "HashManager.h"
 
+namespace dcpp {
+
 Download::Download(UserConnection& conn, const string& pfsDir) throw() : Transfer(conn, pfsDir, TTHValue()),
 	file(0), treeValid(false), lastTick(GET_TICK())
 {
@@ -118,3 +120,4 @@ void Download::getParams(const UserConnection& aSource, StringMap& params) {
 	params["target"] = getPath();
 }
 
+} // namespace dcpp

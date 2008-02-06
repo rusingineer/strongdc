@@ -35,6 +35,8 @@
 #include "ClientManager.h"
 #include "ResourceManager.h"
 
+namespace dcpp {
+
 class SearchManager;
 class SocketException;
 
@@ -232,6 +234,8 @@ private:
 	string getPartsString(const PartsInfo& partsInfo) const;
 	void on(TimerManagerListener::Second, uint64_t aTick) throw();
 };
+
+} // namespace dcpp
 
 #endif // !defined(SEARCH_MANAGER_H)
 

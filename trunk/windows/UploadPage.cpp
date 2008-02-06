@@ -17,18 +17,18 @@
  */
 
 #include "stdafx.h"
+
 #include "../client/DCPlusPlus.h"
-#include "Resource.h"
-
-#include "UploadPage.h"
-#include "WinUtil.h"
-#include "HashProgressDlg.h"
-#include "LineDlg.h"
-
 #include "../client/Util.h"
 #include "../client/ShareManager.h"
 #include "../client/SettingsManager.h"
 #include "../client/version.h"
+
+#include "Resource.h"
+#include "UploadPage.h"
+#include "WinUtil.h"
+#include "HashProgressDlg.h"
+#include "LineDlg.h"
 
 PropPage::TextItem UploadPage::texts[] = {
 	{ IDC_SETTINGS_SHARED_DIRECTORIES, ResourceManager::SETTINGS_SHARED_DIRECTORIES },

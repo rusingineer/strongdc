@@ -5,6 +5,8 @@
 #include "ClientProfileManager.h"
 #include "SimpleXML.h"
 
+namespace dcpp {
+
 void ClientProfileManager::saveClientProfiles() {
 	try {
 		SimpleXML xml;
@@ -123,4 +125,6 @@ void ClientProfileManager::loadClientProfiles() {
 		dcdebug("FavoriteManager::loadClientProfiles: %s\n", e.getError().c_str());
 	}
 }
+
+} // namespace dcpp
 

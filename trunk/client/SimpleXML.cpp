@@ -22,6 +22,8 @@
 #include "SimpleXML.h"
 #include "ConnectionManager.h"
 
+namespace dcpp {
+
 const string SimpleXML::utf8Header = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\r\n";
 
 string& SimpleXML::escape(string& aString, bool aAttrib, bool aLoading /* = false */, const string &encoding /* = "UTF-8" */) {
@@ -336,6 +338,8 @@ void SimpleXML::fromXML(const string& aXML) throw(SimpleXMLException) {
 	current = &root;
 	resetCurrentChild();
 }
+
+} // namespace dcpp
 
 /**
  * @file

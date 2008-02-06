@@ -24,6 +24,8 @@
 #include "TimerManager.h"
 #include "User.h"
 
+namespace dcpp {
+
 class ClientManager;
 
 class AdcHub : public Client, public CommandHandler<AdcHub> {
@@ -141,6 +143,8 @@ private:
 	void on(Second, uint64_t aTick) throw();
 
 };
+
+} // namespace dcpp
 
 #endif // !defined(ADC_HUB_H)
 

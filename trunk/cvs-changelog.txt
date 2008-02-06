@@ -1,3 +1,11 @@
+** svn373
+	updated client profiles URL
+	using dcpp namespace
+	tweaked PFS
+	display "All download slots taken" when maximum segments reached
+	removed horizontal chat/userlist layout to allow compiling with default WTL
+	updated WTL
+
 ** svn372
 	removed option to disable real upload queue
 	removed bad software detection (it is unuseful now)

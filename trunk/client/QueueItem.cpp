@@ -24,6 +24,8 @@
 #include "Download.h"
 #include "File.h"
 
+namespace dcpp {
+
 namespace {
 	const string TEMP_EXTENSION = ".dctmp";
 
@@ -68,7 +70,7 @@ const string& QueueItem::getTempTarget() {
 	if(!isSet(QueueItem::FLAG_USER_LIST) && tempTarget.empty()) {
 		if(!SETTING(TEMP_DOWNLOAD_DIRECTORY).empty() && (File::getSize(getTarget()) == -1)) {
 #ifdef _WIN32
-			::StringMap sm;
+			dcpp::StringMap sm;
 			if(target.length() >= 3 && target[1] == ':' && target[2] == '\\')
 				sm["targetdrive"] = target.substr(0, 3);
 			else
@@ -95,14 +97,14 @@ int64_t QueueItem::getAverageSpeed() const {
 Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const PartialSource::Ptr partialSource) const {
 	if(!BOOLSETTING(MULTI_CHUNK) && isRunning()) {
 		// file is already running and segmented downloads are disabled
-		return Segment(0, 0);
+		return Segment(-1, 0);
 	}
 
 	if(downloads.size() >= maxSegments ||
 		(BOOLSETTING(DONT_BEGIN_SEGMENT) && (size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED) * 1024) < getAverageSpeed()))
 	{
 		// no other segments if we have reached the speed or segment limit
-		return Segment(0, 0);
+		return Segment(-1, 0);
 	}
 
 	if(getSize() == -1 || blockSize == 0) {
@@ -169,8 +171,20 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 			if(partialSource) {
 				// store all chunks we could need
 				for(vector<int64_t>::const_iterator j = posArray.begin(); j < posArray.end(); j += 2){
-					if((*j) <= start && *(j+1) >= end) {					
-						neededParts.push_back(block);
+					if( (*j <= start && start < *(j+1)) || (start <= *j && *j < end) ) {
+						int64_t b = max(start, *j);
+						int64_t e = min(end, *(j+1));
+
+						if(b != start) {
+							// align the start to block size
+							b = b - (b % blockSize);
+							dcassert(b >= start);
+						}
+
+						if(e == end || e - b >= blockSize) {
+							// use this block only if it can be checked for TTH
+							neededParts.push_back(Segment(b, e - b));
+						}
 					}
 				}
 			} else {
@@ -317,4 +331,6 @@ vector<Segment> QueueItem::getChunksVisualisation(int type) const {  // type: 0 
 		break;
 	}
 	return v;
+}
+
 }

@@ -21,6 +21,10 @@
 
 #include "Exception.h"
 
+namespace dcpp {
+
+} // namespace dcpp
+
 /**
  * @file
  * $Id$

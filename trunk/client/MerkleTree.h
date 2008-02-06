@@ -23,6 +23,8 @@
 #include "Encoder.h"
 #include "HashValue.h"
 
+namespace dcpp {
+
 /**
  * A class that represents a Merkle Tree hash. Storing
  * only the leaves of the tree, it is rather memory efficient, 
@@ -229,6 +231,8 @@ struct TTFilter {
 private:
 	TigerTree tt;
 };
+
+} // namespace dcpp
 
 #endif // !defined(MERKLE_TREE_H)
 

@@ -1,9 +1,10 @@
 #include "stdafx.h"
-#include "../client/DCPlusPlus.h"
-#include "Resource.h"
 
-#include "LimitPage.h"
+#include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
+
+#include "Resource.h"
+#include "LimitPage.h"
 #include "WinUtil.h"
 
 PropPage::TextItem LimitPage::texts[] = {

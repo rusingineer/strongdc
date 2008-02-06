@@ -36,6 +36,8 @@
 #include "ClientManagerListener.h"
 #include "LogManager.h"
 
+namespace dcpp {
+
 STANDARD_EXCEPTION(QueueException);
 
 class UserConnection;
@@ -325,6 +327,8 @@ private:
 	void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw();
 	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw();
 };
+
+} // namespace dcpp
 
 #endif // !defined(QUEUE_MANAGER_H)
 

@@ -50,6 +50,8 @@
 #include <fnmatch.h>
 #endif
 
+namespace dcpp {
+
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
 						  Flags::MaskType aFlags, QueueItem::Priority p, const string& aTempTarget, 
 						  time_t aAdded, const TTHValue& root) throw(QueueException, FileException)
@@ -229,7 +231,8 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 					if(blockSize == 0)
 						blockSize = qi->getSize();
 					
-					if(qi->getNextSegment(blockSize, aUser->getLastDownloadSpeed(), source->getPartialSource()).getSize() == 0) {
+					Segment segment = qi->getNextSegment(blockSize, aUser->getLastDownloadSpeed(), source->getPartialSource());
+					if(segment.getStart() != -1 && segment.getSize() == 0) {
 						// no other partial chunk from this user, remove him from queue
 						remove(qi, aUser);
 						qi->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
@@ -260,8 +263,9 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 					if(blockSize == 0)
 						blockSize = qi->getSize();
 
-					if(qi->getNextSegment(blockSize, aUser->getLastDownloadSpeed(), source->getPartialSource()).getSize() == 0) {
-						lastError = STRING(NO_FREE_BLOCK);
+					Segment segment = qi->getNextSegment(blockSize, aUser->getLastDownloadSpeed(), source->getPartialSource());
+					if(segment.getSize() == 0) {
+						lastError = segment.getStart() == -1 ? STRING(ALL_DOWNLOAD_SLOTS_TAKEN) : STRING(NO_FREE_BLOCK);
 						dcdebug("No segment for %s in %s, block " I64_FMT "\n", aUser->getCID().toBase32().c_str(), qi->getTarget().c_str(), blockSize);
 						continue;
 					}
@@ -831,7 +835,7 @@ uint8_t QueueManager::FileQueue::getMaxSegments(int64_t filesize) const {
 	}
 
 #ifdef _DEBUG
-	return 20;
+	return 88;
 #else
 	return MaxSegments;
 #endif
@@ -1914,6 +1918,8 @@ void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl)
 		sl.push_back(i->second);
 	}
 }
+
+} // namespace dcpp
 
 /**
  * @file

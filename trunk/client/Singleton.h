@@ -19,6 +19,8 @@
 #if !defined(SINGLETON_H)
 #define SINGLETON_H
 
+namespace dcpp {
+
 template<typename T>
 class Singleton {
 public:
@@ -50,6 +52,8 @@ private:
 };
 
 template<class T> T* Singleton<T>::instance = NULL;
+
+} // namespace dcpp
 
 #endif // !defined(SINGLETON_H)
 

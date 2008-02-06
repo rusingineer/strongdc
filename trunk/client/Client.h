@@ -26,6 +26,8 @@
 #include "ClientListener.h"
 #include "DebugManager.h"
 
+namespace dcpp {
+
 /** Yes, this should probably be called a Hub */
 class Client : public Speaker<ClientListener>, public BufferedSocketListener, protected TimerManagerListener {
 public:
@@ -101,6 +103,7 @@ public:
 
 	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
 	void send(const char* aMessage, size_t aLen) {
+		dcassert(socket);
 		if(!socket)
 			return;
 		updateActivity();
@@ -204,6 +207,8 @@ private:
 	char separator;
 	bool secure;
 };
+
+} // namespace dcpp
 
 #endif // !defined(CLIENT_H)
 

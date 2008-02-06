@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 
+using namespace dcpp;
 using namespace _STL;
 
 //{{AFX_INSERT_LOCATION}}

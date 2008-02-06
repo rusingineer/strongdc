@@ -22,6 +22,8 @@
 #include "AdcCommand.h"
 #include "ClientManager.h"
 
+namespace dcpp {
+
 AdcCommand::AdcCommand(uint32_t aCmd, char aType /* = TYPE_CLIENT */) : cmdInt(aCmd), from(0), type(aType) { }
 AdcCommand::AdcCommand(uint32_t aCmd, const uint32_t aTarget, char aType) : cmdInt(aCmd), from(0), to(aTarget), type(aType) { }
 AdcCommand::AdcCommand(Severity sev, Error err, const string& desc, char aType /* = TYPE_CLIENT */) : cmdInt(CMD_STA), from(0), type(aType) {
@@ -256,6 +258,8 @@ bool AdcCommand::hasFlag(const char* name, size_t start) const {
 	}
 	return false;
 }
+
+} // namespace dcpp
 
 /**
  * @file

@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(HASH_MANAGER_H)
-#define HASH_MANAGER_H
+#ifndef DCPLUSPLUS_DCPP_HASH_MANAGER_H
+#define DCPLUSPLUS_DCPP_HASH_MANAGER_H
 
 #include "Singleton.h"
 #include "MerkleTree.h"
@@ -29,6 +29,8 @@
 #include "FastAlloc.h"
 #include "Text.h"
 #include "Streams.h"
+
+namespace dcpp {
 
 STANDARD_EXCEPTION(HashException);
 class File;
@@ -226,6 +228,8 @@ private:
 		store.save();
 	}
 };
+
+} // namespace dcpp
 
 #endif // !defined(HASH_MANAGER_H)
 

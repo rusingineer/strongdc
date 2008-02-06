@@ -25,8 +25,6 @@
 
 #include <atlcrack.h>
 
-class FavoriteHubEntry;
-
 class FavHubProperties : public CDialogImpl<FavHubProperties>
 {
 public:

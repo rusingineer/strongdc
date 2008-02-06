@@ -29,6 +29,8 @@
 
 #include "ConnectionManagerListener.h"
 
+namespace dcpp {
+
 class SocketException;
 
 class ConnectionQueueItem {
@@ -195,6 +197,8 @@ private:
 	void on(TimerManagerListener::Minute, uint64_t aTick) throw();
 
 };
+
+} // namespace dcpp
 
 #endif // !defined(CONNECTION_MANAGER_H)
 

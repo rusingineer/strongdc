@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(UTIL_H)
-#define UTIL_H
+#ifndef DCPLUSPLUS_DCPP_UTIL_H
+#define DCPLUSPLUS_DCPP_UTIL_H
 
 #ifndef _WIN32
 #include <sys/stat.h>
@@ -27,6 +27,8 @@
 #endif
 
 #include "Text.h"
+
+namespace dcpp {
 
 template<typename T, bool flag> struct ReferenceSelector {
 	typedef T ResultType;
@@ -546,6 +548,8 @@ struct noCaseStringEq {
 		return Util::stricmp(a, b) == 0;
 	}
 };
+
+} // namespace dcpp
 
 #endif // !defined(UTIL_H)
 

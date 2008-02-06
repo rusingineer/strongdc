@@ -17,14 +17,14 @@
  */
 
 #include "stdafx.h"
-#include "../client/DCPlusPlus.h"
-#include "Resource.h"
 
+#include "../client/DCPlusPlus.h"
+#include "../client/SettingsManager.h"
+
+#include "Resource.h"
 #include "DownloadPage.h"
 #include "WinUtil.h"
 #include "PublicHubsListDlg.h"
-
-#include "../client/SettingsManager.h"
 
 PropPage::TextItem DownloadPage::texts[] = {
 	{ IDC_SETTINGS_DIRECTORIES, ResourceManager::SETTINGS_DIRECTORIES }, 

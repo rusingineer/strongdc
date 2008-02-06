@@ -3,6 +3,8 @@
 
 #include "HashBloom.h"
 
+namespace dcpp {
+
 size_t HashBloom::get_k(size_t n, size_t h) {
 	for(size_t k = TTHValue::BITS/h; k > 1; --k) {
 		uint64_t m = get_m(n, k);
@@ -72,4 +74,6 @@ void HashBloom::copy_to(ByteVector& v) const {
 	for(size_t i = 0; i < bloom.size(); ++i) {
 		v[i/8] |= bloom[i] << (i % 8);
 	}
+}
+
 }

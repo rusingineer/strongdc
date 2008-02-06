@@ -16,10 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_FAVORITEMANAGERLISTENER_H_
-#define DCPLUSPLUS_CLIENT_FAVORITEMANAGERLISTENER_H_
+#ifndef DCPLUSPLUS_DCPP_FAVORITEMANAGERLISTENER_H_
+#define DCPLUSPLUS_DCPP_FAVORITEMANAGERLISTENER_H_
 
 #include "forward.h"
+
+namespace dcpp {
 
 class FavoriteManagerListener {
 public:
@@ -52,5 +54,7 @@ public:
 	virtual void on(RecentRemoved, const RecentHubEntry*) throw() { }
 	virtual void on(RecentUpdated, const RecentHubEntry*) throw() { }
 };
+
+} // namespace dcpp
 
 #endif 

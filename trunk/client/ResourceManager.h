@@ -16,10 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_RESOURCE_MANAGER_H
-#define DCPLUSPLUS_CLIENT_RESOURCE_MANAGER_H
+#ifndef DCPLUSPLUS_DCPP_RESOURCE_MANAGER_H
+#define DCPLUSPLUS_DCPP_RESOURCE_MANAGER_H
 
 #include "Singleton.h"
+
+namespace dcpp {
 
 #define STRING(x) ResourceManager::getInstance()->getString(ResourceManager::x)
 #define CSTRING(x) ResourceManager::getInstance()->getString(ResourceManager::x).c_str()
@@ -70,6 +72,8 @@ private:
 
 	void createWide();
 };
+
+} // namespace dcpp
 
 #endif // !defined(RESOURCE_MANAGER_H)
 

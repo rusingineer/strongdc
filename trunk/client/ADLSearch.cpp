@@ -31,6 +31,8 @@
 #include "File.h"
 #include "SimpleXML.h"
 
+namespace dcpp {
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Load old searches from disk
@@ -345,6 +347,8 @@ void ADLSearchManager::matchRecurse(DestDirList &aDestList, DirectoryListing::Di
 	}
 	StepUpDirectory(aDestList);
 }
+
+} // namespace dcpp
 
 /**
  * @file

@@ -95,18 +95,14 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 		WS_HSCROLL | WS_VSCROLL | LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE, IDC_USERS);
 	ctrlUsers.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT | 0x00010000 | LVS_EX_INFOTIP);
 
-	m_bVertical = BOOLSETTING(USE_VERTICAL_VIEW);
-	if(m_bVertical) {
-		SetSplitterPanes(ctrlClient.m_hWnd, ctrlUsers.m_hWnd, false);
-		m_nProportionalPos = 7500;
-	} else {
-		SetSplitterPanes(ctrlUsers.m_hWnd, ctrlClient.m_hWnd, false);
-		m_nProportionalPos = 2500;
-	}
+	SetSplitterPanes(ctrlClient.m_hWnd, ctrlUsers.m_hWnd, false);
 	SetSplitterExtendedStyle(SPLIT_PROPORTIONAL);
-
-	if(hubchatusersplit)
+	
+	if(hubchatusersplit) {
 		m_nProportionalPos = hubchatusersplit;
+	} else {
+		m_nProportionalPos = 7500;
+	}
 
 	ctrlShowUsers.Create(ctrlStatus.m_hWnd, rcDefault, _T("+/-"), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	ctrlShowUsers.SetButtonStyle(BS_AUTOCHECKBOX, false);
@@ -368,14 +364,6 @@ void HubFrame::onEnter() {
 				}
 			} else if(Util::stricmp(cmd.c_str(), _T("me")) == 0) {
 				client->hubMessage(Text::fromT(s));
-			} else if(Util::stricmp(cmd.c_str(), _T("switch")) == 0) {
-				m_bVertical = !m_bVertical;
-				if(m_bVertical) {
-					SetSplitterPanes(ctrlClient.m_hWnd, ctrlUsers.m_hWnd, false);
-				} else {
-					SetSplitterPanes(ctrlUsers.m_hWnd, ctrlClient.m_hWnd, false);
-				}
-				UpdateLayout();
 			} else if(Util::stricmp(cmd.c_str(), _T("stats")) == 0) {
 			    if(client->isOp())
 					client->hubMessage(WinUtil::generateStats());
@@ -841,7 +829,7 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	rc.bottom -= h + 10;
 	if(!showUsers) {
 		if(GetSinglePaneMode() == SPLIT_PANE_NONE)
-			SetSinglePaneMode(m_bVertical ? SPLIT_PANE_LEFT : SPLIT_PANE_RIGHT);
+			SetSinglePaneMode(SPLIT_PANE_LEFT);
 	} else {
 		if(GetSinglePaneMode() != SPLIT_PANE_NONE)
 			SetSinglePaneMode(SPLIT_PANE_NONE);

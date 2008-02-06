@@ -9,6 +9,8 @@
 * už se nepoužívá pøípona .antifrag (staré doèasné soubory jsou stále podporovány)
 * zmìnìn zpùsob automatického skrolování chatu
 * pøepsán kód menu v chatu
+* odstranìna volba pro vypnutí skuteèné fronty na sloty
+* odstranìna detekce špatného softwaru
 
 
 	-- StrongDC++ 2.11 --

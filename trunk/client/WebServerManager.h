@@ -26,6 +26,8 @@
 #include "Speaker.h"
 #include "CriticalSection.h"
 
+namespace dcpp {
+
 class WebServerListener{
 public:
 	template<int I>	struct X { enum { TYPE = I };  };
@@ -198,3 +200,5 @@ private:
 	SOCKET sock;
 	HANDLE thread;
 };
+
+} // namespace dcpp

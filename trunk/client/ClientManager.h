@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(CLIENT_MANAGER_H)
-#define CLIENT_MANAGER_H
+#ifndef DCPLUSPLUS_DCPP_CLIENT_MANAGER_H
+#define DCPLUSPLUS_DCPP_CLIENT_MANAGER_H
 
 #include "TimerManager.h"
 
@@ -28,6 +28,8 @@
 #include "DirectoryListing.h"
 
 #include "ClientManagerListener.h"
+
+namespace dcpp {
 
 class UserCommand;
 
@@ -153,7 +155,7 @@ public:
 	void send(AdcCommand& c, const CID& to);
 	void privateMessage(const UserPtr& p, const string& msg);
 
-	void userCommand(const UserPtr& p, const ::UserCommand& uc, StringMap& params, bool compatibility);
+	void userCommand(const UserPtr& p, const UserCommand& uc, StringMap& params, bool compatibility);
 	void sendRawCommand(const UserPtr& user, const Client& c, const int aRawCommand);
 
 	int getMode(const string& aHubUrl) const;
@@ -177,6 +179,7 @@ public:
 	void setCheating(const UserPtr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
 
 private:
+
 	typedef unordered_map<CID, UserPtr> UserMap;
 	typedef UserMap::iterator UserIter;
 
@@ -219,6 +222,8 @@ private:
 	// TimerManagerListener
 	void on(TimerManagerListener::Minute, uint64_t aTick) throw();
 };
+
+} // namespace dcpp
 
 #endif // !defined(CLIENT_MANAGER_H)
 

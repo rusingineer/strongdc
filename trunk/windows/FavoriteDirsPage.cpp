@@ -17,16 +17,16 @@
  */
 
 #include "stdafx.h"
+
 #include "../client/DCPlusPlus.h"
-#include "Resource.h"
-
-#include "FavoriteDirsPage.h"
-#include "WinUtil.h"
-#include "LineDlg.h"
-
 #include "../client/Util.h"
 #include "../client/SettingsManager.h"
 #include "../client/FavoriteManager.h"
+
+#include "Resource.h"
+#include "FavoriteDirsPage.h"
+#include "WinUtil.h"
+#include "LineDlg.h"
 
 PropPage::TextItem FavoriteDirsPage::texts[] = {
 	{ IDC_SETTINGS_FAVORITE_DIRECTORIES, ResourceManager::SETTINGS_FAVORITE_DIRS },

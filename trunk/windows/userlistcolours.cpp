@@ -1,9 +1,11 @@
 
 #include "stdafx.h"
+
 #include "../client/DCPlusPlus.h"
+#include "../client/SettingsManager.h"
+
 #include "Resource.h"
 #include "UserListColours.h"
-#include "../client/SettingsManager.h"
 #include "WinUtil.h"
 
 PropPage::TextItem UserListColours::texts[] = {

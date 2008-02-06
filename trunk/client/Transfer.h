@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_TRANSFER_H_
-#define DCPLUSPLUS_CLIENT_TRANSFER_H_
+#ifndef DCPLUSPLUS_DCPP_TRANSFER_H_
+#define DCPLUSPLUS_DCPP_TRANSFER_H_
 
 #include "forward.h"
 #include "MerkleTree.h"
@@ -25,6 +25,8 @@
 #include "Util.h"
 #include "CriticalSection.h"
 #include "Segment.h"
+
+namespace dcpp {
 
 class Transfer {
 public:
@@ -104,5 +106,7 @@ private:
 
 	UserConnection& userConnection;
 };
+
+} // namespace dcpp
 
 #endif /*TRANSFER_H_*/

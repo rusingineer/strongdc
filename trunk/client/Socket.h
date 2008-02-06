@@ -44,6 +44,8 @@ const int INVALID_SOCKET = -1;
 #define SOCKET_ERROR -1
 #endif
 
+namespace dcpp {
+
 class SocketException : public Exception {
 public:
 #ifdef _DEBUG
@@ -245,6 +247,8 @@ private:
 #endif
 	
 };
+
+} // namespace dcpp
 
 #endif // !defined(SOCKET_H)
 

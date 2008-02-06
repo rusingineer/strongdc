@@ -22,6 +22,8 @@
 #include "Streams.h"
 #include "MerkleTree.h"
 
+namespace dcpp {
+
 template<class TreeType, bool managed>
 class MerkleCheckOutputStream : public OutputStream {
 public:
@@ -114,6 +116,8 @@ private:
 		}
 	}
 };
+
+} // namespace dcpp
 
 #endif // !defined(MERKLE_CHECK_OUTPUT_STREAM_H)
 

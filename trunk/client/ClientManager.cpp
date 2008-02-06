@@ -36,6 +36,8 @@
 #include "QueueManager.h"
 #include "FinishedManager.h"
 
+namespace dcpp {
+
 Client* ClientManager::getClient(const string& aHubURL) {
 	Client* c;
 	if(Util::strnicmp("adc://", aHubURL.c_str(), 6) == 0) {
@@ -418,7 +420,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 	}
 }
 
-void ClientManager::userCommand(const UserPtr& p, const ::UserCommand& uc, StringMap& params, bool compatibility) {
+void ClientManager::userCommand(const UserPtr& p, const UserCommand& uc, StringMap& params, bool compatibility) {
 	Lock l(cs);
 	OnlineIterC i = onlineUsers.find(p->getCID());
 	if(i == onlineUsers.end())
@@ -437,7 +439,7 @@ void ClientManager::sendRawCommand(const UserPtr& user, const Client& c, const i
 	if (!rawCommand.empty()) {
 		StringMap ucParams;
 
-		::UserCommand uc = ::UserCommand(0, 0, 0, 0, "", rawCommand, "");
+		UserCommand uc = UserCommand(0, 0, 0, 0, "", rawCommand, "");
 		userCommand(user, uc, ucParams, true);
 	}
 }
@@ -534,7 +536,7 @@ void ClientManager::on(HubUserCommand, const Client* client, int aType, int ctx,
 		} else if(aType == UserCommand::TYPE_CLEAR) {
  			FavoriteManager::getInstance()->removeHubUserCommands(ctx, client->getHubUrl());
  		} else {
-			FavoriteManager::getInstance()->addUserCommand(aType, ctx, ::UserCommand::FLAG_NOSAVE, name, command, client->getHubUrl());
+			FavoriteManager::getInstance()->addUserCommand(aType, ctx, UserCommand::FLAG_NOSAVE, name, command, client->getHubUrl());
 		}
 	}
 }
@@ -706,6 +708,8 @@ int ClientManager::getMode(const string& aHubUrl) const {
 	}
 	return mode;
 }
+
+} // namespace dcpp
 
 /**
  * @file

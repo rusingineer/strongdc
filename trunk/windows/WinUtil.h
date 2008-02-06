@@ -155,7 +155,6 @@ public:
 };
 
 class FlatTabCtrl;
-class UserCommand;
 
 template<class T, int title, int ID = -1>
 class StaticFrame {

@@ -27,6 +27,8 @@
 #include "version.h"
 #include "SSLSocket.h"
 
+namespace dcpp {
+
 STANDARD_EXCEPTION(CryptoException);
 
 class File;
@@ -74,6 +76,8 @@ private:
 		return (b == 0 || b==5 || b==124 || b==96 || b==126 || b==36);
 	}
 };
+
+} // namespace dcpp
 
 #endif // !defined(CRYPTO_MANAGER_H)
 

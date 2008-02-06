@@ -23,6 +23,8 @@
 
 #include "File.h"
 
+namespace dcpp {
+
 STANDARD_EXCEPTION(SimpleXMLException);
 
 /**
@@ -275,6 +277,8 @@ private:
 
 	bool found;
 };
+
+} // namespace dcpp
 
 #endif // !defined(SIMPLE_XML_H)
 

@@ -27,6 +27,8 @@
 #include "ResourceManager.h"
 #include "QueueManager.h"
 
+namespace dcpp {
+
 SearchResult::SearchResult(Types aType, int64_t aSize, const string& aFile, const TTHValue& aTTH) :
 	file(aFile), user(ClientManager::getInstance()->getMe()), size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), 
 	freeSlots(UploadManager::getInstance()->getFreeSlots()),  
@@ -591,6 +593,8 @@ void SearchManager::sendPSR(const string& ip, uint16_t port, bool wantResponse, 
 		dcdebug("Partial search caught error\n");		
 	}
 }
+
+} // namespace dcpp
 
 /**
  * @file

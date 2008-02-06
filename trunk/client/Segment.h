@@ -19,6 +19,8 @@
 #ifndef DCPLUSPLUS_DCPP_SEGMENT_H_
 #define DCPLUSPLUS_DCPP_SEGMENT_H_
 
+namespace dcpp {
+
 // minimum file size to be PFS : 20M
 #define PARTIAL_SHARE_MIN_SIZE 20971520
 
@@ -73,5 +75,7 @@ private:
 
 	GETSET(bool, overlapped, Overlapped);
 };
+
+} // namespace dcpp
 
 #endif /*SEGMENT_H_*/

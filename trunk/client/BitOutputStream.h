@@ -19,6 +19,8 @@
 #if !defined(BIT_OUTPUT_STREAM_H)
 #define BIT_OUTPUT_STREAM_H
 
+namespace dcpp {
+
 class BitOutputStream
 {
 public:
@@ -52,6 +54,8 @@ private:
 	int bitPos;
 	uint8_t next;
 };
+
+} // namespace dcpp
 
 #endif // !defined(BIT_OUTPUT_STREAM_H)
 

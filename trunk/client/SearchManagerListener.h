@@ -19,6 +19,8 @@
 #if !defined(SEARCH_MANAGER_LISTENER_H)
 #define SEARCH_MANAGER_LISTENER_H
 
+namespace dcpp {
+
 class SearchResult;
 class SearchQueueItem;
 
@@ -32,6 +34,8 @@ public:
 	virtual void on(SR, SearchResult*) throw() = 0;
 	virtual void on(Searching, const SearchQueueItem*) throw() { }
 };
+
+} // namespace dcpp
 
 #endif // !defined(SEARCH_MANAGER_LISTENER_H)
 

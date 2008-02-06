@@ -24,6 +24,8 @@
 #include "UserConnection.h"
 #include "Streams.h"
 
+namespace dcpp {
+
 Upload::Upload(UserConnection& conn, const string& path, const TTHValue& tth) : Transfer(conn, path, tth), stream(0), fileSize(-1) { 
 	conn.setUpload(this);
 }
@@ -38,3 +40,4 @@ void Upload::getParams(const UserConnection& aSource, StringMap& params) const {
 	params["source"] = getPath();
 }
 
+} // namespace dcpp

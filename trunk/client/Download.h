@@ -1,5 +1,5 @@
-#ifndef DCPLUSPLUS_CLIENT_DOWNLOAD_H_
-#define DCPLUSPLUS_CLIENT_DOWNLOAD_H_
+#ifndef DCPLUSPLUS_DCPP_DOWNLOAD_H_
+#define DCPLUSPLUS_DCPP_DOWNLOAD_H_
 
 #include "forward.h"
 #include "Transfer.h"
@@ -7,6 +7,8 @@
 #include "Flags.h"
 #include "Streams.h"
 #include "QueueItem.h"
+
+namespace dcpp {
 
 /**
  * Comes as an argument in the DownloadManagerListener functions.
@@ -67,5 +69,6 @@ private:
 	string pfs;
 };
 
+} // namespace dcpp
 
 #endif /*DOWNLOAD_H_*/

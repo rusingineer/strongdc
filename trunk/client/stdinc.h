@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(STDINC_H)
-#define STDINC_H
+#ifndef DCPLUSPLUS_DCPP_STDINC_H
+#define DCPLUSPLUS_DCPP_STDINC_H
 
 #include "memcpy_amd.h"
 
@@ -156,8 +156,10 @@ typedef unsigned __int64 uint64_t;
 #error "Unknown STL, please configure accordingly"
 #endif
 
+namespace dcpp {
 using namespace std;
 using namespace std::tr1;
+}
 
 #endif // !defined(STDINC_H)
 

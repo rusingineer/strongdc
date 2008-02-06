@@ -22,6 +22,8 @@
 #include "Exception.h"
 #include "ResourceManager.h"
 
+namespace dcpp {
+	
 STANDARD_EXCEPTION(BitStreamException);
 
 /**
@@ -60,6 +62,8 @@ private:
 	size_t endPos;
 	const uint8_t* is;
 };
+
+} // namespace dcpp
 
 #endif // !defined(BIT_INPUT_STREAM_H)
 

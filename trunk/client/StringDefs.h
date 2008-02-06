@@ -1,8 +1,8 @@
 // @Prolog: #include "stdinc.h"
 // @Prolog: #include "DCPlusPlus.h"
 // @Prolog: #include "ResourceManager.h"
-// @Strings: string ResourceManager::strings[]
-// @Names: string ResourceManager::names[]
+// @Strings: std::string dcpp::ResourceManager::strings[]
+// @Names: std::string dcpp::ResourceManager::names[]
 
 enum Strings { // @DontAdd
 	ACCEPTED_DISCONNECTS, // "Accepted Disconnects"
@@ -716,7 +716,6 @@ enum Strings { // @DontAdd
 	SETTINGS_USE_OLD_SHARING_UI, // "Use old sharing user interface"
 	SETTINGS_USE_SYSTEM_ICONS, // "Use system icons when browsing files (slows browsing down a bit)"
 	SETTINGS_USE_TLS, // "Use TLS when remote client supports it"
-	SETTINGS_USE_VERTICAL_VIEW, // "Use vertical view by default"
 	SETTINGS_USER_COLORS, // "User List Colors"
 	SETTINGS_USER_COMMANDS, // "User Commands"
 	SETTINGS_USER_MENU, // "User Menu Items"
@@ -854,3 +853,4 @@ enum Strings { // @DontAdd
 	YES, // "Yes"
 	LAST // @DontAdd
 };
+

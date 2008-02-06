@@ -27,8 +27,6 @@
 #include "PropPage.h"
 #include "ExListViewCtrl.h"
 
-class UserCommand;
-
 class UCPage : public CPropertyPage<IDD_UCPAGE>, public PropPage
 {
 public:

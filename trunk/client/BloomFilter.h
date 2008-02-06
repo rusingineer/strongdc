@@ -21,6 +21,8 @@
 
 #include "ZUtils.h"
 
+namespace dcpp {
+
 template<size_t N>
 class BloomFilter {
 public:
@@ -84,6 +86,8 @@ private:
 	
 	vector<bool> table;
 };
+
+} // namespace dcpp
 
 #endif // !defined(BLOOM_FILTER_H)
 

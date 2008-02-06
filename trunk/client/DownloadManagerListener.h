@@ -16,10 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_CLIENT_DOWNLOADMANAGERLISTENER_H_
-#define DCPLUSPLUS_CLIENT_DOWNLOADMANAGERLISTENER_H_
+#ifndef DCPLUSPLUS_DCPP_DOWNLOADMANAGERLISTENER_H_
+#define DCPLUSPLUS_DCPP_DOWNLOADMANAGERLISTENER_H_
 
 #include "forward.h"
+
+namespace dcpp {
 
 /**
  * Use this listener interface to get progress information for downloads.
@@ -72,5 +74,7 @@ public:
 	virtual void on(Failed, const Download*, const string&) throw() { }
 	virtual void on(Status, const UserConnection*, const string&) throw() { }
 };
+
+} // namespace dcpp
 
 #endif /*DOWNLOADMANAGERLISTENER_H_*/

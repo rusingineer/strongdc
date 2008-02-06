@@ -44,6 +44,8 @@
 
 #include "FastAlloc.h"
 
+namespace dcpp {
+
 #ifndef _DEBUG
 FastCriticalSection FastAllocBase::cs;
 #endif
@@ -1117,6 +1119,9 @@ TCHAR* Util::strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound) {
 		*pnIdxFound = -1;
 	return NULL;
 }
+
+
+} // namespace dcpp
 
 /**
  * @file

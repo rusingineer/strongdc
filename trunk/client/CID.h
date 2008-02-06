@@ -16,11 +16,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(CID_H)
-#define CID_H
+#ifndef DCPLUSPLUS_DCPP_CID_H
+#define DCPLUSPLUS_DCPP_CID_H
 
 #include "Encoder.h"
 #include "Util.h"
+
+namespace dcpp {
 
 class CID {
 public:
@@ -53,10 +55,12 @@ private:
 	uint8_t cid[SIZE];
 };
 
+} // namespace dcpp
+
 namespace std {
 template<>
-struct hash<::CID> {
-	size_t operator()(const ::CID& rhs) const {
+struct hash<dcpp::CID> {
+	size_t operator()(const dcpp::CID& rhs) const {
 		return *reinterpret_cast<const size_t*>(rhs.data());
 	}
 };

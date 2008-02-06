@@ -36,6 +36,8 @@
 #undef ff
 #endif
 
+namespace dcpp {
+
 UserPtr DirectoryListing::getUserFromFilename(const string& fileName) {
 	// General file list name format: [username].[CID].[xml|xml.bz2|DcLst]
 
@@ -79,7 +81,7 @@ void DirectoryListing::loadFile(const string& name) throw(Exception) {
 	string ext = Util::getFileExt(name);
 
 	if(Util::stricmp(ext, ".bz2") == 0) {
-		::File ff(name, ::File::READ, ::File::OPEN);
+		dcpp::File ff(name, dcpp::File::READ, dcpp::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
 		const size_t BUF_SIZE = 64*1024;
 		AutoArray<char> buf(BUF_SIZE);
@@ -92,13 +94,13 @@ void DirectoryListing::loadFile(const string& name) throw(Exception) {
 				break;
 		}
 	} else if(Util::stricmp(ext, ".xml") == 0) {
-		int64_t sz = ::File::getSize(name);
+		int64_t sz = dcpp::File::getSize(name);
 		if(sz == -1 || sz >= static_cast<int64_t>(txt.max_size()))
 			throw FileException(STRING(FILE_NOT_AVAILABLE));
 			
 		txt.resize((size_t) sz);
 		size_t n = txt.length();
-		::File(name, ::File::READ, ::File::OPEN).read(&txt[0], n);
+		dcpp::File(name, dcpp::File::READ, dcpp::File::OPEN).read(&txt[0], n);
 	}
 	
 	loadXML(txt, false);
@@ -297,7 +299,7 @@ DirectoryListing::Directory* DirectoryListing::find(const string& aName, Directo
 	dcassert(end != string::npos);
 	string name = aName.substr(0, end);
 
-	Directory::Iter i = ::find(current->directories.begin(), current->directories.end(), name);
+	Directory::Iter i = std::find(current->directories.begin(), current->directories.end(), name);
 	if(i != current->directories.end()) {
 		if(end == (aName.size() - 1))
 			return *i;
@@ -361,6 +363,8 @@ size_t DirectoryListing::Directory::getTotalFileCount(bool adl) {
 	}
 	return x;
 }
+
+} // namespace dcpp
 
 /**
  * @file

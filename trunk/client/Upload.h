@@ -5,6 +5,8 @@
 #include "Transfer.h"
 #include "Flags.h"
 
+namespace dcpp {
+
 class Upload : public Transfer, public Flags {
 public:
 	enum Flags {
@@ -23,5 +25,7 @@ public:
 	GETSET(InputStream*, stream, Stream);
 	GETSET(int64_t, fileSize, FileSize);
 };
+
+} // namespace dcpp
 
 #endif /*UPLOAD_H_*/

@@ -19,6 +19,8 @@
 #ifndef __OMENU_H
 #define __OMENU_H
 
+namespace dcpp {
+
 class OMenu;
 
 struct OMenuItem {
@@ -100,5 +102,7 @@ private:
 		if(bHandled) \
 			return TRUE; \
 	}
+
+} // namespace dcpp
 
 #endif // __OMENU_H

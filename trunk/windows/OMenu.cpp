@@ -22,11 +22,8 @@
 #include "OMenu.h"
 #include "WinUtil.h"
 #include "BarShader.h"
-//#include "DebugFrame.h"
 
-//map<HMENU, bool> OMenu::fixedMenus;
-
-//OMenu::Map OMenu::menus;
+namespace dcpp {
 
 OMenu::~OMenu() {
 	if (::IsMenu(m_hMenu)) {
@@ -195,3 +192,5 @@ LRESULT OMenu::onDrawItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 	}
 	return S_OK;
 }
+
+} // namespace dcpp

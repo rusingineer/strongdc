@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,13 @@
  */
 
 
-#if !defined(AFX_STDAFX_H__65559042_5D04_44EF_9ECF_E0A7FA6E1348__INCLUDED_)
-#define AFX_STDAFX_H__65559042_5D04_44EF_9ECF_E0A7FA6E1348__INCLUDED_
+#ifndef DCPLUSPLUS_WIN32_STDAFX_H
+#define DCPLUSPLUS_WIN32_STDAFX_H
 
 #include "../client/stdinc.h"
 #include "../client/ResourceManager.h"
+
+using namespace dcpp;
 
 #ifdef _WIN32
 
@@ -61,11 +63,7 @@ extern CAppModule _Module;
 #endif // _WIN32
 
 #define WM_SPEAKER (WM_APP + 500)
-
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
-
-#endif // !defined(AFX_STDAFX_H__65559042_5D04_44EF_9ECF_E0A7FA6E1348__INCLUDED_)
+#endif
 
 /**
  * @file

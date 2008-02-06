@@ -33,6 +33,8 @@
 #include "UploadManager.h"
 #include "DownloadManager.h"
 
+namespace dcpp {
+
 // Polling is used for tasks...should be fixed...
 #define POLL_TIMEOUT 250
 
@@ -554,6 +556,8 @@ void BufferedSocket::shutdown() {
 		delete this;
 	}
 }
+
+} // namespace dcpp
 
 /**
  * @file

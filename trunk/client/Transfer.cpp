@@ -26,6 +26,8 @@
 #include "ClientManager.h"
 #include "Upload.h"
 
+namespace dcpp {
+
 const string Transfer::names[] = {
 	"file", "file", "list", "tthl", "file"
 };
@@ -91,3 +93,4 @@ const UserPtr Transfer::getUser() const {
 	return getUserConnection().getUser();
 }
 
+} // namespace dcpp

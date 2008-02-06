@@ -4,6 +4,7 @@
 #include "SSL.h"
 #include "Util.h"
 
+namespace dcpp {
 namespace ssl {
 
 std::string X509_digest(::X509* x509, const ::EVP_MD* md) {
@@ -20,4 +21,5 @@ std::string X509_digest(::X509* x509, const ::EVP_MD* md) {
 	return ret;
 }
 
+}
 }

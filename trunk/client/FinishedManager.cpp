@@ -31,6 +31,8 @@
 #include "LogManager.h"
 #include "ResourceManager.h"
 
+namespace dcpp {
+
 FinishedManager::FinishedManager() { 
 	QueueManager::getInstance()->addListener(this);
 	UploadManager::getInstance()->addListener(this);
@@ -160,6 +162,8 @@ bool FinishedManager::handlePartialRequest(const TTHValue& tth, vector<uint16_t>
 
 	return true;
 }
+
+} // namespace dcpp
 
 /**
  * @file

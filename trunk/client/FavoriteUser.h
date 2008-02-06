@@ -23,10 +23,11 @@
 #include "User.h"
 #include "CID.h"
 
+namespace dcpp {
+
 class FavoriteUser : public Flags {
 public:
 	FavoriteUser(const UserPtr& user_, const string& nick_, const string& hubUrl_) : user(user_), nick(nick_), url(hubUrl_), lastSeen(0) { }
-	~FavoriteUser() { }
 
 	enum Flags {
 		FLAG_GRANTSLOT = 1 << 0
@@ -42,6 +43,8 @@ public:
 	GETSET(time_t, lastSeen, LastSeen);
 	GETSET(string, description, Description);
 };
+
+} // namespace dcpp
 
 #endif // !defined(FAVORITE_USER_H)
 

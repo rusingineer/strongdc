@@ -73,7 +73,6 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -401,6 +400,10 @@
 			</File>
 			<File
 				RelativePath=".\res\toolbar.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\toolbar1.bmp"
 				>
 			</File>
 			<File

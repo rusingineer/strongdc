@@ -26,6 +26,9 @@
 #endif
 
 #include "Exception.h"
+
+namespace dcpp {
+
 STANDARD_EXCEPTION(ThreadException);
 
 class Thread  
@@ -170,6 +173,8 @@ private:
 	}
 #endif
 };
+
+} // namespace dcpp
 
 #endif // !defined(THREAD_H)
 

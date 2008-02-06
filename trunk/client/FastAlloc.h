@@ -21,6 +21,8 @@
 
 #include "CriticalSection.h"
 
+namespace dcpp {
+
 #ifndef _DEBUG
 struct FastAllocBase {
 	static FastCriticalSection cs;
@@ -92,6 +94,8 @@ template<class T> void* FastAlloc<T>::freeList = NULL;
 #else
 template<class T> struct FastAlloc { };
 #endif
+
+} // namespace dcpp
 
 #endif // !defined(FAST_ALLOC_H)
 

@@ -31,6 +31,8 @@
 #include "ResourceManager.h"
 #include "FavoriteManager.h"
 
+namespace dcpp {
+
 FastCriticalSection Identity::cs;
 
 OnlineUser::OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_), isInList(false) { 
@@ -378,6 +380,8 @@ bool OnlineUser::update(int sortCol, const tstring& oldText) {
 
 	return needsSort;
 }
+
+} // namespace dcpp
 
 /**
  * @file
