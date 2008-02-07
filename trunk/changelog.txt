@@ -11,6 +11,10 @@
 * pøepsán kód menu v chatu
 * odstranìna volba pro vypnutí skuteèné fronty na sloty
 * odstranìna detekce špatného softwaru
+* vylepšeno sdílení èásteèných souborù
+* opraveno možné zatuhnutí
+* zobrazena hláška "Všechny stahovací sloty obsazeny" když se dosáhne maximálního poètu segmentù
+* odstranìno horizontální rozložení chatu/seznamu uživatelù, aby šlo kompilovat se standardním WTL
 
 
 	-- StrongDC++ 2.11 --

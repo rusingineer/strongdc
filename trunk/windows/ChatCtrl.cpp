@@ -40,7 +40,7 @@ static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("f
 	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
 	_T("adc://"), _T("adcs://") };
 
-ChatCtrl::ChatCtrl() : client(NULL) {
+ChatCtrl::ChatCtrl() : ccw(_T("edit"), this), client(NULL) {
 	if(g_pEmotionsSetup == NULL) {
 		g_pEmotionsSetup = new CAGEmotionSetup();
 	}
@@ -634,6 +634,8 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 
 LRESULT ChatCtrl::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	if(wParam != SIZE_MINIMIZED && HIWORD(lParam) > 0) {
+		SetRedraw(FALSE);
+
 		SCROLLINFO si = { 0 };
 		POINT pt = { 0 };
 
@@ -642,12 +644,13 @@ LRESULT ChatCtrl::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHan
 		GetScrollInfo(SB_VERT, &si);
 		GetScrollPos(&pt);
 
-		if (si.nPage == 0 || (size_t)si.nPos >= (size_t)si.nMax - si.nPage - 5)
-			PostMessage(EM_SCROLL, SB_BOTTOM, 0);
-		else
-			SetScrollPos(&pt);
+		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
+		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
 
-		InvalidateRect(NULL);
+		SetScrollPos(&pt);
+
+		SetRedraw(TRUE);
+		Invalidate();
 	}
 
 	bHandled = FALSE;

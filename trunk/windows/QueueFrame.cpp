@@ -34,14 +34,14 @@
 #define FILE_LIST_NAME _T("File Lists")
 
 int QueueFrame::columnIndexes[] = { COLUMN_TARGET, COLUMN_STATUS, COLUMN_SEGMENTS, COLUMN_SIZE, COLUMN_PROGRESS, COLUMN_DOWNLOADED, COLUMN_PRIORITY,
-COLUMN_USERS, COLUMN_PATH, COLUMN_EXACT_SIZE, COLUMN_ERRORS, COLUMN_ADDED, COLUMN_TTH, COLUMN_TYPE };
+COLUMN_USERS, COLUMN_PATH, COLUMN_EXACT_SIZE, COLUMN_ERRORS, COLUMN_ADDED, COLUMN_TTH };
 
-int QueueFrame::columnSizes[] = { 200, 300, 70, 75, 100, 120, 75, 200, 200, 75, 200, 100, 125, 75 };
+int QueueFrame::columnSizes[] = { 200, 300, 70, 75, 100, 120, 75, 200, 200, 75, 200, 100, 125 };
 
 static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, ResourceManager::STATUS, ResourceManager::SEGMENTS, ResourceManager::SIZE, 
 ResourceManager::DOWNLOADED_PARTS, ResourceManager::DOWNLOADED,
 ResourceManager::PRIORITY, ResourceManager::USERS, ResourceManager::PATH, ResourceManager::EXACT_SIZE, ResourceManager::ERRORS,
-ResourceManager::ADDED, ResourceManager::TTH_ROOT, ResourceManager::TYPE };
+ResourceManager::ADDED, ResourceManager::TTH_ROOT };
 
 LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -234,11 +234,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 		case COLUMN_ADDED: return Text::toT(Util::formatTime("%Y-%m-%d %H:%M", getAdded()));
 		case COLUMN_TTH: 
 			return qi->isSet(QueueItem::FLAG_USER_LIST) || qi->isSet(QueueItem::FLAG_TESTSUR) ? Util::emptyStringT : Text::toT(getTTH().toBase32());
-		case COLUMN_TYPE: {
-			tstring type = Text::toT(Util::getFileExt(getTarget()));
-			if(type.size() > 0 && type[0] == '.')
-				type.erase(0, 1);
-		}
+
 		default: return Util::emptyStringT;
 	}
 }
@@ -617,10 +613,7 @@ void QueueFrame::moveSelected() {
 			ext2 += (TCHAR)0;
 			ext2 += _T("*.") + ext;
 		}
-		ext2 += _T("*.*");
-		ext2 += (TCHAR)0;
-		ext2 += _T("*.*");
-		ext2 += (TCHAR)0;
+		ext2 += _T("*.*\0*.*\0\0");
 
 		tstring path = Text::toT(ii->getPath());
 		if(WinUtil::browseFile(target, m_hWnd, true, path, ext2.c_str(), ext.empty() ? NULL : ext.c_str())) {

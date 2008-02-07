@@ -192,7 +192,6 @@ private:
 		COLUMN_ERRORS,
 		COLUMN_ADDED,
 		COLUMN_TTH,
-		COLUMN_TYPE,
 		COLUMN_LAST
 	};
 	enum Tasks {
