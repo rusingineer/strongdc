@@ -219,7 +219,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 						tmp += TSTRING(PASSIVE_USER);
 					} else if(j->isSet(QueueItem::Source::FLAG_BAD_TREE)) {
 						tmp += TSTRING(INVALID_TREE);
-					} else if(j->isSet(QueueItem::Source::FLAG_SLOW)) {
+					} else if(j->isSet(QueueItem::Source::FLAG_SLOW_SOURCE)) {
 						tmp += TSTRING(SLOW_USER);
 					} else if(j->isSet(QueueItem::Source::FLAG_NO_TTHF)) {
 						tmp += TSTRING(SOURCE_TOO_OLD);						
@@ -505,7 +505,9 @@ void QueueFrame::on(QueueManagerListener::Removed, const QueueItem* aQI) {
 
 void QueueFrame::on(QueueManagerListener::Moved, const QueueItem* aQI, const string& oldTarget) {
 	speak(REMOVE_ITEM, new StringTask(oldTarget));
-	speak(ADD_ITEM,	new QueueItemInfoTask(new QueueItemInfo(aQI)));
+	
+	// we need to call speaker now to properly remove item before other actions
+	onSpeaker(0, 0, 0, *reinterpret_cast<BOOL*>(NULL));
 }
 
 void QueueFrame::on(QueueManagerListener::SourcesUpdated, const QueueItem* aQI) {
@@ -806,7 +808,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 							nick += _T(" (") + TSTRING(NO_NEEDED_PART) + _T(")");
 						} else if(i->isSet(QueueItem::Source::FLAG_NO_TTHF)) {
 							nick += _T(" (") + TSTRING(SOURCE_TOO_OLD) + _T(")");
-						} else if(i->isSet(QueueItem::Source::FLAG_SLOW)) {
+						} else if(i->isSet(QueueItem::Source::FLAG_SLOW_SOURCE)) {
 							nick += _T(" (") + TSTRING(SLOW_USER) + _T(" [") + Util::formatBytesW(i->getUser()->getLastDownloadSpeed()) + _T("/s])");
 						}
 						mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;

@@ -61,39 +61,51 @@ DownloadManager::~DownloadManager() throw() {
 }
 
 void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
-	Lock l(cs);
+	typedef vector<pair<string, UserPtr> > TargetList;
+	TargetList dropTargets;
+	
+	{
+		Lock l(cs);
 
-	DownloadList tickList;
-	throttleSetup();
+		DownloadList tickList;
+		throttleSetup();
 
-	// Tick each ongoing download
-	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
-		Download* d = *i;
+		// Tick each ongoing download
+		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
+			Download* d = *i;
 
-		if(d->getPos() > 0) {
-			tickList.push_back(d);
-			d->tick();
+			if(d->getPos() > 0) {
+				tickList.push_back(d);
+				d->tick();
+			}
+
+			if (d->getType() == Transfer::TYPE_FILE && d->getStart() > 0)
+			{
+				if (d->getTigerTree().getFileSize() > (SETTING(DISCONNECT_FILESIZE) * 1048576))
+				{
+					if((d->getAverageSpeed() < SETTING(DISCONNECT_SPEED) * 1024))
+					{
+						if(aTick - d->getLastTick() > (uint32_t)SETTING(DISCONNECT_TIME) * 1000)
+						{
+							if(QueueManager::getInstance()->dropSource(d))
+							{
+								dropTargets.push_back(make_pair(d->getPath(), d->getUser()));
+							}
+						}
+					} else {
+						d->setLastTick(aTick);
+					}
+				}
+			}			
 		}
 
-		if (d->getType() == Transfer::TYPE_FILE && d->getStart() > 0)
-		{
-			if (d->getTigerTree().getFileSize() > (SETTING(DISCONNECT_FILESIZE) * 1048576))
-			{
-				if((d->getAverageSpeed() < SETTING(DISCONNECT_SPEED) * 1024))
-				{
-					if(aTick - d->getLastTick() > (uint32_t)SETTING(DISCONNECT_TIME) * 1000)
-					{
-						QueueManager::getInstance()->dropSource(d);
-					}
-				} else {
-					d->setLastTick(aTick);
-				}
-			}
-		}			
+		if(tickList.size() > 0)
+			fire(DownloadManagerListener::Tick(), tickList);
 	}
 
-	if(tickList.size() > 0)
-		fire(DownloadManagerListener::Tick(), tickList);
+	for(TargetList::iterator i = dropTargets.begin(); i != dropTargets.end(); ++i) {
+		QueueManager::getInstance()->removeSource(i->first, i->second, QueueItem::Source::FLAG_SLOW_SOURCE);
+	}
 }
 
 void DownloadManager::removeConnection(UserConnectionPtr aConn) {
