@@ -175,16 +175,11 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 						int64_t b = max(start, *j);
 						int64_t e = min(end, *(j+1));
 
-						if(b != start) {
-							// align the start to block size
-							b = b - (b % blockSize);
-							dcassert(b >= start);
-						}
+						// segment must be blockSize aligned
+						dcassert(b % blockSize == 0);
+						dcassert(e % blockSize == 0 || e == getSize());
 
-						if(e == end || e - b >= blockSize) {
-							// use this block only if it can be checked for TTH
-							neededParts.push_back(Segment(b, e - b));
-						}
+						neededParts.push_back(Segment(b, e - b));
 					}
 				}
 			} else {

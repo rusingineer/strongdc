@@ -771,8 +771,9 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 		QueueItem* qt = fileQueue.find(target);
 		if(qt == NULL || Util::stricmp(aSource, target) == 0) {
 			// Good, update the target and move in the queue...
-			fileQueue.move(qs, target);
 			fire(QueueManagerListener::Moved(), qs, aSource);
+			fileQueue.move(qs, target);
+			fire(QueueManagerListener::Added(), qs);
 			setDirty();
 		} else {
 			// Don't move to target of different size
@@ -874,7 +875,7 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 	
 	userQueue.addDownload(q, d);	
 
-	//fire(QueueManagerListener::StatusUpdated(), q);
+	fire(QueueManagerListener::SourcesUpdated(), q);
 	dcdebug("found %s\n", q->getTarget().c_str());
 	return d;
 }
@@ -1742,7 +1743,7 @@ void QueueManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 
 }
 
-void QueueManager::dropSource(Download* d) {
+bool QueueManager::dropSource(Download* d) {
 	size_t activeSegments, onlineUsers;
 	uint64_t overallSpeed;
 
@@ -1752,12 +1753,12 @@ void QueueManager::dropSource(Download* d) {
 		QueueItem* q = userQueue.getRunning(d->getUser());
 
 		if(!q)
-			return;
+			return false;
 
    		dcassert(q->isSource(d->getUser()));
 
 		if(!q->isSet(QueueItem::FLAG_AUTODROP))
-			return;
+			return false;
 
 		activeSegments = q->getDownloads().size();
 		onlineUsers = q->countOnlineUsers();
@@ -1772,12 +1773,14 @@ void QueueManager::dropSource(Download* d) {
 			d->getUser()->setLastDownloadSpeed(static_cast<size_t>(d->getAverageSpeed()));
 
 			if(d->getAverageSpeed() < SETTING(REMOVE_SPEED)*1024) {
-				removeSource(d->getPath(), d->getUser(), QueueItem::Source::FLAG_SLOW);
+				return true;
 			} else {
 				d->getUserConnection().disconnect();
 			}
 		}
 	}
+
+	return false;
 }
 
 bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth, const QueueItem::PartialSource& partialSource, PartsInfo& outPartialInfo) {
