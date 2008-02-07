@@ -12,6 +12,10 @@
 * updated client profiles URL
 * removed option to disable real upload queue
 * removed bad software detection
+* improved partial file sharing
+* fixed possible deadlock
+* display "All download slots taken" when maximum segments reached
+* removed horizontal chat/userlist layout to allow compiling with default WTL
 
 
 	-- StrongDC++ 2.11 --

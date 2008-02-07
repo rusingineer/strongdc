@@ -1,3 +1,8 @@
+** svn375
+	fixed extensions list in Queue "Rename/Move" dialog
+	hopefully fixed all problems with chat autoscroll
+	Win9x chat fix
+
 ** svn374
 	workaround for QueueFrame updating on file move/rename
 	fixed possible deadlock between ConnectionManager and DownloadManager

@@ -35,7 +35,7 @@
 
 class UserInfo;
 
-class ChatCtrl: public CWindowImpl<ChatCtrl, CRichEditCtrl>, public UCHandler<ChatCtrl>
+class ChatCtrl: public CRichEditCtrl, public CMessageMap, public UCHandler<ChatCtrl>
 {
 public:
 
@@ -123,6 +123,11 @@ public:
 
 	static const tstring& getSelectedUser() { return sSelectedUser; }
 
+	void Subclass() {
+		ccw.SubclassWindow(this->CRichEditCtrl::m_hWnd);
+		// We wanna control the scrolling...
+	}
+
 private:
 	bool HitNick(const POINT& p, tstring& sNick, int& iBegin , int& iEnd);
 	bool HitIP(const POINT& p, tstring& sIP, int& iBegin, int& iEnd);
@@ -135,6 +140,8 @@ private:
     Client* client;
 
 	OMenu copyMenu;
+
+	CContainedWindow ccw;
 
 	static tstring sSelectedLine;
 	static tstring sSelectedIP;
