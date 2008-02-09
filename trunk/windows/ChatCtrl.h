@@ -45,6 +45,7 @@ public:
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_SIZE, onSize)
 		MESSAGE_HANDLER(WM_LBUTTONDOWN, onLButtonDown)
+
 		MESSAGE_HANDLER_HWND(WM_INITMENUPOPUP, OMenu::onInitMenuPopup)
 		MESSAGE_HANDLER_HWND(WM_MEASUREITEM, OMenu::onMeasureItem)
 		MESSAGE_HANDLER_HWND(WM_DRAWITEM, OMenu::onDrawItem)
@@ -134,8 +135,8 @@ private:
 	bool HitURL();
 
 	tstring LineFromPos(const POINT& p) const;
-
 	void AppendTextOnly(const tstring& sMyNick, const TCHAR* sMsg, CHARFORMAT2& cf, bool isMyMessage, const tstring& sAuthor);
+	void scrollToEnd();
 
     Client* client;
 

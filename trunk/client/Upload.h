@@ -22,8 +22,10 @@ public:
 
 	void getParams(const UserConnection& aSource, StringMap& params) const;
 
-	GETSET(InputStream*, stream, Stream);
 	GETSET(int64_t, fileSize, FileSize);
+	GETSET(InputStream*, stream, Stream);
+
+	uint8_t delayTime;
 };
 
 } // namespace dcpp

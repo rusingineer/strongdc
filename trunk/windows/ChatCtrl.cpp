@@ -63,10 +63,9 @@ void ChatCtrl::AdjustTextSize() {
 		SetRedraw(FALSE);
 		SetSel(0, LineIndex(LineFromChar(2000)));
 		ReplaceSel(_T(""));
-
-		// scroll to bottom
-		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
 		SetRedraw(TRUE);
+
+		scrollToEnd();
 	}
 }
 
@@ -634,23 +633,7 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 
 LRESULT ChatCtrl::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	if(wParam != SIZE_MINIMIZED && HIWORD(lParam) > 0) {
-		SetRedraw(FALSE);
-
-		SCROLLINFO si = { 0 };
-		POINT pt = { 0 };
-
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
-		GetScrollInfo(SB_VERT, &si);
-		GetScrollPos(&pt);
-
-		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
-		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
-
-		SetScrollPos(&pt);
-
-		SetRedraw(TRUE);
-		Invalidate();
+		scrollToEnd();
 	}
 
 	bHandled = FALSE;
@@ -891,4 +874,20 @@ void ChatCtrl::runUserCommand(UserCommand& uc) {
 		client->escapeParams(tmp);
 		client->sendUserCmd(Util::formatParams(uc.getCommand(), tmp, false));
 	}
+}
+
+void ChatCtrl::scrollToEnd() {
+	SCROLLINFO si = { 0 };
+	POINT pt = { 0 };
+
+	si.cbSize = sizeof(si);
+	si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
+	GetScrollInfo(SB_VERT, &si);
+	GetScrollPos(&pt);
+
+	// this must be called twice to work properly :(
+	PostMessage(EM_SCROLL, SB_BOTTOM, 0);
+	PostMessage(EM_SCROLL, SB_BOTTOM, 0);
+
+	SetScrollPos(&pt);
 }

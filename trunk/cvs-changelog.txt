@@ -1,3 +1,8 @@
+** svn376
+	chat autoscroll code cleaned up a bit
+	socks5 port field accepts only numbers
+	fix for delayed upload finish
+
 ** svn375
 	fixed extensions list in Queue "Rename/Move" dialog
 	hopefully fixed all problems with chat autoscroll

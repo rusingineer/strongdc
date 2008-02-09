@@ -313,6 +313,8 @@ ok:
 
 	uploads.push_back(u);
 
+	throttleSetup();
+
 	if(!aSource.isSet(UserConnection::FLAG_HASSLOT)) {
 		if(extraSlot) {
 			if(!aSource.isSet(UserConnection::FLAG_HASEXTRASLOT)) {
@@ -358,8 +360,9 @@ void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	dcassert(find(uploads.begin(), uploads.end(), aUpload) != uploads.end());
 	uploads.erase(remove(uploads.begin(), uploads.end(), aUpload), uploads.end());
 	
+	throttleSetup();
+
 	if(delay) {
-		aUpload->setStart(GET_TICK());
 		delayUploads.push_back(aUpload);
 	} else {
 		delete aUpload;
@@ -662,17 +665,19 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		
 		throttleSetup();
 
-		if((aTick / 1000) % 10 == 0) {
-			for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end();) {
-				Upload* u = *i;
-				if((aTick - u->getStart()) > 15000) {
-					logUpload(u);
-					delete u;
+		for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end();) {
+			Upload* u = *i;
+			
+			u->delayTime++;
+			
+			if(u->delayTime > 10) {
+				logUpload(u);
+				delete u;
 
-					delayUploads.erase(i);
-					i = delayUploads.begin();
-				} else
-					i++;
+				delayUploads.erase(i);
+				i = delayUploads.begin();
+			} else {
+				i++;
 			}
 		}
 
