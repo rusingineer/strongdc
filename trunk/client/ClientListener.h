@@ -32,6 +32,11 @@ public:
 	typedef X<20> CheatMessage;
 	typedef X<21> HubTopic;
 
+	enum StatusFlags {
+		FLAG_NORMAL = 0x00,
+		FLAG_IS_SPAM = 0x01
+	};
+	
 	virtual void on(Connecting, const Client*) throw() { }
 	virtual void on(Connected, const Client*) throw() { }
 	virtual void on(UserUpdated, const Client*, const OnlineUser&) throw() { }
@@ -42,7 +47,7 @@ public:
 	virtual void on(GetPassword, const Client*) throw() { }
 	virtual void on(HubUpdated, const Client*) throw() { }
 	virtual void on(Message, const Client*, const OnlineUser&, const string&, bool = false) throw() { }
-	virtual void on(StatusMessage, const Client*, const string&) throw() { }
+	virtual void on(StatusMessage, const Client*, const string&, int = FLAG_NORMAL) throw() { }
 	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&, bool = false) throw() { }
 	virtual void on(HubUserCommand, const Client*, int, int, const string&, const string&) throw() { }
 	virtual void on(HubFull, const Client*) throw() { }

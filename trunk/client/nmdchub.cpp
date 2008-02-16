@@ -221,6 +221,14 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			return;
 		}
 
+		if((line.find("Hub-Security") != string::npos) && (line.find("was kicked by") != string::npos)) {
+			fire(ClientListener::StatusMessage(), this, unescape(line), ClientListener::FLAG_IS_SPAM);
+			return;
+		} else if((line.find("is kicking") != string::npos) && (line.find("because:") != string::npos)) {
+			fire(ClientListener::StatusMessage(), this, unescape(line), ClientListener::FLAG_IS_SPAM);
+			return;
+		}
+
 		bool thirdPerson = false;
 		if(Util::strnicmp(message, "/me ", 4) == 0) {
 			thirdPerson = true;
@@ -845,9 +853,9 @@ void NmdcHub::revConnectToMe(const OnlineUser& aUser) {
 	send("$RevConnectToMe " + fromUtf8(getMyNick()) + " " + fromUtf8(aUser.getIdentity().getNick()) + "|");
 }
 
-void NmdcHub::hubMessage(const string& aMessage) { 
+void NmdcHub::hubMessage(const string& aMessage, bool thirdPerson) { 
 	checkstate(); 
-	send(fromUtf8( "<" + getMyNick() + "> " + escape(aMessage) + "|" ) );
+	send(fromUtf8( "<" + getMyNick() + "> " + escape(thirdPerson ? "/me " + aMessage : aMessage) + "|" ) );
 }
 
 void NmdcHub::myInfo(bool alwaysSend) {
@@ -987,15 +995,15 @@ string NmdcHub::validateMessage(string tmp, bool reverse) {
 	return tmp;
 }
 
-void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage) { 
+void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage, bool thirdPerson) { 
 	checkstate();
 
-	send("$To: " + fromUtf8(aUser.getIdentity().getNick()) + " From: " + fromUtf8(getMyNick()) + " $" + fromUtf8(escape("<" + getMyNick() + "> " + aMessage)) + "|");
+	send("$To: " + fromUtf8(aUser.getIdentity().getNick()) + " From: " + fromUtf8(getMyNick()) + " $" + fromUtf8(escape("<" + getMyNick() + "> " + (thirdPerson ? "/me " + aMessage : aMessage))) + "|");
 	// Emulate a returning message...
 	Lock l(cs);
 	OnlineUser* ou = findUser(getMyNick());
 	if(ou) {
-		fire(ClientListener::PrivateMessage(), this, *ou, aUser, *ou, aMessage);
+		fire(ClientListener::PrivateMessage(), this, *ou, aUser, *ou, aMessage, thirdPerson);
 	}
 }
 
