@@ -225,9 +225,10 @@ void HubFrame::onEnter() {
 			tstring param;
 			tstring message;
 			tstring status;
-			if(WinUtil::checkCommand(cmd, param, message, status)) {
+			bool thirdPerson = false;
+			if(WinUtil::checkCommand(cmd, param, message, status, thirdPerson)) {
 				if(!message.empty()) {
-					client->hubMessage(Text::fromT(message));
+					client->hubMessage(Text::fromT(message), thirdPerson);
 				}
 				if(!status.empty()) {
 					addClientLine(status, WinUtil::m_ChatTextSystem);
@@ -1669,24 +1670,12 @@ void HubFrame::on(HubUpdated, const Client*) throw() {
 	speak(SET_WINDOW_TITLE, hubName);
 }
 void HubFrame::on(Message, const Client*, const OnlineUser& from, const string& msg, bool thirdPerson) throw() {
-	if(SETTING(FILTER_MESSAGES) && from.getIdentity().isOp()) {
-		if((msg.find("is kicking") != string::npos) && (msg.find("because:") != string::npos)) {
-			speak(KICK_MSG, Identity(NULL, 0), Util::formatMessage(from.getIdentity().getNick(), msg, thirdPerson));
-			return;
-		}	
-	}
 	speak(ADD_CHAT_LINE, from.getIdentity(), Util::formatMessage(from.getIdentity().getNick(), msg, thirdPerson));
 }	
 
-void HubFrame::on(StatusMessage, const Client*, const string& line) {
-	if(SETTING(FILTER_MESSAGES)) {
-		if((line.find("Hub-Security") != string::npos) && (line.find("was kicked by") != string::npos)) {
-			// Do nothing...
-		} else if((line.find("is kicking") != string::npos) && (line.find("because:") != string::npos)) {
-			speak(KICK_MSG, Identity(NULL, 0), Text::toDOS(line));
-		} else {
-			speak(ADD_CHAT_LINE, Identity(NULL, 0), Text::toDOS(line));
-		}
+void HubFrame::on(StatusMessage, const Client*, const string& line, int statusFlags) {
+	if(SETTING(FILTER_MESSAGES) && (statusFlags & ClientListener::FLAG_IS_SPAM)) {
+		speak(KICK_MSG, Identity(NULL, 0), Text::toDOS(line));
 	} else {
 		speak(ADD_CHAT_LINE, Identity(NULL, 0), Text::toDOS(line));
 	}
@@ -1920,6 +1909,7 @@ bool HubFrame::matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare, Fi
 			case GREATER: insert = (size < ui.getIdentity().getBytesShared()); break;
 			case LESS: insert = (size > ui.getIdentity().getBytesShared()); break;
 			case NOT_EQUAL: insert = (size != ui.getIdentity().getBytesShared()); break;
+			case NONE: ; break;
 		}
 	} else {
 		PME reg(filter,_T("i"));

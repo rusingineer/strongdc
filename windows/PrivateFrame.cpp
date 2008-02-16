@@ -269,9 +269,10 @@ void PrivateFrame::onEnter()
 			tstring param;
 			tstring message;
 			tstring status;
-			if(WinUtil::checkCommand(s, param, message, status)) {
+			bool thirdPerson = false;
+			if(WinUtil::checkCommand(s, param, message, status, thirdPerson)) {
 				if(!message.empty()) {
-					sendMessage(message);
+					sendMessage(message, thirdPerson);
 				}
 				if(!status.empty()) {
 					addClientLine(status);
@@ -326,8 +327,8 @@ void PrivateFrame::onEnter()
 	} 
 }
 
-void PrivateFrame::sendMessage(const tstring& msg) {
-	ClientManager::getInstance()->privateMessage(replyTo, Text::fromT(msg));
+void PrivateFrame::sendMessage(const tstring& msg, bool thirdPerson) {
+	ClientManager::getInstance()->privateMessage(replyTo, Text::fromT(msg), thirdPerson);
 }
 
 LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {

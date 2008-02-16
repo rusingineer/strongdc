@@ -434,31 +434,31 @@ public:
 	}
 
 	void saveHeaderOrder(SettingsManager::StrSetting order, SettingsManager::StrSetting widths, 
-		SettingsManager::StrSetting visible) {
+		SettingsManager::StrSetting visible)
+	{	
 		string tmp, tmp2, tmp3;
-			saveHeaderOrder(tmp, tmp2, tmp3);
+		
+		saveHeaderOrder(tmp, tmp2, tmp3);
+		
 		SettingsManager::getInstance()->set(order, tmp);
 		SettingsManager::getInstance()->set(widths, tmp2);
 		SettingsManager::getInstance()->set(visible, tmp3);
 	}
 
 	void saveHeaderOrder(string& order, string& widths, string& visible) throw() {
-		TCHAR buf[512];
 		int size = GetHeader().GetItemCount();
-		for(int i = 0; i < size; ++i){
-			LVCOLUMN lvc;
-			lvc.mask = LVCF_TEXT | LVCF_ORDER | LVCF_WIDTH;
-			lvc.cchTextMax = 512;
-			lvc.pszText = buf;
-			GetColumn(i, &lvc);
-			for(ColumnIter j = columnList.begin(); j != columnList.end(); ++j){
-				if(_tcscmp(buf, (*j)->name.c_str()) == 0){
-					(*j)->pos = lvc.iOrder;
-					(*j)->width = lvc.cx;
-					break;
-				}
+
+		std::vector<int> ret(size);
+		if(SendMessage(LVM_GETCOLUMNORDERARRAY, static_cast<WPARAM>(ret.size()), reinterpret_cast<LPARAM>(&ret[0]))) {
+			for(size_t i = 0; i < ret.size(); ++i) {
+				order += Util::toString(ret[i]) + ",";
 			}
 		}
+
+		for(size_t i = 0; i < ret.size(); ++i) {
+			widths += Util::toString(SendMessage(LVM_GETCOLUMNWIDTH, static_cast<WPARAM>(i), 0));
+			widths += ",";
+		}			
 
 		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
 			ColumnInfo* ci = *i;
@@ -466,15 +466,8 @@ public:
 			if(ci->visible){
 				visible += "1,";
 			} else {
-				ci->pos = size++;
 				visible += "0,";
 			}
-
-			order += Util::toString(ci->pos);
-			order += ',';
-
-			widths += Util::toString(ci->width);
-			widths += ',';
 		}
 
 		order.erase(order.size()-1, 1);
@@ -499,13 +492,8 @@ public:
 		updateColumnIndexes();
 	}
 
-	void setColumnOrderArray(int iCount, LPINT piArray ) {
-		LVCOLUMN lvc;
-		lvc.mask = LVCF_ORDER;
-		for(int i = 0; i < iCount; ++i) {
-			lvc.iOrder = columnList[i]->pos = piArray[i];
-			SetColumn(i, &lvc);
-		}
+	void setColumnOrderArray(int iCount, int* columns) {
+		SendMessage(LVM_SETCOLUMNORDERARRAY, static_cast<WPARAM>(iCount), reinterpret_cast<LPARAM>(&columns[0])); 
 	}
 
 	//find the original position of the column at the current position.

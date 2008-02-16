@@ -152,7 +152,7 @@ public:
 		}
 	}
 	
-	void sendMessage(const tstring& msg);
+	void sendMessage(const tstring& msg, bool thirdPerson = false);
 
 private:
 	PrivateFrame(const UserPtr& replyTo_) : replyTo(replyTo_), 

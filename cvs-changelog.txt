@@ -1,3 +1,7 @@
+** svn377
+	reworked column order/width code a bit (it will break current settings)
+	some stuff about /me messages (DC++ SVN)
+
 ** svn376
 	chat autoscroll code cleaned up a bit
 	socks5 port field accepts only numbers

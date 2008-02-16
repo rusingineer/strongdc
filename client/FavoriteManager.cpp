@@ -415,9 +415,9 @@ void FavoriteManager::save() {
 			xml.addChildAttrib("ChatUserSplit", (*i)->getChatUserSplit());
 			xml.addChildAttrib("StealthMode", (*i)->getStealth());
 			xml.addChildAttrib("UserListState", (*i)->getUserListState());
-			xml.addChildAttrib("HeaderOrder",		(*i)->getHeaderOrder());
-			xml.addChildAttrib("HeaderWidths",		(*i)->getHeaderWidths());
-			xml.addChildAttrib("HeaderVisible",		(*i)->getHeaderVisible());
+			xml.addChildAttrib("HubFrameOrder",	(*i)->getHeaderOrder());
+			xml.addChildAttrib("HubFrameWidths", (*i)->getHeaderWidths());
+			xml.addChildAttrib("HubFrameVisible", (*i)->getHeaderVisible());
 			xml.addChildAttrib("RawOne", (*i)->getRawOne());
 			xml.addChildAttrib("RawTwo", (*i)->getRawTwo());
 			xml.addChildAttrib("RawThree", (*i)->getRawThree());
@@ -575,9 +575,9 @@ void FavoriteManager::load(SimpleXML& aXml) {
 			e->setChatUserSplit(aXml.getIntChildAttrib("ChatUserSplit"));
 			e->setStealth(aXml.getBoolChildAttrib("StealthMode"));
 			e->setUserListState(aXml.getBoolChildAttrib("UserListState"));
-			e->setHeaderOrder(aXml.getChildAttrib("HeaderOrder", SETTING(HUBFRAME_ORDER)));
-			e->setHeaderWidths(aXml.getChildAttrib("HeaderWidths", SETTING(HUBFRAME_WIDTHS)));
-			e->setHeaderVisible(aXml.getChildAttrib("HeaderVisible", SETTING(HUBFRAME_VISIBLE)));
+			e->setHeaderOrder(aXml.getChildAttrib("HubFrameOrder", SETTING(HUBFRAME_ORDER)));
+			e->setHeaderWidths(aXml.getChildAttrib("HubFrameWidths", SETTING(HUBFRAME_WIDTHS)));
+			e->setHeaderVisible(aXml.getChildAttrib("HubFrameVisible", SETTING(HUBFRAME_VISIBLE)));
 			e->setRawOne(aXml.getChildAttrib("RawOne"));
 			e->setRawTwo(aXml.getChildAttrib("RawTwo"));
 			e->setRawThree(aXml.getChildAttrib("RawThree"));
