@@ -77,10 +77,13 @@ public:
 	bool isSecure() const { return sock && sock->isSecure(); }
 	bool isTrusted() const { return sock && sock->isTrusted(); }
 
-	void write(const string& aData) throw() { write(aData.data(), aData.length()); }
+	void write(const string& aData) { write(aData.data(), aData.length()); }
 	void write(const char* aBuf, size_t aLen) throw();
 	/** Send the file f over this socket. */
-	void transmitFile(InputStream* f) throw() { Lock l(cs); addTask(SEND_FILE, new SendFileInfo(f)); }
+	void transmitFile(InputStream* f) { Lock l(cs); addTask(SEND_FILE, new SendFileInfo(f)); }
+
+	/** Send an updated signal to all listeners */
+	void updated() { Lock l(cs); addTask(UPDATED, 0); }
 
 	void disconnect(bool graceless = false) throw() { Lock l(cs); if(graceless) disconnecting = true; addTask(DISCONNECT, 0); }
 
@@ -94,7 +97,8 @@ private:
 		SEND_DATA,
 		SEND_FILE,
 		SHUTDOWN,
-		ACCEPTED
+		ACCEPTED,
+		UPDATED
 	};
 
 	struct TaskData { 

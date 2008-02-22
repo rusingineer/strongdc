@@ -93,11 +93,13 @@ public:
 		// UploadManager
 		STATE_GET,			// Waiting for GET
 		STATE_SEND,			// Waiting for $Send
-		STATE_RUNNING,		// Transmitting data
 
 		// DownloadManager
 		STATE_SND,	// Waiting for SND
-		STATE_TREE
+		STATE_IDLE, // No more downloads for the moment
+
+		// Up & down
+		STATE_RUNNING,		// Transmitting data
 
 	};
 
@@ -143,6 +145,8 @@ public:
 
 	void connect(const string& aServer, uint16_t aPort) throw(SocketException, ThreadException);
 	void accept(const Socket& aServer) throw(SocketException, ThreadException);
+
+	void updated() { if(socket) socket->updated(); }
 
 	void disconnect(bool graceless = false) { if(socket) socket->disconnect(graceless); }
 	void transmitFile(InputStream* f) { socket->transmitFile(f); }
@@ -245,6 +249,7 @@ private:
 	void on(ModeChange) throw();
 	void on(TransmitDone) throw();
 	void on(Failed, const string&) throw();
+	void on(Updated) throw();
 };
 
 } // namespace dcpp

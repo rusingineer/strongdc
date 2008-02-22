@@ -80,8 +80,7 @@ void ConnectionManager::getDownloadConnection(const UserPtr& aUser) {
 		if(i == downloads.end()) {
 			getCQI(aUser, true);
 		} else {
-			if(find(checkIdle.begin(), checkIdle.end(), aUser) == checkIdle.end())
-				checkIdle.push_back(aUser);
+			DownloadManager::getInstance()->checkIdle(aUser);
 		}
 	}
 }
@@ -136,15 +135,11 @@ void ConnectionManager::putConnection(UserConnection* aConn) {
 void ConnectionManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	UserList passiveUsers;
 	ConnectionQueueItem::List removed;
-	UserList idlers;
 
 	{
 		Lock l(cs);
 
 		uint16_t attempts = 0;
-
-		idlers = checkIdle;
-		checkIdle.clear();
 
 		for(ConnectionQueueItem::Iter i = downloads.begin(); i != downloads.end(); ++i) {
 			ConnectionQueueItem* cqi = *i;
@@ -201,10 +196,6 @@ void ConnectionManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 			putCQI(*m);
 		}
 
-	}
-
-	for(UserList::const_iterator i = idlers.begin(); i != idlers.end(); ++i) {
-		DownloadManager::getInstance()->checkIdle(*i);
 	}
 
 	for(UserList::iterator ui = passiveUsers.begin(); ui != passiveUsers.end(); ++ui) {
@@ -729,7 +720,7 @@ void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSour
 			dcassert(i != downloads.end());
 			ConnectionQueueItem* cqi = *i;
 			cqi->setState(ConnectionQueueItem::WAITING);
-			cqi->setLastAttempt((aSource->getLastActivity() == 0) ? 0 : GET_TICK());
+			cqi->setLastAttempt(GET_TICK());
 			fire(ConnectionManagerListener::Failed(), cqi, aError);
 		} else if(aSource->isSet(UserConnection::FLAG_UPLOAD)) {
 			ConnectionQueueItem::Iter i = find(uploads.begin(), uploads.end(), aSource->getUser());

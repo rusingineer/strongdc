@@ -206,6 +206,10 @@ void UserConnection::on(TransmitDone) throw() {
 	fire(UserConnectionListener::TransmitDone(), this);
 }
 
+void UserConnection::on(Updated) throw() { 
+	fire(UserConnectionListener::Updated(), this); 
+}
+
 void UserConnection::on(Failed, const string& aLine) throw() {
 	setState(STATE_UNCONNECTED);
 	fire(UserConnectionListener::Failed(), this, aLine);
