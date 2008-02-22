@@ -147,8 +147,6 @@ private:
 	/** All active connections */
 	UserConnectionList userConnections;
 
-	UserList checkIdle;
-
 	StringList features;
 	StringList adcFeatures;
 

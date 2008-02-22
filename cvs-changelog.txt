@@ -1,3 +1,6 @@
+** svn378
+	DownloadManager patch from DC++ SVN
+
 ** svn377
 	reworked column order/width code a bit (it will break current settings)
 	some stuff about /me messages (DC++ SVN)

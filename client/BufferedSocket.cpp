@@ -493,6 +493,9 @@ bool BufferedSocket::checkEvents() {
 					return false;
 				case ACCEPTED:
 					break;
+			case UPDATED:
+				fire(BufferedSocketListener::Updated());
+				break;
 			}
 
 			delete p.second;

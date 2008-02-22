@@ -38,7 +38,7 @@ public:
 	typedef X<5> Key;
 	typedef X<6> Direction;
 	typedef X<7> Get;
-	typedef X<8> Error;
+	typedef X<8> Updated;
 	typedef X<12> Send;
 	typedef X<13> GetListLength;
 	typedef X<14> MaxedOut;
@@ -52,7 +52,6 @@ public:
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw() { }
 	virtual void on(Connected, UserConnection*) throw() { }
 	virtual void on(Data, UserConnection*, const uint8_t*, size_t) throw() { }
-	virtual void on(Error, UserConnection*, const string&) throw() { }
 	virtual void on(Failed, UserConnection*, const string&) throw() { }
 	virtual void on(CLock, UserConnection*, const string&, const string&) throw() { }
 	virtual void on(Key, UserConnection*, const string&) throw() { }
@@ -66,6 +65,7 @@ public:
 	virtual void on(TransmitDone, UserConnection*) throw() { }
 	virtual void on(Supports, UserConnection*, const StringList&) throw() { }
 	virtual void on(FileNotAvailable, UserConnection*) throw() { }
+	virtual void on(Updated, UserConnection*) throw() { }
 	virtual void on(ListLength, UserConnection*, const string&) throw() { }
 
 	virtual void on(AdcCommand::SUP, UserConnection*, const AdcCommand&) throw() { }
