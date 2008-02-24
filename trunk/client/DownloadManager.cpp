@@ -359,7 +359,7 @@ int64_t DownloadManager::getRunningAverage() {
 	int64_t avg = 0;
 	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
-		avg += static_cast<int64_t>(d->getAverageSpeed());
+		avg += d->getAverageSpeed();
 	}
 	return avg;
 }

@@ -193,27 +193,30 @@ const string Identity::getReport() const {
 }
 
 const string Identity::updateClientType(const OnlineUser& ou) {
-	if ( getUser()->isSet(User::DCPLUSPLUS) && (get("LL") == "11") && (getBytesShared() > 0) ) {
-		string report = setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
-		set("CL", "DC++ Stealth");
-		set("BC", "1");
-		set("BF", "1");
-		ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(LISTLEN_MISMATCH));
-		return report;
-	} else if( getUser()->isSet(User::DCPLUSPLUS) &&
-		strncmp(getTag().c_str(), "<++ V:0.69", 10) == 0 &&
-		get("LL") != "42") {
+	if(getUser()->isSet(User::DCPLUSPLUS)) {
+		if (get("LL") == "11" && getBytesShared() > 0) {
+			string report = setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
+			set("CL", "DC++ Stealth");
+			set("BC", "1");
+			set("BF", "1");
+
+			ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(LISTLEN_MISMATCH));
+			return report;
+		} else if(strncmp(getTag().c_str(), "<++ V:0.69", 10) == 0 && get("LL") != "42") {
 			string report = setCheat(ou.getClient(), "Listlen mismatched" , true);
 			set("CL", "Faked DC++");
 			set("CM", "Supports corrupted files...");
 			set("BC", "1");
+
 			ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(LISTLEN_MISMATCH));
 			return report;
+		}
 	}
+
 	int64_t tick = GET_TICK();
 
 	StringMap params;
-	ClientProfile::List& lst = ClientProfileManager::getInstance()->getClientProfiles(params);
+	const ClientProfile::List& lst = ClientProfileManager::getInstance()->getClientProfiles(params);
 
 	for(ClientProfile::List::const_iterator i = lst.begin(); i != lst.end(); ++i) {
 		const ClientProfile& cp = *i;
