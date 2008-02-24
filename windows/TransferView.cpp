@@ -825,7 +825,7 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		ui->setPos(d->getPos());
 //			ui->setSize(d->getSize());
 		ui->setTimeLeft(d->getSecondsLeft());
-		ui->setSpeed(static_cast<int64_t>(d->getAverageSpeed()));
+		ui->setSpeed(d->getAverageSpeed());
 
 		tstring pos = Util::formatBytesW(d->getPos());
 		double percent = (double)d->getPos()*100.0/(double)d->getSize();
@@ -941,7 +941,7 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 		ui->setActual(u->getStartPos() + u->getActual());
 		ui->setPos(u->getStartPos() + u->getPos());
 		ui->setTimeLeft(u->getSecondsLeft(true)); // we are interested when whole file is finished and not only one chunk
-		ui->setSpeed(static_cast<int64_t>(u->getAverageSpeed()));
+		ui->setSpeed(u->getAverageSpeed());
 
 		tstring pos = Util::formatBytesW(ui->pos);
 		double percent = (double)ui->pos*100.0/(double)(u->getType() == Transfer::TYPE_TREE ? u->getSize() : u->getFileSize());
@@ -1118,7 +1118,7 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 			if(d->getStart() > 0) {
 				segs++;
 
-				totalSpeed += static_cast<int64_t>(d->getAverageSpeed());
+				totalSpeed += d->getAverageSpeed();
 				ratio += d->getPos() > 0 ? (double)d->getActual() / (double)d->getPos() : 1.00;
 			}
 		}

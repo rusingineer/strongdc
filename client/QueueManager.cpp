@@ -417,7 +417,7 @@ struct PartsInfoReqParam{
 
 void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	string searchString;
-	vector<PartsInfoReqParam*> params;
+	vector<const PartsInfoReqParam*> params;
 
 	{
 		Lock l(cs);
@@ -427,9 +427,9 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 		PFSSourceList sl;
 		fileQueue.findPFSSources(sl);
 
-		for(PFSSourceList::iterator i = sl.begin(); i != sl.end(); i++){
+		for(PFSSourceList::const_iterator i = sl.begin(); i != sl.end(); i++){
 			QueueItem::PartialSource::Ptr source = (*i->first).getPartialSource();
-			QueueItem* qi = i->second;
+			const QueueItem* qi = i->second;
 
 			PartsInfoReqParam* param = new PartsInfoReqParam;
 			
@@ -472,8 +472,8 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	}
 
 	// Request parts info from partial file sharing sources
-	for(vector<PartsInfoReqParam*>::const_iterator i = params.begin(); i != params.end(); i++){
-		PartsInfoReqParam* param = *i;
+	for(vector<const PartsInfoReqParam*>::const_iterator i = params.begin(); i != params.end(); i++){
+		const PartsInfoReqParam* param = *i;
 		SearchManager::getInstance()->sendPSR(param->ip, param->udpPort, true, param->myNick, param->hubIpPort, param->tth, param->parts);
 		delete param;
 	}
@@ -1744,7 +1744,7 @@ void QueueManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 }
 
 bool QueueManager::dropSource(Download* d) {
-	size_t activeSegments, onlineUsers;
+	size_t activeSegments = 0, onlineUsers;
 	uint64_t overallSpeed;
 
 	{
@@ -1760,7 +1760,16 @@ bool QueueManager::dropSource(Download* d) {
 		if(!q->isSet(QueueItem::FLAG_AUTODROP))
 			return false;
 
-		activeSegments = q->getDownloads().size();
+		for(DownloadList::const_iterator i = q->getDownloads().begin(); i != q->getDownloads().end(); i++) {
+			if((*i)->getStart() > 0) {
+				activeSegments++;
+			}
+
+			// more segments won't change anything
+			if(activeSegments > 2)
+				break;
+		}
+
 		onlineUsers = q->countOnlineUsers();
 		overallSpeed = q->getAverageSpeed();
 	}
@@ -1884,12 +1893,12 @@ bool QueueManager::handlePartialSearch(const TTHValue& tth, PartsInfo& _outParts
 // compare nextQueryTime, get the oldest ones
 void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl) 
 {
-	typedef multimap<time_t, pair<QueueItem::SourceConstIter, QueueItem*> > Buffer;
+	typedef multimap<time_t, pair<QueueItem::SourceConstIter, const QueueItem*> > Buffer;
 	Buffer buffer;
 	uint64_t now = GET_TICK();
 
 	for(QueueItem::StringIter i = queue.begin(); i != queue.end(); ++i) {
-		QueueItem* q = i->second;
+		const QueueItem* q = i->second;
 
 		if(q->getSize() < PARTIAL_SHARE_MIN_SIZE) continue;
 

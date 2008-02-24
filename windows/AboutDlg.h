@@ -71,7 +71,7 @@ public:
 		}
 		CenterWindow(GetParent());
 		c.addListener(this);
-		c.downloadFile("http://strongdc.sf.net/download/version.xml");
+		c.downloadFile("http://strongdc.sourceforge.net.nyud.net/download/version.xml");
 		return TRUE;
 	}
 

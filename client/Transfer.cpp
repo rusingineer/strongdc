@@ -39,26 +39,32 @@ Transfer::Transfer(UserConnection& conn, const string& path_, const TTHValue& tt
 	path(path_), tth(tth_), actual(0), pos(0), userConnection(conn) { }
 
 void Transfer::tick() {
+/*	
 	Lock l(cs);
 	while(samples.size() >= SAMPLES) {
 		samples.pop_front();
 	}
 	samples.push_back(std::make_pair(GET_TICK(), pos));
+*/
 }
 
-double Transfer::getAverageSpeed() const {
+int64_t Transfer::getAverageSpeed() const {
+/*
 	Lock l(cs);
 	if(samples.size() < 2) {
 		return 0;
 	}
 	uint64_t ticks = samples.back().first - samples.front().first;
 	int64_t bytes = samples.back().second - samples.front().second;
+*/
+	uint64_t ticks = GET_TICK() - getStart();
+	int64_t bytes = getPos();
 
-	return ticks > 0 ? (static_cast<double>(bytes) / ticks) * 1000.0 : 0;
+	return ticks > 0 ? static_cast<int64_t>((static_cast<double>(bytes) / ticks) * 1000.0) : 0;
 }
 
 int64_t Transfer::getSecondsLeft(bool wholeFile) const {
-	int64_t avg = static_cast<int64_t>(getAverageSpeed());
+	int64_t avg = getAverageSpeed();
 	int64_t bytesLeft =  (wholeFile ? ((Upload*)this)->getFileSize() : getSize()) - getPos();
 
 	return (avg > 0) ? (bytesLeft / avg) : 0;
@@ -77,11 +83,11 @@ void Transfer::getParams(const UserConnection& aSource, StringMap& params) const
 	params["hubURL"] = Util::toString(hubs);
 	params["fileSI"] = Util::toString(getSize());
 	params["fileSIshort"] = Util::formatBytes(getSize());
-//	params["fileSIchunk"] = Util::toString(getTotal());
-//	params["fileSIchunkshort"] = Util::formatBytes(getTotal());
+	params["fileSIchunk"] = Util::toString(getPos());
+	params["fileSIchunkshort"] = Util::formatBytes(getPos());
 	params["fileSIactual"] = Util::toString(getActual());
 	params["fileSIactualshort"] = Util::formatBytes(getActual());
-	params["speed"] = Util::formatBytes(static_cast<int64_t>(getAverageSpeed())) + "/s";
+	params["speed"] = Util::formatBytes(getAverageSpeed()) + "/s";
 	params["time"] = Text::fromT(Util::formatSeconds((GET_TICK() - getStart()) / 1000));
 	params["fileTR"] = getTTH().toBase32();
 }

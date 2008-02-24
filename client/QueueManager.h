@@ -209,7 +209,7 @@ public:
 
 	typedef unordered_map<CID, string> PfsQueue;
 	typedef PfsQueue::iterator PfsIter;
-	typedef vector<pair<QueueItem::SourceConstIter, QueueItem*> > PFSSourceList;
+	typedef vector<pair<QueueItem::SourceConstIter, const QueueItem*> > PFSSourceList;
 
 	/** All queue items by target */
 	class FileQueue {
