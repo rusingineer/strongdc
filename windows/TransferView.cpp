@@ -1168,7 +1168,17 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 }
 
 void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const string&, const Download* download) throw() {
-	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true, true);
+	// update download item
+	UpdateInfo* ui = new UpdateInfo(download->getUser(), true);
+
+	ui->setStatus(ItemInfo::STATUS_WAITING);	
+	ui->setPos(0);
+	ui->setStatusString( TSTRING(DOWNLOAD_FINISHED_IDLE));
+
+	speak(UPDATE_ITEM, ui);
+
+	// update file item
+	ui = new UpdateInfo(const_cast<QueueItem*>(qi), true, true);
 	ui->user = download->getUser();
 
 	ui->setTarget(Text::toT(qi->getTarget()));

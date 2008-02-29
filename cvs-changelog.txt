@@ -1,3 +1,6 @@
+** svn380
+	fixed "Download finished" reporting for single download items
+
 ** svn379
 	changed version.xml/hublists URLs to Coral
 	added "Troj/Agent-GNA" to crash libraries
