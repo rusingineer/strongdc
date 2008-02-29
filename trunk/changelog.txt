@@ -15,6 +15,7 @@
 * opraveno možné zatuhnutí
 * zobrazena hláška "Všechny stahovací sloty obsazeny" když se dosáhne maximálního poètu segmentù
 * odstranìno horizontální rozložení chatu/seznamu uživatelù, aby šlo kompilovat se standardním WTL
+* další opravy
 
 
 	-- StrongDC++ 2.11 --
