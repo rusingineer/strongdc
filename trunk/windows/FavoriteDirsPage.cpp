@@ -65,15 +65,17 @@ void FavoriteDirsPage::write()
 
 LRESULT FavoriteDirsPage::onDropFiles(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/){
 	HDROP drop = (HDROP)wParam;
-	AutoArray<TCHAR> buf(MAX_PATH);
+	tstring buf;
+	buf.resize(MAX_PATH);
+
 	UINT nrFiles;
 	
 	nrFiles = DragQueryFile(drop, (UINT)-1, NULL, 0);
 	
 	for(UINT i = 0; i < nrFiles; ++i){
-		if(DragQueryFile(drop, i, buf, MAX_PATH)){
-			if(PathIsDirectory(buf))
-				addDirectory(tstring(buf));
+		if(DragQueryFile(drop, i, &buf[0], MAX_PATH)){
+			if(PathIsDirectory(&buf[0]))
+				addDirectory(buf);
 		}
 	}
 

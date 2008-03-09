@@ -5,7 +5,7 @@
 * fixed upload timeleft
 * added slow segments overlapping when file download is going to be finished
 * usernicks CPU optimization for NMDC
-* fixed last segmet status in Transfer window
+* fixed last segment status in Transfer window
 * no more .antifrag extension (old temp files still supported)
 * changed the way of chat autoscrolling
 * rewritten chat menu code

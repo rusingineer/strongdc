@@ -1031,7 +1031,9 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
             }
 			if(!bPaused) {
 				bool resort = false;
-				if(ctrlResults.getSortColumn() == COLUMN_HITS && (resultsCount++) % 15 == 0) {
+				resultsCount++;
+
+				if(ctrlResults.getSortColumn() == COLUMN_HITS && resultsCount % 15 == 0) {
 					//ctrlResults.SetRedraw(FALSE);
 					resort = true;
 				}

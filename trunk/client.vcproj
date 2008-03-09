@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\openssl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\boost&quot;;&quot;$(SolutionDir)\openssl\include&quot;"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="1"
@@ -571,10 +571,6 @@
 			</File>
 			<File
 				RelativePath=".\client\HttpConnection.h"
-				>
-			</File>
-			<File
-				RelativePath=".\client\intrusive_ptr.hpp"
 				>
 			</File>
 			<File

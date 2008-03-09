@@ -340,6 +340,9 @@ private:
 
 	void moveNode(HTREEITEM item, HTREEITEM parent);
 
+	// temporary vector for moving directories
+	vector<pair<QueueItemInfo*, string>> tmp;
+
 	void clearTree(HTREEITEM item);
 
 	QueueItemInfo* getItemInfo(const string& target) const;

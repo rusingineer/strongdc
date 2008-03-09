@@ -643,25 +643,33 @@ void QueueFrame::moveSelectedDir() {
 	tstring name = Text::toT(curDir);
 	
 	if(WinUtil::browseDirectory(name, m_hWnd)) {
+		tmp.clear();
 		moveDir(ctrlDirs.GetSelectedItem(), Text::fromT(name));
+
+		for(vector<pair<QueueItemInfo*, string>>::const_iterator i = tmp.begin(); i != tmp.end(); ++i) {
+			QueueManager::getInstance()->move((*i).first->getTarget(), (*i).second + Util::getFileName((*i).first->getTarget()));
+		}
+
+		tmp.clear();
 	}
 }
 
 void QueueFrame::moveDir(HTREEITEM ht, const string& target) {
+
 	HTREEITEM next = ctrlDirs.GetChildItem(ht);
 	while(next != NULL) {
 		// must add path separator since getLastDir only give us the name
 		moveDir(next, target + Util::getLastDir(getDir(next)) + PATH_SEPARATOR);
 		next = ctrlDirs.GetNextSiblingItem(next);
 	}
+
 	string* s = (string*)ctrlDirs.GetItemData(ht);
 
 	DirectoryPairC p = directories.equal_range(*s);
-	
+
 	for(DirectoryIterC i = p.first; i != p.second; ++i) {
-		QueueItemInfo* ii = i->second;
-		QueueManager::getInstance()->move(ii->getTarget(), target + Util::getFileName(ii->getTarget()));
-	}			
+		tmp.push_back(make_pair(i->second, target));
+	}
 }
 
 QueueItem::SourceList sources;

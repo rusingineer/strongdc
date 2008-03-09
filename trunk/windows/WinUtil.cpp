@@ -1324,9 +1324,9 @@ void WinUtil::openLink(const tstring& url) {
 
 				STARTUPINFO si = { sizeof(si), 0 };
 				PROCESS_INFORMATION pi = { 0 };
-				AutoArray<TCHAR> buf(cmdLine.length() + 1);
-				_tcscpy(buf, cmdLine.c_str());
-				if(::CreateProcess(cmd.c_str(), buf, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+				boost::scoped_array<TCHAR> buf(new TCHAR[cmdLine.length() + 1]);
+				_tcscpy(&buf[0], cmdLine.c_str());
+				if(::CreateProcess(cmd.c_str(), &buf[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
 					::CloseHandle(pi.hThread);
 					::CloseHandle(pi.hProcess);
 					return;
@@ -1455,9 +1455,8 @@ int WinUtil::textUnderCursor(POINT p, CEdit& ctrl, tstring& x) {
 		return 0;
 	}
 
-	AutoArray<TCHAR> buf(len);
-	ctrl.GetLine(line, buf, len);
-	x = tstring(buf, len-1);
+	x.resize(len);
+	ctrl.GetLine(line, &x[0], len);
 
 	string::size_type start = x.find_last_of(_T(" <\t\r\n"), c);
 	if(start == string::npos)

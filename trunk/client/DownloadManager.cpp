@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 
 void DownloadManager::checkIdle(const UserPtr& user) {	
 	Lock l(cs);	
-	for(UserConnectionList::const_iterator i = idlers.begin(); i != idlers.end(); ++i) {	
+	for(UserConnectionList::const_iterator i = idlers.begin(); i != idlers.end(); ++i) {
 		UserConnection* uc = *i;	
 		if(uc->getUser() == user) {	
 			uc->updated();
@@ -419,7 +419,6 @@ void DownloadManager::removeConnection(UserConnectionPtr aConn) {
 	aConn->disconnect();
 }
 
-
 void DownloadManager::removeDownload(Download* d) {
 	if(d->getFile()) {
 		if(d->getActual() > 0) {
@@ -521,7 +520,7 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	dcdebug("File Not Available: %s\n", d->getPath().c_str());
 
 	removeDownload(d);
-	fire(DownloadManagerListener::Failed(), d, d->getTargetFileName() + ": " + STRING(FILE_NOT_AVAILABLE));
+	fire(DownloadManagerListener::Failed(), d, STRING(FILE_NOT_AVAILABLE));
 
 	if (d->getType() == Transfer::TYPE_FULL_LIST) {
 		ClientManager::getInstance()->setCheating(aSource->getUser(), "", "Filelist Not Available", SETTING(FILELIST_UNAVAILABLE), false);

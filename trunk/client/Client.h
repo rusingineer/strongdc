@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(CLIENT_H)
-#define CLIENT_H
+#ifndef DCPLUSPLUS_DCPP_CLIENT_H
+#define DCPLUSPLUS_DCPP_CLIENT_H
+
+#include "forward.h"
 
 #include "User.h"
-#include "BufferedSocket.h"
-#include "SettingsManager.h"
+#include "Speaker.h"
+#include "BufferedSocketListener.h"
 #include "TimerManager.h"
 #include "ClientListener.h"
 #include "DebugManager.h"
@@ -31,8 +33,7 @@ namespace dcpp {
 /** Yes, this should probably be called a Hub */
 class Client : public Speaker<ClientListener>, public BufferedSocketListener, protected TimerManagerListener {
 public:
-	typedef Client* Ptr;
-	typedef slist<Ptr> List;
+	typedef slist<Client*> List;
 	typedef List::const_iterator Iter;
 
 	virtual void connect();
@@ -54,7 +55,7 @@ public:
 
 	virtual string escape(string const& str) const { return str; }
 
-	bool isConnected() const { return socket && socket->isConnected(); }
+	bool isConnected() const { return state != STATE_DISCONNECTED; }
 	bool isOp() const { return getMyIdentity().isOp(); }
 
 	virtual void refreshUserList(bool) = 0;
@@ -102,14 +103,7 @@ public:
 	bool isActive() const;
 
 	void send(const string& aMessage) { send(aMessage.c_str(), aMessage.length()); }
-	void send(const char* aMessage, size_t aLen) {
-		dcassert(socket);
-		if(!socket)
-			return;
-		updateActivity();
-		socket->write(aMessage, aLen);
-		COMMAND_DEBUG(aMessage, DebugManager::HUB_OUT, getIpPort());
-	}
+	void send(const char* aMessage, size_t aLen);
 
 	string getMyNick() const { return getMyIdentity().getNick(); }
 	string getHubName() const { return getHubIdentity().getNick().empty() ? getHubUrl() : getHubIdentity().getNick(); }
@@ -164,7 +158,7 @@ protected:
 		STATE_DISCONNECTED,	///< Nothing in particular
 	} state;
 
-	BufferedSocket* socket;
+	BufferedSocket* sock;
 
 	static Counts counts;
 	Counts lastCounts;
@@ -203,6 +197,7 @@ private:
 	string hubUrl;
 	string address;
 	string ip;
+	string localIp;
 	uint16_t port;
 	char separator;
 	bool secure;

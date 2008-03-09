@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -192,7 +192,7 @@ void SearchManager::disconnect() throw() {
 #define BUFSIZE 8192
 int SearchManager::run() {
 	
-	AutoArray<uint8_t> buf(BUFSIZE);
+	boost::scoped_array<uint8_t> buf(new uint8_t[BUFSIZE]);
 	int len;
 
 	queue.start();
@@ -200,8 +200,8 @@ int SearchManager::run() {
 
 		string remoteAddr;
 		try {
-			while( (len = socket->read((uint8_t*)buf, BUFSIZE, remoteAddr)) != 0) {
-				onData(buf, len, remoteAddr);
+			while( (len = socket->read(&buf[0], BUFSIZE, remoteAddr)) != 0) {
+				onData(&buf[0], len, remoteAddr);
 			}
 		} catch(const SocketException& e) {
 			dcdebug("SearchManager::run Error: %s\n", e.getError().c_str());

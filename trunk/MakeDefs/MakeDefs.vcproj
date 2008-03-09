@@ -151,6 +151,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\boost&quot;"
 				PreprocessorDefinitions="_CONSOLE"
 				StringPooling="true"
 				MinimalRebuild="true"

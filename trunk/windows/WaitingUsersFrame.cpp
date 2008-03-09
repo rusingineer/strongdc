@@ -68,7 +68,6 @@ LRESULT WaitingUsersFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 		
 	ctrlList.setColumnOrderArray(UploadQueueItem::COLUMN_LAST, columnIndexes);
 	ctrlList.setSortColumn(UploadQueueItem::COLUMN_NICK);
-	ctrlList.setVisible(SETTING(UPLOADQUEUEFRAME_VISIBLE));
 	
 	// colors
 	ctrlList.SetBkColor(WinUtil::bgColor);

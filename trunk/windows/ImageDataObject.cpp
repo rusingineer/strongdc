@@ -28,13 +28,12 @@ void CImageDataObject::InsertBitmap(IRichEditOle* pRichEditOle, HBITMAP hBitmap)
 	LPLOCKBYTES lpLockBytes = NULL;
 	SCODE sc = ::CreateILockBytesOnHGlobal(NULL, TRUE, &lpLockBytes);
 
-	if(sc != S_OK) {
+	if(sc != S_OK || lpLockBytes == NULL) {
 		DeleteObject(hBitmap);
 		pRichEditOle->Release();	
 		dcdebug("Thrown OLE Exception: %d\n", sc);
 		return;
 	}
-	dcassert(lpLockBytes != NULL);
 
 	// Initialize a Storage Object
 	IStorage *pStorage = NULL;	
