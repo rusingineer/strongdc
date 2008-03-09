@@ -40,11 +40,11 @@ Transfer::Transfer(UserConnection& conn, const string& path_, const TTHValue& tt
 
 void Transfer::tick() {
 	
-	Lock l(cs);
-	while(samples.size() >= SAMPLES) {
-		samples.pop_front();
-	}
-	samples.push_back(std::make_pair(GET_TICK(), pos));
+	//Lock l(cs);
+	//while(samples.size() >= SAMPLES) {
+	//	samples.pop_front();
+	//}
+	//samples.push_back(std::make_pair(GET_TICK(), pos));
 
 }
 
@@ -52,9 +52,11 @@ int64_t Transfer::getAverageSpeed() const {
 
 	Lock l(cs);
 	if(samples.size() < 2) {
-		return 0;
+		uint64_t ticks = GET_TICK() - getStart();
+		return ticks > 0 ? static_cast<int64_t>((static_cast<double>(getPos()) / ticks) * 1000.0) : 0;
 	}
-	uint64_t ticks = samples.back().first - samples.front().first;
+
+	uint64_t ticks = GET_TICK() - samples.front().first;
 	int64_t bytes = samples.back().second - samples.front().second;
 
 	return ticks > 0 ? static_cast<int64_t>((static_cast<double>(bytes) / ticks) * 1000.0) : 0;

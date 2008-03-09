@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(THREAD_H)
-#define THREAD_H
+#ifndef DCPLUSPLUS_DCPP_THREAD_H
+#define DCPLUSPLUS_DCPP_THREAD_H
 
 #ifndef _WIN32
 #include <pthread.h>
@@ -31,7 +31,7 @@ namespace dcpp {
 
 STANDARD_EXCEPTION(ThreadException);
 
-class Thread  
+class Thread : private boost::noncopyable
 {
 public:
 #ifdef _WIN32
@@ -124,10 +124,6 @@ public:
 protected:
 	virtual int run() = 0;
 	
-private:
-	Thread(const Thread&);
-	Thread& operator=(const Thread&);
-
 #ifdef _WIN32
 /*
 	static void DbgDumpStack()

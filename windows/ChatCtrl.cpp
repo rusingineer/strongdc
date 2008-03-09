@@ -337,9 +337,10 @@ bool ChatCtrl::HitNick(const POINT& p, tstring& sNick, int& iBegin, int& iEnd) {
 	if(len <= 0)
 		return false;
 
-	AutoArray<TCHAR> buf(len+1);
-	GetTextRange(lSelBegin, lSelEnd, buf);
-	tstring sText(buf, len);
+	tstring sText;
+	sText.resize(len);
+
+	GetTextRange(lSelBegin, lSelEnd, &sText[0]);
 
 	int iLeft = 0, iRight = 0, iCRLF = sText.size(), iPos = sText.find(_T('<'));
 	if(iPos >= 0) {
@@ -405,15 +406,16 @@ bool ChatCtrl::HitIP(const POINT& p, tstring& sIP, int& iBegin, int& iEnd) {
 	DWORD lPosBegin = FindWordBreak(WB_LEFT, iCharPos);
 	DWORD lPosEnd = FindWordBreak(WB_RIGHTBREAK, iCharPos);
 	len = lPosEnd - lPosBegin;
-	
-	AutoArray<TCHAR> buf(len+1);
-	GetTextRange(lPosBegin, lPosEnd, buf);
+
+	tstring sText;
+	sText.resize(len);
+	GetTextRange(lPosBegin, lPosEnd, &sText[0]);
+
 	for(int i = 0; i < len; i++) {
-		if(!((buf[i] == 0) || (buf[i] == '.') || ((buf[i] >= '0') && (buf[i] <= '9')))) {
+		if(!((sText[i] == 0) || (sText[i] == '.') || ((sText[i] >= '0') && (sText[i] <= '9')))) {
 			return false;
 		}
 	}
-	tstring sText(buf, len);
 
 	sText += _T('.');
 	int iFindBegin = 0, iPos = -1, iEnd2 = 0;
@@ -461,10 +463,12 @@ tstring ChatCtrl::LineFromPos(const POINT& p) const {
 		return Util::emptyStringT;
 	}
 
-	AutoArray<TCHAR> buf(len+1);
-	GetLine(line, buf, len);
+	tstring tmp;
+	tmp.resize(len + 1);
 
-	return tstring(buf, len - 1);
+	GetLine(line, &tmp[0], len);
+
+	return tmp;
 }
 
 LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
@@ -868,7 +872,7 @@ void ChatCtrl::runUserCommand(UserCommand& uc) {
 	client->getHubIdentity().getParams(ucParams, "hub", false);
 
 	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
-	if(ou->getUser()->isOnline()) {
+	if(ou != NULL) {
 		StringMap tmp = ucParams;
 		ou->getIdentity().getParams(tmp, "user", true);
 		client->escapeParams(tmp);

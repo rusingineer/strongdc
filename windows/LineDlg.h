@@ -72,10 +72,9 @@ public:
 	LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		if(wID == IDOK) {
-			int len = ctrlLine.GetWindowTextLength() + 1;
-			AutoArray<TCHAR> buf(len);
-			GetDlgItemText(IDC_LINE, buf, len);
-			line = buf;
+			line.resize(ctrlLine.GetWindowTextLength() + 1);
+
+			GetDlgItemText(IDC_LINE, &line[0], line.size());
 		}
 		EndDialog(wID);
 		return 0;

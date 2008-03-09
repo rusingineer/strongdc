@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -666,12 +666,12 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			fire(ClientListener::UserUpdated(), this, u);
 		}
 	} else if(cmd == "$ForceMove") {
-		socket->disconnect(false);
+		disconnect(false);
 		fire(ClientListener::Redirect(), this, param);
 	} else if(cmd == "$HubIsFull") {
 		fire(ClientListener::HubFull(), this);
 	} else if(cmd == "$ValidateDenide") {		// Mind the spelling...
-		socket->disconnect(false);
+		disconnect(false);
 		fire(ClientListener::NickTaken(), this);
 	} else if(cmd == "$UserIP") {
 		if(!param.empty()) {
@@ -819,7 +819,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 	} else if(cmd == "$BadPass") {
 		setPassword(Util::emptyString);
 	} else if(cmd == "$ZOn") {
-		socket->setMode(BufferedSocket::MODE_ZPIPE);
+		sock->setMode(BufferedSocket::MODE_ZPIPE);
 	} else if(cmd == "$HubTopic") {
 		fire(ClientListener::HubTopic(), this, param);
 	} else {
@@ -924,7 +924,6 @@ void NmdcHub::myInfo(bool alwaysSend) {
 
 void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string&){
 	checkstate(); 
-	AutoArray<char> buf((char*)NULL);
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
 	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';
 	string tmp = ((aFileType == SearchManager::TYPE_TTH) ? "TTH:" + aString : fromUtf8(escape(aString)));
@@ -932,19 +931,19 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	while((i = tmp.find(' ')) != string::npos) {
 		tmp[i] = '$';
 	}
-	int chars = 0;
-	size_t BUF_SIZE;	
+	size_t BUF_SIZE;
+	string tmp2;
 	if(isActive() && !BOOLSETTING(SEARCH_PASSIVE)) {
 		string x = getLocalIp();
-		BUF_SIZE = x.length() + tmp.length() + 64;
-		buf = new char[BUF_SIZE];
-		chars = snprintf(buf, BUF_SIZE, "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, aSize, aFileType+1, tmp.c_str());
+		BUF_SIZE = x.length() + aString.length() + 64;
+		tmp2.resize(BUF_SIZE);
+		tmp2.resize(snprintf(&tmp2[0], tmp2.size(), "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, aSize, aFileType+1, tmp.c_str()));
 	} else {
-		BUF_SIZE = getMyNick().length() + tmp.length() + 64;
-		buf = new char[BUF_SIZE];
-		chars = snprintf(buf, BUF_SIZE, "$Search Hub:%s %c?%c?%I64d?%d?%s|", fromUtf8(getMyNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str());
+		BUF_SIZE = getMyNick().length() + aString.length() + 64;
+		tmp2.resize(BUF_SIZE);
+		tmp2.resize(snprintf(&tmp2[0], tmp2.size(), "$Search Hub:%s %c?%c?%I64d?%d?%s|", fromUtf8(getMyNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str()));
 	}
-	send(buf, chars);
+	send(tmp2);
 }
 
 string NmdcHub::validateMessage(string tmp, bool reverse) {
@@ -995,7 +994,7 @@ string NmdcHub::validateMessage(string tmp, bool reverse) {
 	return tmp;
 }
 
-void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage, bool thirdPerson) { 
+void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage, bool thirdPerson) {
 	checkstate();
 
 	send("$To: " + fromUtf8(aUser.getIdentity().getNick()) + " From: " + fromUtf8(getMyNick()) + " $" + fromUtf8(escape("<" + getMyNick() + "> " + (thirdPerson ? "/me " + aMessage : aMessage))) + "|");

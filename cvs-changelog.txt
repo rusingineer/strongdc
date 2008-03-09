@@ -1,3 +1,16 @@
+** svn382
+	hopefully fixed columns settings
+	fixed crashes #12115, #12130, #12141
+	fixed search results count
+	fixed loading old-styled hublists
+	some memory handling fixes (idea from DC++ SVN)
+	fixed crash when try to run user command on offline user in mainchat
+	hopefully fixed frozen running transfer when no other partial chunk available
+	something about upload speed (not final and still broken)
+
+** svn381
+	released 2.12
+
 ** svn380
 	fixed "Download finished" reporting for single download items
 

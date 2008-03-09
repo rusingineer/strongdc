@@ -1148,11 +1148,11 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 			} else {
 				uint64_t time = GET_TICK() - qi->getFileBegin();
 				if(time > 1000) {
-					AutoArray<TCHAR> buf(TSTRING(DOWNLOADED_BYTES).size() + 64);
-						_stprintf(buf, CTSTRING(DOWNLOADED_BYTES), Util::formatBytesW(ui->pos).c_str(), 
-						(double)ui->pos*100.0/(double)ui->size, Util::formatSeconds(time/1000).c_str());
+					tstring pos = Util::formatBytesW(ui->pos);
+					double percent = (double)ui->pos*100.0/(double)ui->size;
+					tstring elapsed = Util::formatSeconds(time/1000);
 
-					ui->setStatusString(tstring(buf));
+					ui->setStatusString(Text::tformat(TSTRING(DOWNLOADED_BYTES), pos.c_str(), percent, elapsed.c_str()));
 				}
 			}
 		}

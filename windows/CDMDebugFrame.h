@@ -104,9 +104,10 @@ public:
 		return 0;
 	}
 	LRESULT onChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		AutoArray<TCHAR> buf(ctrlFilterText.GetWindowTextLength() + 1);
-		ctrlFilterText.GetWindowText(buf, ctrlFilterText.GetWindowTextLength() + 1);
-		sFilterIp = buf;
+		sFilterIp.resize(ctrlFilterText.GetWindowTextLength());
+
+		ctrlFilterText.GetWindowText(&sFilterIp[0], sFilterIp.size() + 1);
+
 		UpdateLayout();
 		return 0;
 	}

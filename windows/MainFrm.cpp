@@ -115,9 +115,10 @@ public:
 			try {
 				dl.loadFile(*i);
 				const size_t BUF_SIZE = STRING(MATCHED_FILES).size() + 16;
-				AutoArray<char> tmp(BUF_SIZE);
-				snprintf(tmp, BUF_SIZE, CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl));
-				LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(u->getCID())) + ": " + string(tmp));
+				string tmp;
+				tmp.resize(BUF_SIZE);
+				snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl));
+				LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(u->getCID())) + ": " + tmp);
 			} catch(const Exception&) {
 
 			}
@@ -985,10 +986,10 @@ int MainFrame::run() {
 		Thread::setThreadPriority(Thread::LOW);
 		lastTTHdir = Util::getFilePath(file);
 
-		//char TTH[192*8/(5*8)+2];
-		//char buf[512*1024];
-		AutoArray<char> TTH(192*8/(5*8)+2);
-		AutoArray<char> buf(512*1024);
+		string TTH;
+		TTH.resize(192*8/(5*8)+2);
+
+		boost::scoped_array<char> buf(new char[512 * 1024]);
 
 		try {
 			File f(Text::fromT(file), File::READ, File::OPEN);
@@ -996,8 +997,8 @@ int MainFrame::run() {
 
 			if(f.getSize() > 0) {
 				size_t n = 512*1024;
-				while( (n = f.read(buf, n)) > 0) {
-					tth.update(buf, n);
+				while( (n = f.read(&buf[0], n)) > 0) {
+					tth.update(&buf[0], n);
 					n = 512*1024;
 				}
 			} else {
@@ -1005,14 +1006,14 @@ int MainFrame::run() {
 			}
 			tth.finalize();
 
-			strcpy(TTH, tth.getRoot().toBase32().c_str());
+			strcpy(&TTH[0], tth.getRoot().toBase32().c_str());
 
 			CInputBox ibox(m_hWnd);
 
-			string magnetlink = "magnet:?xt=urn:tree:tiger:"+ string(TTH) +"&xl="+Util::toString(f.getSize())+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
+			string magnetlink = "magnet:?xt=urn:tree:tiger:"+ TTH +"&xl="+Util::toString(f.getSize())+"&dn="+Util::encodeURI(Text::fromT(Util::getFileName(file)));
 			f.close();
 			
-			ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT((char*)TTH).c_str(), Text::toT(magnetlink).c_str());
+			ibox.DoModal(_T("Tiger Tree Hash"), file.c_str(), Text::toT(TTH).c_str(), Text::toT(magnetlink).c_str());
 		} catch(...) { }
 		Thread::setThreadPriority(Thread::NORMAL);
 		WinUtil::mainMenu.EnableMenuItem(ID_GET_TTH, MF_ENABLED);

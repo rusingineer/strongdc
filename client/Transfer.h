@@ -51,7 +51,17 @@ public:
 
 	int64_t getStartPos() const { return getSegment().getStart(); }
 
-	void addPos(int64_t aBytes, int64_t aActual) { pos += aBytes; actual+= aActual; }
+	void addPos(int64_t aBytes, int64_t aActual) { 
+		pos += aBytes; actual+= aActual;
+
+		if(aBytes > 0) {
+			Lock l(cs);
+			while(samples.size() >= SAMPLES) {
+				samples.pop_front();
+			}
+			samples.push_back(std::make_pair(GET_TICK(), pos));
+		}
+	}
 
 	enum { SAMPLES = 15 };
 	

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 #ifndef DCPLUSPLUS_DCPP_POINTER_H
 #define DCPLUSPLUS_DCPP_POINTER_H
 
-#include "intrusive_ptr.hpp"
+#include <boost/intrusive_ptr.hpp>
 #include "Thread.h"
 
 namespace dcpp {
@@ -36,7 +36,6 @@ public:
 		dcassert(ref>0);
 		
 		if ( (Thread::safeDec(ref)) == 0 ) {
-			//dcdebug("Smart Object at 0x%08x deleted\n", this);
 			delete this;
 		}
 	}

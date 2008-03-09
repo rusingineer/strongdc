@@ -207,9 +207,10 @@ LRESULT HubFrame::OnForwardMsg(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, 
 
 void HubFrame::onEnter() {	
 	if(ctrlMessage.GetWindowTextLength() > 0) {
-		AutoArray<TCHAR> msg(ctrlMessage.GetWindowTextLength()+1);
-		ctrlMessage.GetWindowText(msg, ctrlMessage.GetWindowTextLength()+1);
-		tstring s(msg, ctrlMessage.GetWindowTextLength());
+		tstring s;
+		s.resize(ctrlMessage.GetWindowTextLength());
+		
+		ctrlMessage.GetWindowText(&s[0], ctrlMessage.GetWindowTextLength() + 1);
 
 		// save command in history, reset current buffer pointer to the newest command
 		curCommandPosition = prevCommands.size();		//this places it one position beyond a legal subscript
@@ -1248,10 +1249,11 @@ void HubFrame::onTab() {
 	HWND focus = GetFocus();
 	if( (focus == ctrlMessage.m_hWnd) && !WinUtil::isShift() ) 
 	{
-		int n = ctrlMessage.GetWindowTextLength();
-		AutoArray<TCHAR> buf(n+1);
-		ctrlMessage.GetWindowText(buf, n+1);
-		tstring text(buf, n);
+		tstring text;
+		text.resize(ctrlMessage.GetWindowTextLength());
+
+		ctrlMessage.GetWindowText(&text[0], text.size() + 1);
+
 		string::size_type textStart = text.find_last_of(_T(" \n\t"));
 
 		if(complete.empty()) {
@@ -1394,9 +1396,8 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 				if (curCommandPosition > 0) {
 					//check whether current command needs to be saved
 					if (curCommandPosition == prevCommands.size()) {
-						auto_ptr<TCHAR> messageContents(new TCHAR[ctrlMessage.GetWindowTextLength()+2]);
-						ctrlMessage.GetWindowText(messageContents.get(), ctrlMessage.GetWindowTextLength()+1);
-						currentCommand = tstring(messageContents.get());
+						currentCommand.resize(ctrlMessage.GetWindowTextLength());
+						ctrlMessage.GetWindowText(&currentCommand[0], ctrlMessage.GetWindowTextLength()+1);
 					}
 
 					//replace current chat buffer with current command
@@ -1442,9 +1443,8 @@ LRESULT HubFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHan
 			if (!prevCommands.empty() && (GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
 				curCommandPosition = 0;
 				
-				auto_ptr<TCHAR> messageContents(new TCHAR[ctrlMessage.GetWindowTextLength()+2]);
-				ctrlMessage.GetWindowText(messageContents.get(), ctrlMessage.GetWindowTextLength()+1);
-				currentCommand = tstring(messageContents.get());
+				currentCommand.resize(ctrlMessage.GetWindowTextLength());
+				ctrlMessage.GetWindowText(&currentCommand[0], ctrlMessage.GetWindowTextLength() + 1);
 
 				ctrlMessage.SetWindowText(prevCommands[curCommandPosition].c_str());
 			} else {

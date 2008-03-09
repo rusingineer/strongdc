@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -150,14 +150,12 @@ void CryptoManager::generateCertificate() throw(CryptoException) {
 	ssl::X509 x509ss(X509_new());
 	
 	if(!bn || !rsa || !pkey || !nm || !x509ss) {
-		throw new CryptoException("Error creating objects for cert generation");
+		throw CryptoException("Error creating objects for cert generation");
 	}
 	
 	int days = 10;
 	int keylength = 2048;
 
-//	const char* err = NULL;
-	
 #define CHECK(n) if(!(n)) { throw CryptoException(#n); }
 	
 	// Generate key pair
@@ -347,12 +345,12 @@ void CryptoManager::decodeBZ2(const uint8_t* is, size_t sz, string& os) throw (C
 	// We assume that the files aren't compressed more than 2:1...if they are it'll work anyway,
 	// but we'll have to do multiple passes...
 	size_t bufsize = 2*sz;
-	AutoArray<char> buf(bufsize);
+	boost::scoped_array<char> buf(new char[bufsize]);
 	
 	bs.avail_in = sz;
 	bs.avail_out = bufsize;
-	bs.next_in = (char*)(const_cast<uint8_t*>(is));
-	bs.next_out = buf;
+	bs.next_in = reinterpret_cast<char*>(const_cast<uint8_t*>(is));
+	bs.next_out = &buf[0];
 
 	int err;
 
@@ -363,13 +361,13 @@ void CryptoManager::decodeBZ2(const uint8_t* is, size_t sz, string& os) throw (C
 			BZ2_bzDecompressEnd(&bs); 
 			throw CryptoException(STRING(DECOMPRESSION_ERROR)); 
 		} 
-		os.append(buf, bufsize-bs.avail_out); 
+		os.append(&buf[0], bufsize-bs.avail_out);
 		bs.avail_out = bufsize; 
-		bs.next_out = buf; 
+		bs.next_out = &buf[0];
 	} 
 
 	if(err == BZ_STREAM_END)
-		os.append(buf, bufsize-bs.avail_out);
+		os.append(&buf[0], bufsize-bs.avail_out);
 	
 	BZ2_bzDecompressEnd(&bs);
 
@@ -380,7 +378,7 @@ void CryptoManager::decodeBZ2(const uint8_t* is, size_t sz, string& os) throw (C
 }
 
 string CryptoManager::keySubst(const uint8_t* aKey, size_t len, size_t n) {
-	AutoArray<uint8_t> temp(len + n * 10);
+	boost::scoped_array<uint8_t> temp(new uint8_t[len + n * 10]);
 	
 	size_t j=0;
 	
@@ -401,14 +399,14 @@ string CryptoManager::keySubst(const uint8_t* aKey, size_t len, size_t n) {
 			temp[j++] = aKey[i];
 		}
 	}
-	return string((char*)(uint8_t*)temp, j);
+	return string((const char*)&temp[0], j);
 }
 
 string CryptoManager::makeKey(const string& aLock) {
 	if(aLock.size() < 3)
 		return Util::emptyString;
 
-    AutoArray<uint8_t> temp(aLock.length());
+	boost::scoped_array<uint8_t> temp(new uint8_t[aLock.length()]);
 	uint8_t v1;
 	size_t extra=0;
 	
@@ -432,7 +430,7 @@ string CryptoManager::makeKey(const string& aLock) {
 		extra++;
 	}
 	
-	return keySubst(temp, aLock.length(), extra);
+	return keySubst(&temp[0], aLock.length(), extra);
 }
 
 } // namespace dcpp

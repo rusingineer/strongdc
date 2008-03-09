@@ -127,20 +127,19 @@ LRESULT DirectoryListingFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	ctrlTree.SetBkColor(WinUtil::bgColor);
 	ctrlTree.SetTextColor(WinUtil::textColor);
 	
-	WinUtil::splitTokens(columnIndexes, SETTING(DIRECTORLISTINGFRAME_ORDER), COLUMN_LAST);
-	WinUtil::splitTokens(columnSizes, SETTING(DIRECTORLISTINGFRAME_WIDTHS), COLUMN_LAST);
+	WinUtil::splitTokens(columnIndexes, SETTING(DIRECTORYLISTINGFRAME_ORDER), COLUMN_LAST);
+	WinUtil::splitTokens(columnSizes, SETTING(DIRECTORYLISTINGFRAME_WIDTHS), COLUMN_LAST);
 	for(uint8_t j = 0; j < COLUMN_LAST; j++) 
 	{
 		int fmt = ((j == COLUMN_SIZE) || (j == COLUMN_EXACTSIZE) || (j == COLUMN_TYPE)) ? LVCFMT_RIGHT : LVCFMT_LEFT;
 		ctrlList.InsertColumn(j, CTSTRING_I(columnNames[j]), fmt, columnSizes[j], j);
 	}
 	ctrlList.setColumnOrderArray(COLUMN_LAST, columnIndexes);
-
-	ctrlList.setSortColumn(COLUMN_FILENAME);	
 	ctrlList.setVisible(SETTING(DIRECTORYLISTINGFRAME_VISIBLE));
 
 	ctrlTree.SetImageList(WinUtil::fileImages, TVSIL_NORMAL);
 	ctrlList.SetImageList(WinUtil::fileImages, LVSIL_SMALL);
+	ctrlList.setSortColumn(COLUMN_FILENAME);
 
 	ctrlFind.Create(ctrlStatus.m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON, 0, IDC_FIND);
@@ -558,9 +557,12 @@ LRESULT DirectoryListingFrame::onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 
 LRESULT DirectoryListingFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int x = QueueManager::getInstance()->matchListing(*dl);
-	AutoArray<TCHAR> buf(STRING(MATCHED_FILES).length() + 32);
-	_stprintf(buf, CTSTRING(MATCHED_FILES), x);
-	ctrlStatus.SetText(STATUS_TEXT, buf);
+
+	tstring buf;
+	buf.resize(STRING(MATCHED_FILES).length() + 32);
+	_stprintf(&buf[0], CTSTRING(MATCHED_FILES), x);
+	ctrlStatus.SetText(STATUS_TEXT, &buf[0]);
+
 	return 0;
 }
 
@@ -1223,7 +1225,10 @@ LRESULT DirectoryListingFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 		ctrlList.SetRedraw(FALSE);
 		clearList();
 		frames.erase(m_hWnd);
-		WinUtil::saveHeaderOrder(ctrlList, SettingsManager::DIRECTORLISTINGFRAME_ORDER, SettingsManager::DIRECTORLISTINGFRAME_WIDTHS, COLUMN_LAST, columnIndexes, columnSizes);
+
+		ctrlList.saveHeaderOrder(SettingsManager::DIRECTORYLISTINGFRAME_ORDER, SettingsManager::DIRECTORYLISTINGFRAME_WIDTHS,
+			SettingsManager::DIRECTORYLISTINGFRAME_VISIBLE);
+
 		closed = true;
 		PostMessage(WM_CLOSE);
 		return 0;

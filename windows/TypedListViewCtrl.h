@@ -136,7 +136,10 @@ public:
 		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
 		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
 		tstring InfoTip(Util::emptyStringT);
-		AutoArray<TCHAR> Buffer(300);
+		tstring buffer;
+
+		size_t BUF_SIZE = 300;
+		buffer.resize(BUF_SIZE);
 		
 		LV_COLUMN lvCol;
 		LVITEM lvItem;
@@ -146,17 +149,17 @@ public:
 		{
 			if (!NoColumnHeader) {
 				lvCol.mask = LVCF_TEXT;
-				lvCol.pszText = Buffer;
-				lvCol.cchTextMax = 300;
+				lvCol.pszText = &buffer[0];
+				lvCol.cchTextMax = BUF_SIZE;
 				GetColumn(indexes[i], &lvCol);
 				InfoTip += lvCol.pszText;
 				InfoTip += _T(": ");
 			}
 			lvItem.iItem = pInfoTip->iItem;
-			GetItemText(pInfoTip->iItem, indexes[i], Buffer, 300);
-			Buffer[299] = NULL;
+			GetItemText(pInfoTip->iItem, indexes[i],  &buffer[0], BUF_SIZE);
+			//Buffer[299] = NULL;
 
-			InfoTip += Buffer;
+			InfoTip += &buffer[0];
 			InfoTip += _T("\r\n");
 		}
 
@@ -446,7 +449,7 @@ public:
 	}
 
 	void saveHeaderOrder(string& order, string& widths, string& visible) throw() {
-		int size = GetHeader().GetItemCount();
+/*		int size = GetHeader().GetItemCount();
 
 		std::vector<int> ret(size);
 		if(SendMessage(LVM_GETCOLUMNORDERARRAY, static_cast<WPARAM>(ret.size()), reinterpret_cast<LPARAM>(&ret[0]))) {
@@ -458,11 +461,31 @@ public:
 		for(size_t i = 0; i < ret.size(); ++i) {
 			widths += Util::toString(SendMessage(LVM_GETCOLUMNWIDTH, static_cast<WPARAM>(i), 0));
 			widths += ",";
-		}			
+		}*/			
+
+		TCHAR buf[512];
+		int size = GetHeader().GetItemCount();
+		for(int i = 0; i < size; ++i) {
+			LVCOLUMN lvc;
+			lvc.mask = LVCF_TEXT | LVCF_ORDER | LVCF_WIDTH;
+			lvc.cchTextMax = 512;
+			lvc.pszText = buf;
+			GetColumn(i, &lvc);
+			for(ColumnIter j = columnList.begin(); j != columnList.end(); ++j){
+				if(_tcscmp(buf, (*j)->name.c_str()) == 0) {
+					(*j)->pos = lvc.iOrder;
+					(*j)->width = lvc.cx;
+					break;
+				}
+			}
+		}
 
 		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
 			ColumnInfo* ci = *i;
-
+			
+			order += Util::toString((*i)->pos) + ",";
+			widths += Util::toString((*i)->width) + ",";
+			
 			if(ci->visible){
 				visible += "1,";
 			} else {
@@ -493,7 +516,21 @@ public:
 	}
 
 	void setColumnOrderArray(int iCount, int* columns) {
-		SendMessage(LVM_SETCOLUMNORDERARRAY, static_cast<WPARAM>(iCount), reinterpret_cast<LPARAM>(&columns[0])); 
+		LVCOLUMN lvc = {0};
+		lvc.mask = LVCF_ORDER;
+
+		int j = 0;
+		for(int i = 0; i < iCount;) {
+			if(columns[i] == j) {
+				lvc.iOrder = columnList[i]->pos = columns[i];
+				SetColumn(i, &lvc);
+
+				j++;
+				i = 0;
+			} else {
+				i++;
+			}
+		}
 	}
 
 	//find the original position of the column at the current position.

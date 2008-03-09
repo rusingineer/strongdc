@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -217,8 +217,8 @@ void AdcHub::handle(AdcCommand::SUP, AdcCommand& c) throw() {
 	}
 	
 	if(!baseOk) {
-		fire(ClientListener::StatusMessage(), this, "Failed to negotiate base protocol"); // @todo internationalize
-		socket->disconnect(false);
+		fire(ClientListener::StatusMessage(), this, "Failed to negotiate base protocol");
+		disconnect(false);
 		return;
 	} else if(!tigrOk) {
 		oldPassword = true;
@@ -454,6 +454,7 @@ void AdcHub::sendUDP(const AdcCommand& cmd) throw() {
 		udp.writeTo(ip, port, command);
 	} catch(const SocketException& e) {
 		dcdebug("AdcHub::sendUDP: write failed: %s\n", e.getError().c_str());
+		udp.close();
 	}
 }
 
@@ -656,15 +657,15 @@ void AdcHub::password(const string& pwd) {
 		return;
 	if(!salt.empty()) {
 		size_t saltBytes = salt.size() * 5 / 8;
-		AutoArray<uint8_t> buf(saltBytes);
-		Encoder::fromBase32(salt.c_str(), buf, saltBytes);
+		boost::scoped_array<uint8_t> buf(new uint8_t[saltBytes]);
+		Encoder::fromBase32(salt.c_str(), &buf[0], saltBytes);
 		TigerHash th;
 		if(oldPassword) {
 			CID cid = getMyIdentity().getUser()->getCID();
 			th.update(cid.data(), CID::SIZE);
 		}
 		th.update(pwd.data(), pwd.length());
-		th.update(buf, saltBytes);
+		th.update(&buf[0], saltBytes);
 		send(AdcCommand(AdcCommand::CMD_PAS, AdcCommand::TYPE_HUB).addParam(Encoder::toBase32(th.finalize(), TigerHash::BYTES)));
 		salt.clear();
 	}

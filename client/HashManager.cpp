@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -152,9 +152,9 @@ bool HashManager::HashStore::loadTree(File& f, const TreeInfo& ti, const TTHValu
 	try {
 		f.setPos(ti.getIndex());
 		size_t datalen = TigerTree::calcBlocks(ti.getSize(), ti.getBlockSize()) * TTHValue::BYTES;
-		AutoArray<uint8_t> buf(datalen);
-		f.read((uint8_t*)buf, datalen);
-		tt = TigerTree(ti.getSize(), ti.getBlockSize(), buf);
+		boost::scoped_array<uint8_t> buf(new uint8_t[datalen]);
+		f.read(&buf[0], datalen);
+		tt = TigerTree(ti.getSize(), ti.getBlockSize(), &buf[0]);
 		if(!(tt.getRoot() == root))
 			return false;
 	} catch(const Exception&) {

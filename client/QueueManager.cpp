@@ -212,8 +212,7 @@ void QueueManager::UserQueue::add(QueueItem* qi, const UserPtr& aUser) {
 	}
 }
 
-// TODO: implement error message as a reason for no other segment
-QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Priority minPrio) {
+QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Priority minPrio, bool allowRemove) {
 	int p = QueueItem::LAST - 1;
 	lastError = Util::emptyString;
 
@@ -232,7 +231,7 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 						blockSize = qi->getSize();
 					
 					Segment segment = qi->getNextSegment(blockSize, aUser->getLastDownloadSpeed(), source->getPartialSource());
-					if(segment.getStart() != -1 && segment.getSize() == 0) {
+					if(allowRemove && segment.getStart() != -1 && segment.getSize() == 0) {
 						// no other partial chunk from this user, remove him from queue
 						remove(qi, aUser);
 						qi->removeSource(aUser, QueueItem::Source::FLAG_NO_NEED_PARTS);
@@ -863,7 +862,7 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 		return new Download(aSource, pi->second);
 	}
 
-	QueueItem* q = userQueue.getNext(aUser);
+	QueueItem* q = userQueue.getNext(aUser, QueueItem::LOWEST, true);
 
 	if(!q) {
 		aMessage = userQueue.getLastError();
@@ -1085,29 +1084,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 							if(aDownload->getType() == Transfer::TYPE_FILE) {
 								// For partial-share, abort upload first to move file correctly
 								UploadManager::getInstance()->abortUpload(q->getTempTarget());
-
-#ifdef _DEBUG
-								try {
-									// last TTH verification only in debug mode
-									AutoArray<char> buf(512*1024);
-						   
-									File f(aDownload->getDownloadTarget(), File::READ, File::OPEN);
-									TigerTree tth(TigerTree::calcBlockSize(aDownload->getSize(), 1));
-						   
-									if(aDownload->getSize() > 0) {
-										size_t n = 512*1024;
-										while( (n = f.read(buf, n)) > 0) {
-											tth.update(buf, n);
-											n = 512*1024;
-										}
-									} else {
-										tth.update("", 0);
-									}
-									tth.finalize();
-						   
-									dcassert(tth.getRoot() == aDownload->getTTH());
-								} catch(...) { }
-#endif
 							}
 						
 							// Check if we need to move the file
@@ -1231,9 +1207,10 @@ void QueueManager::processList(const string& name, UserPtr& user, int flags) {
 	}
 	if(flags & QueueItem::FLAG_MATCH_QUEUE) {
 		const size_t BUF_SIZE = STRING(MATCHED_FILES).size() + 16;
-		AutoArray<char> tmp(BUF_SIZE);
-		snprintf(tmp, BUF_SIZE, CSTRING(MATCHED_FILES), matchListing(dirList));
-		LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(user->getCID())) + ": " + string(tmp));
+		string tmp;
+		tmp.resize(BUF_SIZE);
+		snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), matchListing(dirList));
+		LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(user->getCID())) + ": " + tmp);
 	}
 }
 

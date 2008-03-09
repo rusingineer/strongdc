@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -807,17 +807,18 @@ string fixedftime(const string& format, struct tm* t) {
 	tmp[1] = tmp[2] = tmp[3] = 0;
 
 	StringMap sm;
-	AutoArray<char> buf(1024);
+	static const size_t BUF_SIZE = 1024;
+	boost::scoped_array<char> buf(new char[BUF_SIZE]);
 	for(size_t i = 0; i < strlen(codes); ++i) {
 		tmp[1] = codes[i];
 		tmp[2] = 0;
-		strftime(buf, 1024-1, tmp, t);
-		sm[tmp] = buf; 
+		strftime(&buf[0], BUF_SIZE-1, tmp, t);
+		sm[tmp] = &buf[0];
 
 		tmp[1] = '#';
 		tmp[2] = codes[i];
-		strftime(buf, 1024-1, tmp, t);
-		sm[tmp] = buf; 		
+		strftime(&buf[0], BUF_SIZE-1, tmp, t);
+		sm[tmp] = &buf[0]; 
 	}
 
 	for(StringMapIter i = sm.begin(); i != sm.end(); ++i) {
@@ -914,24 +915,29 @@ string Util::formatTime(const string &msg, const time_t t) {
 			return Util::emptyString;
 		}
 #if _WIN32
-		AutoArray<TCHAR> buf(bufsize);
+		tstring buf(bufsize, 0);
 
-		if(!_tcsftime(buf, bufsize-1, Text::toT(msg).c_str(), loc)) {
+		buf.resize(_tcsftime(&buf[0], buf.size()-1, Text::toT(msg).c_str(), loc));
+
+		if(buf.empty()) {
 			return fixedftime(msg, loc);
 		}
 
-		return Text::fromT(tstring(buf));
+		return Text::fromT(buf);
 #else
 		// will this give wide representations for %a and %A?
 		// surely win32 can't have a leg up on linux/unixen in this area. - Todd
-		AutoArray<char> buf(bufsize);
+		string buf(bufsize, 0);
 
-		while(!strftime(buf, bufsize-1, msg.c_str(), loc)) {
+		buf.resize(strftime(&buf[0], bufsize-1, msg.c_str(), loc));
+		
+		while(buf.empty()) {
 			bufsize+=64;
-			buf = new char[bufsize];
+			buf.resize(bufsize);
+			buf.resize(strftime(&buf[0], bufsize-1, msg.c_str(), loc));
 		}
 
-		return Text::toUtf8(string(buf));
+		return Text::toUtf8(buf);
 #endif
 	}
 	return Util::emptyString;
