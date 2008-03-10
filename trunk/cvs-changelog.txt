@@ -1,3 +1,6 @@
+** svn383
+	fixed Release build
+
 ** svn382
 	hopefully fixed columns settings
 	fixed crashes #12115, #12130, #12141
