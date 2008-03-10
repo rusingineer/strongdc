@@ -153,7 +153,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="false"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\openssl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\boost&quot;;&quot;$(SolutionDir)\openssl\include&quot;"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="1"

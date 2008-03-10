@@ -51,6 +51,7 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\boost&quot;"
 				PreprocessorDefinitions="_CONSOLE"
 				StringPooling="true"
 				MinimalRebuild="true"
