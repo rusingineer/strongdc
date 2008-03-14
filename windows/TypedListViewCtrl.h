@@ -483,14 +483,16 @@ public:
 		for(ColumnIter i = columnList.begin(); i != columnList.end(); ++i){
 			ColumnInfo* ci = *i;
 			
-			order += Util::toString((*i)->pos) + ",";
-			widths += Util::toString((*i)->width) + ",";
-			
+
 			if(ci->visible){
 				visible += "1,";
 			} else {
+				ci->pos = size++;
 				visible += "0,";
 			}
+			
+			order += Util::toString((*i)->pos) + ",";
+			widths += Util::toString((*i)->width) + ",";			
 		}
 
 		order.erase(order.size()-1, 1);
