@@ -112,7 +112,6 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 	dcassert(page != NULL);
 
 	tstring buf;
-	buf.resize(SETTING_STR_MAXLEN);
 
 	for(Item const* i = items; i->type != T_END; i++)
 	{
@@ -124,7 +123,8 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 					// Control not exist ? Why ??
 					throw;
 				}
-				::GetDlgItemText(page, i->itemID, &buf[0], SETTING_STR_MAXLEN);
+				buf.resize(SETTING_STR_MAXLEN);
+				buf.resize(::GetDlgItemText(page, i->itemID, &buf[0], SETTING_STR_MAXLEN));
 				settings->set((SettingsManager::StrSetting)i->setting, Text::fromT(buf));
 #if DIM_EDIT_EXPERIMENT
 				if (ctrlMap[i->itemID]) {
@@ -141,14 +141,15 @@ void PropPage::write(HWND page, Item const* items, ListItem* listItems /* = NULL
 					// Control not exist ? Why ??
 					throw;
 				}
-
-				::GetDlgItemText(page, i->itemID, &buf[0], SETTING_STR_MAXLEN);
+				buf.resize(SETTING_STR_MAXLEN);
+				buf.resize(::GetDlgItemText(page, i->itemID, &buf[0], SETTING_STR_MAXLEN));
 				settings->set((SettingsManager::IntSetting)i->setting, Util::toInt(Text::fromT(buf)));
 				break;
 			}
 		case T_INT64:
 			{
-				::GetDlgItemText(page, i->itemID, &buf[0], SETTING_STR_MAXLEN);
+				buf.resize(SETTING_STR_MAXLEN);
+				buf.resize(::GetDlgItemText(page, i->itemID, &buf[0], SETTING_STR_MAXLEN));
 				settings->set((SettingsManager::Int64Setting)i->setting, Text::fromT(buf));
 				break;
 			}

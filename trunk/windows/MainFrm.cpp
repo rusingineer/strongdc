@@ -117,7 +117,7 @@ public:
 				const size_t BUF_SIZE = STRING(MATCHED_FILES).size() + 16;
 				string tmp;
 				tmp.resize(BUF_SIZE);
-				snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl));
+				tmp.resize(snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl)));
 				LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(u->getCID())) + ": " + tmp);
 			} catch(const Exception&) {
 
@@ -987,7 +987,7 @@ int MainFrame::run() {
 		lastTTHdir = Util::getFilePath(file);
 
 		string TTH;
-		TTH.resize(192*8/(5*8)+2);
+		TTH.resize(192*8/(5*8)+1);
 
 		boost::scoped_array<char> buf(new char[512 * 1024]);
 

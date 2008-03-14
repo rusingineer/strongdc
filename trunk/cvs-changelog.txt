@@ -1,3 +1,7 @@
+** svn384
+	fixed some memory problems
+	fixed columns ordering when some columns are hidden
+
 ** svn383
 	fixed Release build
 
