@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,6 +90,7 @@ public:
 	SearchManager::TypeModes getType(const string& fileName) const throw();
 
 	string validateVirtual(const string& /*aVirt*/) const throw();
+	bool hasVirtual(const string& name) const throw();
 
 	void addHits(uint32_t aHits) {
 		hits += aHits;
@@ -145,7 +146,7 @@ private:
 
 			string getADCPath() const { return parent->getADCPath() + name; }
 			string getFullName() const { return parent->getFullName() + name; }
-			string getRealPath() const { return parent->getRealPath() + name; }
+			string getRealPath() const { return parent->getRealPath(name); }
 
 			GETSET(TTHValue, tth, TTH);
 			GETSET(string, name, Name);
@@ -161,9 +162,7 @@ private:
 		File::Set files;
 		int64_t size;
 
-		Directory(const string& aName = Util::emptyString, Directory* aParent = NULL) : 
-			name(aName), parent(aParent), fileTypes(0) {
-		}
+		Directory(const string& aName, Directory* aParent);
 
 		~Directory();
 
@@ -174,10 +173,9 @@ private:
 
 		string getADCPath() const throw();
 		string getFullName() const throw(); 
-		string getRealPath() const throw();
+		string getRealPath(const std::string& path) const throw(ShareException);
 
 		int64_t getSize() const throw();
-		size_t countFiles() const throw();
 
 		void search(SearchResult::List& aResults, StringSearch::List& aStrings, int aSearchType, int64_t aSize, int aFileType, Client* aClient, StringList::size_type maxResults) const throw();
 		void search(SearchResult::List& aResults, AdcSearch& aStrings, StringList::size_type maxResults) const throw();
@@ -187,6 +185,8 @@ private:
 
 		File::Set::const_iterator findFile(const string& aFile) const { return find_if(files.begin(), files.end(), Directory::File::StringComp(aFile)); }
 
+		void merge(Directory* source);
+		
 		GETSET(string, name, Name);
 		GETSET(Directory*, parent, Parent);
 	private:
@@ -261,8 +261,12 @@ private:
 
 	mutable CriticalSection cs;
 
-	// Map real name to directory structure
-	Directory::Map directories;
+	// List of root directory items
+	typedef std::list<Directory*> DirList;
+	DirList directories;
+
+	/** Map real name to virtual name - multiple real names may be mapped to a single virtual one */
+	StringMap shares;
 
 	typedef unordered_map<TTHValue, Directory::File::Set::const_iterator> HashFileMap;
 	typedef HashFileMap::const_iterator HashFileIter;
@@ -277,15 +281,19 @@ private:
 
 	void rebuildIndices();
 
-	void addTree(Directory& aDirectory);
-	void addFile(Directory& dir, const Directory::File::Set::const_iterator& i);
+	void updateIndices(Directory& aDirectory);
+	void updateIndices(Directory& dir, const Directory::File::Set::iterator& i);
+	
+	Directory* merge(Directory* directory);
+	
 	void generateXmlList();
 	StringList notShared;
 	bool loadCache() throw();
-	bool hasVirtual(const string& name) const throw();
-	Directory::Map::const_iterator getByVirtual(const string& virtualName) const throw();
+	DirList::const_iterator getByVirtual(const string& virtualName) const throw();
+	
+	string findRealRoot(const string& virtualRoot, const string& virtualLeaf) const throw(ShareException);
 
-	Directory* getDirectory(const string& fname) const;
+	Directory* getDirectory(const string& fname);
 
 	int run();
 

@@ -277,7 +277,6 @@ private:
 		COLUMN_CONNECTION,
 		COLUMN_HUB,
 		COLUMN_EXACT_SIZE,
-		COLUMN_UPLOAD,
 		COLUMN_IP,		
 		COLUMN_TTH,
 		COLUMN_LAST
@@ -400,14 +399,6 @@ private:
 				case COLUMN_CONNECTION: return Text::toT(ClientManager::getInstance()->getConnection(getUser()->getCID()));
 				case COLUMN_HUB: return Text::toT(sr->getHubName());
 				case COLUMN_EXACT_SIZE: return sr->getSize() > 0 ? Util::formatExactSize(sr->getSize()) : Util::emptyStringT;
-				case COLUMN_UPLOAD:
-					if (getUser()->getLastDownloadSpeed() > 0) {
-						return Util::formatBytesW(getUser()->getLastDownloadSpeed()) + _T("/s");
-					} else if(getUser()->isSet(User::FIREBALL)) {
-						return _T(">=100 kB/s");
-					} else {
-						return _T("N/A");
-					}		
 				case COLUMN_IP: {
 					string ip = sr->getIP();
 					if (!ip.empty()) {
@@ -442,7 +433,6 @@ private:
 						return compare(a->sr->getFreeSlots(), b->sr->getFreeSlots());
 				case COLUMN_SIZE:
 				case COLUMN_EXACT_SIZE: return compare(a->sr->getSize(), b->sr->getSize());
-				case COLUMN_UPLOAD: return compare(a->getText(COLUMN_UPLOAD), b->getText(COLUMN_UPLOAD));
 				default: return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 			}
 		}

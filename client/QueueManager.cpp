@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -142,7 +142,7 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 		QueueItem* q = i->second;
 
 		// We prefer to search for things that are not running...
-		if((cand != NULL) && q->getNextSegment(0, 0, NULL).getSize() == 0) 
+		if((cand != NULL) && q->getNextSegment(0, 0, 0, NULL).getSize() == 0) 
 			continue;
 		// No user lists
 		if(q->isSet(QueueItem::FLAG_USER_LIST) || q->isSet(QueueItem::FLAG_TESTSUR) || q->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
@@ -159,13 +159,13 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 
 		cand = q;
 
-		if(cand->getNextSegment(0, 0, NULL).getSize() != 0)
+		if(cand->getNextSegment(0, 0, 0, NULL).getSize() != 0)
 			break;
 	}
 
 	//check this again, if the first item we pick is running and there are no
 	//other suitable items this will be true
-	if((cand != NULL) && (cand->getNextSegment(0, 0, NULL).getSize() == 0)) {
+	if((cand != NULL) && (cand->getNextSegment(0, 0, 0, NULL).getSize() == 0)) {
 		cand = NULL;
 	}
 
@@ -182,9 +182,9 @@ QueueItem* QueueManager::FileQueue::findAutoSearch(deque<string>& recent) const 
 	QueueItem* cand = findCandidate(i, queue.end(), recent);
 	if(cand == NULL) {
 		cand = findCandidate(queue.begin(), i, recent);
-	} else if(cand->getNextSegment(0, 0, NULL).getSize() == 0) {
+	} else if(cand->getNextSegment(0, 0, 0, NULL).getSize() == 0) {
 		QueueItem* cand2 = findCandidate(queue.begin(), i, recent);
-		if(cand2 != NULL && cand2->getNextSegment(0, 0, NULL).getSize() != 0) {
+		if(cand2 != NULL && cand2->getNextSegment(0, 0, 0, NULL).getSize() != 0) {
 			cand = cand2;
 		}
 	}
@@ -212,7 +212,7 @@ void QueueManager::UserQueue::add(QueueItem* qi, const UserPtr& aUser) {
 	}
 }
 
-QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Priority minPrio, bool allowRemove) {
+QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Priority minPrio, int64_t wantedSize, int64_t lastSpeed, bool allowRemove) {
 	int p = QueueItem::LAST - 1;
 	lastError = Util::emptyString;
 
@@ -230,7 +230,7 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 					if(blockSize == 0)
 						blockSize = qi->getSize();
 					
-					Segment segment = qi->getNextSegment(blockSize, aUser->getLastDownloadSpeed(), source->getPartialSource());
+					Segment segment = qi->getNextSegment(blockSize, wantedSize, lastSpeed, source->getPartialSource());
 					if(allowRemove && segment.getStart() != -1 && segment.getSize() == 0) {
 						// no other partial chunk from this user, remove him from queue
 						remove(qi, aUser);
@@ -262,7 +262,7 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 					if(blockSize == 0)
 						blockSize = qi->getSize();
 
-					Segment segment = qi->getNextSegment(blockSize, aUser->getLastDownloadSpeed(), source->getPartialSource());
+					Segment segment = qi->getNextSegment(blockSize, wantedSize, lastSpeed, source->getPartialSource());
 					if(segment.getSize() == 0) {
 						lastError = segment.getStart() == -1 ? STRING(ALL_DOWNLOAD_SLOTS_TAKEN) : STRING(NO_FREE_BLOCK);
 						dcdebug("No segment for %s in %s, block " I64_FMT "\n", aUser->getCID().toBase32().c_str(), qi->getTarget().c_str(), blockSize);
@@ -515,7 +515,7 @@ void QueueManager::addPfs(const UserPtr& aUser, const string& aDir) throw(QueueE
 }
 
 void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& root, UserPtr aUser,
-					   Flags::MaskType aFlags /* = QueueItem::FLAG_RESUME */, bool addBad /* = true */) throw(QueueException, FileException)
+					   Flags::MaskType aFlags /* = 0 */, bool addBad /* = true */) throw(QueueException, FileException)
 {
 	bool wantConnection = true;
 	bool newItem = false;
@@ -862,7 +862,7 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 		return new Download(aSource, pi->second);
 	}
 
-	QueueItem* q = userQueue.getNext(aUser, QueueItem::LOWEST, true);
+	QueueItem* q = userQueue.getNext(aUser, QueueItem::LOWEST, aSource.getChunkSize(), aSource.getSpeed(), true);
 
 	if(!q) {
 		aMessage = userQueue.getLastError();
@@ -920,33 +920,31 @@ private:
 
 void QueueManager::setFile(Download* d) {
 	if(d->getType() == Transfer::TYPE_FILE) {
-		{
-			Lock l(cs);
+		Lock l(cs);
 
-			QueueItem* qi = fileQueue.find(d->getPath());
-			if(!qi) {
-				throw QueueException(STRING(TARGET_REMOVED));
+		QueueItem* qi = fileQueue.find(d->getPath());
+		if(!qi) {
+			throw QueueException(STRING(TARGET_REMOVED));
+		}
+		
+		if(d->getOverlapped()) {
+			d->setOverlapped(false);
+
+			bool found = false;
+			// ok, we got a fast slot, so it's possible to disconnect original user now
+			for(DownloadList::const_iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); ++i) {
+				if((*i) != d && (*i)->getSegment().contains(d->getSegment())) {
+					found = true;
+
+					// disconnect slow chunk
+					(*i)->getUserConnection().disconnect();
+					break;
+				}
 			}
-			
-			if(d->getOverlapped()) {
-				d->setOverlapped(false);
 
-				bool found = false;
-				// ok, we got a fast slot, so it's possible to disconnect original user now
-				for(DownloadList::const_iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); ++i) {
-					if((*i) != d && (*i)->getSegment().contains(d->getSegment())) {
-						found = true;
-
-						// disconnect slow chunk
-						(*i)->getUserConnection().disconnect();
-						break;
-					}
-				}
-
-				if(!found) {
-					// slow chunk already finished ???
-					throw QueueException(STRING(DOWNLOAD_FINISHED_IDLE));
-				}
+			if(!found) {
+				// slow chunk already finished ???
+				throw QueueException(STRING(DOWNLOAD_FINISHED_IDLE));
 			}
 		}
 		
@@ -955,9 +953,10 @@ void QueueManager::setFile(Download* d) {
 		File* f = new File(target, File::WRITE, File::OPEN | File::CREATE | File::SHARED);
 
 		// Only use antifrag if we don't have a previous non-antifrag part
-		if(BOOLSETTING(ANTI_FRAG) && f->getSize() == 0) {
+		if(BOOLSETTING(ANTI_FRAG) && f->getSize() < qi->getSize()) {
 			f->setSize(d->getTigerTree().getFileSize());
 		}
+		
 		f->setPos(d->getSegment().getStart());
 		d->setFile(f);
 	} else if(d->getType() == Transfer::TYPE_FULL_LIST) {
@@ -1156,11 +1155,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 			}
 		}
 
-		size_t speed = static_cast<size_t>(aDownload->getAverageSpeed());
-		if(speed > 0 && aDownload->getStart() > 0 && aDownload->getPos() > 32768 && speed < 10485760){
-			UserPtr u = aDownload->getUser();
-			u->setLastDownloadSpeed(speed);
-		}
 		delete aDownload;
 	}
 
@@ -1518,7 +1512,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 		inDownloads = true;
 	} else if(inDownloads) {
 		if(cur == NULL && name == sDownload) {
-			Flags::MaskType flags = QueueItem::FLAG_RESUME;
+			Flags::MaskType flags = 0;
 			int64_t size = Util::toInt64(getAttrib(attribs, sSize, 1));
 			if(size == 0)
 				return;
@@ -1756,7 +1750,6 @@ bool QueueManager::dropSource(Download* d) {
 
 		if((iHighSpeed == 0 || overallSpeed > iHighSpeed * 1024) && onlineUsers > 2) {
 			d->setFlag(Download::FLAG_SLOWUSER);
-			d->getUser()->setLastDownloadSpeed(static_cast<size_t>(d->getAverageSpeed()));
 
 			if(d->getAverageSpeed() < SETTING(REMOVE_SPEED)*1024) {
 				return true;

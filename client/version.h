@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,13 @@
  */
 
 #define APPNAME "StrongDC++"
-#define VERSIONSTRING "2.12"
-#define VERSIONFLOAT 2.12
+#define VERSIONSTRING "2.13"
+#define VERSIONFLOAT 2.13
 
-#define DCVERSIONSTRING "0.704"
+#define DCVERSIONSTRING "0.706"
+#define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
 
-#define SVNVERSION "svn384"
+#define SVNVERSION "svn385"
 
 /* Update the .rc file as well... */
 

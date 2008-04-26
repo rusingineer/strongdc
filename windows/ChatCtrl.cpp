@@ -740,6 +740,20 @@ LRESULT ChatCtrl::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
+		StringMap params;
+
+		params["userNI"] = ou->getNick();
+		params["hubNI"] = client->getHubName();
+		params["myNI"] = client->getMyNick();
+		params["userCID"] = ou->getUser()->getCID().toBase32();
+		params["hubURL"] = client->getHubUrl();
+
+		tstring file = Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false)));
+		if(Util::fileExists(Text::fromT(file))) {
+			ShellExecute(NULL, NULL, file.c_str(), NULL, NULL, SW_SHOWNORMAL);
+		} else {
+			MessageBox(CTSTRING(NO_LOG_FOR_USER),CTSTRING(NO_LOG_FOR_USER), MB_OK );	  
+		}
 	}
 
 	return 0;

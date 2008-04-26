@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,19 +51,9 @@ public:
 
 	int64_t getStartPos() const { return getSegment().getStart(); }
 
-	void addPos(int64_t aBytes, int64_t aActual) { 
-		pos += aBytes; actual+= aActual;
+	void addPos(int64_t aBytes, int64_t aActual) { pos += aBytes; actual+= aActual; }
 
-		if(aBytes > 0) {
-			Lock l(cs);
-			while(samples.size() >= SAMPLES) {
-				samples.pop_front();
-			}
-			samples.push_back(std::make_pair(GET_TICK(), pos));
-		}
-	}
-
-	enum { SAMPLES = 15 };
+	enum { MIN_SAMPLES = 15, MIN_SECS = 15 };
 	
 	/** Record a sample for average calculation */
 	void tick();

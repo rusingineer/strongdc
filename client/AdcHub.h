@@ -112,7 +112,7 @@ private:
 	   return NULL; 
 	}
 
-	void putUser(const uint32_t sid);
+	void putUser(const uint32_t sid, bool disconnect);
 
 	void clearUsers();
 

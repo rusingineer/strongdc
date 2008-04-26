@@ -54,7 +54,7 @@ public:
 		size_t operator()(const UserPtr& x) const { return ((size_t)(&(*x)))/sizeof(User); }
 	};
 
-	User(const CID& aCID) : cid(aCID), lastDownloadSpeed(0), firstNick(Util::emptyString) { }
+	User(const CID& aCID) : cid(aCID), firstNick(Util::emptyString) { }
 
 	~User() throw() { }
 
@@ -65,7 +65,6 @@ public:
 	bool isNMDC() const { return isSet(NMDC); }
 
 	GETSET(string, firstNick, FirstNick);
-	GETSET(size_t, lastDownloadSpeed, LastDownloadSpeed);
 private:
 	User(const User&);
 	User& operator=(const User&);
