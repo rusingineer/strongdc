@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,24 +39,38 @@ Transfer::Transfer(UserConnection& conn, const string& path_, const TTHValue& tt
 	path(path_), tth(tth_), actual(0), pos(0), userConnection(conn) { }
 
 void Transfer::tick() {
+	Lock l(cs);
 	
-	//Lock l(cs);
-	//while(samples.size() >= SAMPLES) {
-	//	samples.pop_front();
-	//}
-	//samples.push_back(std::make_pair(GET_TICK(), pos));
+	uint64_t t = GET_TICK();
+	
+	if(samples.size() >= 1) {
+		int64_t tdiff = samples.back().first - samples.front().first;
+		if((tdiff / 1000) > MIN_SECS) {
+			while(samples.size() >= MIN_SAMPLES) {
+				samples.pop_front();
+			}
+		}
+		
+	}
+	
+	if(samples.size() > 1) {
+		if(samples.back().second == pos) {
+			// Position hasn't changed, just update the time
+			samples.back().first = t;
+			return;
+		}
+	}
 
+	samples.push_back(std::make_pair(t, pos));
 }
 
 int64_t Transfer::getAverageSpeed() const {
 
 	Lock l(cs);
 	if(samples.size() < 2) {
-		uint64_t ticks = GET_TICK() - getStart();
-		return ticks > 0 ? static_cast<int64_t>((static_cast<double>(getPos()) / ticks) * 1000.0) : 0;
+		return 0;
 	}
-
-	uint64_t ticks = GET_TICK() - samples.front().first;
+	uint64_t ticks = samples.back().first - samples.front().first;
 	int64_t bytes = samples.back().second - samples.front().second;
 
 	return ticks > 0 ? static_cast<int64_t>((static_cast<double>(bytes) / ticks) * 1000.0) : 0;
@@ -65,7 +79,6 @@ int64_t Transfer::getAverageSpeed() const {
 int64_t Transfer::getSecondsLeft(bool wholeFile) const {
 	int64_t avg = getAverageSpeed();
 	int64_t bytesLeft =  (wholeFile ? ((Upload*)this)->getFileSize() : getSize()) - getPos();
-
 	return (avg > 0) ? (bytesLeft / avg) : 0;
 }
 

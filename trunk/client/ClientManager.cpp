@@ -23,6 +23,7 @@
 
 #include "ShareManager.h"
 #include "SearchManager.h"
+#include "ConnectionManager.h"
 #include "CryptoManager.h"
 #include "FavoriteManager.h"
 #include "SimpleXML.h"
@@ -280,7 +281,7 @@ void ClientManager::putOnline(OnlineUser* ou) throw() {
 	}
 }
 
-void ClientManager::putOffline(OnlineUser* ou) throw() {
+void ClientManager::putOffline(OnlineUser* ou, bool disconnect) throw() {
 	bool lastUser = false;
 	{
 		Lock l(cs);
@@ -297,8 +298,11 @@ void ClientManager::putOffline(OnlineUser* ou) throw() {
 	}
 
 	if(lastUser) {
-		ou->getUser()->unsetFlag(User::ONLINE);
-		fire(ClientManagerListener::UserDisconnected(), ou->getUser());
+		UserPtr& u = ou->getUser();
+		u->unsetFlag(User::ONLINE);
+		if(disconnect)
+			ConnectionManager::getInstance()->disconnect(u);
+		fire(ClientManagerListener::UserDisconnected(), u);
 	}
 }
 

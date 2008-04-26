@@ -810,7 +810,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 						} else if(i->isSet(QueueItem::Source::FLAG_NO_TTHF)) {
 							nick += _T(" (") + TSTRING(SOURCE_TOO_OLD) + _T(")");
 						} else if(i->isSet(QueueItem::Source::FLAG_SLOW_SOURCE)) {
-							nick += _T(" (") + TSTRING(SLOW_USER) + _T(" [") + Util::formatBytesW(i->getUser()->getLastDownloadSpeed()) + _T("/s])");
+							nick += _T(" (") + TSTRING(SLOW_USER) + _T(")");
 						}
 						mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 						mi.fType = MFT_STRING;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,8 +57,6 @@ public:
 	enum FileFlags {
 		/** Normal download, no flags set */
 		FLAG_NORMAL				= 0x00, 
-		/** This download should be resumed if possible */
-		FLAG_RESUME				= 0x01,
 		/** This is a user file listing download */
 		FLAG_USER_LIST			= 0x02,
 		/** The file list is downloaded to use for directory download (used with USER_LIST) */
@@ -224,7 +222,7 @@ public:
 	DownloadList& getDownloads() { return downloads; }
 	
 	/** Next segment that is not done and not being downloaded, zero-sized segment returned if there is none is found */
-	Segment getNextSegment(int64_t blockSize, int64_t userSpeed, const PartialSource::Ptr partialSource) const;
+	Segment getNextSegment(int64_t blockSize, int64_t wantedSize, int64_t lastSpeed, const PartialSource::Ptr partialSource) const;
 	
 	void addSegment(const Segment& segment);
 	

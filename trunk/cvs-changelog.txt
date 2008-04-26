@@ -1,3 +1,11 @@
+** svn385
+	fixed opening user logs from chat
+	fixed parsing partial blocks in PSR command
+	fixed race condition in ConnectionManager
+	improved segment auto-size (DC++ SVN)
+	improved transfer speed averaging (DC++ SVN)
+	allow shared virtual folders to have the same name (DC++ SVN)
+
 ** svn384
 	fixed some memory problems
 	fixed columns ordering when some columns are hidden

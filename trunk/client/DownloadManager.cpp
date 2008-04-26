@@ -271,6 +271,7 @@ void DownloadManager::startData(UserConnection* aSource, int64_t start, int64_t 
 	}
 
 	d->setStart(GET_TICK());
+	d->tick();
 	aSource->setState(UserConnection::STATE_RUNNING);
 
 	fire(DownloadManagerListener::Starting(), d);
@@ -293,6 +294,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 
 	try {
 		d->addPos(d->getFile()->write(aData, aLen), aLen);
+		d->tick();
 
 		if(d->getPos() > d->getSize()) {
 			failDownload(aSource, STRING(TOO_MUCH_DATA));
@@ -342,6 +344,9 @@ void DownloadManager::endData(UserConnection* aSource) {
 			return;
 		}
 
+		aSource->setSpeed(d->getAverageSpeed());
+		aSource->updateChunkSize(d->getTigerTree().getBlockSize(), d->getSize(), GET_TICK() - d->getStart());
+		
 		dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getPath().c_str(), d->getSize(), d->getPos());
 	}
 

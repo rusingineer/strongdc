@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,8 +94,12 @@ int64_t QueueItem::getAverageSpeed() const {
 	return totalSpeed;
 }
 
-Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const PartialSource::Ptr partialSource) const {
-	if(!BOOLSETTING(MULTI_CHUNK) && isRunning()) {
+Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_t lastSpeed, const PartialSource::Ptr partialSource) const {
+	if(getSize() == -1 || blockSize == 0) {
+		return Segment(0, -1);
+	}
+	
+	if(!BOOLSETTING(MULTI_CHUNK) && !downloads.empty()) {
 		// file is already running and segmented downloads are disabled
 		return Segment(-1, 0);
 	}
@@ -105,10 +109,6 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 	{
 		// no other segments if we have reached the speed or segment limit
 		return Segment(-1, 0);
-	}
-
-	if(getSize() == -1 || blockSize == 0) {
-		return Segment(0, -1);
 	}
 
 	/* added for PFS */
@@ -125,26 +125,27 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 
 	/***************************/
 
-	int64_t start = 0;
-	int64_t maxSize = std::max(blockSize, static_cast<int64_t>(1024 * 1024));
-
-	if(userSpeed > 0) {
-		// get the speed of average chunk
-		int64_t averageChunkSpeed = downloads.size() > 0 ? getAverageSpeed() / downloads.size() : 25600;
-		if(averageChunkSpeed == 0) averageChunkSpeed = 25600;
-
-		// set maxSize according to user's lastSpeed
-		double x = max(1.0, (double)userSpeed / (double)averageChunkSpeed);
-		maxSize = (int64_t)((double)maxSize * x);
-
-		// chunk is still too small for this user
-		if(maxSize / userSpeed <= 5) {
-			maxSize *= 2;
+	int64_t remaining = getSize() - getDownloadedBytes();
+	
+	int64_t targetSize;
+	if(BOOLSETTING(MULTI_CHUNK)) {
+		double done = static_cast<double>(getDownloadedBytes()) / getSize();
+		
+		// We want smaller blocks at the end of the transfer, squaring gives a nice curve...
+		targetSize = static_cast<int64_t>(static_cast<double>(wantedSize) * std::max(0.25, (1. - (done * done))));
+		
+		if(targetSize > blockSize) {
+			// Round off to nearest block size
+			targetSize = ((targetSize + (blockSize / 2)) / blockSize) * blockSize;
+		} else {
+			targetSize = blockSize;
 		}
+	} else {
+		targetSize = remaining;
 	}
-
-	maxSize = ((maxSize + blockSize - 1) / blockSize) * blockSize; // Make sure we're on an even block boundary
-	int64_t curSize = maxSize;
+	
+	int64_t start = 0;
+	int64_t curSize = targetSize;
 
 	while(start < getSize()) {
 		int64_t end = std::min(getSize(), start + curSize);
@@ -191,7 +192,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 			curSize -= blockSize;
 		} else {
 			start = end;
-			curSize = maxSize;
+			curSize = targetSize;
 		}
 	}
 
@@ -201,7 +202,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 		return neededParts[Util::rand(0, neededParts.size())];
 	}
 	
-	if(partialSource == NULL && BOOLSETTING(OVERLAP_CHUNKS) && userSpeed > 10*1024) {
+	if(partialSource == NULL && BOOLSETTING(OVERLAP_CHUNKS) && lastSpeed > 10*1024) {
 		// overlap slow running chunk only when new speed is more than 10 kB/s
 
 		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
@@ -224,7 +225,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t userSpeed, const P
 			int64_t size = d->getSize() - pos;
 
 			// new user should finish this chunk more than 2x faster
-			int64_t newChunkLeft = size / userSpeed;
+			int64_t newChunkLeft = size / lastSpeed;
 			if(2 * newChunkLeft < d->getSecondsLeft()) {
 				dcdebug("Overlapping... old user: %I64d s, new user: %I64d s\n", d->getSecondsLeft(), newChunkLeft);
 				return Segment(d->getStartPos() + pos, size, true);

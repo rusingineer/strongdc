@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,8 @@
 namespace dcpp {
 
 class UserConnection : public Speaker<UserConnectionListener>, 
-	private BufferedSocketListener, public Flags, private CommandHandler<UserConnection>
+	private BufferedSocketListener, public Flags, private CommandHandler<UserConnection>,
+	private boost::noncopyable
 {
 public:
 	friend class ConnectionManager;
@@ -185,8 +186,12 @@ public:
 	// Ignore any other ADC commands for now
 	template<typename T> void handle(T , const AdcCommand& ) { }
 
+	int64_t getChunkSize() const { return chunkSize; }
+	void updateChunkSize(int64_t leafSize, int64_t lastChunk, uint64_t ticks);
+	
 	GETSET(string, hubUrl, HubUrl);
 	GETSET(string, token, Token);
+	GETSET(int64_t, speed, Speed);
 	GETSET(uint64_t, lastActivity, LastActivity);
 	GETSET(States, state, State);
 
@@ -203,6 +208,7 @@ public:
 	}
 
 private:
+	int64_t chunkSize;
 	BufferedSocket* socket;
 	UserPtr user;
 
@@ -215,7 +221,7 @@ private:
 
 	// We only want ConnectionManager to create this...
 	UserConnection(bool secure_) throw() : encoding(const_cast<string*>(&Text::systemCharset)), state(STATE_UNCONNECTED),
-		lastActivity(0), socket(0), download(NULL) {
+		lastActivity(0), speed(0), chunkSize(0), socket(0), download(NULL) {
 		if(secure_) {
 			setFlag(FLAG_SECURE);
 		}
@@ -225,10 +231,8 @@ private:
 		BufferedSocket::putSocket(socket);
 		dcassert(!download);
 	}
-	friend struct DeleteFunction;
 
-	UserConnection(const UserConnection&);
-	UserConnection& operator=(const UserConnection&);
+	friend struct DeleteFunction;
 
 	void setUser(const UserPtr& aUser) {
 		user = aUser;

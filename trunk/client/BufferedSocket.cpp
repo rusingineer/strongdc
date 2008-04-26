@@ -40,7 +40,7 @@ namespace dcpp {
 
 BufferedSocket::BufferedSocket(char aSeparator) throw(ThreadException) :
 separator(aSeparator), mode(MODE_LINE), dataBytes(0), rollback(0), state(STARTING),
-disconnecting(false)
+disconnecting(false), sock(0)
 {
 	start();
 	

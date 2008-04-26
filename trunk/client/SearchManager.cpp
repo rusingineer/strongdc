@@ -400,8 +400,7 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 			} else if(str.compare(0, 2, "PI") == 0) {
 				string partialInfoBlocks = str.substr(2);
 				string::size_type i = 0, j = 0;
-				while(j != string::npos) {
-					j = partialInfoBlocks.find(',', i);
+				while((j = partialInfoBlocks.find(',', i)) != string::npos) {
 					partialInfo.push_back((uint16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
 					i = j + 1;
 				}

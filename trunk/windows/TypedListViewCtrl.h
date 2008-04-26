@@ -492,7 +492,7 @@ public:
 			}
 			
 			order += Util::toString((*i)->pos) + ",";
-			widths += Util::toString((*i)->width) + ",";			
+			widths += Util::toString((*i)->width) + ",";
 		}
 
 		order.erase(order.size()-1, 1);

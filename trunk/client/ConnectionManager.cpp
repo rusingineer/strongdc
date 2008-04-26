@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -285,7 +285,13 @@ bool ConnectionManager::checkIpFlood(const string& aServer, uint16_t aPort) {
 	// We don't want to be used as a flooding instrument
 	uint8_t count = 0;
 	for(UserConnectionList::const_iterator j = userConnections.begin(); j != userConnections.end(); ++j) {
-		if((*j)->getRemoteIp() == aServer && (*j)->getPort() == aPort) {
+		
+		const UserConnection& uc = **j;
+		
+		if(uc.socket == NULL || !uc.socket->hasSocket())
+			continue;
+
+		if(uc.getRemoteIp() == aServer && uc.getPort() == aPort) {
 			if(++count >= 5) {
 				// More than 5 outbound connections to the same addr/port? Can't trust that..
 				dcdebug("ConnectionManager::connect Tried to connect more than 5 times to %s:%hu, connect dropped\n", aServer.c_str(), aPort);
@@ -730,6 +736,15 @@ void ConnectionManager::on(UserConnectionListener::Failed, UserConnection* aSour
 		}
 	}
 	putConnection(aSource);
+}
+
+void ConnectionManager::disconnect(const UserPtr& aUser) {
+	Lock l(cs);
+	for(UserConnectionList::const_iterator i = userConnections.begin(); i != userConnections.end(); ++i) {
+		UserConnection* uc = *i;
+		if(uc->getUser() == aUser)
+			uc->disconnect(true);
+	}
 }
 
 void ConnectionManager::disconnect(const UserPtr& aUser, int isDownload) {

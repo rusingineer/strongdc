@@ -823,7 +823,7 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		ui->setStatus(ItemInfo::STATUS_RUNNING);
 		ui->setActual(d->getActual());
 		ui->setPos(d->getPos());
-//			ui->setSize(d->getSize());
+		ui->setSize(d->getSize());
 		ui->setTimeLeft(d->getSecondsLeft());
 		ui->setSpeed(d->getAverageSpeed());
 
@@ -1026,7 +1026,7 @@ void TransferView::CollapseAll() {
 		if(m->download && m->parent) {
 			ctrlTransfers.deleteItem(m); 
 		}
-		if(m->download && !m->parent) {
+		if(m->download && !m->parent && !m->collapsed) {
 			m->collapsed = true;
 			ctrlTransfers.SetItemState(ctrlTransfers.findItem(m), INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
 		 }
