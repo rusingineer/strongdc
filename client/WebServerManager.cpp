@@ -25,6 +25,7 @@
 #include "UploadManager.h"
 #include "StringTokenizer.h"
 #include "ResourceManager.h"
+#include "SearchResult.h"
 
 namespace dcpp {
 
@@ -547,7 +548,7 @@ int WebServerSocket::run(){
 
 } 
 
-void WebServerManager::onSearchResult(const SearchResult* aResult) {
+void WebServerManager::onSearchResult(const SearchResultPtr& aResult) {
 	// Check that this is really a relevant search result...
 	{
 		Lock l(cs);

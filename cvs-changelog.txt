@@ -1,3 +1,7 @@
+** svn386
+	some DC++ SVN merge
+	fixed ADC userlist refresh
+
 ** svn385
 	fixed opening user logs from chat
 	fixed parsing partial blocks in PSR command

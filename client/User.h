@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ public:
 		size_t operator()(const UserPtr& x) const { return ((size_t)(&(*x)))/sizeof(User); }
 	};
 
-	User(const CID& aCID) : cid(aCID), firstNick(Util::emptyString) { }
+	User(const CID& aCID) : cid(aCID) { }
 
 	~User() throw() { }
 
@@ -64,7 +64,6 @@ public:
 	bool isOnline() const { return isSet(ONLINE); }
 	bool isNMDC() const { return isSet(NMDC); }
 
-	GETSET(string, firstNick, FirstNick);
 private:
 	User(const User&);
 	User& operator=(const User&);
@@ -90,27 +89,12 @@ public:
 	Identity& operator=(const Identity& rhs) { FastLock l(cs); user = rhs.user; info = rhs.info; return *this; }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
+	GS(Nick, "NI")
 	GS(Description, "DE")
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
 	GS(Status, "ST")
-
-	void setNick(const string& aNick) {
-		if(!user || !user->isSet(User::NMDC)) {
-			set("NI", aNick);
-		}
-	}
-
-	const string& getNick() const {
-		if(user && user->isSet(User::NMDC)) {
-			return user->getFirstNick();
-		} else {
-			FastLock l(cs);
-			InfMap::const_iterator i = info.find(*(short*)"NI");
-			return i == info.end() ? Util::emptyString : i->second;
-		}
-	}
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }

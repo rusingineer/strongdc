@@ -227,7 +227,7 @@ File::File(const string& aFileName, int access, int mode) throw(FileException) {
 
 	h = open(filename.c_str(), m, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if(h == -1)
-		throw FileException("Could not open file");
+		throw FileException(Util::translateError(errno));
 }
 
 uint32_t File::getLastModified() const throw() {
@@ -274,20 +274,31 @@ void File::movePos(int64_t pos) throw() {
 }
 
 size_t File::read(void* buf, size_t& len) throw(FileException) {
-	ssize_t x = ::read(h, buf, len);
-	if(x == -1)
-		throw FileException("Read error");
-	len = x;
-	return (size_t)x;
+	ssize_t result = ::read(h, buf, len);
+	if (result == -1) {
+		throw FileException(Util::translateError(errno));
+	}
+	len = result;
+	return (size_t)result;
 }
 
 size_t File::write(const void* buf, size_t len) throw(FileException) {
-	ssize_t x = ::write(h, buf, len);
-	if(x == -1)
-		throw FileException("Write error");
-	if(x < (ssize_t)len)
-		throw FileException("Disk full(?)");
-	return x;
+	ssize_t result;
+	char* pointer = (char*)buf;
+	ssize_t left = len;
+
+	while (left > 0) {
+		result = ::write(h, pointer, left);
+		if (result == -1) {
+			if (errno != EINTR) {
+				throw FileException(Util::translateError(errno));
+			}
+		} else {
+			pointer += result;
+			left -= result;
+		}
+	}
+	return len;
 }
 
 // some ftruncate implementations can't extend files like SetEndOfFile,
@@ -341,10 +352,10 @@ size_t File::flush() throw(FileException) {
 void File::renameFile(const string& source, const string& target) throw(FileException) {
 	int ret = ::rename(Text::fromUtf8(source).c_str(), Text::fromUtf8(target).c_str());
 	if(ret != 0 && errno == EXDEV) {
-		copyFile(source.c_str(), target.c_str());
-		deleteFile(source.c_str());
+		copyFile(source, target);
+		deleteFile(source);
 	} else if(ret != 0)
-		throw FileException(source.c_str() + Util::translateError(errno));
+		throw FileException(source + Util::translateError(errno));
 }
 
 // This doesn't assume all bytes are written in one write call, it is a bit safer

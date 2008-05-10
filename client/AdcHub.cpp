@@ -177,10 +177,6 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 		u->getUser()->unsetFlag(User::BOT);
 	}
 
-	if(u->getUser()->getFirstNick().empty()) {
-		u->getUser()->setFirstNick(u->getIdentity().getNick());
-	}
-
 	if(u->getIdentity().supports(ADCS_FEATURE)) {
 		u->getUser()->setFlag(User::TLS);
 	}
@@ -289,7 +285,7 @@ void AdcHub::handle(AdcCommand::QUI, AdcCommand& c) throw() {
 		string tmp2;
 		if(c.getParam("ID", 1, tmp2)) {
 			source = findUser(AdcCommand::toSID(tmp2));
-	}
+		}
 	
 		if(source) {
 			tmp = victim->getIdentity().getNick() + " was kicked by " +	source->getIdentity().getNick() + ": " + tmp;
@@ -756,6 +752,16 @@ void AdcHub::info(bool /*alwaysSend*/) {
 	if(c.getParameters().size() > 0) {
 		send(c);
 	}
+}
+
+void AdcHub::refreshUserList(bool) {
+	Lock l(cs);
+
+	OnlineUser::List v;
+	for(SIDIter i = users.begin(); i != users.end(); ++i) {
+		v.push_back(i->second);
+	}
+	fire(ClientListener::UsersUpdated(), this, v);
 }
 
 string AdcHub::checkNick(const string& aNick) {

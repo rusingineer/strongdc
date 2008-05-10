@@ -110,6 +110,8 @@ void Client::connect() {
 	setMyIdentity(Identity(ClientManager::getInstance()->getMe(), 0));
 	setHubIdentity(Identity());
 
+	state = STATE_CONNECTING;
+
 	try {
 		sock = BufferedSocket::getSocket(separator);
 		sock->addListener(this);
@@ -122,7 +124,6 @@ void Client::connect() {
 		fire(ClientListener::Failed(), this, e.getError());
 	}
 	updateActivity();
-	state = STATE_CONNECTING;
 }
 
 void Client::send(const char* aMessage, size_t aLen) {

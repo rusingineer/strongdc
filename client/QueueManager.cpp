@@ -37,6 +37,7 @@
 #include "UploadManager.h"
 #include "UserConnection.h"
 #include "version.h"
+#include "SearchResult.h"
 
 #include <limits>
 
@@ -1441,7 +1442,7 @@ void QueueManager::saveQueue() throw() {
 					f.write(LIT("\t\t<Source CID=\""));
 					f.write(j->getUser()->getCID().toBase32());
 					f.write(LIT("\" Nick=\""));
-					f.write(SimpleXML::escape(j->getUser()->getFirstNick(), tmp, true));
+					//f.write(SimpleXML::escape(j->getUser()->getFirstNick(), tmp, true));
 					f.write(LIT("\"/>\r\n"));
 				}
 
@@ -1574,7 +1575,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			}
 			UserPtr user = ClientManager::getInstance()->getUser(CID(cid));
 			const string& nick = getAttrib(attribs, sNick, 1);
-			user->setFirstNick(nick);
+//			user->setFirstNick(nick);
 
 			try {
 				if(qm->addSource(cur, user, 0) && user->isOnline())
@@ -1596,7 +1597,7 @@ void QueueLoader::endTag(const string& name, const string&) {
 }
 
 // SearchManagerListener
-void QueueManager::on(SearchManagerListener::SR, SearchResult* sr) throw() {
+void QueueManager::on(SearchManagerListener::SR, const SearchResultPtr& sr) throw() {
 	bool added = false;
 	bool wantConnection = false;
 	int users = 0;

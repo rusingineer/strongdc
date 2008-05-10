@@ -30,6 +30,7 @@
 #include "UserCommand.h"
 #include "ResourceManager.h"
 #include "LogManager.h"
+#include "SearchResult.h"
 
 #include "AdcHub.h"
 #include "NmdcHub.h"
@@ -98,21 +99,21 @@ StringList ClientManager::getHubNames(const CID& cid) const {
 
 StringList ClientManager::getNicks(const CID& cid) const {
 	Lock l(cs);
-	StringSet nicks;
+	StringSet ret;
 	OnlinePairC op = onlineUsers.equal_range(cid);
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
-		nicks.insert(i->second->getIdentity().getNick());
+		ret.insert(i->second->getIdentity().getNick());
 	}
-	if(nicks.empty()) {
-		// Offline perhaps?
-		UserMap::const_iterator i = users.find(cid);
-		if(i != users.end() && !i->second->getFirstNick().empty()) {
-			nicks.insert(i->second->getFirstNick());
+	if(ret.empty()) {
+		NickMap::const_iterator i = nicks.find(cid);
+		if(i != nicks.end()) {
+			ret.insert(i->second);
 		} else {
-			nicks.insert('{' + cid.toBase32() + '}');
+			// Offline perhaps?
+			ret.insert('{' + cid.toBase32() + '}');
 		}
 	}
-	return StringList(nicks.begin(), nicks.end());
+	return StringList(ret.begin(), ret.end());
 }
 
 string ClientManager::getConnection(const CID& cid) const {
@@ -203,13 +204,11 @@ UserPtr ClientManager::getUser(const string& aNick, const string& aHubUrl) throw
 
 	UserIter ui = users.find(cid);
 	if(ui != users.end()) {
-		ui->second->setFirstNick(aNick);	
 		ui->second->setFlag(User::NMDC);
 		return ui->second;
 	}
 
 	UserPtr p(new User(cid));
-	p->setFirstNick(aNick);
 	p->setFlag(User::NMDC);
 	users.insert(make_pair(cid, p));
 
@@ -363,21 +362,19 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 		return;
 	}
 
-	SearchResult::List l;
+	SearchResultList l;
 	ShareManager::getInstance()->search(l, aString, aSearchType, aSize, aFileType, aClient, isPassive ? 5 : 10);
 	if(l.size() > 0) {
 		if(isPassive) {
 			string name = aSeeker.substr(4);
 			// Good, we have a passive seeker, those are easier...
 			string str;
-			for(SearchResult::Iter i = l.begin(); i != l.end(); ++i) {
-				SearchResult* sr = *i;
+			for(SearchResultList::const_iterator i = l.begin(); i != l.end(); ++i) {
+				const SearchResultPtr& sr = *i;
 				str += sr->toSR(*aClient);
 				str[str.length()-1] = 5;
 				str += Text::fromUtf8(name, *(aClient->getEncoding()));
 				str += '|';
-
-				sr->dec();
 			}
 			
 			if(str.size() > 0)
@@ -393,16 +390,11 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 				
 				if(port == 0) 
 					port = 412;
-				for(SearchResult::Iter i = l.begin(); i != l.end(); ++i) {
-					SearchResult* sr = *i;
+				for(SearchResultList::const_iterator i = l.begin(); i != l.end(); ++i) {
+					const SearchResultPtr& sr = *i;
 					udp.writeTo(ip, port, sr->toSR(*aClient));
-					sr->dec();
 				}
 			} catch(...) {
-				for(SearchResult::Iter i = l.begin(); i != l.end(); ++i) {
-					SearchResult* sr = *i;
-					sr->dec();
-				}
 				dcdebug("Search caught error\n");
 			}
 		}
@@ -507,7 +499,6 @@ UserPtr& ClientManager::getMe() {
 		Lock l(cs);
 		if(!me) {
 			me = new User(getMyCID());
-			me->setFirstNick(SETTING(NICK));
 			users.insert(make_pair(me->getCID(), me));
 		}
 	}
@@ -524,6 +515,37 @@ CID ClientManager::getMyCID() {
 	TigerHash tiger;
 	tiger.update(getMyPID().data(), CID::SIZE);
 	return CID(tiger.finalize());
+}
+
+void ClientManager::updateNick(const OnlineUser& user) throw() {
+	Lock l(cs);
+	if(nicks.find(user.getUser()->getCID()) != nicks.end()) {
+		return;
+	}
+	
+	if(!user.getIdentity().getNick().empty()) {
+		nicks.insert(std::make_pair(user.getUser()->getCID(), user.getIdentity().getNick()));
+	}
+}
+
+void ClientManager::on(Connected, const Client* c) throw() {
+	fire(ClientManagerListener::ClientConnected(), c);
+}
+
+void ClientManager::on(UserUpdated, const Client*, const OnlineUser& user) throw() {
+	updateNick(user);
+	fire(ClientManagerListener::UserUpdated(), user);
+}
+
+void ClientManager::on(UsersUpdated, const Client* c, const OnlineUserList& l) throw() {
+	for(OnlineUserList::const_iterator i = l.begin(), iend = l.end(); i != iend; ++i) {
+		updateNick(*(*i));
+		fire(ClientManagerListener::UserUpdated(), *(*i)); 
+	}
+}
+
+void ClientManager::on(HubUpdated, const Client* c) throw() {
+	fire(ClientManagerListener::ClientUpdated(), c);
 }
 
 void ClientManager::on(Failed, const Client* client, const string&) throw() { 

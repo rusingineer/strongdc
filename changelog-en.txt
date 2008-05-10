@@ -1,3 +1,17 @@
+	-- StrongDC++ 2.13 --
+
+* fixed columns settings
+* fixed some crashes
+* fixed search resuls count
+* fixed loading old-styled hublists
+* fixed opening userlogs from chat
+* fixed ADC userlist refresh
+* improved segment auto-size (DC++ SVN)
+* improved transfer speed averaging (DC++ SVN)
+* allow shared virtual folders to have the same name (DC++ SVN)
+* some other fixes and optimizations
+
+
 	-- StrongDC++ 2.12 --
 
 * fixed some rare crashes
