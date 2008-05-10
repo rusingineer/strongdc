@@ -1,3 +1,17 @@
+	-- StrongDC++ 2.13 --
+
+* opraveno nastavení sloupeèkù
+* opraveny nìjaké pády
+* opraven poèet výsledkù vyhledávání
+* opraveno naètení starých hublistù
+* opraveno otevøení logù z chatu
+* opraveno obnovení seznamu uživatelù v ADC hubech
+* vylepšena automatická velikost segmentù (DC++ SVN)
+* vylepšeno mìøení ryclosti pøenosù (DC++ SVN)
+* lze používat stejný název u sdlených virtuálních složek (DC++ SVN)
+* nìjaké další opravy a optimalizace
+
+
 	-- StrongDC++ 2.12 --
 
 * opraveno pár vzácných pádù

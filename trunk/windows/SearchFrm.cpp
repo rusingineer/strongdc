@@ -424,7 +424,7 @@ void SearchFrame::onEnter() {
 		(SearchManager::TypeModes)ftype, mode, "manual", (int*)this);
 }
 
-void SearchFrame::on(SearchManagerListener::SR, SearchResult* aResult) throw() {
+void SearchFrame::on(SearchManagerListener::SR, const SearchResultPtr& aResult) throw() {
 	// Check that this is really a relevant search result...
 	{
 		Lock l(cs);
@@ -594,7 +594,7 @@ LRESULT SearchFrame::onDownloadTo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
 		dcassert(i != -1);
 		const SearchInfo* si = ctrlResults.getItemData(i);
-		const SearchResult* sr = si->sr;
+		const SearchResultPtr& sr = si->sr;
 	
 		if(sr->getType() == SearchResult::TYPE_FILE) {
 			tstring target = Text::toT(SETTING(DOWNLOAD_DIRECTORY)) + si->getText(COLUMN_FILENAME);
@@ -887,7 +887,7 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 
 	int sel = -1;
 	while((sel = ctrlResults.GetNextItem(sel, LVNI_SELECTED)) != -1) {
-		SearchResult* sr = ctrlResults.getItemData(sel)->sr;
+		const SearchResultPtr& sr = ctrlResults.getItemData(sel)->sr;
 
 		if(!sr->getUser()->isOnline())
 			continue;
@@ -978,7 +978,7 @@ void SearchFrame::onTab(bool shift) {
 LRESULT SearchFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlResults.GetSelectedCount() == 1) {
 		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-		SearchResult* sr = ctrlResults.getItemData(i)->sr;
+		const SearchResultPtr& sr = ctrlResults.getItemData(i)->sr;
 		if(sr->getType() == SearchResult::TYPE_FILE) {
 			WinUtil::searchHash(sr->getTTH());
 		}
@@ -990,7 +990,7 @@ LRESULT SearchFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 LRESULT SearchFrame::onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlResults.GetSelectedCount() == 1) {
 		int i = ctrlResults.GetNextItem(-1, LVNI_SELECTED);
-		SearchResult* sr = ctrlResults.getItemData(i)->sr;
+		const SearchResultPtr& sr = ctrlResults.getItemData(i)->sr;
 		if(sr->getType() == SearchResult::TYPE_FILE) {
 			WinUtil::bitziLink(sr->getTTH());
 		}
@@ -1003,7 +1003,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 	case ADD_RESULT:
 		{
 			SearchInfo* si = (SearchInfo*)lParam;
-			SearchResult* sr = si->sr;
+			const SearchResultPtr& sr = si->sr;
             // Check previous search results for dupes
 			if(!si->getText(COLUMN_TTH).empty() && useGrouping) {
 				SearchInfoList::ParentPair* pp = ctrlResults.findParentPair(sr->getTTH());
@@ -1022,7 +1022,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 			} else {
 				for(SearchInfoList::ParentMap::const_iterator s = ctrlResults.parents.begin(); s != ctrlResults.parents.end(); ++s) {
 					SearchInfo* si2 = (*s).second.parent;
-	                SearchResult* sr2 = si2->sr;
+	                const SearchResultPtr& sr2 = si2->sr;
 					if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
 						delete si;	 	
 				        return 0;	 	
@@ -1325,7 +1325,7 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 	dcassert(pos != -1);
 	tstring sCopy;
 	if ( pos >= 0 ) {
-		SearchResult* sr = ctrlResults.getItemData(pos)->sr;
+		const SearchResultPtr& sr = ctrlResults.getItemData(pos)->sr;
 		switch (wID) {
 			case IDC_COPY_NICK:
 				sCopy = WinUtil::getNicks(sr->getUser());

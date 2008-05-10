@@ -278,7 +278,6 @@ private:
 		uint32_t updateMask;
 
 		UserPtr user;
-		QueueItem* queueItem;
 
 		bool download;
 		bool transferFailed;
@@ -303,6 +302,9 @@ private:
 		tstring target;
 		void setIP(const tstring& aIP, uint8_t aFlagImage) { IP = aIP; flagImage = aFlagImage, updateMask |= MASK_IP; }
 		tstring IP;
+
+	private:
+		QueueItem* queueItem;
 	};
 
 	void speak(uint8_t type, UpdateInfo* ui) { tasks.add(type, ui); PostMessage(WM_SPEAKER); }

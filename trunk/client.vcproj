@@ -101,7 +101,7 @@
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
-			WholeProgramOptimization="1"
+			WholeProgramOptimization="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -298,6 +298,10 @@
 			</File>
 			<File
 				RelativePath=".\client\SearchManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\client\SearchResult.cpp"
 				>
 			</File>
 			<File
@@ -623,6 +627,10 @@
 			</File>
 			<File
 				RelativePath=".\client\SearchManagerListener.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\SearchResult.h"
 				>
 			</File>
 			<File

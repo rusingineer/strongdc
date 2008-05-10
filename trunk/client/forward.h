@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,10 +34,7 @@ class BufferedSocket;
 class CID;
 
 typedef std::vector<uint16_t> PartsInfo;
-/*
-typedef map<uint16_t, uint16_t> BlockMap;
-typedef BlockMap::const_iterator BlockIter;
-*/
+
 class Client;
 
 class ClientManager;
@@ -70,10 +67,16 @@ class Identity;
 class InputStream;
 
 class OnlineUser;
+typedef OnlineUser* OnlineUserPtr;
+typedef std::vector<OnlineUserPtr> OnlineUserList;
 
 class QueueItem;
 
 class RecentHubEntry;
+
+class SearchResult;
+typedef boost::intrusive_ptr<SearchResult> SearchResultPtr;
+typedef std::vector<SearchResultPtr> SearchResultList;
 
 class ServerSocket;
 

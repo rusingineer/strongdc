@@ -95,7 +95,7 @@ class FilteredOutputStream : public OutputStream {
 public:
 	using OutputStream::write;
 
-	FilteredOutputStream(OutputStream* aFile) : f(aFile), buf(new uint8_t[BUF_SIZE]), flushed(false) { }
+	FilteredOutputStream(OutputStream* aFile) : f(aFile), buf(new uint8_t[BUF_SIZE]), flushed(false), more(true) { }
 	~FilteredOutputStream() throw() { if(manage) delete f; }
 
 	size_t flush() throw(Exception) {
@@ -108,7 +108,7 @@ public:
 		for(;;) {
 			size_t n = BUF_SIZE;
 			size_t zero = 0;
-			bool more = filter(NULL, zero, &buf[0], n);
+			more = filter(NULL, zero, &buf[0], n);
 
 			written += f->write(&buf[0], n);
 
@@ -128,7 +128,7 @@ public:
 			size_t n = BUF_SIZE;
 			size_t m = len;
 
-			bool more = filter(wb, m, &buf[0], n);
+			more = filter(wb, m, &buf[0], n);
 			wb += m;
 			len -= m;
 
@@ -145,6 +145,8 @@ public:
 		return written;
 	}
 
+	virtual bool eof() { return !more; }
+
 private:
 	static const size_t BUF_SIZE = 64*1024;
 
@@ -153,6 +155,7 @@ private:
 
 	boost::scoped_array<uint8_t> buf;
 	bool flushed;
+	bool more;
 };
 
 template<class Filter, bool managed>

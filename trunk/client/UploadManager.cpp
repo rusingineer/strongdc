@@ -119,7 +119,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 					return false;
 				}
 
-				free = free || (fileSize <= (int64_t)(SETTING(SET_MINISLOT_SIZE) * 1024) );
+				free = free || (sz <= (int64_t)(SETTING(SET_MINISLOT_SIZE) * 1024) );
 
 				f->setPos(start);
 				is = f;
@@ -174,13 +174,11 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 				try {
 					File* f = new File(sourceFile, File::READ, File::OPEN | File::SHARED);
 					
-					is = f;
 					start = aStartPos;
-					int64_t sz = f->getSize();
-					size = (aBytes == -1) ? sz - start : aBytes;
-					fileSize = sz;
-
-					if((start + size) > sz) {
+					fileSize = f->getSize();
+					size = (aBytes == -1) ? fileSize - start : aBytes;
+					
+					if((start + size) > fileSize) {
 						aSource.fileNotAvail();
 						delete f;
 						return false;
@@ -188,7 +186,8 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 
 					f->setPos(start);
 					is = f;
-					if((start + size) < sz) {
+
+					if((start + size) < fileSize) {
 						is = new LimitedInputStream<true>(is, size);
 					}
 

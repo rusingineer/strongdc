@@ -21,6 +21,7 @@
 
 #include "SettingsManager.h"
 #include "Exception.h"
+#include "ResourceManager.h"
 
 namespace dcpp {
 
@@ -47,6 +48,11 @@ public:
 	 * might not need it...
 	 */
 	virtual size_t flush() throw(Exception) = 0;
+
+	/**
+	 * @return True if stream is at expected end
+	 */
+	virtual bool eof() { return false; }
 
 	size_t write(const string& str) throw(Exception) { return write(str.c_str(), str.size()); }
 private:
@@ -119,6 +125,32 @@ public:
 
 private:
 	InputStream* s;
+	int64_t maxBytes;
+};
+
+/** Limits the number of bytes that are requested to be written (not the number actually written!) */
+template<bool managed>
+class LimitedOutputStream : public OutputStream {
+public:
+	LimitedOutputStream(OutputStream* os, int64_t aMaxBytes) : s(os), maxBytes(aMaxBytes) {
+	}
+	virtual ~LimitedOutputStream() throw() { if(managed) delete s; }
+
+	virtual size_t write(const void* buf, size_t len) throw(Exception) {
+		if(maxBytes < len) {
+			throw FileException(STRING(TOO_MUCH_DATA));
+		}
+		maxBytes -= len;
+		return s->write(buf, len);
+	}
+	
+	virtual size_t flush() throw(Exception) {
+		return s->flush();
+	}
+	
+	virtual bool eof() { return maxBytes == 0; }
+private:
+	OutputStream* s;
 	int64_t maxBytes;
 };
 

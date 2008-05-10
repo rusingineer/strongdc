@@ -321,7 +321,7 @@ private:
 	void on(TimerManagerListener::Minute, uint64_t aTick) throw();
 	
 	// SearchManagerListener
-	void on(SearchManagerListener::SR, SearchResult*) throw();
+	void on(SearchManagerListener::SR, const SearchResultPtr&) throw();
 
 	// ClientManagerListener
 	void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw();

@@ -24,54 +24,18 @@
 
 #include "ClientManager.h"
 #include "ShareManager.h"
+#include "SearchResult.h"
 #include "ResourceManager.h"
 #include "QueueManager.h"
 
 namespace dcpp {
 
-SearchResult::SearchResult(Types aType, int64_t aSize, const string& aFile, const TTHValue& aTTH) :
-	file(aFile), user(ClientManager::getInstance()->getMe()), size(aSize), type(aType), slots(UploadManager::getInstance()->getSlots()), 
-	freeSlots(UploadManager::getInstance()->getFreeSlots()),  
-	tth(aTTH) { inc(); }
-
-string SearchResult::toSR(const Client& c) const {
-	// File:		"$SR %s %s%c%s %d/%d%c%s (%s)|"
-	// Directory:	"$SR %s %s %d/%d%c%s (%s)|"
-	string tmp;
-	tmp.reserve(128);
-	tmp.append("$SR ", 4);
-	tmp.append(Text::fromUtf8(c.getMyNick(), *c.getEncoding()));
-	tmp.append(1, ' ');
-	string acpFile = Text::fromUtf8(file, *c.getEncoding());
-	if(type == TYPE_FILE) {
-		tmp.append(acpFile);
-		tmp.append(1, '\x05');
-		tmp.append(Util::toString(size));
-	} else {
-		tmp.append(acpFile, 0, acpFile.length() - 1);
-	}
-	tmp.append(1, ' ');
-	tmp.append(Util::toString(freeSlots));
-	tmp.append(1, '/');
-	tmp.append(Util::toString(slots));
-	tmp.append(1, '\x05');
-	tmp.append("TTH:" + getTTH().toBase32());
-	tmp.append(" (", 2);
-	tmp.append(c.getIpPort());
-	tmp.append(")|", 2);
-	return tmp;
-}
-
-AdcCommand SearchResult::toRES(char type) const {
-	AdcCommand cmd(AdcCommand::CMD_RES, type);
-	cmd.addParam("SI", Util::toString(size));
-	cmd.addParam("SL", Util::toString(freeSlots));
-	cmd.addParam("FN", Util::toAdcFile(file));
-	cmd.addParam("TR", getTTH().toBase32());
-	return cmd;
-}
-
-SearchManager::SearchManager() : socket(NULL), port(0), stop(false), lastSearch(0) {
+SearchManager::SearchManager() :
+	socket(NULL),
+	port(0),
+	stop(false),
+	lastSearch(GET_TICK()) 
+{
 	TimerManager::getInstance()->addListener(this);
 }
 
@@ -149,20 +113,6 @@ void SearchManager::stopSearch(const int *aWindow) {
 			break;
 		}
 	}
-}
-
-string SearchResult::getFileName() const { 
-	if(getType() == TYPE_FILE) 
-		return Util::getFileName(getFile()); 
-
-	if(getFile().size() < 2)
-		return getFile();
-
-	string::size_type i = getFile().rfind('\\', getFile().length() - 2);
-	if(i == string::npos)
-		return getFile();
-
-	return getFile().substr(i + 1);
 }
 
 void SearchManager::listen() throw(SocketException) {
@@ -338,10 +288,9 @@ int SearchManager::ResultsQueue::run() {
 			}
 
 
-			SearchResult* sr = new SearchResult(user, type, slots, freeSlots, size,
-				file, hubName, remoteIp, TTHValue(tth), Util::emptyString);
+			SearchResultPtr sr(new SearchResult(user, type, slots, freeSlots, size,
+				file, hubName, remoteIp, TTHValue(tth), Util::emptyString));
 			SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
-			sr->dec();
 		}
 		Thread::sleep(10);
 	}
@@ -480,10 +429,9 @@ void SearchManager::onRES(const AdcCommand& cmd, const UserPtr& from, const stri
 		if(type == SearchResult::TYPE_FILE && tth.empty())
 			return;
 		/// @todo Something about the slots
-		SearchResult* sr = new SearchResult(from, type, 0, (uint8_t)freeSlots, size, 
-			file, hubName, remoteIp, TTHValue(tth), token);
+		SearchResultPtr sr(new SearchResult(from, type, 0, (uint8_t)freeSlots, size,
+			file, hubName, remoteIp, TTHValue(tth), token));
 			fire(SearchManagerListener::SR(), sr);
-			sr->dec();
 	}
 }
 
@@ -496,7 +444,7 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from) {
 	if(!p)
 		return;
 
-	SearchResult::List results;
+	SearchResultList results;
 	ShareManager::getInstance()->search(results, adc.getParameters(), 10);
 
 	string token;
@@ -506,12 +454,11 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from) {
 	if(results.empty())
 		return;
 
-	for(SearchResult::Iter i = results.begin(); i != results.end(); ++i) {
+	for(SearchResultList::const_iterator i = results.begin(); i != results.end(); ++i) {
 		AdcCommand cmd = (*i)->toRES(AdcCommand::TYPE_UDP);
 		if(!token.empty())
 			cmd.addParam("TO", token);
 		ClientManager::getInstance()->send(cmd, from);
-		(*i)->dec();
 	}
 }
 

@@ -74,9 +74,9 @@ void BufferedSocket::setMode (Modes aMode, size_t aRollback) {
 
 void BufferedSocket::setSocket(std::auto_ptr<Socket> s) {
 	dcassert(!sock.get());
-	if(SETTING(SOCKET_IN_BUFFER) > 1023)
+	if(SETTING(SOCKET_IN_BUFFER) > 0)
 		s->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
-	if(SETTING(SOCKET_OUT_BUFFER) > 1023)
+	if(SETTING(SOCKET_OUT_BUFFER) > 0)
 		s->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
 	s->setBlocking(false);
 
@@ -446,6 +446,7 @@ bool BufferedSocket::checkEvents() {
 			return false;
 		} else if(p.first == UPDATED) {
 			fire(BufferedSocketListener::Updated());			
+			continue;
 		}
 
 		if(state == STARTING) {
@@ -455,7 +456,7 @@ bool BufferedSocket::checkEvents() {
 			} else if(p.first == ACCEPTED) {
 				state = RUNNING;
 			} else {
-				dcdebug("%d unexpected in STARTING state", p.first);
+				dcdebug("%d unexpected in STARTING state\n", p.first);
 			}
 		} else if(state == RUNNING) {
 			if(p.first == SEND_DATA) {
@@ -465,7 +466,7 @@ bool BufferedSocket::checkEvents() {
 			} else if(p.first == DISCONNECT) {
 				fail(STRING(DISCONNECTED));
 			} else {
-				dcdebug("%d unexpected in RUNNING state", p.first);
+				dcdebug("%d unexpected in RUNNING state\n", p.first);
 			}
 		}
 	}

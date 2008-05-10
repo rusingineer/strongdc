@@ -41,7 +41,8 @@ public:
 	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	void password(const string& pwd);
 	void info(bool alwaysSend);
-	
+	void refreshUserList(bool);	
+
 	size_t getUserCount() const { Lock l(cs); return users.size(); }
 
 	string escape(string const& str) const { return AdcCommand::escape(str, false); }
@@ -50,8 +51,8 @@ public:
 	string getMySID() { return AdcCommand::fromSID(sid); }
 
 	/* these functions not implemented yet */
-	void refreshUserList(bool) { }
 	void cheatMessage(const string&) { }
+
 private:
 	friend class ClientManager;
 	friend class CommandHandler<AdcHub>;
