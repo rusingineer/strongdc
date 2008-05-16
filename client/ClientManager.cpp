@@ -528,6 +528,17 @@ void ClientManager::updateNick(const OnlineUser& user) throw() {
 	}
 }
 
+void ClientManager::updateNick(const UserPtr& user, const string& nick) throw() {
+	Lock l(cs);
+	if(nicks.find(user->getCID()) != nicks.end()) {
+		return;
+	}
+	
+	if(!nick.empty()) {
+		nicks.insert(std::make_pair(user->getCID(), nick));
+	}
+}
+
 void ClientManager::on(Connected, const Client* c) throw() {
 	fire(ClientManagerListener::ClientConnected(), c);
 }

@@ -1,6 +1,12 @@
+** svn387
+	fixed saving usernicks in queue
+	fixed missing "Downloaded parts" status in queue
+	Windows folder won't be shared
+
 ** svn386
 	some DC++ SVN merge
 	fixed ADC userlist refresh
+	enabled guided optimization (up 20% faster when released)
 
 ** svn385
 	fixed opening user logs from chat

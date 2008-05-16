@@ -438,6 +438,17 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 		throw ShareException(STRING(DONT_SHARE_TEMP_DIRECTORY));
 	}
 
+#ifdef _WIN32
+	// don't share Windows directory
+	TCHAR path[MAX_PATH];
+	::SHGetFolderPath(NULL, CSIDL_WINDOWS, NULL, SHGFP_TYPE_CURRENT, path);
+	if(Util::stricmp(realPath, Text::fromT((tstring)path) + PATH_SEPARATOR) == 0) {
+		char buf[MAX_PATH];
+		snprintf(buf, sizeof(buf), CSTRING(CHECK_FORBIDDEN), realPath.c_str());
+		throw ShareException(buf);
+	}
+#endif
+
 	slist<string> removeMap;
 	{
 		Lock l(cs);
@@ -790,6 +801,15 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
  			
 		if(i->isDirectory()) {
 			string newName = aName + name + PATH_SEPARATOR;
+
+#ifdef _WIN32
+			// don't share Windows directory
+			TCHAR path[MAX_PATH];
+			::SHGetFolderPath(NULL, CSIDL_WINDOWS, NULL, SHGFP_TYPE_CURRENT, path);
+			if(Util::strnicmp(newName, Text::fromT((tstring)path) + PATH_SEPARATOR, _tcslen(path) + 1) == 0)
+				continue;
+#endif
+
 			if((Util::stricmp(newName, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) && shareFolder(newName)) {
 				dir->directories[name] = buildTree(newName, dir);
 			}

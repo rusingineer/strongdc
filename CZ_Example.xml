@@ -241,7 +241,7 @@
 		<String Name="CheatingUser">Nalezení FAKERa</String>
 		<String Name="Check0byteShare">Zkontrolovat 0B sdílení</String>
 		<String Name="CheckFilelist">Zkontrolovat filelist</String>
-		<String Name="CheckForbidden">Sdílí zakázaných souborů : %s</String>
+		<String Name="CheckForbidden">Sdílení zakázaných souborů : %s</String>
 		<String Name="CheckInflated">Filelist byl zvětšen %s krát</String>
 		<String Name="CheckMismatchedShareSize">Velikost podvodného sdílení - </String>
 		<String Name="CheckOnConnect">Kontroluj uživatele po připojení</String>
