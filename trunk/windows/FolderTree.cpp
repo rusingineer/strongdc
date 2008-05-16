@@ -1421,6 +1421,8 @@ LRESULT FolderTree::OnChecked(HTREEITEM hItem, BOOL &bHandled)
 			UpdateParentItems(hItem);
 		} catch(const ShareException& e) {
 			MessageBox(Text::toT(e.getError()).c_str(), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
+			bHandled = TRUE;
+			return 1;
 		}
 	}
 	

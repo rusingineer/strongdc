@@ -65,6 +65,8 @@ public:
 	UserPtr findUser(const CID& cid) const throw();
 	UserPtr findLegacyUser(const string& aNick) const throw();
 
+	void updateNick(const UserPtr& user, const string& nick) throw();
+
 	bool isOnline(const UserPtr& aUser) const {
 		Lock l(cs);
 		return onlineUsers.find(aUser->getCID()) != onlineUsers.end();
@@ -214,7 +216,7 @@ private:
 	}
 
 	void updateNick(const OnlineUser& user) throw();
-	
+		
 	// ClientListener
 	void on(Connected, const Client* c) throw();
 	void on(UserUpdated, const Client*, const OnlineUser& user) throw();

@@ -1442,7 +1442,7 @@ void QueueManager::saveQueue() throw() {
 					f.write(LIT("\t\t<Source CID=\""));
 					f.write(j->getUser()->getCID().toBase32());
 					f.write(LIT("\" Nick=\""));
-					//f.write(SimpleXML::escape(j->getUser()->getFirstNick(), tmp, true));
+					f.write(SimpleXML::escape(ClientManager::getInstance()->getNicks(j->getUser()->getCID())[0], tmp, true));
 					f.write(LIT("\"/>\r\n"));
 				}
 
@@ -1574,8 +1574,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 				return;
 			}
 			UserPtr user = ClientManager::getInstance()->getUser(CID(cid));
-			const string& nick = getAttrib(attribs, sNick, 1);
-//			user->setFirstNick(nick);
+			ClientManager::getInstance()->updateNick(user, getAttrib(attribs, sNick, 1));
 
 			try {
 				if(qm->addSource(cur, user, 0) && user->isOnline())
