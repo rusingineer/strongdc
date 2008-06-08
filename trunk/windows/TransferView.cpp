@@ -155,6 +155,10 @@ LRESULT TransferView::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 				case 4:
 		          transferMenu.SetMenuDefaultItem(IDC_ADD_TO_FAVORITES);
 		          break;
+				case 5:
+		          transferMenu.SetMenuDefaultItem(IDC_BROWSELIST);
+		          break;
+			  
 			}
 		} else {
 			transferMenu.InsertSeparatorFirst(TSTRING(SETTINGS_SEGMENT));
@@ -497,9 +501,14 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 					break;
 				case 2:
 					i->matchQueue();
+				case 3:
+					i->grant();
 					break;
 				case 4:
 					i->addFav();
+					break;
+				case 5:
+					i->browseList();
 					break;
 			}
 		}

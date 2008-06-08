@@ -742,7 +742,7 @@ LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 	if(ou) {
 		StringMap params;
 
-		params["userNI"] = ou->getNick();
+		params["userNI"] = ou->getIdentity().getNick();
 		params["hubNI"] = client->getHubName();
 		params["myNI"] = client->getMyNick();
 		params["userCID"] = ou->getUser()->getCID().toBase32();

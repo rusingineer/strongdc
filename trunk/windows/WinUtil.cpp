@@ -658,7 +658,7 @@ void WinUtil::decodeFont(const tstring& setting, LOGFONT &dest) {
 	}
 	
 	if(!face.empty()) {
-		memzero2(dest.lfFaceName, LF_FACESIZE);
+		memzero(dest.lfFaceName, LF_FACESIZE);
 		_tcscpy(dest.lfFaceName, face.c_str());
 	}
 }
@@ -677,7 +677,7 @@ bool WinUtil::browseDirectory(tstring& target, HWND owner /* = NULL */) {
 	BROWSEINFO bi;
 	LPMALLOC ma;
 	
-	memzero2(&bi, sizeof(bi));
+	memzero(&bi, sizeof(bi));
 	
 	bi.hwndOwner = owner;
 	bi.pszDisplayName = buf;

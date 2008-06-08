@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include "Util.h"
 #include "Exception.h"
 
+#include <errno.h>
 #ifdef _WIN32
 // Berkely constants converted to the windows equivs...
 #define EADDRNOTAVAIL WSAEADDRNOTAVAIL
@@ -35,7 +36,6 @@ typedef SOCKET socket_t;
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <errno.h>
 #include <netdb.h>
 #include <fcntl.h>
 
@@ -179,7 +179,7 @@ public:
 
 	/** When socks settings are updated, this has to be called... */
 	static void socksUpdated();
-	static const string getRemoteHost(const string& aIp);
+	static string getRemoteHost(const string& aIp);
 	
 	GETSET(string, ip, Ip);
 	GETSET(uint16_t, port, Port);

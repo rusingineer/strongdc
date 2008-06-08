@@ -1,5 +1,6 @@
 	-- StrongDC++ 2.13 --
 
+* zvýšen výkon celého programu
 * opraveno nastavení sloupeèkù
 * opraveny nìjaké pády
 * opraven poèet výsledkù vyhledávání
@@ -9,6 +10,8 @@
 * vylepšena automatická velikost segmentù (DC++ SVN)
 * vylepšeno mìøení ryclosti pøenosù (DC++ SVN)
 * lze používat stejný název u sdlených virtuálních složek (DC++ SVN)
+* opraven chybìjící stav "Stažené èásti" ve frontì
+* složka Windows nebude sdílena
 * nìjaké další opravy a optimalizace
 
 

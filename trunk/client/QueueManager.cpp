@@ -496,7 +496,7 @@ void QueueManager::addList(const UserPtr& aUser, Flags::MaskType aFlags, const s
 	add(target, -1, TTHValue(), aUser, (Flags::MaskType)(QueueItem::FLAG_USER_LIST | aFlags));
 }
 
-void QueueManager::addPfs(const UserPtr& aUser, const string& aDir) throw(QueueException) {
+void QueueManager::addPfs(const UserPtr& aUser, const string& aDir, bool onlyDownload) throw(QueueException) {
 	if(aUser == ClientManager::getInstance()->getMe()) {
 		throw QueueException(STRING(NO_DOWNLOADS_FROM_SELF));
 	}
@@ -507,8 +507,8 @@ void QueueManager::addPfs(const UserPtr& aUser, const string& aDir) throw(QueueE
 	{
 		Lock l(cs);
 		pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aUser->getCID());
-		if(find_if(range.first, range.second, CompareSecond<CID, string>(aDir)) == range.second) {
-			pfsQueue.insert(make_pair(aUser->getCID(), aDir));
+		if(find_if(range.first, range.second, CompareSecondFirst<CID, string, bool>(aDir)) == range.second) {
+			pfsQueue.insert(make_pair(aUser->getCID(), make_pair(aDir, onlyDownload)));
 		}
 	}
 
@@ -684,7 +684,8 @@ void QueueManager::addDirectory(const string& aDir, const UserPtr& aUser, const 
 
 	if(needList) {
 		try {
-			addList(aUser, QueueItem::FLAG_DIRECTORY_DOWNLOAD);
+			//addList(aUser, QueueItem::FLAG_DIRECTORY_DOWNLOAD);
+			addPfs(aUser, aDir, true);
 		} catch(const Exception&) {
 			// Ignore, we don't really care...
 		}
@@ -859,8 +860,8 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 	// First check PFS's...
 	PfsIter pi = pfsQueue.find(aUser->getCID());
 	if(pi != pfsQueue.end()) {
-		dcdebug("partial %s\n", pi->second.c_str());
-		return new Download(aSource, pi->second);
+		dcdebug("partial %s\n", pi->second.first.c_str());
+		return new Download(aSource, pi->second.first);
 	}
 
 	QueueItem* q = userQueue.getNext(aUser, QueueItem::LOWEST, aSource.getChunkSize(), aSource.getSpeed(), true);
@@ -1029,10 +1030,16 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 
 		if(aDownload->getType() == Transfer::TYPE_PARTIAL_LIST) {
 			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUser()->getCID());
-			PfsIter i = find_if(range.first, range.second, CompareSecond<CID, string>(aDownload->getPath()));
+			PfsIter i = find_if(range.first, range.second, CompareSecondFirst<CID, string, bool>(aDownload->getPath()));
 			if(i != range.second) {
+				if(i->second.second == false) {
+					fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
+				} else {
+					fname = aDownload->getPFS();
+					up = aDownload->getUser();
+					flag = QueueItem::FLAG_DIRECTORY_DOWNLOAD | QueueItem::FLAG_TEXT;
+				}
 				pfsQueue.erase(i);
-				fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
 			}
 		} else {
 			QueueItem* q = fileQueue.find(aDownload->getPath());
@@ -1177,7 +1184,11 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 void QueueManager::processList(const string& name, UserPtr& user, int flags) {
 	DirectoryListing dirList(user);
 	try {
-		dirList.loadFile(name);
+		if(flags & QueueItem::FLAG_TEXT) {
+			dirList.loadXML(name, true);
+		} else {
+			dirList.loadFile(name);
+		}
 	} catch(const Exception&) {
 		LogManager::getInstance()->message(STRING(UNABLE_TO_OPEN_FILELIST) + name);
 		return;

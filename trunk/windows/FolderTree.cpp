@@ -52,7 +52,7 @@ FolderTreeItemInfo::FolderTreeItemInfo(const FolderTreeItemInfo& ItemInfo)
 		  m_pNetResource->lpProvider	= _tcsdup(ItemInfo.m_pNetResource->lpProvider);
   }
   else
-    memzero2(m_pNetResource, sizeof(NETRESOURCE));
+    memzero(m_pNetResource, sizeof(NETRESOURCE));
 }
 
 SystemImageList::SystemImageList()
@@ -181,7 +181,7 @@ void ShareEnumerator::Refresh()
 			{
 				unsigned short nTotalRead = 0;
 				m_pWin9xShareInfo = (FolderTree_share_info_50*) new BYTE[cbBuffer];
-				memzero2(m_pWin9xShareInfo, cbBuffer);
+				memzero(m_pWin9xShareInfo, cbBuffer);
 				unsigned short nShares = 0;
 				NET_API_STATUS nStatus = m_pWin9xShareEnum(NULL, 50, (char FAR *)m_pWin9xShareInfo, cbBuffer, (unsigned short FAR *)&nShares, (unsigned short FAR *)&nTotalRead);
 				if (nStatus == ERROR_MORE_DATA)
@@ -416,7 +416,7 @@ void FolderTree::Clear()
 int FolderTree::GetIconIndex(HTREEITEM hItem)
 {
 	TV_ITEM tvi;
-	memzero2(&tvi, sizeof(TV_ITEM));
+	memzero(&tvi, sizeof(TV_ITEM));
 	tvi.mask = TVIF_IMAGE;
 	tvi.hItem = hItem;
 	if (GetItem(&tvi))
@@ -429,7 +429,7 @@ int FolderTree::GetIconIndex(const tstring &sFilename)
 {
 	//Retreive the icon index for a specified file/folder
 	SHFILEINFO sfi;
-	memzero2(&sfi, sizeof(SHFILEINFO));
+	memzero(&sfi, sizeof(SHFILEINFO));
 	SHGetFileInfo(sFilename.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
 	return sfi.iIcon;
 }
@@ -437,7 +437,7 @@ int FolderTree::GetIconIndex(const tstring &sFilename)
 int FolderTree::GetIconIndex(LPITEMIDLIST lpPIDL)
 {
 	SHFILEINFO sfi;
-	memzero2(&sfi, sizeof(SHFILEINFO));
+	memzero(&sfi, sizeof(SHFILEINFO));
 	SHGetFileInfo((LPCTSTR)lpPIDL, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_LINKOVERLAY);
 	return sfi.iIcon;
 }
@@ -445,7 +445,7 @@ int FolderTree::GetIconIndex(LPITEMIDLIST lpPIDL)
 int FolderTree::GetSelIconIndex(LPITEMIDLIST lpPIDL)
 {
 	SHFILEINFO sfi;
-	memzero2(&sfi, sizeof(SHFILEINFO));
+	memzero(&sfi, sizeof(SHFILEINFO));
 	SHGetFileInfo((LPCTSTR)lpPIDL, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_OPENICON);
 	return sfi.iIcon;
 }
@@ -453,7 +453,7 @@ int FolderTree::GetSelIconIndex(LPITEMIDLIST lpPIDL)
 int FolderTree::GetSelIconIndex(HTREEITEM hItem)
 {
 	TV_ITEM tvi;
-	memzero2(&tvi, sizeof(TV_ITEM));
+	memzero(&tvi, sizeof(TV_ITEM));
 	tvi.mask = TVIF_SELECTEDIMAGE;
 	tvi.hItem = hItem;
 	if (GetItem(&tvi))
@@ -466,7 +466,7 @@ int FolderTree::GetSelIconIndex(const tstring &sFilename)
 {
 	//Retreive the icon index for a specified file/folder
 	SHFILEINFO sfi;
-	memzero2(&sfi, sizeof(SHFILEINFO));
+	memzero(&sfi, sizeof(SHFILEINFO));
 	SHGetFileInfo(sFilename.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_OPENICON | SHGFI_SMALLICON);
 	return sfi.iIcon;
 }
@@ -483,7 +483,7 @@ HTREEITEM FolderTree::InsertFileItem(HTREEITEM hParent, FolderTreeItemInfo *pIte
 
 	//Add the actual item
 	TV_INSERTSTRUCT tvis;
-	memzero2(&tvis, sizeof(TV_INSERTSTRUCT));
+	memzero(&tvis, sizeof(TV_INSERTSTRUCT));
 	tvis.hParent = hParent;
 	tvis.hInsertAfter = TVI_LAST;
 	tvis.item.mask = TVIF_CHILDREN | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT | TVIF_PARAM;
@@ -1155,7 +1155,7 @@ bool FolderTree::EnumNetwork(HTREEITEM hParent)
 			//Setup the item data for the new item
 			FolderTreeItemInfo* pItem = new FolderTreeItemInfo;
 			pItem->m_pNetResource = new NETRESOURCE;
-			memzero2(pItem->m_pNetResource, sizeof(NETRESOURCE));
+			memzero(pItem->m_pNetResource, sizeof(NETRESOURCE));
 			*pItem->m_pNetResource = lpnrDrv[i];
 			
 			if (lpnrDrv[i].lpLocalName)

@@ -121,11 +121,11 @@ void FavoriteHubsFrame::openSelected() {
 		r.setServer(entry->getServer());
 		FavoriteManager::getInstance()->addRecent(r);
 		HubFrame::openWindow(Text::toT(entry->getServer())
-			, Text::toT(entry->getRawOne())
-			, Text::toT(entry->getRawTwo())
-			, Text::toT(entry->getRawThree())
-			, Text::toT(entry->getRawFour())
-			, Text::toT(entry->getRawFive())
+			, entry->getRawOne()
+			, entry->getRawTwo()
+			, entry->getRawThree()
+			, entry->getRawFour()
+			, entry->getRawFive()
 			, entry->getChatUserSplit(), entry->getUserListState());
 	}
 	return;

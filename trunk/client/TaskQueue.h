@@ -28,7 +28,7 @@ struct Task {
 };
 struct StringTask : public Task {
 	StringTask(const string& str_) : str(str_) { }
-	const string str;
+	string str;
 };
 
 class TaskQueue {

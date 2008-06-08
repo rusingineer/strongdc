@@ -416,7 +416,7 @@ SettingsManager::SettingsManager()
 
 	setDefault(MAX_AUTO_MATCH_SOURCES, 5);
 	setDefault(MULTI_CHUNK, true);
-	setDefault(USERLIST_DBLCLICK, 0);
+	setDefault(USERLIST_DBLCLICK, 6);
 	setDefault(TRANSFERLIST_DBLCLICK, 0);
 	setDefault(CHAT_DBLCLICK, 0);	
 	setDefault(HUBFRAME_VISIBLE, "1,1,0,1,0,1,0,0,0,0,0,0");

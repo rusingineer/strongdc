@@ -231,7 +231,7 @@ private:
 		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}
 
 		const QueueItem* getQueueItem() const { return qi; }
-		const string getPath() const { return Util::getFilePath(getTarget()); }
+		string getPath() const { return Util::getFilePath(getTarget()); }
 
 		bool isSet(Flags::MaskType aFlag) const { return (qi->getFlags() & aFlag) == aFlag; }
 

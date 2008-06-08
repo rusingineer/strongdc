@@ -670,9 +670,7 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end();) {
 			Upload* u = *i;
 			
-			u->delayTime++;
-			
-			if(u->delayTime > 10) {
+			if(++u->delayTime > 10) {
 				logUpload(u);
 				delete u;
 

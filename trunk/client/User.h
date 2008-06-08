@@ -106,7 +106,7 @@ public:
 	void setHub(bool hub) { set("HU", hub ? "1" : Util::emptyString); }
 	void setBot(bool bot) { set("BO", bot ? "1" : Util::emptyString); }
 	void setHidden(bool hidden) { set("HI", hidden ? "1" : Util::emptyString); }
-	const string getTag() const;
+	string getTag() const;
 	bool supports(const string& name) const;
 	bool isHub() const { return isClientType(CT_HUB) || isSet("HU"); }
 	bool isOp() const { return isClientType(CT_OP) || isSet("OP"); }
@@ -116,7 +116,7 @@ public:
 	bool isAway() const { return isSet("AW"); }
 	bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
 	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
-	const string get(const char* name) const;
+	string get(const char* name) const;
 	void set(const char* name, const string& val);
 	bool isSet(const char* name) const;	
 	string getSIDString() const { uint32_t sid = getSID(); return string((const char*)&sid, 4); }
@@ -126,9 +126,9 @@ public:
 	
 	bool isClientType(ClientType ct) const;
 		
-	const string setCheat(const Client& c, const string& aCheatDescription, bool aBadClient);
-	const string getReport() const;
-	const string updateClientType(const OnlineUser& ou);
+	string setCheat(const Client& c, const string& aCheatDescription, bool aBadClient);
+	string getReport() const;
+	string updateClientType(const OnlineUser& ou);
 	bool matchProfile(const string& aString, const string& aProfile) const;
 
 	void getParams(StringMap& map, const string& prefix, bool compatibility) const;
@@ -176,9 +176,9 @@ public:
 	operator UserPtr&() { return getUser(); }
 	operator const UserPtr&() const { return getUser(); }
 
-	inline UserPtr& getUser() { return getIdentity().getUser(); }
-	inline const UserPtr& getUser() const { return getIdentity().getUser(); }
-	inline Identity& getIdentity() { return identity; }
+	UserPtr& getUser() { return getIdentity().getUser(); }
+	const UserPtr& getUser() const { return getIdentity().getUser(); }
+	Identity& getIdentity() { return identity; }
 	Client& getClient() { return client; }
 	const Client& getClient() const { return client; }
 
@@ -186,10 +186,9 @@ public:
 	bool update(int sortCol, const tstring& oldText = Util::emptyStringT);
 	uint8_t imageIndex() const { return UserInfoBase::getImage(identity); }
 	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
-	const string getNick() const { return identity.getNick(); }
 	bool isHidden() const { return identity.isHidden(); }
 	
-	const tstring getText(uint8_t col) const;
+	tstring getText(uint8_t col) const;
 
 	bool isInList;
 	GETSET(Identity, identity, Identity);
