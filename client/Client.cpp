@@ -144,7 +144,6 @@ void Client::on(Connected) throw() {
 }
 
 void Client::on(Failed, const string& aLine) throw() {
-	updateActivity(); 
 	state = STATE_DISCONNECTED;
 	FavoriteManager::getInstance()->removeUserCommand(getHubUrl());
 	sock->removeListener(this);

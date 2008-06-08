@@ -170,11 +170,11 @@ LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 }
 
 void HubFrame::openWindow(const tstring& aServer
-							, const tstring& rawOne /*= Util::emptyString*/
-							, const tstring& rawTwo /*= Util::emptyString*/
-							, const tstring& rawThree /*= Util::emptyString*/
-							, const tstring& rawFour /*= Util::emptyString*/
-							, const tstring& rawFive /*= Util::emptyString*/
+							, const string& rawOne /*= Util::emptyString*/
+							, const string& rawTwo /*= Util::emptyString*/
+							, const string& rawThree /*= Util::emptyString*/
+							, const string& rawFour /*= Util::emptyString*/
+							, const string& rawFive /*= Util::emptyString*/
 		, int chatusersplit, bool userliststate, string sColumsOrder, string sColumsWidth, string sColumsVisible) {
 	FrameIter i = frames.find(aServer);
 	if(i == frames.end()) {
@@ -476,13 +476,13 @@ LRESULT HubFrame::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 
 LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
 	NMITEMACTIVATE* item = (NMITEMACTIVATE*)pnmh;
-	if(item->iItem != -1) {
+	if(item->iItem != -1 && (ctrlUsers.getItemData(item->iItem)->getUser() != ClientManager::getInstance()->getMe())) {
 	    switch(SETTING(USERLIST_DBLCLICK)) {
 		    case 0:
 				ctrlUsers.getItemData(item->iItem)->getList();
 		        break;
 		    case 1: {
-				tstring sUser = Text::toT(ctrlUsers.getItemData(item->iItem)->getNick());
+				tstring sUser = Text::toT(ctrlUsers.getItemData(item->iItem)->getIdentity().getNick());
 	            int iSelBegin, iSelEnd;
 	            ctrlMessage.GetSel(iSelBegin, iSelEnd);
 
@@ -504,8 +504,7 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 				break;
 		    }    
 		    case 2:
-				if(ctrlUsers.getItemData(item->iItem)->getUser() != ClientManager::getInstance()->getMe())
-		         	 ctrlUsers.getItemData(item->iItem)->pm();
+				ctrlUsers.getItemData(item->iItem)->pm();
 		        break;
 		    case 3:
 		        ctrlUsers.getItemData(item->iItem)->matchQueue();
@@ -516,6 +515,9 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 		    case 5:
 		        ctrlUsers.getItemData(item->iItem)->addFav();
 		        break;
+			case 6:
+				ctrlUsers.getItemData(item->iItem)->browseList();
+				break;
 		}	
 	}
 	return 0;
@@ -1025,8 +1027,8 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					} catch(const Exception& e) {
 						addClientLine(Text::toT(e.getError()), WinUtil::m_ChatTextSystem);
 					}
-				} else {
-				switch(SETTING(CHAT_DBLCLICK)) {
+				} else if(ui->getUser() != ClientManager::getInstance()->getMe()) {
+					switch(SETTING(CHAT_DBLCLICK)) {
 					case 0: {
 						int items = ctrlUsers.GetItemCount();
 						int pos = -1;
@@ -1063,21 +1065,20 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					     break;
 					}
 					case 2:
-						if(ui->getUser() != ClientManager::getInstance()->getMe())
-					          ui->pm();
-					     break;
+						ui->pm();
+					    break;
 					case 3:
-					     ui->getList();
-					     break;
+					    ui->getList();
+					    break;
 					case 4:
-					     ui->matchQueue();
-					     break;
+					    ui->matchQueue();
+					    break;
 					case 5:
-					     ui->grant();
-					     break;
+					    ui->grant();
+					    break;
 					case 6:
-					     ui->addFav();
-					     break;
+					    ui->addFav();
+					    break;
 				}
 			}
 		}
@@ -1965,7 +1966,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 	bool isMe = false;
 
 	if(count == 1) {
-		tstring sNick = Text::toT(((OnlineUser*)ctrlUsers.getItemData(ctrlUsers.GetNextItem(-1, LVNI_SELECTED)))->getNick());
+		tstring sNick = Text::toT(((OnlineUser*)ctrlUsers.getItemData(ctrlUsers.GetNextItem(-1, LVNI_SELECTED)))->getIdentity().getNick());
 	    isMe = (sNick == Text::toT(client->getMyNick()));
 
 		menu.InsertSeparatorFirst(sNick);
@@ -1980,7 +1981,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 
 	if(!isMe) {
 		menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
-		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
+		appendUserItems(menu);
 		menu.AppendMenu(MF_SEPARATOR);
 
 		if(count == 1) {
@@ -1994,16 +1995,9 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 				menu.AppendMenu(MF_SEPARATOR);
 			}
 		}
-
-		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyMenu, CTSTRING(COPY));
-		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
-		menu.AppendMenu(MF_SEPARATOR);
-		menu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
-		menu.AppendMenu(MF_STRING, IDC_MATCH_QUEUE, CTSTRING(MATCH_QUEUE));
-		menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));	
-	} else {
-		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyMenu, CTSTRING(COPY));
 	}
+	
+	menu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyMenu, CTSTRING(COPY));
    
 	switch(SETTING(USERLIST_DBLCLICK)) {
     case 0:
@@ -2018,8 +2012,14 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
     case 3:
 		menu.SetMenuDefaultItem(IDC_MATCH_QUEUE);
 		break;
+	case 4:
+		menu.SetMenuDefaultItem(IDC_GRANTSLOT);
+		break;
     case 5:
 		menu.SetMenuDefaultItem(IDC_ADD_TO_FAVORITES);
+		break;
+	case 6:
+		menu.SetMenuDefaultItem(IDC_BROWSELIST);
 		break;
 	}   		
 
@@ -2069,7 +2069,7 @@ LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			if (!sUsers.empty())
 				sUsers += _T(", ");
-			sUsers += Text::toT(((OnlineUser*)ctrlUsers.getItemData(i))->getNick());
+			sUsers += Text::toT(((OnlineUser*)ctrlUsers.getItemData(i))->getIdentity().getNick());
 		}
 	} else {
 		sUsers = ChatCtrl::getSelectedUser();
@@ -2107,7 +2107,7 @@ LRESULT HubFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 
 	if(ui == NULL) return 0;
 
-	params["userNI"] = ui->getNick();
+	params["userNI"] = ui->getIdentity().getNick();
 	params["hubNI"] = client->getHubName();
 	params["myNI"] = client->getMyNick();
 	params["userCID"] = ui->getUser()->getCID().toBase32();

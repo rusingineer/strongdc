@@ -631,7 +631,7 @@ void Socket::disconnect() throw() {
 	close();
 }
 
-const string Socket::getRemoteHost(const string& aIp) {
+string Socket::getRemoteHost(const string& aIp) {
 	if(aIp.empty())
 		return Util::emptyString;
 	hostent *h = NULL;

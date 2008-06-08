@@ -475,7 +475,7 @@ StringMap WebServerSocket::getArgs(const string& arguments) {
 int WebServerSocket::run(){
 	char buff[8192];
 	uint16_t test = 0;
-	memzero2(buff, sizeof(buff));
+	memzero(buff, sizeof(buff));
 	while(true) {
 
 		test++;

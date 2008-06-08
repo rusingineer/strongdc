@@ -1,3 +1,16 @@
+** svn389
+	added "Troj/Agent-GZF" to crash libraries
+	added "Internet Monitor Layered Service provider" to crash libraries
+	fixed that Windows subfolders were shared
+	fixed problems with disabled segmented downloads
+	fixed remote exploit (THX Fartman)
+	whole folder can be downloaded without downloading whole filelist
+	added "Browse filelist" to userlist/transferlist default actions
+	updated boost library
+
+** svn388
+	released 2.13
+
 ** svn387
 	fixed saving usernicks in queue
 	fixed missing "Downloaded parts" status in queue

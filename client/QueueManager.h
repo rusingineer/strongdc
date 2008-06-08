@@ -80,7 +80,7 @@ public:
 		/** Add a user's filelist to the queue. */
 	void addList(const UserPtr& aUser, Flags::MaskType aFlags, const string& aInitialDir = Util::emptyString) throw(QueueException, FileException);
 	/** Queue a partial file list download */
-	void addPfs(const UserPtr& aUser, const string& aDir) throw(QueueException);
+	void addPfs(const UserPtr& aUser, const string& aDir, bool onlyDownload = false) throw(QueueException);
 
 	void addTestSUR(UserPtr aUser, bool checkList = false) throw(QueueException, FileException) {
 		StringList nicks = ClientManager::getInstance()->getNicks(*aUser);
@@ -207,7 +207,7 @@ public:
 		CriticalSection cs;
 	} mover;
 
-	typedef unordered_map<CID, string> PfsQueue;
+	typedef unordered_map<CID, pair<string, bool>> PfsQueue;
 	typedef PfsQueue::iterator PfsIter;
 	typedef vector<pair<QueueItem::SourceConstIter, const QueueItem*> > PFSSourceList;
 

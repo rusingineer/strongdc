@@ -1,5 +1,6 @@
 	-- StrongDC++ 2.13 --
 
+* improved program performance
 * fixed columns settings
 * fixed some crashes
 * fixed search resuls count
@@ -9,6 +10,8 @@
 * improved segment auto-size (DC++ SVN)
 * improved transfer speed averaging (DC++ SVN)
 * allow shared virtual folders to have the same name (DC++ SVN)
+* fixed missing "Downloaded parts" status in queue
+* Windows folder won't be shared
 * some other fixes and optimizations
 
 

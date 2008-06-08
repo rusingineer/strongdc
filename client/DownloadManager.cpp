@@ -353,7 +353,7 @@ void DownloadManager::endData(UserConnection* aSource) {
 
 	removeDownload(d);
 
-	if(d->getType() == Transfer::TYPE_TREE)
+	if(d->getType() == Transfer::TYPE_TREE || d->getType() == Transfer::TYPE_PARTIAL_LIST)
 		fire(DownloadManagerListener::Complete(), d, d->getType() == Transfer::TYPE_TREE);
 
 	QueueManager::getInstance()->putDownload(d, true, false);	

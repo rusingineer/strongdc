@@ -765,7 +765,7 @@ $memset_exit:
     }
 }
 
-void __stdcall memzero2(void *dest, size_t n)
+void __stdcall memzero(void *dest, size_t n)
 {
   __asm
   {

@@ -80,6 +80,17 @@ private:
 	const T2& a;
 };
 
+/** Evaluates op(pair<T1, T2>.second, compareTo) */
+template<class T1, class T2, class T3, class op = equal_to<T2> >
+class CompareSecondFirst {
+public:
+	CompareSecondFirst(const T2& compareTo) : a(compareTo) { }
+	bool operator()(const pair<T1, pair<T2, T3>>& p) { return op()(p.second.first, a); }
+private:
+	CompareSecondFirst& operator=(const CompareSecondFirst&);
+	const T2& a;
+};
+
 /** 
  * Compares two values
  * @return -1 if v1 < v2, 0 if v1 == v2 and 1 if v1 > v2

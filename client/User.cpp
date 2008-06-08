@@ -77,7 +77,7 @@ bool Identity::isClientType(ClientType ct) const {
 	return (type & ct) == ct;
 }
 
-const string Identity::getTag() const {
+string Identity::getTag() const {
 	if(!get("TA").empty())
 		return get("TA");
 	if(get("VE").empty() || get("HN").empty() || get("HR").empty() || get("HO").empty() || get("SL").empty())
@@ -86,7 +86,7 @@ const string Identity::getTag() const {
 		get("HR") + "/" + get("HO") + ",S:" + get("SL") + ">";
 }
 
-const string Identity::get(const char* name) const {
+string Identity::get(const char* name) const {
 	FastLock l(cs);
 	InfMap::const_iterator i = info.find(*(short*)name);
 	return i == info.end() ? Util::emptyString : i->second;
@@ -142,7 +142,7 @@ void FavoriteUser::update(const OnlineUser& info) {
 	setUrl(info.getClient().getHubUrl()); 
 }
 
-const string Identity::setCheat(const Client& c, const string& aCheatDescription, bool aBadClient) {
+string Identity::setCheat(const Client& c, const string& aCheatDescription, bool aBadClient) {
 	if(!c.isOp() || isOp()) return Util::emptyString;
 
 	if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -159,7 +159,7 @@ const string Identity::setCheat(const Client& c, const string& aCheatDescription
 	return report;
 }
 
-const string Identity::getReport() const {
+string Identity::getReport() const {
 	string report = "\r\nClient:		" + get("CL");
 	report += "\r\nXML Generator:	" + (get("GE").empty() ? "N/A" : get("GE"));
 	report += "\r\nLock:		" + get("LO");
@@ -191,7 +191,7 @@ const string Identity::getReport() const {
 	return report;
 }
 
-const string Identity::updateClientType(const OnlineUser& ou) {
+string Identity::updateClientType(const OnlineUser& ou) {
 	if(getUser()->isSet(User::DCPLUSPLUS)) {
 		if (get("LL") == "11" && getBytesShared() > 0) {
 			string report = setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
@@ -341,7 +341,7 @@ int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t c
 	return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 }
 
-const tstring OnlineUser::getText(uint8_t col) const {
+tstring OnlineUser::getText(uint8_t col) const {
 	switch(col) {
 		case COLUMN_NICK: return Text::toT(identity.getNick());
 		case COLUMN_SHARED: return Util::formatBytesW(identity.getBytesShared());

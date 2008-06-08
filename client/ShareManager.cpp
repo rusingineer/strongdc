@@ -442,7 +442,7 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 	// don't share Windows directory
 	TCHAR path[MAX_PATH];
 	::SHGetFolderPath(NULL, CSIDL_WINDOWS, NULL, SHGFP_TYPE_CURRENT, path);
-	if(Util::stricmp(realPath, Text::fromT((tstring)path) + PATH_SEPARATOR) == 0) {
+	if(Util::strnicmp(realPath, Text::fromT((tstring)path) + PATH_SEPARATOR, _tcslen(path) + 1) == 0) {
 		char buf[MAX_PATH];
 		snprintf(buf, sizeof(buf), CSTRING(CHECK_FORBIDDEN), realPath.c_str());
 		throw ShareException(buf);
@@ -522,9 +522,7 @@ void ShareManager::Directory::merge(Directory* source) {
 	source->directories.clear();
 	
 	for(File::Set::iterator i = source->files.begin(); i != source->files.end(); ++i) {
-		File::Set::const_iterator j = findFile(i->getName());
-		
-		if(j == files.end()) {
+		if(findFile(i->getName()) == files.end()) {
 			if(directories.find(i->getName()) != directories.end()) {
 				dcdebug("Directory named the same as file");
 			} else {
@@ -1068,6 +1066,10 @@ MemoryInputStream* ShareManager::generatePartialList(const string& dir, bool rec
 			}
 			j = i + 1;
 		}
+
+		if(first)
+			return NULL;
+
 		for(Directory::Map::const_iterator it2 = root->directories.begin(); it2 != root->directories.end(); ++it2) {
 			it2->second->toXml(sos, indent, tmp, recurse);
 		}

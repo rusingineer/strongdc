@@ -117,11 +117,13 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
     userlistaction.AddString(CTSTRING(MATCH_QUEUE));
     userlistaction.AddString(CTSTRING(GRANT_EXTRA_SLOT));
 	userlistaction.AddString(CTSTRING(ADD_TO_FAVORITES));
+	userlistaction.AddString(CTSTRING(BROWSE_FILE_LIST));
 	transferlistaction.AddString(CTSTRING(SEND_PRIVATE_MESSAGE));
 	transferlistaction.AddString(CTSTRING(GET_FILE_LIST));
 	transferlistaction.AddString(CTSTRING(MATCH_QUEUE));
 	transferlistaction.AddString(CTSTRING(GRANT_EXTRA_SLOT));
 	transferlistaction.AddString(CTSTRING(ADD_TO_FAVORITES));
+	transferlistaction.AddString(CTSTRING(BROWSE_FILE_LIST));
 	chataction.AddString(CTSTRING(SELECT_USER_LIST));
     chataction.AddString(CTSTRING(SEND_PUBLIC_MESSAGE));
     chataction.AddString(CTSTRING(SEND_PRIVATE_MESSAGE));

@@ -125,25 +125,23 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 
 	/***************************/
 
-	int64_t remaining = getSize() - getDownloadedBytes();
-	
 	int64_t targetSize;
 	if(BOOLSETTING(MULTI_CHUNK)) {
 		double done = static_cast<double>(getDownloadedBytes()) / getSize();
 		
 		// We want smaller blocks at the end of the transfer, squaring gives a nice curve...
 		targetSize = static_cast<int64_t>(static_cast<double>(wantedSize) * std::max(0.25, (1. - (done * done))));
-		
-		if(targetSize > blockSize) {
-			// Round off to nearest block size
-			targetSize = ((targetSize + (blockSize / 2)) / blockSize) * blockSize;
-		} else {
-			targetSize = blockSize;
-		}
 	} else {
-		targetSize = remaining;
+		targetSize = getSize() - getDownloadedBytes();
 	}
-	
+		
+	if(targetSize > blockSize) {
+		// Round off to nearest block size
+		targetSize = ((targetSize + (blockSize / 2)) / blockSize) * blockSize;
+	} else {
+		targetSize = blockSize;
+	}
+
 	int64_t start = 0;
 	int64_t curSize = targetSize;
 
@@ -151,7 +149,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 		int64_t end = std::min(getSize(), start + curSize);
 		Segment block(start, end - start);
 		bool overlaps = false;
-		for(SegmentIter i = done.begin(); !overlaps && i != done.end(); ++i) {
+		for(SegmentConstIter i = done.begin(); !overlaps && i != done.end(); ++i) {
 			if(curSize <= blockSize) {
 				int64_t dstart = i->getStart();
 				int64_t dend = i->getEnd();
@@ -278,7 +276,7 @@ bool QueueItem::isSource(const PartsInfo& partsInfo, int64_t blockSize)
 {
 	dcassert(partsInfo.size() % 2 == 0);
 	
-	SegmentIter i  = done.begin();
+	SegmentConstIter i  = done.begin();
 	for(PartsInfo::const_iterator j = partsInfo.begin(); j != partsInfo.end(); j+=2){
 		while(i != done.end() && (*i).getEnd() <= (*j) * blockSize)
 			i++;
@@ -295,7 +293,7 @@ void QueueItem::getPartialInfo(PartsInfo& partialInfo, int64_t blockSize) const 
 	size_t maxSize = min(done.size() * 2, (size_t)510);
 	partialInfo.reserve(maxSize);
 
-	SegmentIter i = done.begin();
+	SegmentConstIter i = done.begin();
 	for(; i != done.end() && partialInfo.size() < maxSize; i++) {
 
 		uint16_t s = (uint16_t)((*i).getStart() / blockSize);
@@ -311,16 +309,19 @@ vector<Segment> QueueItem::getChunksVisualisation(int type) const {  // type: 0 
 
 	switch(type) {
 	case 0:
+		v.reserve(downloads.size());
 		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 			v.push_back((*i)->getSegment());
 		}
 		break;
 	case 1:
+		v.reserve(downloads.size());
 		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 			v.push_back(Segment((*i)->getStartPos(), (*i)->getPos()));
 		}
 		break;
 	case 2:
+		v.reserve(done.size());
 		for(SegmentSet::const_iterator i = done.begin(); i != done.end(); ++i) {
 			v.push_back(*i);
 		}

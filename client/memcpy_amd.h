@@ -37,6 +37,6 @@ void* __stdcall memcpy2(void *dest, const void *src, size_t n);
 
 void* __stdcall memset2(void *dest, int c, size_t n);
 
-void __stdcall memzero2(void *dest, size_t n);
+void __stdcall memzero(void *dest, size_t n);
 
 unsigned long get_cpu_type();

@@ -684,6 +684,34 @@ LRESULT PrivateFrame::onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndC
 	return 0;
 }
 
+LRESULT PrivateFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+
+	if(isoffline)
+		return 0;
+
+	tstring sUsers = ChatCtrl::getSelectedUser();
+
+	int iSelBegin, iSelEnd;
+	ctrlMessage.GetSel( iSelBegin, iSelEnd );
+
+	if ( ( iSelBegin == 0 ) && ( iSelEnd == 0 ) ) {
+		sUsers += _T(": ");
+		if (ctrlMessage.GetWindowTextLength() == 0) {	
+			ctrlMessage.SetWindowText(sUsers.c_str());
+			ctrlMessage.SetFocus();
+			ctrlMessage.SetSel( ctrlMessage.GetWindowTextLength(), ctrlMessage.GetWindowTextLength() );
+		} else {
+			ctrlMessage.ReplaceSel( sUsers.c_str() );
+			ctrlMessage.SetFocus();
+		}
+	} else {
+		sUsers += _T(" ");
+		ctrlMessage.ReplaceSel( sUsers.c_str() );
+		ctrlMessage.SetFocus();
+	}
+	return 0;
+}
+
 /**
  * @file
  * $Id$

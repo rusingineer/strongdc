@@ -243,7 +243,7 @@ static void checkCommonControls() {
 			DLLVERSIONINFO dvi;
 			HRESULT hr;
 			
-			memzero2(&dvi, sizeof(dvi));
+			memzero(&dvi, sizeof(dvi));
 			dvi.cbSize = sizeof(dvi);
 			
 			hr = (*pDllGetVersion)(&dvi);

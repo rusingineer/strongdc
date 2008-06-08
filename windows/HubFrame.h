@@ -179,11 +179,11 @@ public:
 	void runUserCommand(::UserCommand& uc);
 
 	static void openWindow(const tstring& server
-		, const tstring& rawOne = Util::emptyStringT
-		, const tstring& rawTwo = Util::emptyStringT
-		, const tstring& rawThree = Util::emptyStringT
-		, const tstring& rawFour = Util::emptyStringT
-		, const tstring& rawFive = Util::emptyStringT
+		, const string& rawOne = Util::emptyString
+		, const string& rawTwo = Util::emptyString
+		, const string& rawThree = Util::emptyString
+		, const string& rawFour = Util::emptyString
+		, const string& rawFive = Util::emptyString
 		, int chatusersplit = 0, bool userliststate = true,
 		        string sColumsOrder = Util::emptyString, string sColumsWidth = Util::emptyString, string sColumsVisible = Util::emptyString);
 	static void resortUsers();	
@@ -307,11 +307,11 @@ private:
 	friend class PrivateFrame;
 	
 	HubFrame(const tstring& aServer
-		, const tstring& aRawOne
-		, const tstring& aRawTwo
-		, const tstring& aRawThree
-		, const tstring& aRawFour
-		, const tstring& aRawFive
+		, const string& aRawOne
+		, const string& aRawTwo
+		, const string& aRawThree
+		, const string& aRawFour
+		, const string& aRawFive
 		, int chatusersplit, bool userliststate) : 
 		waitingForPW(false), extraSort(false), server(aServer), closed(false), 
 		showUsers(BOOLSETTING(GET_USER_INFO)), updateUsers(false), resort(false),
@@ -326,11 +326,11 @@ private:
 		client = ClientManager::getInstance()->getClient(Text::fromT(aServer));
 		client->addListener(this);
 		
-		client->setRawOne(Text::fromT(aRawOne));
-		client->setRawTwo(Text::fromT(aRawTwo));
-		client->setRawThree(Text::fromT(aRawThree));
-		client->setRawFour(Text::fromT(aRawFour));
-		client->setRawFive(Text::fromT(aRawFive));
+		client->setRawOne(aRawOne);
+		client->setRawTwo(aRawTwo);
+		client->setRawThree(aRawThree);
+		client->setRawFour(aRawFour);
+		client->setRawFive(aRawFive);
 
 		if(FavoriteManager::getInstance()->getFavoriteHubEntry(Text::fromT(server)) != NULL) {
 			showUsers = userliststate;

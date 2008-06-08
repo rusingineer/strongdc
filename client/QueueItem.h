@@ -136,7 +136,7 @@ public:
 	typedef SourceList::const_iterator SourceConstIter;
 
 	typedef set<Segment> SegmentSet;
-	typedef SegmentSet::const_iterator SegmentIter;
+	typedef SegmentSet::const_iterator SegmentConstIter;
 	
 	QueueItem(const string& aTarget, int64_t aSize, Priority aPriority, Flags::MaskType aFlag,
 		time_t aAdded, const TTHValue& tth) :
