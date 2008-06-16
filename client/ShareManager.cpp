@@ -78,7 +78,7 @@ ShareManager::~ShareManager() {
 ShareManager::Directory::Directory(const string& aName, Directory* aParent) : 
 	name(aName),
 	parent(aParent),
-	fileTypes(SearchManager::TYPE_DIRECTORY)
+	fileTypes(1 << SearchManager::TYPE_DIRECTORY)
 {
 }
 
@@ -1040,7 +1040,7 @@ MemoryInputStream* ShareManager::generatePartialList(const string& dir, bool rec
 	} else {
 		string::size_type i = 1, j = 1;
 		
-		Directory* root = NULL;
+		Directory* root = 0;
 		
 		bool first = true;
 		while( (i = dir.find('/', j)) != string::npos) {

@@ -111,7 +111,6 @@ typedef unsigned __int64 uint64_t;
 #undef memzero
 #define memcpy memcpy2
 #define memset memset2
-#define memzero memzero
 
 #ifdef _MSC_VER
 #include <crtdbg.h>

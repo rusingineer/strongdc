@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ private:
 	size_t getPos(const string& s, size_t i, size_t l) const {
 		size_t h = 0;
 		const char* c = s.data() + i;
-		const char* end = s.data() + l;
+		const char* end = s.data() + i + l;
 		for(; c < end; ++c) {
 			h ^= *c + 0x9e3779b9 + (h<<6) + (h>>2);
 		}

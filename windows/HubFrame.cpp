@@ -1107,9 +1107,9 @@ void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf,
 	}
 
 	if(timeStamps) {
-		ctrlClient.AppendText(i, Text::toT(client->getCurrentNick()), Text::toT("[" + Util::getShortTimeString() + "] "), aLine.c_str(), cf, bUseEmo);
+		ctrlClient.AppendText(i, Text::toT(client->getCurrentNick()), Text::toT("[" + Util::getShortTimeString() + "] "), aLine + _T('\n'), cf, bUseEmo);
 	} else {
-		ctrlClient.AppendText(i, Text::toT(client->getCurrentNick()), _T(""), aLine.c_str(), cf, bUseEmo);
+		ctrlClient.AppendText(i, Text::toT(client->getCurrentNick()), _T(""), aLine + _T('\n'), cf, bUseEmo);
 	}
 	if (BOOLSETTING(BOLD_HUB)) {
 		setDirty();
@@ -1170,6 +1170,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	}
 		
 	if(reinterpret_cast<HWND>(wParam) == ctrlUsers && showUsers && (ctrlUsers.GetSelectedCount() > 0)) {
+		ChatCtrl::setSelectedUser(Util::emptyStringT);
 		if ( ctrlUsers.GetSelectedCount() == 1 ) {
 			if(pt.x == -1 && pt.y == -1) {
 				WinUtil::getContextMenuPos(ctrlUsers, pt);
