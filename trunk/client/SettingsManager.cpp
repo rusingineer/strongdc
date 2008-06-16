@@ -182,7 +182,7 @@ SettingsManager::SettingsManager()
 	setDefault(IGNORE_HUB_PMS, false);
 	setDefault(IGNORE_BOT_PMS, false);
 	setDefault(BUFFER_SIZE, 64);
-	setDefault(HUBLIST_SERVERS, "http://download.hublist.cz.nyud.net/hublist.xml.bz2;http://hublist.hubtracker.com.nyud.net/hublist.xml.bz2;http://www.cnet.cz.nyud.net/list.txt;http://dchublist.com.nyud.net/hublist.xml.bz2;http://adchublist.com.nyud.net/hublist.xml.bz2");
+	setDefault(HUBLIST_SERVERS, "http://download.hublist.cz/hublist.xml.bz2;http://hublist.hubtracker.com/hublist.xml.bz2;http://www.cnet.cz/list.txt;http://dchublist.com/hublist.xml.bz2;http://adchublist.com/hublist.xml.bz2");
 	setDefault(DOWNLOAD_SLOTS, 50);
     setDefault(FILE_SLOTS, 15);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
@@ -304,7 +304,7 @@ SettingsManager::SettingsManager()
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);
 	setDefault(DEBUG_COMMANDS, false);
-	setDefault(UPDATE_URL, "http://dcaml.sourceforge.net.nyud.net/files/");	
+	setDefault(UPDATE_URL, "http://dcaml.sourceforge.net/files/");	
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
 	setDefault(SEARCH_PASSIVE, false);

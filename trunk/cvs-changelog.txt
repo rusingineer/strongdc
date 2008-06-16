@@ -1,3 +1,9 @@
+** svn390
+	fixed usercommands in PM tab context menu
+	updated bzip2
+	fixed some problems with returning search results (DC++ BZR)
+	some fixes to chat formatting
+
 ** svn389
 	added "Troj/Agent-GZF" to crash libraries
 	added "Internet Monitor Layered Service provider" to crash libraries

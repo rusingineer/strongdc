@@ -428,6 +428,31 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 	ClientManager::getInstance()->userCommand(replyTo, uc, ucParams, true);
 }
 
+LRESULT PrivateFrame::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ClientManager::getInstance()->reportUser(replyTo);
+	return 0;
+}
+
+LRESULT PrivateFrame::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	try {
+		QueueManager::getInstance()->addTestSUR(replyTo, false);
+	} catch(const Exception& e) {
+		LogManager::getInstance()->message(e.getError());		
+	}
+
+	return 0;
+}
+
+LRESULT PrivateFrame::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	try {
+		QueueManager::getInstance()->addList(replyTo, QueueItem::FLAG_CHECK_FILE_LIST);
+	} catch(const Exception& e) {
+		LogManager::getInstance()->message(e.getError());		
+	}
+	
+	return 0;
+}
+
 LRESULT PrivateFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	try {
 		QueueManager::getInstance()->addList(replyTo, QueueItem::FLAG_CLIENT_VIEW);

@@ -31,7 +31,7 @@ _T("Dìkuji všem, kteøí mì ve vývoji podporovali. THX: Andyman (for muscle-arm lo
 _T("Chmelic, Cinique, Corvik, Crakter, darwusch, Dreamveawer, FarCry, Fartman, GargoyleMT, Gigadisk (for Czech translation), ")
 _T("Ice, Jove, King Wenceslas, klirik, Lee, Legolas, Liny, MaynardK, Mlok, Naga, Patrol, popKorn, Pothead, ProLogic, Rm., ")
 _T("Testament, Warrior, WereWiking, xAyiDe, XiND and ToH for very nice betatesting :-) and to all donators who support me: ")
-_T("Kulmegil, Michal Seckar, k3dt, majki, mazeboy, Fino, Architect, Ujep, Jeepo, mlok, redsaq, anton009, Lee, share2all ")
+_T("Kulmegil, Michal Seckar, k3dt, majki, mazeboy, Fino, Architect, Ujep, Jeepo, mlok, redsaq, anton009, Lee, share2all, ")
 _T("Dr. Martin Sereday");
 
 class AboutDlg : public CDialogImpl<AboutDlg>, private HttpConnectionListener
