@@ -106,7 +106,7 @@ public:
 		return tthIndex.find(tth) != tthIndex.end();
 	}
 
-	GETSET(uint32_t, hits, Hits);
+	GETSET(size_t, hits, Hits);
 	GETSET(string, bzXmlFile, BZXmlFile);
 	GETSET(int64_t, sharedSize, SharedSize);
 

@@ -145,7 +145,7 @@ UINT CShellContextMenu::ShowContextMenu(HWND hWnd, CPoint pt)
 	WNDPROC OldWndProc;
 	if(iMenuType > 1)	// only subclass if its version 2 or 3
 	{
-		OldWndProc = (WNDPROC) SetWindowLong(hWnd, GWL_WNDPROC, (DWORD) HookWndProc);
+		OldWndProc = (WNDPROC) SetWindowLongPtr(hWnd, GWLP_WNDPROC, (DWORD) HookWndProc);
 		if(iMenuType == 2)
 			g_IContext2 = (LPCONTEXTMENU2) pContextMenu;
 		else	// version 3
@@ -157,7 +157,7 @@ UINT CShellContextMenu::ShowContextMenu(HWND hWnd, CPoint pt)
 	UINT idCommand = m_Menu->TrackPopupMenu(TPM_RETURNCMD | TPM_LEFTALIGN, pt.x, pt.y, hWnd);
 
 	if(OldWndProc) // unsubclass
-		SetWindowLong(hWnd, GWL_WNDPROC, (DWORD) OldWndProc);
+		SetWindowLongPtr(hWnd, GWLP_WNDPROC, (DWORD) OldWndProc);
 
 	if(idCommand >= ID_SHELLCONTEXTMENU_MIN && idCommand <= ID_SHELLCONTEXTMENU_MAX)
 	{

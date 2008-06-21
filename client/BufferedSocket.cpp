@@ -148,7 +148,7 @@ void BufferedSocket::threadRead() throw(SocketException) {
 	bool throttling = false;
 	if(mode == MODE_DATA)
 	{
-		uint32_t getMaximum;
+		size_t getMaximum;
 		throttling = dm->throttle();
 		if (throttling)
 		{
@@ -376,7 +376,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 				}	
 			}
 			if(throttling) {
-				uint32_t cycle_time = um->throttleCycleTime();
+				size_t cycle_time = um->throttleCycleTime();
 				uint64_t sleep_time = cycle_time - (GET_TICK() - start);
 				if (sleep_time > 0 && sleep_time <= cycle_time) {
 					Thread::sleep(sleep_time);

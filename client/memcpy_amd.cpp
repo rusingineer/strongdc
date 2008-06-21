@@ -37,6 +37,7 @@
 #include "stdinc.h"
 #include "memcpy_amd.h"
 
+#ifndef _WIN64
 /*****************************************************************************
 MEMCPY_AMD.CPP
 ******************************************************************************/
@@ -984,3 +985,9 @@ $memzero_last_few:		; dword aligned from before stosd's
 $memzero_exit:
     }
 }
+
+#else
+
+  void __stdcall memzero(void *dest, size_t n) { memset(dest, 0, n); }
+  
+#endif

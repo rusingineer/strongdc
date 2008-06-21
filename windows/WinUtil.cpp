@@ -1750,6 +1750,7 @@ uint8_t WinUtil::getFlagImage(const char* country, bool fullname) {
 }
 
 float ProcSpeedCalc() {
+#ifndef _WIN64
 #define RdTSC __asm _emit 0x0f __asm _emit 0x31
 __int64 cyclesStart = 0, cyclesStop = 0;
 unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
@@ -1769,6 +1770,34 @@ unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
         mov DWORD PTR [cyclesStop + 4], edx
     }
 	return ((float)cyclesStop-(float)cyclesStart) / 1000000;
+#else
+	HKEY hKey;
+	DWORD dwSpeed;
+
+	// Get the key name
+	wchar_t szKey[256];
+	_snwprintf(szKey, sizeof(szKey)/sizeof(wchar_t),
+		L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%d\\", 0);
+
+	// Open the key
+	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,szKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+	{
+		return 0;
+	}
+
+	// Read the value
+	DWORD dwLen = 4;
+	if(RegQueryValueEx(hKey, L"~MHz", NULL, NULL, (LPBYTE)&dwSpeed, &dwLen) != ERROR_SUCCESS)
+	{
+		RegCloseKey(hKey);
+		return 0;
+	}
+
+	// Cleanup and return
+	RegCloseKey(hKey);
+	
+	return dwSpeed;
+#endif
 }
 
 wchar_t arrayutf[42] = { L'¡', L'»', L'œ', L'…', L'Ã', L'Õ', L'º', L'“', L'”', L'ÿ', L'ä', L'ç', L'⁄', L'Ÿ', L'›', L'é', L'·', L'Ë', L'Ô', L'È', L'Ï', L'Ì', L'æ', L'Ú', L'Û', L'¯', L'ö', L'ù', L'˙', L'˘', L'˝', L'û', L'ƒ', L'À', L'÷', L'‹', L'‰', L'Î', L'ˆ', L'¸', L'£', L'≥' };
