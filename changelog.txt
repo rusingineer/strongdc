@@ -1,3 +1,18 @@
+	-- StrongDC++ --
+
+* pøidany nìjaké další knihovny, které by mohly zpùsobit pád
+* opraveno sdílení podsložek složky Windows
+* opraveny problémy s vypnutým segmentovým stahováním
+* opravena možnost shodit program na dálku (THX Fartman)
+* celé složky lze stáhnout aniž by se musel stahovat celý seznam souborù
+* pøidáno "Procházet seznam souborù" do výchozích akcí seznamu uživatelù/pøenosù
+* opraveny uživatelské pøíkazy v kontextovém menu soukromých zpráv
+* aktualizován bzip2
+* opraveny nìjaké problémy s výsledky hledání (DC++ BZR)
+* nìjaké opravy ve formátování chatu
+* opraveny nìkolik málo pádù
+
+
 	-- StrongDC++ 2.13 --
 
 * zvýšen výkon celého programu

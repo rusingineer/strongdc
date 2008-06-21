@@ -254,7 +254,7 @@ void QueueItem::addSegment(const Segment& segment) {
 	dcassert(segment.getOverlapped() == false);
 	done.insert(segment);
 
-	// Consilidate segments
+	// Consolidate segments
 	if(done.size() == 1)
 		return;
 	

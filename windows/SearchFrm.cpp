@@ -20,6 +20,7 @@
 #include "../client/DCPlusPlus.h"
 #include "Resource.h"
 
+#include "MainFrm.h"
 #include "SearchFrm.h"
 #include "LineDlg.h"
 
@@ -409,6 +410,9 @@ void SearchFrame::onEnter() {
 			lastSearches.erase(lastSearches.begin());
 		}
 		lastSearches.push_back(s);
+		
+		// update history in quick search box
+		MainFrame::getMainFrame()->updateQuickSearches();
 	}
 		
 	for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {

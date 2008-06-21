@@ -520,7 +520,7 @@ void BufferedSocket::shutdown() {
 }
 
 void BufferedSocket::addTask(Tasks task, TaskData* data) { 
-	dcassert(task == SHUTDOWN || sock.get());
+	//dcassert(task == SHUTDOWN || sock.get());
 	tasks.push_back(make_pair(task, data)); taskSem.signal();
 }
 

@@ -258,6 +258,8 @@ public:
 		return 0;
 	}
 	
+	static const TStringList& getLastSearches() { return lastSearches; }
+	
 private:
 	class SearchInfo;
 	
