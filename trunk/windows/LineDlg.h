@@ -56,7 +56,7 @@ public:
 		ctrlLine.SetWindowText(line.c_str());
 		ctrlLine.SetSelAll(TRUE);
 		if(password) {
-			ctrlLine.SetWindowLong(GWL_STYLE, ctrlLine.GetWindowLong(GWL_STYLE) | ES_PASSWORD);
+			ctrlLine.SetWindowLongPtr(GWL_STYLE, ctrlLine.GetWindowLongPtr(GWL_STYLE) | ES_PASSWORD);
 			ctrlLine.SetPasswordChar('*');
 		}
 

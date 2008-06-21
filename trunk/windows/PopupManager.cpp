@@ -83,7 +83,7 @@ void PopupManager::Show(const tstring &aMsg, const tstring &aTitle, int Icon, in
 	PopupWnd *p = new PopupWnd(msg, aTitle, rc, id++);
 			
 	if(LOBYTE(LOWORD(GetVersion())) >= 5) {
-		p->SetWindowLong(GWL_EXSTYLE, p->GetWindowLong(GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT);
+		p->SetWindowLongPtr(GWL_EXSTYLE, p->GetWindowLongPtr(GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT);
 		typedef bool (CALLBACK* LPFUNC)(HWND hwnd, COLORREF crKey, BYTE bAlpha, DWORD dwFlags);
 		LPFUNC _d_SetLayeredWindowAttributes = (LPFUNC)GetProcAddress(LoadLibrary(_T("user32")), "SetLayeredWindowAttributes");
 		_d_SetLayeredWindowAttributes(p->m_hWnd, 0, 200, LWA_ALPHA);

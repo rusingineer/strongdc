@@ -134,7 +134,7 @@ public:
 		if(!BOOLSETTING(SHOW_INFOTIPS)) return 0;
 
 		NMLVGETINFOTIP* pInfoTip = (NMLVGETINFOTIP*) pnmh;
-		BOOL NoColumnHeader = (BOOL)(GetWindowLong(GWL_STYLE) & LVS_NOCOLUMNHEADER);
+		BOOL NoColumnHeader = (BOOL)(GetWindowLongPtr(GWL_STYLE) & LVS_NOCOLUMNHEADER);
 		tstring InfoTip(Util::emptyStringT);
 		tstring buffer;
 

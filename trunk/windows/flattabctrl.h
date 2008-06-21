@@ -536,9 +536,9 @@ private:
 
 		TabInfo(HWND aWnd, COLORREF c, long icon, long stateIcon) : hWnd(aWnd), len(0), xpos(0), row(0), dirty(false), hIcon(NULL), hStateIcon(NULL), bState(false) { 
 			if (icon != 0)
-				hIcon = (HICON)LoadImage((HINSTANCE)::GetWindowLong(aWnd, GWL_HINSTANCE), MAKEINTRESOURCE(icon), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
+				hIcon = (HICON)LoadImage((HINSTANCE)::GetWindowLongPtr(aWnd, GWLP_HINSTANCE), MAKEINTRESOURCE(icon), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 			if (icon != stateIcon)
-				hStateIcon = (HICON)LoadImage((HINSTANCE)::GetWindowLong(aWnd, GWL_HINSTANCE), MAKEINTRESOURCE(stateIcon), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
+				hStateIcon = (HICON)LoadImage((HINSTANCE)::GetWindowLongPtr(aWnd, GWLP_HINSTANCE), MAKEINTRESOURCE(stateIcon), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE);
 			pen.CreatePen(PS_SOLID, 1, c);
 			memzero(&size, sizeof(size));
 			memzero(&boldSize, sizeof(boldSize));
