@@ -1,3 +1,8 @@
+** svn391
+	some other fixes to chat formatting
+	fixed potentional race condition in QueueManager
+	implemented Quick Search function (ApexDC++)
+
 ** svn390
 	fixed usercommands in PM tab context menu
 	updated bzip2

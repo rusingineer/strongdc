@@ -39,6 +39,7 @@
 #define IDC_OPEN_MY_LIST                132
 #define IDC_SERVER                      133
 #define IDC_EXTERNAL_IP                 133
+#define ID_TOGGLE_QSEARCH               134
 #define IDC_FILES                       135
 #define IDB_FOLDERS                     206
 #define IDB_ARROWS                      208

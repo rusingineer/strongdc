@@ -45,6 +45,8 @@
 #include "UPnP.h"
 #include "WinUtil.h"
 
+#define QUICK_SEARCH_MAP 20
+
 class MainFrame : public CMDIFrameWindowImpl<MainFrame>, public CUpdateUI<MainFrame>,
 		public CMessageFilter, public CIdleHandler, public CSplitterImpl<MainFrame, false>, public Thread,
 		private TimerManagerListener, private HttpConnectionListener, private QueueManagerListener,
@@ -170,17 +172,27 @@ public:
 		COMMAND_ID_HANDLER(IDC_REFRESH_FILE_LIST, onRefreshFileList)
 		COMMAND_ID_HANDLER(ID_FILE_QUICK_CONNECT, onQuickConnect)
 		COMMAND_ID_HANDLER(IDC_HASH_PROGRESS, onHashProgress)
+		COMMAND_ID_HANDLER(ID_TOGGLE_QSEARCH, OnViewQuickSearchBar)
 		NOTIFY_CODE_HANDLER(TTN_GETDISPINFO, onGetToolTip)
 		CHAIN_MDI_CHILD_COMMANDS()
 		CHAIN_MSG_MAP(CUpdateUI<MainFrame>)
 		CHAIN_MSG_MAP(CMDIFrameWindowImpl<MainFrame>)
 		CHAIN_MSG_MAP(splitterBase);
+	ALT_MSG_MAP(QUICK_SEARCH_MAP)
+		MESSAGE_HANDLER(WM_CHAR, onQuickSearchChar)
+		MESSAGE_HANDLER(WM_KEYDOWN, onQuickSearchChar)
+		MESSAGE_HANDLER(WM_KEYUP, onQuickSearchChar)
+		MESSAGE_HANDLER(WM_CTLCOLOREDIT, onQuickSearchColor)
+		MESSAGE_HANDLER(WM_CTLCOLORSTATIC, onQuickSearchColor)
+		MESSAGE_HANDLER(WM_CTLCOLORLISTBOX, onQuickSearchColor)
+		COMMAND_CODE_HANDLER(EN_CHANGE, onQuickSearchEditChange)
 	END_MSG_MAP()
 
 	BEGIN_UPDATE_UI_MAP(MainFrame)
 		UPDATE_ELEMENT(ID_VIEW_TOOLBAR, UPDUI_MENUPOPUP)
 		UPDATE_ELEMENT(ID_VIEW_STATUS_BAR, UPDUI_MENUPOPUP)
 		UPDATE_ELEMENT(ID_VIEW_TRANSFER_VIEW, UPDUI_MENUPOPUP)
+		UPDATE_ELEMENT(ID_TOGGLE_QSEARCH, UPDUI_MENUPOPUP)
 	END_UPDATE_UI_MAP()
 
 
@@ -214,6 +226,10 @@ public:
 	LRESULT onUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDisableSounds(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onOpenWindows(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onQuickSearchChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled);
+	LRESULT onQuickSearchColor(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT onQuickSearchEditChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled);
+	LRESULT OnViewQuickSearchBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	static DWORD WINAPI stopper(void* p);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
@@ -336,7 +352,8 @@ public:
 	}
 
 	void ShowBalloonTip(tstring szMsg, tstring szTitle, DWORD dwInfoFlags=NIIF_INFO);
-
+	void updateQuickSearches();
+	
 	CImageList largeImages, largeImagesHot;
 	int run();
 	
@@ -393,6 +410,13 @@ private:
 	CImageList images;
 	CToolBarCtrl ctrlToolbar;
 
+	CToolBarCtrl ctrlQuickSearchBar;
+	CComboBox QuickSearchBox;
+	CEdit QuickSearchEdit;
+	CContainedWindow QuickSearchBoxContainer;
+	CContainedWindow QuickSearchEditContainer;
+	bool m_bDisableAutoComplete;
+
 	bool tbarcreated;
 	bool awaybyminimize;
 	bool bTrayIcon;
@@ -428,6 +452,7 @@ private:
 	FileListQueue listQueue;
 	bool missedAutoConnect;
 	HWND createToolbar();
+	HWND createQuickSearchBar();
 	void updateTray(bool add = true);
 
 	LRESULT onAppShow(WORD /*wNotifyCode*/,WORD /*wParam*/, HWND, BOOL& /*bHandled*/) {

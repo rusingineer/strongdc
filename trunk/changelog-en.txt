@@ -1,3 +1,17 @@
+	-- StrongDC++ --
+
+* added some other libraries which could cause crash
+* fixed that Windows subfolders were shared
+* fixed problems with disabled segmented downloads
+* fixed remote exploit (THX Fartman)
+* whole folder can be downloaded without downloading whole filelist
+* added "Browse filelist" to userlist/transferlist default actions
+* fixed usercommands in PM tab context menu
+* updated bzip2
+* fixed some problems with returning search results (DC++ BZR)
+* some fixes to chat formatting
+* fixed some crashes
+
 	-- StrongDC++ 2.13 --
 
 * improved program performance

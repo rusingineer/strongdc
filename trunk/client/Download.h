@@ -42,9 +42,8 @@ public:
 	}
 
 	/** @internal */
-	string getDownloadTarget() const {
-		const string& tgt = (getTempTarget().empty() ? getPath() : getTempTarget());
-		return tgt;
+	const string& getDownloadTarget() const {
+		return (getTempTarget().empty() ? getPath() : getTempTarget());
 	}
 
 	/** @internal */

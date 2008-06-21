@@ -69,7 +69,10 @@ bool MainFrame::isShutdownStatus = false;
 MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
 lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
 closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT), tabsontop(false),
-bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), UPnP_UDPConnection(NULL) { 
+bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), UPnP_UDPConnection(NULL),
+QuickSearchBoxContainer(WC_COMBOBOX, this, QUICK_SEARCH_MAP), QuickSearchEditContainer(WC_EDIT ,this, QUICK_SEARCH_MAP),
+m_bDisableAutoComplete(false)
+{ 
 		memzero(statusSizes, sizeof(statusSizes));
 		anyMF = this;
 }
@@ -215,10 +218,12 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	tbarcreated = false;
 	HWND hWndToolBar = createToolbar();
+	HWND hWndQuickSearchkBar = createQuickSearchBar();
 
 	CreateSimpleReBar(ATL_SIMPLE_REBAR_NOBORDER_STYLE);
 	AddSimpleReBarBand(hWndCmdBar);
-	AddSimpleReBarBand(hWndToolBar, NULL, TRUE);
+	AddSimpleReBarBand(hWndToolBar, NULL, TRUE, 0, TRUE);
+	AddSimpleReBarBand(hWndQuickSearchkBar, NULL, FALSE, 200, TRUE);
 	CreateSimpleStatusBar();
 
 	ctrlStatus.Attach(m_hWndStatusBar);
@@ -248,9 +253,11 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	SetSplitterExtendedStyle(SPLIT_PROPORTIONAL);
 	m_nProportionalPos = SETTING(TRANSFER_SPLIT_SIZE);
 	UIAddToolBar(hWndToolBar);
+	UIAddToolBar(hWndQuickSearchkBar);
 	UISetCheck(ID_VIEW_TOOLBAR, 1);
 	UISetCheck(ID_VIEW_STATUS_BAR, 1);
 	UISetCheck(ID_VIEW_TRANSFER_VIEW, 1);
+	UISetCheck(ID_TOGGLE_QSEARCH, 1);
 
 	// register object for message filtering and idle updates
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -284,6 +291,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(!BOOLSETTING(SHOW_STATUSBAR)) PostMessage(WM_COMMAND, ID_VIEW_STATUS_BAR);
 	if(!BOOLSETTING(SHOW_TOOLBAR)) PostMessage(WM_COMMAND, ID_VIEW_TOOLBAR);
 	if(!BOOLSETTING(SHOW_TRANSFERVIEW))	PostMessage(WM_COMMAND, ID_VIEW_TRANSFER_VIEW);
+	if(!BOOLSETTING(SHOW_QUICK_SEARCH))	PostMessage(WM_COMMAND, ID_TOGGLE_QSEARCH);
 
 	if(!WinUtil::isShift())
 		PostMessage(WM_SPEAKER, AUTO_CONNECT);
@@ -314,6 +322,140 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	// We want to pass this one on to the splitter...hope it get's there...
 	bHandled = FALSE;
 	return 0;
+}
+
+HWND MainFrame::createQuickSearchBar() {
+	ctrlQuickSearchBar.Create(m_hWnd, NULL, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS, 0, ATL_IDW_TOOLBAR);
+
+	TBBUTTON tb[1];
+	memzero(&tb, sizeof(tb));
+
+	tb[0].iBitmap = 200;
+	tb[0].fsStyle = TBSTYLE_SEP;
+
+	ctrlQuickSearchBar.SetButtonStructSize();
+	ctrlQuickSearchBar.AddButtons(1, tb);
+	ctrlQuickSearchBar.AutoSize();
+
+	CRect rect;
+	ctrlQuickSearchBar.GetItemRect(0, &rect);
+	rect.bottom += 100;
+	rect.left += 2;
+
+	QuickSearchBox.Create(ctrlQuickSearchBar.m_hWnd, rect , NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+		WS_VSCROLL | CBS_DROPDOWN | CBS_AUTOHSCROLL , 0);
+	updateQuickSearches();
+	QuickSearchBox.SetWindowText(CTSTRING(QSEARCH_STR));
+	QuickSearchBoxContainer.SubclassWindow(QuickSearchBox.m_hWnd);
+	QuickSearchBox.SetExtendedUI();
+
+	QuickSearchBox.SetFont(WinUtil::systemFont, FALSE);
+
+	POINT pt;
+	pt.x = 10;
+	pt.y = 10;
+	HWND hWnd = QuickSearchBox.ChildWindowFromPoint(pt);
+	if(hWnd != NULL && !QuickSearchEdit.IsWindow() && hWnd != QuickSearchBox.m_hWnd) {
+		QuickSearchEdit.Attach(hWnd);
+		QuickSearchEditContainer.SubclassWindow(QuickSearchEdit.m_hWnd);
+	}
+
+	return ctrlQuickSearchBar.m_hWnd;
+}
+
+LRESULT MainFrame::onQuickSearchChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled){
+	if(uMsg == WM_CHAR)
+		if(wParam == VK_BACK)
+			m_bDisableAutoComplete = true;
+		else
+			m_bDisableAutoComplete = false;
+
+	switch(wParam) {
+		case VK_DELETE:
+			if(uMsg == WM_KEYDOWN) {
+				m_bDisableAutoComplete = true;
+			}
+			bHandled = FALSE;
+			break;
+		case VK_RETURN:
+			if( WinUtil::isShift() || WinUtil::isCtrl() || WinUtil::isAlt() ) {
+				bHandled = FALSE;
+			} else {
+				if(uMsg == WM_KEYDOWN) {
+					tstring s(QuickSearchEdit.GetWindowTextLength() + 1, _T('\0'));
+					QuickSearchEdit.GetWindowText(&s[0], s.size());
+					s.resize(s.size()-1);
+					SearchFrame::openWindow(s);
+					
+					updateQuickSearches();
+				}
+			}
+			break;
+		default:
+			bHandled = FALSE;
+	}
+	return 0;
+}
+
+LRESULT MainFrame::onQuickSearchColor(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	HDC hDC = (HDC)wParam;
+	::SetBkColor(hDC, WinUtil::bgColor);
+	::SetTextColor(hDC, WinUtil::textColor);
+	return (LRESULT)WinUtil::bgBrush;
+}
+
+LRESULT MainFrame::onQuickSearchEditChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
+	uint32_t nTextLen = 0, nMatchedTextLen = 0;
+	HWND hWndCombo = QuickSearchBox.m_hWnd;
+	_TCHAR *pStrMatchedText = NULL, *pEnteredText = NULL;
+	DWORD dwStartSel = 0, dwEndSel = 0;
+
+	// Get the text length from the combobox, then copy it into a newly allocated buffer.
+	nTextLen = ::SendMessage(hWndCombo, WM_GETTEXTLENGTH, NULL, NULL);
+	pEnteredText = new _TCHAR[nTextLen + 1];
+	::SendMessage(hWndCombo, WM_GETTEXT, (WPARAM)nTextLen + 1, (LPARAM)pEnteredText);
+	::SendMessage(hWndCombo, CB_GETEDITSEL, (WPARAM)&dwStartSel, (LPARAM)&dwEndSel);
+
+	// Check to make sure autocompletion isn't disabled due to a backspace or delete
+	// Also, the user must be typing at the end of the string, not somewhere in the middle.
+	if (! m_bDisableAutoComplete && (dwStartSel == dwEndSel) && (dwStartSel == nTextLen)) {
+		// Try and find a string that matches the typed substring.  If one is found,
+		// set the text of the combobox to that string and set the selection to mask off
+		// the end of the matched string.
+		int nMatch = ::SendMessage(hWndCombo, CB_FINDSTRING, (WPARAM)-1, (LPARAM)pEnteredText);
+		if (nMatch != CB_ERR) {
+			nMatchedTextLen = ::SendMessage(hWndCombo, CB_GETLBTEXTLEN, (WPARAM)nMatch, 0);
+			if (nMatchedTextLen != CB_ERR) {
+				// Since the user may be typing in the same string, but with different case (e.g. "/port --> /PORT")
+				// we copy whatever the user has already typed into the beginning of the matched string,
+				// then copy the whole shebang into the combobox.  We then set the selection to mask off
+				// the inferred portion.
+				pStrMatchedText = new _TCHAR[nMatchedTextLen + 1];
+				::SendMessage(hWndCombo, CB_GETLBTEXT, (WPARAM)nMatch, (LPARAM)pStrMatchedText);				
+				memcpy((void*)pStrMatchedText, (void*)pEnteredText, nTextLen * sizeof(_TCHAR));
+				::SendMessage(hWndCombo, WM_SETTEXT, 0, (WPARAM)pStrMatchedText);
+				::SendMessage(hWndCombo, CB_SETEDITSEL, 0, MAKELPARAM(nTextLen, -1));
+				delete[] pStrMatchedText;
+			}
+		}
+	}
+
+	delete[] pEnteredText;
+	bHandled = TRUE;	
+
+    return 0;
+}
+
+void MainFrame::updateQuickSearches() {
+	QuickSearchBox.ResetContent();
+	
+	for(TStringList::const_iterator i = SearchFrame::getLastSearches().begin(); i != SearchFrame::getLastSearches().end(); ++i) {
+		QuickSearchBox.InsertString(0, i->c_str());
+	}	
+	
+	if(BOOLSETTING(CLEAR_SEARCH) && ::IsWindow(QuickSearchEdit.m_hWnd)) {
+		QuickSearchBox.SetWindowText(CTSTRING(QSEARCH_STR));
+	}
 }
 
 void MainFrame::startSocket() {
@@ -1141,6 +1283,19 @@ LRESULT MainFrame::OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 	UISetCheck(ID_VIEW_TOOLBAR, bVisible);
 	UpdateLayout();
 	SettingsManager::getInstance()->set(SettingsManager::SHOW_TOOLBAR, bVisible);
+	return 0;
+}
+
+LRESULT MainFrame::OnViewQuickSearchBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	static BOOL bVisible = TRUE;	// initially visible
+	bVisible = !bVisible;
+	CReBarCtrl rebar = m_hWndToolBar;
+	int nBandIndex = rebar.IdToIndex(ATL_IDW_BAND_FIRST + 2);	// toolbar is 3rd added band
+	rebar.ShowBand(nBandIndex, bVisible);
+	UISetCheck(ID_TOGGLE_QSEARCH, bVisible);
+	UpdateLayout();
+	SettingsManager::getInstance()->set(SettingsManager::SHOW_QUICK_SEARCH, bVisible);
 	return 0;
 }
 

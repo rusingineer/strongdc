@@ -45,12 +45,6 @@
 #undef ff
 #endif
 
-#ifndef _WIN32
-#include <sys/types.h>
-#include <dirent.h>
-#include <fnmatch.h>
-#endif
-
 namespace dcpp {
 
 QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize, 
@@ -77,12 +71,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		qi->setMaxSegments(getMaxSegments(qi->getSize()));
 		
 		if(!aTempTarget.empty()) {
-			if(!Util::fileExists(aTempTarget) && Util::fileExists(aTempTarget + ".antifrag")) {
-				// load old antifrag files
-				qi->setTempTarget(aTempTarget + ".antifrag");
-			} else {
-				qi->setTempTarget(aTempTarget);
-			}
+			qi->setTempTarget(aTempTarget);
 		}
 		
 		if(p == QueueItem::DEFAULT) {
@@ -288,7 +277,6 @@ void QueueManager::UserQueue::addDownload(QueueItem* qi, Download* d) {
 }
 
 void QueueManager::UserQueue::removeDownload(QueueItem* qi, const UserPtr& user) {
-	// Remove the download from running
 	running.erase(user);
 
 	for(DownloadList::iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); ++i) {
@@ -389,9 +377,8 @@ QueueManager::~QueueManager() throw() {
 	if(!BOOLSETTING(KEEP_LISTS)) {
 		string path = Util::getListPath();
 		StringList filelists = File::findFiles(path, "*.xml.bz2");
-		StringList filelists2 = File::findFiles(path, "*.DcLst");
-		filelists.insert(filelists.end(), filelists2.begin(), filelists2.end());
-
+		std::for_each(filelists.begin(), filelists.end(), &File::deleteFile);
+		filelists = File::findFiles(path, "*.DcLst");
 		std::for_each(filelists.begin(), filelists.end(), &File::deleteFile);
 	}
 }
@@ -490,6 +477,7 @@ void QueueManager::addList(const UserPtr& aUser, Flags::MaskType aFlags, const s
 	string target = Util::getListPath() + nick + aUser->getCID().toBase32();
 
 	if (!aInitialDir.empty()) {
+		Lock l(cs);
 		dirMap[aUser->getCID().toBase32()] = aInitialDir;
 	}
 
@@ -501,7 +489,7 @@ void QueueManager::addPfs(const UserPtr& aUser, const string& aDir, bool onlyDow
 		throw QueueException(STRING(NO_DOWNLOADS_FROM_SELF));
 	}
 
-	if(!aUser->isOnline())
+	if(!aUser->isOnline() || aUser->getCID().isZero())
 		return;
 
 	{
@@ -872,6 +860,20 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 		return 0;
 	}
 
+	// Check that the file we will be downloading to exists
+	if(q->getDownloadedBytes() > 0) {
+		if(File::getSize(q->getTempTarget()) != q->getSize()) {
+			// <= 0.706 added ".antifrag" to temporary download files if antifrag was enabled...
+			std::string antifrag = q->getTempTarget() + ".antifrag";
+			if(File::getSize(antifrag) == q->getSize()) {
+				File::renameFile(antifrag, q->getTempTarget());
+			} else {
+				// Temp target gone?
+				q->resetDownloaded();
+			}
+		}
+	}
+
 	Download* d = new Download(aSource, *q);
 	
 	userQueue.addDownload(q, d);	
@@ -951,11 +953,20 @@ void QueueManager::setFile(Download* d) {
 		}
 		
 		string target = d->getDownloadTarget();
-		File::ensureDirectory(target);
+		
+		if(d->getSegment().getStart() > 0) {
+			if(File::getSize(target) != qi->getSize()) {
+				// When trying the download the next time, the resume pos will be reset
+				throw QueueException("Target file is missing or wrong size");
+			}
+		} else {
+			File::ensureDirectory(target);
+		}
+
 		File* f = new File(target, File::WRITE, File::OPEN | File::CREATE | File::SHARED);
 
 		// Only use antifrag if we don't have a previous non-antifrag part
-		if(BOOLSETTING(ANTI_FRAG) && f->getSize() < qi->getSize()) {
+		if(BOOLSETTING(ANTI_FRAG) && f->getSize() != qi->getSize()) {
 			f->setSize(d->getTigerTree().getFileSize());
 		}
 		
@@ -1026,7 +1037,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 		Lock l(cs);
 
 		delete aDownload->getFile();
-		aDownload->setFile(NULL);
+		aDownload->setFile(0);
 
 		if(aDownload->getType() == Transfer::TYPE_PARTIAL_LIST) {
 			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUser()->getCID());
@@ -1162,7 +1173,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 				}
 			}
 		}
-
 		delete aDownload;
 	}
 
