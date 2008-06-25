@@ -862,14 +862,25 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 
 	// Check that the file we will be downloading to exists
 	if(q->getDownloadedBytes() > 0) {
-		if(File::getSize(q->getTempTarget()) != q->getSize()) {
+		int64_t tempSize = File::getSize(q->getTempTarget());
+		if(tempSize != q->getSize()) {
 			// <= 0.706 added ".antifrag" to temporary download files if antifrag was enabled...
+			// 0.705 added ".antifrag" even if antifrag was disabled
 			std::string antifrag = q->getTempTarget() + ".antifrag";
-			if(File::getSize(antifrag) == q->getSize()) {
+			if(File::getSize(antifrag) > 0) {
 				File::renameFile(antifrag, q->getTempTarget());
-			} else {
-				// Temp target gone?
-				q->resetDownloaded();
+				tempSize = File::getSize(q->getTempTarget());	
+			}	
+			if(tempSize != q->getSize()) {
+				if(tempSize > 0 && tempSize < q->getSize()) {
+					// Probably started with <=0.699 or with 0.705 without antifrag enabled...
+					try {
+						File(q->getTempTarget(), File::WRITE, File::OPEN).setSize(q->getSize()); 
+					} catch(const FileException&) { }		
+				} else {
+					// Temp target gone?
+					q->resetDownloaded();
+				}
 			}
 		}
 	}
@@ -1620,7 +1631,7 @@ void QueueLoader::endTag(const string& name, const string&) {
 void QueueManager::on(SearchManagerListener::SR, const SearchResultPtr& sr) throw() {
 	bool added = false;
 	bool wantConnection = false;
-	int users = 0;
+	size_t users = 0;
 
 	if(BOOLSETTING(AUTO_SEARCH)) {
 		Lock l(cs);
@@ -1635,7 +1646,7 @@ void QueueManager::on(SearchManagerListener::SR, const SearchResultPtr& sr) thro
 			if(qi->getSize() == sr->getSize() && !qi->isSource(sr->getUser())) {
 				try {
 					users = qi->countOnlineUsers();
-					if(!BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) || (users >= SETTING(MAX_AUTO_MATCH_SOURCES)))
+					if(!BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) || (users >= (size_t)SETTING(MAX_AUTO_MATCH_SOURCES)))
 						wantConnection = addSource(qi, sr->getUser(), 0);
 					added = true;
 				} catch(const Exception&) {
@@ -1646,7 +1657,7 @@ void QueueManager::on(SearchManagerListener::SR, const SearchResultPtr& sr) thro
 		}
 	}
 
-	if(added && BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) && (users < SETTING(MAX_AUTO_MATCH_SOURCES))) {
+	if(added && BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) && (users < (size_t)SETTING(MAX_AUTO_MATCH_SOURCES))) {
 		try {
 			addList(sr->getUser(), QueueItem::FLAG_MATCH_QUEUE);
 		} catch(const Exception&) {

@@ -266,7 +266,18 @@ public:
 		return toUInt32(str.c_str());
 	}
 	static uint32_t toUInt32(const char* c) {
-		return (uint32_t)strtoul(c, NULL, 10);
+#ifdef _MSC_VER
+		/*
+		* MSVC's atoi returns INT_MIN/INT_MAX if out-of-range; hence, a number
+		* between INT_MAX and UINT_MAX can't be converted back to uint32_t.
+		*/
+		uint32_t ret = atoi(c);
+		if(errno == ERANGE)
+			return (uint32_t)_atoi64(c);
+		return ret;
+#else
+		return (uint32_t)atoi(c);
+#endif
 	}
 
 	static double toDouble(const string& aString) {
@@ -475,11 +486,6 @@ private:
 	
 /** Case insensitive hash function for strings */
 struct noCaseStringHash {
-#ifdef _MSC_VER
-	static const size_t bucket_size = 4;
-	static const size_t min_buckets = 8;
-#endif
-
 	size_t operator()(const string* s) const {
 		return operator()(*s);
 	}

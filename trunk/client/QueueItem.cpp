@@ -84,8 +84,8 @@ const string& QueueItem::getTempTarget() {
 	return tempTarget;
 }
 
-int64_t QueueItem::getAverageSpeed() const {
-	int64_t totalSpeed = 0;
+uint64_t QueueItem::getAverageSpeed() const {
+	uint64_t totalSpeed = 0;
 	
 	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); i++) {
 		totalSpeed += (*i)->getAverageSpeed();

@@ -1,3 +1,11 @@
+** svn393
+	prevent Aboutdlg crash in case of wrong versiondata (DC++ BZR)
+	add 1000 mbit upload speed (DC++ BZR)
+	some fixes for resuming old .antifrag files (DC++ BZR)
+	decreased OpenSSL libraries size
+	fixed finished items' total size
+	added option to place usercommands outside of submenu
+
 ** svn392
 	possible x64 builds (with many warnings now)
 	updated OpenSSL

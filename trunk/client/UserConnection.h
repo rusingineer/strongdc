@@ -115,8 +115,8 @@ public:
 	void error(const string& aError) { send("$Error " + aError + '|'); }
 	void listLen(const string& aLength) { send("$ListLen " + aLength + '|'); }
 	
-	void maxedOut(int qPos = -1) {
-		bool sendPos = !isSet(UserConnection::FLAG_STEALTH) && qPos >= 0;
+	void maxedOut(size_t qPos = 0) {
+		bool sendPos = !isSet(UserConnection::FLAG_STEALTH) && qPos > 0;
 
 		if(isSet(FLAG_NMDC)) {
 			send("$MaxedOut" + (sendPos ? (" " + Util::toString(qPos)) : Util::emptyString) + "|");

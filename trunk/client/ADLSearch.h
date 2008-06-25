@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,8 @@
  * Henrik Engstr�m, henrikengstrom at home se
  */
 
-#if !defined(ADL_SEARCH_H)
-#define ADL_SEARCH_H
-
-#if _MSC_VER > 1000
-#pragma once
-#endif
+#ifndef DCPLUSPLUS_DCPP_A_D_L_SEARCH_H
+#define DCPLUSPLUS_DCPP_A_D_L_SEARCH_H
 
 #include "Util.h"
 
@@ -329,7 +325,8 @@ private:
 
 } // namespace dcpp
 
-#endif // !defined(ADL_SEARCH_H)
+#endif // !defined(DCPLUSPLUS_DCPP_A_D_L_SEARCH_H)
+
 
 /**
  * @file

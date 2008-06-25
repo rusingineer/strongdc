@@ -816,6 +816,7 @@ Default: %H:%M:%S</String>
 		<String Name="TthRoot">TTH Root</String>
 		<String Name="TwoColors">Two colors</String>
 		<String Name="Type">Type</String>
+		<String Name="UcSubmenu">Place usercommands to submenu</String>
 		<String Name="UnableToCreateThread">Unable to create thread</String>
 		<String Name="UnableToOpenFilelist">Unable to open filelist: </String>
 		<String Name="UnableToRename">Unable to rename </String>

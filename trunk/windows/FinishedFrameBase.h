@@ -44,7 +44,7 @@ class FinishedFrameBase : public MDITabChildWindowImpl<T, RGB(0, 0, 0), icon>, p
 public:
 	typedef MDITabChildWindowImpl<T, RGB(0, 0, 0), icon> baseClass;
 
-	FinishedFrameBase() : totalBytes(0), totalTime(0), closed(false) { }
+	FinishedFrameBase() : totalBytes(0), totalSpeed(0), closed(false) { }
 	virtual ~FinishedFrameBase() { }
 
 	BEGIN_MSG_MAP(T)
@@ -166,8 +166,8 @@ public:
 					FinishedManager::getInstance()->remove(ii, upload);
 					ctrlList.DeleteItem(i);
 					
-					totalBytes -= ii->getChunkSize();
-					totalTime -= ii->getMilliSeconds();
+					totalBytes -= ii->getSize();
+					totalSpeed -= ii->getAvgSpeed();
 					
 					delete ii;
 				}
@@ -183,7 +183,7 @@ public:
 			}
 			
 			totalBytes = 0;
-			totalTime = 0;
+			totalSpeed = 0;
 			updateStatus();
 			break;
 		}
@@ -340,7 +340,7 @@ protected:
 	TypedListViewCtrl<FinishedItem, id> ctrlList;
 
 	int64_t totalBytes;
-	int64_t totalTime;
+	int64_t totalSpeed;
 
 	bool closed;
 
@@ -359,9 +359,10 @@ protected:
 	}
 
 	void updateStatus() {
-		ctrlStatus.SetText(1, (Util::toStringW(ctrlList.GetItemCount()) + _T(" ") + TSTRING(ITEMS)).c_str());
+		int count = ctrlList.GetItemCount();
+		ctrlStatus.SetText(1, (Util::toStringW(count) + _T(" ") + TSTRING(ITEMS)).c_str());
 		ctrlStatus.SetText(2, Util::formatBytesW(totalBytes).c_str());
-		ctrlStatus.SetText(3, (Util::formatBytesW((totalTime > 0) ? totalBytes * ((int64_t)1000) / totalTime : 0) + _T("/s")).c_str());
+		ctrlStatus.SetText(3, (Util::formatBytesW(count > 0 ? totalSpeed / count : 0) + _T("/s")).c_str());
 	}
 
 	void updateList(const FinishedItemList& fl) {
@@ -375,8 +376,8 @@ protected:
 	}
 
 	void addEntry(FinishedItem* entry) {
-		totalBytes += entry->getChunkSize();
-		totalTime += entry->getMilliSeconds();
+		totalBytes += entry->getSize();
+		totalSpeed += entry->getAvgSpeed();
 
 		int image = WinUtil::getIconIndex(Text::toT(entry->getTarget()));
 		int loc = ctrlList.insertItem(entry, image);

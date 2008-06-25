@@ -70,12 +70,6 @@ extern "C" void bz_internal_error(int errcode) {
 	dcdebug("bzip2 internal error: %d\n", errcode); 
 }
 
-#if defined(_WIN32) && (_MSC_VER == 1400 || _MSC_VER == 1500)
-void WINAPI invalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t) {
-	//do nothing, this exist because vs2k5 crt needs it not to crash on errors.
-}
-#endif
-
 bool nlfound = false;
 BOOL CALLBACK GetWOkna(HWND handle, LPARAM) {
 	TCHAR buf[256];
@@ -117,7 +111,7 @@ int Util::getNetLimiterLimit() {
 		string cesta = Text::fromT(tstring(appName, x)) + "/";
 
 		char buf[BUF_SIZE];
-		uint32_t len;
+		size_t len;
 		char* w2 = _strdup(cesta.c_str());
 
 		for(;;) {
@@ -223,11 +217,9 @@ void Util::initialize() {
 	if(!File::isAbsolute(configPath)) {
 		configPath = systemPath + configPath;
 	}
-
-#if _MSC_VER == 1400 || _MSC_VER == 1500
-	_set_invalid_parameter_handler(reinterpret_cast<_invalid_parameter_handler>(invalidParameterHandler));
-#endif
-
+	configPath = Util::validateFileName(configPath);
+	File::ensureDirectory(Util::getConfigPath());	
+	
 	try {
 		// This product includes GeoIP data created by MaxMind, available from http://maxmind.com/
 		// Updates at http://www.maxmind.com/app/geoip_country
@@ -269,7 +261,6 @@ void Util::initialize() {
 		}
 	} catch(const FileException&) {
 	}
-	File::ensureDirectory(Util::getConfigPath());
 }
 
 #ifdef _WIN32

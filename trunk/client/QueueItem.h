@@ -292,7 +292,7 @@ public:
 		return priority;
 	}
 
-	int64_t getAverageSpeed() const;
+	uint64_t getAverageSpeed() const;
 
 private:
 	QueueItem& operator=(const QueueItem&);

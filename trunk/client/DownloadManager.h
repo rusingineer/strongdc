@@ -69,7 +69,7 @@ public:
 private:
 	void throttleSetup();
 	bool mThrottleEnable;
-	uint32_t mCycleTime;
+	size_t mCycleTime;
 	size_t mBytesSpokenFor, mDownloadLimit, mByteSlice;
 	
 	CriticalSection cs;
