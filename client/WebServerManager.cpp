@@ -280,9 +280,9 @@ string WebServerManager::getLogs(){
 
 		StringList lines = StringTokenizer<string>(f.read(32*1024), "\r\n").getTokens();
 
-		int linesCount = lines.size();
+		size_t linesCount = lines.size();
 
-		int i = linesCount > 11 ? linesCount - 11 : 0;
+		size_t i = linesCount > 11 ? linesCount - 11 : 0;
 
 		for(; i < (linesCount - 1); ++i){
 			ret += "<br>" + lines[i];
@@ -318,9 +318,9 @@ string WebServerManager::getSysLogs(){
 
 		StringList lines = StringTokenizer<string>(f.read(32*1024), "\r\n").getTokens();
 
-		int linesCount = lines.size();
+		size_t linesCount = lines.size();
 
-		int i = linesCount > 11 ? linesCount - 11 : 0;
+		size_t i = linesCount > 11 ? linesCount - 11 : 0;
 
 		for(; i < (linesCount - 1); ++i){
 			ret += "<br>" + lines[i];
@@ -487,7 +487,7 @@ int WebServerSocket::run(){
 		string header = buff;
 		header = header.substr(0,size);
 
-		int start = 0, end = 0;
+		size_t start = 0, end = 0;
 
 		string IP = Util::toString(from.sin_addr.S_un.S_un_b.s_b1) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b2) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b3) + string(".") + Util::toString(from.sin_addr.S_un.S_un_b.s_b4);
 

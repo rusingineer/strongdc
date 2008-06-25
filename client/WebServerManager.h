@@ -141,7 +141,7 @@ public:
 	}
 	void search(string search_str, int search_type) {
 		if(sended_search == false) {
-			int i = 0;
+			size_t i = 0;
 			while( (i = search_str.find("+", i)) != string::npos) {
 				search_str.replace(i, 1, " ");
 				i++;

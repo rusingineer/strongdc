@@ -336,7 +336,7 @@ SSLSocket* CryptoManager::getServerSocket(bool allowUntrusted) throw(SocketExcep
 }
 
 
-void CryptoManager::decodeBZ2(const uint8_t* is, size_t sz, string& os) throw (CryptoException) {
+void CryptoManager::decodeBZ2(const uint8_t* is, unsigned int sz, string& os) throw (CryptoException) {
 	bz_stream bs = { 0 };
 
 	if(BZ2_bzDecompressInit(&bs, 0, 0) != BZ_OK)
@@ -344,7 +344,7 @@ void CryptoManager::decodeBZ2(const uint8_t* is, size_t sz, string& os) throw (C
 
 	// We assume that the files aren't compressed more than 2:1...if they are it'll work anyway,
 	// but we'll have to do multiple passes...
-	size_t bufsize = 2*sz;
+	unsigned int bufsize = 2 * sz;
 	boost::scoped_array<char> buf(new char[bufsize]);
 	
 	bs.avail_in = sz;

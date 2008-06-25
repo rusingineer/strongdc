@@ -49,14 +49,12 @@ public:
 	};
 
 	FinishedItem(string const& aTarget, const UserPtr& aUser, string const& aHub, 
-		int64_t aSize, int64_t aChunkSize, int64_t aMSeconds, time_t aTime,
+		int64_t aSize, int64_t aSpeed, time_t aTime,
 		const string& aTTH = Util::emptyString) : 
-		target(aTarget), user(aUser), hub(aHub), size(aSize), chunkSize(aChunkSize),
-		milliSeconds(aMSeconds), time(aTime), tth(aTTH)
+		target(aTarget), user(aUser), hub(aHub), size(aSize), avgSpeed(aSpeed),
+		time(aTime), tth(aTTH)
 	{
 	}
-
-	int64_t getAvgSpeed() const { return milliSeconds > 0 ? (chunkSize * ((int64_t)1000) / milliSeconds) : 0; }
 
 	const tstring getText(uint8_t col) const {
 		dcassert(col >= 0 && col < COLUMN_LAST);
@@ -86,8 +84,7 @@ public:
 	GETSET(string, tth, TTH);
 
 	GETSET(int64_t, size, Size);
-	GETSET(int64_t, chunkSize, ChunkSize);
-	GETSET(int64_t, milliSeconds, MilliSeconds);
+	GETSET(int64_t, avgSpeed, AvgSpeed);
 	GETSET(time_t, time, Time);
 	GETSET(UserPtr, user, User);
 

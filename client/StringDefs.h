@@ -791,6 +791,7 @@ enum Strings { // @DontAdd
 	TTH_ROOT, // "TTH Root"
 	TWO_COLORS, // "Two colors"
 	TYPE, // "Type"
+	UC_SUBMENU, // "Place usercommands to submenu"
 	UNABLE_TO_CREATE_THREAD, // "Unable to create thread"
 	UNABLE_TO_OPEN_FILELIST, // "Unable to open filelist: "
 	UNABLE_TO_RENAME, // "Unable to rename "

@@ -98,15 +98,17 @@ private:
 
 	void on(HttpConnectionListener::Complete, HttpConnection* conn, const string&) throw() {
 		if(!downBuf.empty()) {
-			SimpleXML xml;
-			xml.fromXML(downBuf);
-			if(xml.findChild("DCUpdate")) {
-				xml.stepIn();
-				if(xml.findChild("Version")) {
-					tstring* x = new tstring(Text::toT(xml.getChildData()));
-					PostMessage(WM_VERSIONDATA, (WPARAM) x);
+			try {
+				SimpleXML xml;
+				xml.fromXML(downBuf);
+				if(xml.findChild("DCUpdate")) {
+					xml.stepIn();
+					if(xml.findChild("Version")) {
+						tstring* x = new tstring(Text::toT(xml.getChildData()));
+						PostMessage(WM_VERSIONDATA, (WPARAM) x);
+					}
 				}
-			}
+			} catch(const SimpleXMLException&) { }
 		}
 		conn->removeListener(this);
 	}

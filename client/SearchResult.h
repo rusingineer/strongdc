@@ -57,8 +57,8 @@ public:
 	const string& getHubName() const { return hubName; }
 	int64_t getSize() const { return size; }
 	Types getType() const { return type; }
-	uint8_t getSlots() const { return slots; }
-	uint8_t getFreeSlots() const { return freeSlots; }
+	size_t getSlots() const { return slots; }
+	size_t getFreeSlots() const { return freeSlots; }
 	const TTHValue& getTTH() const { return tth; }
 	
 	const string& getIP() const { return IP; }
@@ -81,11 +81,13 @@ private:
 	
 	int64_t size;
 	
+	size_t slots;
+	size_t freeSlots;
+	
 	UserPtr user;
 	Types type;
 
-	uint8_t slots;
-	uint8_t freeSlots;
+
 };
 
 }

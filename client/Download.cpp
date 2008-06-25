@@ -51,6 +51,8 @@ Download::Download(UserConnection& conn, QueueItem& qi) throw() : Transfer(conn,
 
 	if(qi.isSet(QueueItem::FLAG_CHECK_FILE_LIST))
 		setFlag(Download::FLAG_CHECK_FILE_LIST);
+	if(qi.isSet(QueueItem::FLAG_TESTSUR))
+		setFlag(Download::FLAG_TESTSUR);		
 
 	if(getType() == TYPE_FILE && qi.getSize() != -1) {
 		if(HashManager::getInstance()->getTree(getTTH(), getTigerTree())) {
