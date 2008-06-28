@@ -33,14 +33,11 @@ namespace dcpp {
 SearchManager::SearchManager() :
 	socket(NULL),
 	port(0),
-	stop(false),
-	lastSearch(GET_TICK()) 
+	stop(false)
 {
-	TimerManager::getInstance()->addListener(this);
 }
 
 SearchManager::~SearchManager() throw() {
-	TimerManager::getInstance()->removeListener(this);
 	if(socket) {
 		stop = true;
 		socket->disconnect();
@@ -51,69 +48,14 @@ SearchManager::~SearchManager() throw() {
 	}
 }
 
-void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, const int* aWindow /* = NULL */) {
-	Lock l(cs);
-	SearchQueueItem sqi(aSizeMode, aSize, aTypeMode, aName, aWindow, aToken);
-	if(aWindow != NULL) {
-		bool added = false;
-		if(searchQueue.empty()) {
-			searchQueue.push_front(sqi);
-			added = true;
-		} else {
-			// Insert before the automatic searches (manual search) 
-			for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
-				if(qi->getWindow() == NULL) {
-					searchQueue.insert(qi, sqi);
-					added = true;
-					break;
-				}
-			}
-		}
-		if (!added) {
-			searchQueue.push_back(sqi);
-		}
-	} else {
-		// Insert last (automatic search)
-		searchQueue.push_back(sqi);
-	}
+void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, void* aOwner /* = NULL */) {
+	ClientManager::getInstance()->search(aSizeMode, aSize, aTypeMode, aName, aToken, aOwner);
 }
 
-void SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, const int* aWindow /* = NULL */) {
-	Lock l(cs);
-	SearchQueueItem sqi(who, aSizeMode, aSize, aTypeMode, aName, aWindow, aToken);
-	if(aWindow != NULL) {
-		bool added = false;
-		if(searchQueue.empty()) {
-			searchQueue.push_front(sqi);
-			added = true;
-		} else {
-			// Insert before the automatic searches (manual search) 
-			for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
-				if(qi->getWindow() == NULL) {
-					searchQueue.insert(qi, sqi);
-					added = true;
-					break;
-				}
-			}
-		}
-		if (!added) {
-			searchQueue.push_back(sqi);
-		}
-	} else {
-		// Insert last (automatic search)
-		searchQueue.push_back(sqi);
-	}
+uint64_t SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, void* aOwner /* = NULL */) {
+	return ClientManager::getInstance()->search(who, aSizeMode, aSize, aTypeMode, aName, aToken, aOwner);
 }
 
-void SearchManager::stopSearch(const int *aWindow) {
-	Lock l(cs);
-	for(SearchQueueIter qi = searchQueue.begin(); qi != searchQueue.end(); qi++) {
-		if(qi->getWindow() == aWindow) {
-			searchQueue.erase(qi);
-			break;
-		}
-	}
-}
 
 void SearchManager::listen() throw(SocketException) {
 
@@ -475,40 +417,6 @@ string SearchManager::clean(const string& aSearchString) {
 	} while ( (i = tmp.find_first_of(badChars, i)) != string::npos);
 
 	return tmp;
-}
-
-void SearchManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
-	if((getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) < aTick) {
-		SearchQueueItem sqi;
-		{
-			Lock l(cs);
-			if(searchQueue.empty()) return;
-			sqi = searchQueue.front();
-			searchQueue.pop_front();
-		}
-		
-		if(sqi.getHubs().empty()) {
-			ClientManager::getInstance()->search(sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget(), sqi.getToken());
-		} else {
-			ClientManager::getInstance()->search(sqi.getHubs(), sqi.getSizeMode(), sqi.getSize(), sqi.getTypeMode(), sqi.getTarget(), sqi.getToken());
-		}
-		fire(SearchManagerListener::Searching(), &sqi);
-		setLastSearch(aTick);
-	}
-}
-
-int SearchManager::getSearchQueueNumber(const int* aWindow) {
-	Lock l(cs);
-	if(!searchQueue.empty()){
-		int queueNumber = 0;
-		for(SearchQueueIterC sqi = searchQueue.begin(); sqi != searchQueue.end(); ++sqi) {
-			if(sqi->getWindow() == aWindow) {
-				return queueNumber;
-			}
-			queueNumber++;
-		}
-	}
-	return 0;
 }
 
 string SearchManager::getPartsString(const PartsInfo& partsInfo) const {

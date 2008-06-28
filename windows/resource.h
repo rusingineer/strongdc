@@ -523,10 +523,14 @@
 #define IDC_HASH_SPIN                   1308
 #define IDC_SETTINGS_KB4                1309
 #define IDC_BUFFER_SPIN                 1309
+#define IDC_FAV_SEARCH_INTERVAL         1309
 #define IDC_SETTINGS_KB5                1310
 #define IDC_DOWNCONN_SPIN               1310
+#define IDC_FAV_SEARCH_INTERVAL_BOX     1310
 #define IDC_SETTINGS_KB6                1311
+#define IDC_FAV_SEARCH_INTERVAL_SPIN    1311
 #define IDC_SETTINGS_AUTOPRIO           1312
+#define IDC_OTHER_BORDER                1312
 #define IDC_SETTINGS_SEGMENT            1313
 #define IDC_BOLD_BOOLEANS               1313
 #define IDC_SETTINGS_BOLD_CONTENTS      1314
@@ -779,7 +783,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        306
 #define _APS_NEXT_COMMAND_VALUE         32795
-#define _APS_NEXT_CONTROL_VALUE         1309
+#define _APS_NEXT_CONTROL_VALUE         1313
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

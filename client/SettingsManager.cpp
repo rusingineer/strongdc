@@ -57,7 +57,7 @@ const string SettingsManager::settingTags[] =
 	"MainFrameVisible", "SearchFrameVisible", "QueueFrameVisible", "HubFrameVisible", "UploadQueueFrameVisible", 
 	"EmoticonsFile", "TLSPrivateKeyFile", "TLSCertificateFile", "TLSTrustedCertificatesPath",
 	"FinishedVisible", "FinishedULVisible", "DirectoryListingFrameVisible",
-	"RecentFrameOrder", "RecentFrameWidths",
+	"RecentFrameOrder", "RecentFrameWidths", "ToolbarSettings",
 	"SENTRY", 
 	// Ints
 	"IncomingConnections", "InPort", "Slots", "AutoFollow", "ClearSearch",
@@ -435,6 +435,7 @@ SettingsManager::SettingsManager()
 	setDefault(FILTER_ENTER, false);
 	setDefault(SHOW_QUICK_SEARCH, true);	
 	setDefault(UC_SUBMENU, true);
+// TODO:	setDefault(TOOLBAR_SIZE, 800);
 
 	setDefault(DROP_MULTISOURCE_ONLY, true);
 	setDefault(DISCONNECT_SPEED, 5);

@@ -867,7 +867,6 @@ Default: %H:%M:%S</String>
 		<String Name="VirtualNameExists">Virtual directory name already exists</String>
 		<String Name="VirtualNameLong">Name under which the others see the directory</String>
 		<String Name="Waiting">Waiting...</String>
-		<String Name="WaitingFor">Waiting for %i seconds before searching...</String>
 		<String Name="WaitingTime">Waiting time</String>
 		<String Name="WaitingToRetry">Waiting to retry...</String>
 		<String Name="WaitingUserOnline">Waiting (User online)</String>

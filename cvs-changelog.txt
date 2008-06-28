@@ -1,3 +1,13 @@
+** svn394
+	fixed line ends in PM history
+	quick search position saved
+	fixed that 3 standard OP commands were missing in some cases
+	menu/toolbar/quicksearch position and size are saved
+	updated PCRE library
+	stopping old search request when starting new one
+	rewritten search queue + search interval is hub dependent (idea from RevConnect)
+	added missing searchresult's context menu header
+
 ** svn393
 	prevent Aboutdlg crash in case of wrong versiondata (DC++ BZR)
 	add 1000 mbit upload speed (DC++ BZR)

@@ -842,7 +842,6 @@ enum Strings { // @DontAdd
 	VIRTUAL_NAME_EXISTS, // "Virtual directory name already exists"
 	VIRTUAL_NAME_LONG, // "Name under which the others see the directory"
 	WAITING, // "Waiting..."
-	WAITING_FOR, // "Waiting for %i seconds before searching..."
 	WAITING_TIME, // "Waiting time"
 	WAITING_TO_RETRY, // "Waiting to retry..."
 	WAITING_USER_ONLINE, // "Waiting (User online)"

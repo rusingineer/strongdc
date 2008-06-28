@@ -471,6 +471,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\SearchQueue.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\SearchResult.cpp"
 				>
 			</File>
@@ -816,6 +820,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\SearchQueue.h"
+				>
+			</File>
+			<File
 				RelativePath=".\client\SearchResult.h"
 				>
 			</File>
@@ -880,7 +888,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Building StringDefs.cpp and Example.xml from StringDefs.h..."
-						CommandLine="&quot;$(SolutionDir)vc9\Win32\$(ConfigurationName)\MakeDefs\MakeDefs.exe&quot; .\client\StringDefs.h .\client\StringDefs.cpp .\EN_Example.xml"
+						CommandLine="&quot;$(SolutionDir)vc9\Win32\$(ConfigurationName)\MakeDefs\MakeDefs.exe&quot; .\client\StringDefs.h .\client\StringDefs.cpp .\EN_Example.xml&#x0D;&#x0A;"
 						Outputs=".\client\StringDefs.cpp"
 					/>
 				</FileConfiguration>
@@ -890,7 +898,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Building StringDefs.cpp and Example.xml from StringDefs.h..."
-						CommandLine="&quot;$(SolutionDir)vc9\Win32\$(ConfigurationName)\MakeDefs\MakeDefs.exe&quot; .\client\StringDefs.h .\client\StringDefs.cpp .\EN_Example.xml"
+						CommandLine="&quot;$(SolutionDir)vc9\Win32\$(ConfigurationName)\MakeDefs\MakeDefs.exe&quot; .\client\StringDefs.h .\client\StringDefs.cpp .\EN_Example.xml&#x0D;&#x0A;"
 						Outputs=".\client\StringDefs.cpp"
 					/>
 				</FileConfiguration>
@@ -900,7 +908,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Building StringDefs.cpp and Example.xml from StringDefs.h..."
-						CommandLine="&quot;$(SolutionDir)vc9\Win32\$(ConfigurationName)\MakeDefs\MakeDefs.exe&quot; .\client\StringDefs.h .\client\StringDefs.cpp .\EN_Example.xml"
+						CommandLine="&quot;$(SolutionDir)vc9\Win32\$(ConfigurationName)\MakeDefs\MakeDefs.exe&quot; .\client\StringDefs.h .\client\StringDefs.cpp .\EN_Example.xml&#x0D;&#x0A;"
 						Outputs=".\client\StringDefs.cpp"
 					/>
 				</FileConfiguration>
@@ -910,7 +918,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Building StringDefs.cpp and Example.xml from StringDefs.h..."
-						CommandLine="&quot;$(SolutionDir)vc9\Win32\$(ConfigurationName)\MakeDefs\MakeDefs.exe&quot; .\client\StringDefs.h .\client\StringDefs.cpp .\EN_Example.xml"
+						CommandLine="&quot;$(SolutionDir)vc9\Win32\$(ConfigurationName)\MakeDefs\MakeDefs.exe&quot; .\client\StringDefs.h .\client\StringDefs.cpp .\EN_Example.xml&#x0D;&#x0A;"
 						Outputs=".\client\StringDefs.cpp"
 					/>
 				</FileConfiguration>

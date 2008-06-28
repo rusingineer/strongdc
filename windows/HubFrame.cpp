@@ -958,7 +958,7 @@ void HubFrame::findText(tstring const& needle) throw() {
 	// found? set selection
 	if(currentNeedlePos != -1) {
 		ft.chrg.cpMin = currentNeedlePos;
-		ft.chrg.cpMax = currentNeedlePos + needle.length();
+		ft.chrg.cpMax = currentNeedlePos + (long)needle.length();
 		ctrlClient.SetFocus();
 		ctrlClient.SendMessage(EM_EXSETSEL, 0, (LPARAM)&ft);
 	} else {

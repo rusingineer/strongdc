@@ -268,32 +268,97 @@ LRESULT SearchFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	SettingsManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
 
+	ctrlStatus.SetText(1, 0, SBT_OWNERDRAW);
+	
 	bHandled = FALSE;
 	return 1;
 }
 
 LRESULT SearchFrame::onMeasure(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	HWND hwnd = 0;
-	if(wParam == IDC_FILETYPES) return ListMeasure(hwnd, wParam, (MEASUREITEMSTRUCT *)lParam);
-		else return OMenu::onMeasureItem(hwnd, uMsg, wParam, lParam, bHandled);
+	bHandled = FALSE;
+	
+	if(wParam == IDC_FILETYPES) {
+		bHandled = TRUE;
+		return ListMeasure((MEASUREITEMSTRUCT *)lParam);
+	} else if(((MEASUREITEMSTRUCT *)lParam)->CtlType == ODT_MENU) {
+		bHandled = TRUE;
+		return OMenu::onMeasureItem(hwnd, uMsg, wParam, lParam, bHandled);
+	}
+	
+	return S_OK;
 }
 
 LRESULT SearchFrame::onDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	HWND hwnd = 0;
-	if(wParam == IDC_FILETYPES) return ListDraw(hwnd, wParam, (DRAWITEMSTRUCT*)lParam);
-		else return OMenu::onDrawItem(hwnd, uMsg, wParam, lParam, bHandled);
+	DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lParam;
+	bHandled = FALSE;
+	
+	if(wParam == IDC_FILETYPES) {
+		bHandled = TRUE;
+		return ListDraw(dis);
+	} else if(dis->CtlID == ATL_IDW_STATUS_BAR && dis->itemID == 1){
+		if(searchStartTime > 0){
+			bHandled = TRUE;
+
+			RECT rc = dis->rcItem;
+			int borders[3];
+
+			ctrlStatus.GetBorders(borders);
+
+			CDC dc(dis->hDC);
+
+			HGDIOBJ oldpen = ::SelectObject(dc, ::CreatePen(PS_SOLID, 0, RGB(255,255,255)));
+			HGDIOBJ oldbr = ::SelectObject(dc, ::CreateSolidBrush(RGB(128,128,128)));
+
+			uint64_t now = GET_TICK();
+			uint64_t length = (rc.right - rc.left) * (now - searchStartTime) / (searchEndTime - searchStartTime);
+
+			dc.Rectangle(rc.left, rc.top, rc.left + (LONG)length, rc.bottom);
+
+			::DeleteObject(::SelectObject(dc, oldpen));
+			::DeleteObject(::SelectObject(dc, oldbr));
+
+
+			dc.SetBkMode(TRANSPARENT);
+
+			uint64_t percent = (now - searchStartTime) * 100 / (searchEndTime - searchStartTime);
+			tstring progress = percent >= 100 ? TSTRING(DONE) : Text::toT(Util::toString(percent) + "%");
+			tstring buf = TSTRING(SEARCHING_FOR) + target + _T(" ... ") + progress;
+
+			int textHeight = WinUtil::getTextHeight(dc);
+			LONG top = rc.top + (rc.bottom - rc.top - textHeight) / 2;
+
+			dc.SetTextColor(RGB(255, 255, 255));
+			RECT rc2 = rc;
+			rc2.right = rc.left + (LONG)length;
+			dc.ExtTextOut(rc.left + borders[2], top, ETO_CLIPPED, &rc2, buf.c_str(), buf.size(), NULL);
+			
+
+			dc.SetTextColor(WinUtil::textColor);
+			rc2 = rc;
+			rc2.left = rc.left + (LONG)length;
+			dc.ExtTextOut(rc.left + borders[2], top, ETO_CLIPPED, &rc2, buf.c_str(), buf.size(), NULL);
+
+			dc.Detach();
+		}	
+	} else if(dis->CtlType == ODT_MENU) {
+		bHandled = TRUE;
+		return OMenu::onDrawItem(hwnd, uMsg, wParam, lParam, bHandled);
+	}
+	
+	return S_OK;
 }
 
 
-BOOL SearchFrame::ListMeasure(HWND /*hwnd*/, UINT /*uCtrlId*/, MEASUREITEMSTRUCT *mis) {
+BOOL SearchFrame::ListMeasure( MEASUREITEMSTRUCT *mis) {
 	mis->itemHeight = 16;
 	return TRUE;
 }
 
 
-BOOL SearchFrame::ListDraw(HWND /*hwnd*/, UINT /*uCtrlId*/, DRAWITEMSTRUCT *dis) {
+BOOL SearchFrame::ListDraw(DRAWITEMSTRUCT *dis) {
 	TCHAR szText[MAX_PATH+1];
-	int idx;
 	
 	switch(dis->itemAction) {
 		case ODA_FOCUS:
@@ -312,7 +377,6 @@ BOOL SearchFrame::ListDraw(HWND /*hwnd*/, UINT /*uCtrlId*/, DRAWITEMSTRUCT *dis)
 				SetBkColor(dis->hDC, WinUtil::bgColor);
 			}
 
-			idx = dis->itemData;
 			ExtTextOut(dis->hDC, dis->rcItem.left+22, dis->rcItem.top+1, ETO_OPAQUE, &dis->rcItem, szText, lstrlen(szText), 0);
 			if(dis->itemState & ODS_FOCUS) {
 				if(!(dis->itemState &  0x0200 ))
@@ -367,6 +431,16 @@ void SearchFrame::onEnter() {
 
 	int64_t llsize = (int64_t)lsize;
 
+	for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
+		delete *i;
+	}
+	
+	PausedResults.clear();
+	ctrlResults.deleteAllItems();	
+	
+	::EnableWindow(GetDlgItem(IDC_SEARCH_PAUSE), TRUE);
+	ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
+	
 	{
 		Lock l(cs);
 		search = StringTokenizer<tstring>(s, ' ').getTokens();
@@ -384,6 +458,9 @@ void SearchFrame::onEnter() {
 
 		s = s.substr(0, max(s.size(), static_cast<tstring::size_type>(1)) - 1);
 	}
+	
+	if(s.empty())
+		return;
 
 	SearchManager::SizeModes mode((SearchManager::SizeModes)ctrlMode.GetCurSel());
 	if(llsize == 0)
@@ -393,10 +470,18 @@ void SearchFrame::onEnter() {
 	exactSize1 = (mode == SearchManager::SIZE_EXACT);
 	exactSize2 = llsize;		
 
-	if(BOOLSETTING(CLEAR_SEARCH)){
-		ctrlSearch.SetWindowText(_T(""));
-	}
+	ctrlStatus.SetText(3, _T(""));
+	ctrlStatus.SetText(4, _T(""));
+	target = s;
+	::InvalidateRect(m_hWndStatusBar, NULL, TRUE);
 
+	droppedResults = 0;
+	resultsCount = 0;
+	bPaused = false;
+	waiting = true;
+
+	isHash = (ftype == SearchManager::TYPE_TTH);
+	
 	// Add new searches to the last-search dropdown list
 	if(find(lastSearches.begin(), lastSearches.end(), s) == lastSearches.end()) 
 	{
@@ -414,18 +499,22 @@ void SearchFrame::onEnter() {
 		// update history in quick search box
 		MainFrame::getMainFrame()->updateQuickSearches();
 	}
-		
-	for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
-		delete *i;
-	}
-	PausedResults.clear();
-	bPaused = false;
-	::EnableWindow(GetDlgItem(IDC_SEARCH_PAUSE), TRUE);
-	ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
-			
-	searches++;
-	SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
-		(SearchManager::TypeModes)ftype, mode, "manual", (int*)this);
+	
+	SetWindowText((TSTRING(SEARCH) + _T(" - ") + s).c_str());
+	
+	// stop old search
+	ClientManager::getInstance()->cancelSearch((void*)this);	
+
+	searchStartTime = GET_TICK();
+	// more 5 seconds for transfering results
+	searchEndTime = searchStartTime + SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
+		(SearchManager::TypeModes)ftype, mode, "manual", (void*)this) + 5000;
+
+	ctrlStatus.SetText(2, (TSTRING(TIME_LEFT) + _T(" ") + Util::formatSeconds((searchEndTime - searchStartTime) / 1000)).c_str());
+
+	if(BOOLSETTING(CLEAR_SEARCH)) // Only clear if the search was sent
+		ctrlSearch.SetWindowText(_T(""));
+
 }
 
 void SearchFrame::on(SearchManagerListener::SR, const SearchResultPtr& aResult) throw() {
@@ -471,20 +560,17 @@ void SearchFrame::on(SearchManagerListener::SR, const SearchResultPtr& aResult) 
 	PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)i);
 }
 
-void SearchFrame::on(SearchManagerListener::Searching, const SearchQueueItem* aSearch) throw() {
-	if((searches > 0) && (aSearch->getWindow() == (int*)this)) {
-		searches--;
-		dcassert(searches >= 0);
-		PostMessage(WM_SPEAKER, SEARCH_START, (LPARAM)new SearchQueueItem(*aSearch));
-	}
-}
-
 void SearchFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
-	if(searches > 0) {
-		uint64_t waitFor = (((SearchManager::getInstance()->getLastSearch() + (SETTING(MINIMUM_SEARCH_INTERVAL)*1000)) - aTick)/1000) + SETTING(MINIMUM_SEARCH_INTERVAL) * SearchManager::getInstance()->getSearchQueueNumber((int*)this);
-		TCHAR buf[64];
-		_stprintf(buf, CTSTRING(WAITING_FOR), waitFor);
-		PostMessage(WM_SPEAKER, QUEUE_STATS, (LPARAM)new tstring(buf));
+	if(waiting) {
+		if(aTick < searchEndTime + 1000){
+			TCHAR buf[64];
+			_stprintf(buf, _T("%s %s"), CTSTRING(TIME_LEFT), Util::formatSeconds(searchEndTime > aTick ? (searchEndTime - aTick) / 1000 : 0).c_str());
+			PostMessage(WM_SPEAKER, QUEUE_STATS, (LPARAM)new tstring(buf));		
+		}
+	
+		if(aTick > searchEndTime) {
+			waiting = false;
+		}
 	}
 }
 
@@ -691,7 +777,7 @@ LRESULT SearchFrame::onDoubleClickResults(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*
 LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
 	if(!closed) {
-		SearchManager::getInstance()->stopSearch((int*)this);
+		ClientManager::getInstance()->cancelSearch((void*)this);
 		SettingsManager::getInstance()->removeListener(this);
 		TimerManager::getInstance()->removeListener(this);
 		SearchManager::getInstance()->removeListener(this);
@@ -731,16 +817,17 @@ void SearchFrame::UpdateLayout(BOOL bResizeBars)
 	
 	if(ctrlStatus.IsWindow()) {
 		CRect sr;
-		int w[4];
+		int w[5];
 		ctrlStatus.GetClientRect(sr);
-		int tmp = (sr.Width()) > 316 ? 216 : ((sr.Width() > 116) ? sr.Width()-100 : 16);
+		int tmp = (sr.Width()) > 420 ? 376 : ((sr.Width() > 116) ? sr.Width()-100 : 16);
 		
 		w[0] = 15;
 		w[1] = sr.right - tmp;
-		w[2] = w[1] + (tmp-16)/2;
-		w[3] = w[1] + (tmp-16);
+		w[2] = w[1] + (tmp-16) / 3;
+		w[3] = w[2] + (tmp-16) / 3;
+		w[4] = w[3] + (tmp-16) / 3;
 		
-		ctrlStatus.SetParts(4, w);
+		ctrlStatus.SetParts(5, w);
 
 		// Layout showUI button in statusbar part #0
 		ctrlStatus.GetRect(0, sr);
@@ -1056,7 +1143,7 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				if (BOOLSETTING(BOLD_SEARCH)) {
 					setDirty();
 				}
-				ctrlStatus.SetText(2, (Util::toStringW(resultsCount) + _T(" ") + TSTRING(FILES)).c_str());
+				ctrlStatus.SetText(3, (Util::toStringW(resultsCount) + _T(" ") + TSTRING(FILES)).c_str());
 
 				if(resort) {
 					ctrlResults.resort();
@@ -1064,51 +1151,30 @@ LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL
 				}
 			} else {
 				PausedResults.push_back(si);
-				ctrlStatus.SetText(2, (Util::toStringW(resultsCount-PausedResults.size()) + _T("/") + Util::toStringW(resultsCount) + _T(" ") + WSTRING(FILES)).c_str());
+				ctrlStatus.SetText(3, (Util::toStringW(resultsCount-PausedResults.size()) + _T("/") + Util::toStringW(resultsCount) + _T(" ") + WSTRING(FILES)).c_str());
 			}
 		}
 		break;
 	case FILTER_RESULT:
-		ctrlStatus.SetText(3, (Util::toStringW(droppedResults) + _T(" ") + TSTRING(FILTERED)).c_str());
+		ctrlStatus.SetText(4, (Util::toStringW(droppedResults) + _T(" ") + TSTRING(FILTERED)).c_str());
 		break;
  	case HUB_ADDED:
- 			onHubAdded((HubInfo*)(lParam));
+ 		onHubAdded((HubInfo*)(lParam));
 		break;
  	case HUB_CHANGED:
- 			onHubChanged((HubInfo*)(lParam));
+ 		onHubChanged((HubInfo*)(lParam));
 		break;
  	case HUB_REMOVED:
- 			onHubRemoved((HubInfo*)(lParam));
+ 		onHubRemoved((HubInfo*)(lParam));
  		break;
 	case QUEUE_STATS:
-		{
-			tstring* t = (tstring*)(lParam);
-			ctrlStatus.SetText(1, (*t).c_str());
-			ctrlStatus.SetText(2, _T(""));
-			ctrlStatus.SetText(3, _T(""));
-			SetWindowText((*t).c_str());
-			delete t;
-		}
-		break;
-	case SEARCH_START:
-		{
-			SearchQueueItem* aSearch = (SearchQueueItem*)(lParam);
-
-			ctrlResults.deleteAllItems();
-			resultsCount = 0;
-
-			isHash = (aSearch->getTypeMode() == SearchManager::TYPE_TTH);
-
-			// Update the status bar
-			ctrlStatus.SetText(1, Text::toT(STRING(SEARCHING_FOR) + aSearch->getTarget() + "...").c_str());
-			ctrlStatus.SetText(2, _T(""));
-			ctrlStatus.SetText(3, _T(""));
-	
-			SetWindowText(Text::toT(STRING(SEARCH) + " - " + aSearch->getTarget()).c_str());
-			delete aSearch;
-
-			droppedResults = 0;
-		}
+	{
+		tstring* t = (tstring*)(lParam);
+		ctrlStatus.SetText(2, (*t).c_str());
+		
+		::InvalidateRect(m_hWndStatusBar, NULL, TRUE);
+		delete t;
+	}
 		break;
 	}
 
@@ -1141,6 +1207,11 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 			copyMenu.AppendMenu(MF_STRING, IDC_COPY_TTH, CTSTRING(TTH_ROOT));
 			copyMenu.AppendMenu(MF_STRING, IDC_COPY_LINK, CTSTRING(COPY_MAGNET_LINK));
 
+			if(ctrlResults.GetSelectedCount() > 1)
+				resultsMenu.InsertSeparatorFirst(Util::toStringW(ctrlResults.GetSelectedCount()) + _T(" ") + TSTRING(FILES));
+			else
+				resultsMenu.InsertSeparatorFirst(Util::toStringW(((SearchInfo*)ctrlResults.getSelectedItem())->hits + 1) + _T(" ") + TSTRING(USERS));
+				
 			resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD, CTSTRING(DOWNLOAD));
 			resultsMenu.AppendMenu(MF_POPUP, (UINT_PTR)(HMENU)targetMenu, CTSTRING(DOWNLOAD_TO));
 			resultsMenu.AppendMenu(MF_STRING, IDC_DOWNLOADDIR, CTSTRING(DOWNLOAD_WHOLE_DIR));

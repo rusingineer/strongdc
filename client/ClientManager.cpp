@@ -452,28 +452,32 @@ const string& ClientManager::getHubUrl(const UserPtr& aUser) const {
 	return Util::emptyString;
 }
 
-void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
+void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
 	Lock l(cs);
 
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		if((*i)->isConnected()) {
-			(*i)->search(aSizeMode, aSize, aFileType, aString, aToken);
+			(*i)->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
 		}
 	}
 }
 
-void ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
+uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
 	Lock l(cs);
 
+	uint64_t estimateSearchSpan = 0;
+	
 	for(StringIter it = who.begin(); it != who.end(); ++it) {
 		string& client = *it;
 		for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
 			Client* c = *j;
 			if(c->isConnected() && c->getHubUrl() == client) {
-				c->search(aSizeMode, aSize, aFileType, aString, aToken);
+				uint64_t ret = c->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
+				estimateSearchSpan = max(estimateSearchSpan, ret);
 			}
 		}
 	}
+	return estimateSearchSpan;
 }
 
 void ClientManager::on(TimerManagerListener::Minute, uint64_t /*aTick*/) throw() {
@@ -743,6 +747,14 @@ int ClientManager::getMode(const string& aHubUrl) const {
 		mode = SETTING(INCOMING_CONNECTIONS);
 	}
 	return mode;
+}
+
+void ClientManager::cancelSearch(void* aOwner) {
+	Lock l(cs);
+
+	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+		(*i)->cancelSearch(aOwner);
+	}
 }
 
 } // namespace dcpp

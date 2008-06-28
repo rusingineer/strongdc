@@ -83,6 +83,11 @@ void Client::reloadSettings(bool updateNick) {
 			setPassword(hub->getPassword());
 		setStealth(hub->getStealth());
 		setFavIp(hub->getIP());
+		
+		if(hub->getSearchInterval() < 10)
+			setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL));
+		else
+			setSearchInterval(hub->getSearchInterval() * 1000 + 1000);
 	} else {
 		if(updateNick) {
 			setCurrentNick(checkNick(SETTING(NICK)));
@@ -90,6 +95,7 @@ void Client::reloadSettings(bool updateNick) {
 		setCurrentDescription(SETTING(DESCRIPTION));
 		setStealth(true);
 		setFavIp(Util::emptyString);
+		setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL));
 	}
 }
 
@@ -202,6 +208,28 @@ string Client::getLocalIp() const {
 	return localIp;
 }
 
+uint64_t Client::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* owner){
+	dcdebug("Queue search %s\n", aString);
+
+	if(searchQueue.interval){
+		Search s;
+		s.fileType = aFileType;
+		s.size     = aSize;
+		s.query    = aString;
+		s.sizeType = aSizeMode;
+		s.token    = aToken;
+		s.owners.insert(owner);
+
+		searchQueue.add(s);
+
+		return searchQueue.getSearchTime(owner) - GET_TICK();
+	}
+
+	search(aSizeMode, aSize, aFileType , aString, aToken);
+	return 0;
+
+}
+ 
 void Client::on(Line, const string& aLine) throw() {
 	updateActivity();
 	COMMAND_DEBUG(aLine, DebugManager::HUB_IN, getIpPort());
@@ -212,6 +240,17 @@ void Client::on(Second, uint64_t aTick) throw() {
 		// Try to reconnect...
 		connect();
 	}
+
+	if(!searchQueue.interval) return;
+
+	if(isConnected()){
+		Search s;
+		
+		if(searchQueue.pop(s)){
+			search(s.sizeType, s.size, s.fileType , s.query, s.token);
+		}
+	}
+
 }
 
 } // namespace dcpp

@@ -55,12 +55,13 @@ public:
 	}
 
 	void prepareMenu(OMenu& menu, int ctx, const StringList& hubs) {
-		bool op = false;
-		userCommands = FavoriteManager::getInstance()->getUserCommands(ctx, hubs, op);
+		bool isOp = false;
+		userCommands = FavoriteManager::getInstance()->getUserCommands(ctx, hubs, isOp);
+		isOp = isOp && (ctx != UserCommand::CONTEXT_HUB);
 		int n = 0;
 		int m = 0;
 		
-		if(!userCommands.empty()) {
+		if(!userCommands.empty() || isOp) {
 			subMenu.DestroyMenu();
 			subMenu.m_hMenu = NULL;
 
@@ -75,7 +76,7 @@ public:
 			
 			CMenuHandle cur = BOOLSETTING(UC_SUBMENU) ? subMenu.m_hMenu : menu.m_hMenu;	
 
-			if(op && (ctx != UserCommand::CONTEXT_HUB)) {
+			if(isOp) {
 				cur.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CTSTRING(GET_USER_RESPONSES));
 				cur.AppendMenu(MF_STRING, IDC_REPORT, CTSTRING(REPORT));
 				cur.AppendMenu(MF_STRING, IDC_CHECKLIST, CTSTRING(CHECK_FILELIST));

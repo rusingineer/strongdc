@@ -10,7 +10,10 @@
 * aktualizován bzip2
 * opraveny nìjaké problémy s výsledky hledání (DC++ BZR)
 * nìjaké opravy ve formátování chatu
-* opraveny nìkolik málo pádù
+* opraveno nìkolik málo pádù
+* implementováno Rychlé vyhledávání (ApexDC++)
+* opravena celková velikost dokonèených položek
+* pøidána volba pro umístìní uživatelský pøíkazù mimo submenu
 
 
 	-- StrongDC++ 2.13 --

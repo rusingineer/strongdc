@@ -410,6 +410,9 @@ public:
 	static void saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting order, 
 		SettingsManager::StrSetting widths, int n, int* indexes, int* sizes) throw();
 
+	static void loadReBarSettings(HWND bar);
+	static void saveReBarSettings(HWND bar);
+	
 	static bool isShift() { return (GetKeyState(VK_SHIFT) & 0x8000) > 0; }
 	static bool isAlt() { return (GetKeyState(VK_MENU) & 0x8000) > 0; }
 	static bool isCtrl() { return (GetKeyState(VK_CONTROL) & 0x8000) > 0; }

@@ -217,12 +217,12 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	tbarcreated = false;
 	HWND hWndToolBar = createToolbar();
-	HWND hWndQuickSearchkBar = createQuickSearchBar();
+	HWND hWndQuickSearchBar = createQuickSearchBar();
 
 	CreateSimpleReBar(ATL_SIMPLE_REBAR_NOBORDER_STYLE);
 	AddSimpleReBarBand(hWndCmdBar);
-	AddSimpleReBarBand(hWndToolBar, NULL, TRUE, 0, TRUE);
-	AddSimpleReBarBand(hWndQuickSearchkBar, NULL, FALSE, 200, TRUE);
+	AddSimpleReBarBand(hWndToolBar, NULL, TRUE);
+	AddSimpleReBarBand(hWndQuickSearchBar, NULL, FALSE, 200, TRUE);
 	CreateSimpleStatusBar();
 	
 	RECT toolRect = {0};
@@ -255,11 +255,14 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	SetSplitterExtendedStyle(SPLIT_PROPORTIONAL);
 	m_nProportionalPos = SETTING(TRANSFER_SPLIT_SIZE);
 	UIAddToolBar(hWndToolBar);
-	UIAddToolBar(hWndQuickSearchkBar);
+	UIAddToolBar(hWndQuickSearchBar);
 	UISetCheck(ID_VIEW_TOOLBAR, 1);
 	UISetCheck(ID_VIEW_STATUS_BAR, 1);
 	UISetCheck(ID_VIEW_TRANSFER_VIEW, 1);
 	UISetCheck(ID_TOGGLE_QSEARCH, 1);
+	
+	// load bars settings
+	WinUtil::loadReBarSettings(m_hWndToolBar);	
 
 	// register object for message filtering and idle updates
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -1072,6 +1075,9 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			if(wp.showCmd == SW_SHOWNORMAL || wp.showCmd == SW_SHOW || wp.showCmd == SW_SHOWMAXIMIZED || wp.showCmd == SW_MAXIMIZE)
 				SettingsManager::getInstance()->set(SettingsManager::MAIN_WINDOW_STATE, (int)wp.showCmd);
 
+			// save bars settings
+			WinUtil::saveReBarSettings(m_hWndToolBar);
+			
 			ShowWindow(SW_HIDE);
 			transferView.prepareClose();
 			

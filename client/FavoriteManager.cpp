@@ -425,6 +425,7 @@ void FavoriteManager::save() {
 			xml.addChildAttrib("RawFive", (*i)->getRawFive());
 			xml.addChildAttrib("Mode", Util::toString((*i)->getMode()));
 			xml.addChildAttrib("IP", (*i)->getIP());
+			xml.addChildAttrib("SearchInterval", Util::toString((*i)->getSearchInterval()));
 		}
 		xml.stepOut();
 		xml.addTag("Users");
@@ -585,6 +586,7 @@ void FavoriteManager::load(SimpleXML& aXml) {
 			e->setRawFive(aXml.getChildAttrib("RawFive"));
 			e->setMode(Util::toInt(aXml.getChildAttrib("Mode")));
 			e->setIP(aXml.getChildAttrib("IP"));
+			e->setSearchInterval(Util::toUInt32(aXml.getChildAttrib("SearchInterval")));
 			favoriteHubs.push_back(e);
 		}
 		aXml.stepOut();
