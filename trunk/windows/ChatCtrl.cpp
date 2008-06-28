@@ -105,8 +105,8 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	bool isMyMessage = i.getUser() == ClientManager::getInstance()->getMe();
 	
 	if(!sAuthor.empty()) {
-		size_t iLen = (sMsg[0] == _T('*')) ? 1 : 0;
-		size_t iAuthorLen = _tcslen(sAuthor.c_str()) + 1;
+		LONG iLen = (sMsg[0] == _T('*')) ? 1 : 0;
+		LONG iAuthorLen = (LONG)_tcslen(sAuthor.c_str()) + 1;
    		sText += iAuthorLen + iLen;
    		
 		lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
@@ -146,7 +146,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
             case _T('<'):
 				sText = _tcschr(sText + 1 + (int)thirdPerson, thirdPerson ? _T(' ') : _T('>'));
                 if(sText != NULL) {
-                    size_t iAuthorLen = sText - sMsg.c_str();
+                    LONG iAuthorLen = (LONG)(sText - sMsg.c_str());
 		            lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
 		            SetSel(lSelEnd, lSelEnd);
             		ReplaceSel(sMsg.substr(0, iAuthorLen).c_str(), false);
@@ -185,7 +185,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 		while(true) {
 			TCHAR *rpl = NULL;
 			CAGEmotion* pFoundEmotion = NULL;
-			int len = _tcslen(sText);
+			int64_t len = _tcslen(sText);
 			for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
 				nIdxFound = -1;
 				TCHAR *txt = Util::strstr(sText, (*pEmotion)->getEmotionText().c_str(), &nIdxFound);
@@ -250,21 +250,21 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 	// Zvyrazneni vsech URL a nastaveni "klikatelnosti"
 	long lSearchFrom = 0;
 	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
-		long linkStart = sMsgLower.find(Links[i], lSearchFrom);
+		long linkStart = (long)sMsgLower.find(Links[i], lSearchFrom);
 		while(linkStart > 0) {
 			long linkEnd;
-			long linkEndSpace = sMsgLower.find(_T(" "), linkStart);
-			long linkEndLine = sMsgLower.find(_T("\n"), linkStart);
+			long linkEndSpace = (long)sMsgLower.find(_T(" "), linkStart);
+			long linkEndLine = (long)sMsgLower.find(_T("\n"), linkStart);
 			if((linkEndSpace <= linkStart && linkEndLine > linkStart) || (linkEndSpace > linkEndLine && linkEndLine > linkStart)) {
 				linkEnd = linkEndLine;
 			} else if(linkEndSpace > linkStart) {
 				linkEnd = linkEndSpace;
 			} else {
-				linkEnd = sMsgLower.size();
+				linkEnd = (long)sMsgLower.size();
 			}
 			SetSel(lSelBegin + linkStart, lSelBegin + linkEnd);
 			SetSelectionCharFormat(WinUtil::m_TextStyleURL);
-			linkStart = sMsgLower.find(Links[i], linkEnd);
+			linkStart = (long)sMsgLower.find(Links[i], linkEnd);
 		}
 	}
 
@@ -273,8 +273,8 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 	tstring sNick = sMyNick.c_str();
 	std::transform(sNick.begin(), sNick.end(), sNick.begin(), _totlower);
 
-	while((lMyNickStart = sMsgLower.find(sNick, lSearchFrom)) >= 0) {
-		lMyNickEnd = lMyNickStart + sNick.size();
+	while((lMyNickStart = (long)sMsgLower.find(sNick, lSearchFrom)) >= 0) {
+		lMyNickEnd = lMyNickStart + (long)sNick.size();
 		SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
 		SetSelectionCharFormat(WinUtil::m_TextStyleMyNick);
 		lSearchFrom = lMyNickEnd;
@@ -294,8 +294,8 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 		sNick = Text::toT(pUser.getNick()).c_str();
 		std::transform(sNick.begin(), sNick.end(), sNick.begin(), _totlower);
 
-		while((lMyNickStart = sMsgLower.find(sNick, lSearchFrom)) >= 0) {
-			lMyNickEnd = lMyNickStart + sNick.size();
+		while((lMyNickStart = (long)sMsgLower.find(sNick, lSearchFrom)) >= 0) {
+			lMyNickEnd = lMyNickStart + (long)sNick.size();
 			SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
 			SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);
 			lSearchFrom = lMyNickEnd;

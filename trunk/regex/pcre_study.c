@@ -2,42 +2,56 @@
 *      Perl-Compatible Regular Expressions       *
 *************************************************/
 
-/*
-This is a library of functions to support regular expressions whose syntax
-and semantics are as close as possible to those of the Perl 5 language. See
-the file Tech.Notes for some information on the internals.
+/* PCRE is a library of functions to support regular expressions whose syntax
+and semantics are as close as possible to those of the Perl 5 language.
 
-Written by: Philip Hazel <ph10@cam.ac.uk>
-
-           Copyright (c) 1997-2003 University of Cambridge
+                       Written by Philip Hazel
+           Copyright (c) 1997-2008 University of Cambridge
 
 -----------------------------------------------------------------------------
-Permission is granted to anyone to use this software for any purpose on any
-computer system, and to redistribute it freely, subject to the following
-restrictions:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-1. This software is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
 
-2. The origin of this software must not be misrepresented, either by
-   explicit claim or by omission.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
 
-3. Altered versions must be plainly marked as such, and must not be
-   misrepresented as being the original software.
+    * Neither the name of the University of Cambridge nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
 
-4. If PCRE is embedded in any software that is released under the GNU
-   General Purpose Licence (GPL), then the terms of that licence shall
-   supersede any condition above with which it is incompatible.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------
 */
 
 
-/* Include the internals header, which itself includes Standard C headers plus
-the external pcre header. */
+/* This module contains the external function pcre_study(), along with local
+supporting functions. */
 
-#include "internal.h"
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "pcre_internal.h"
+
+
+/* Returns from set_start_bits() */
+
+enum { SSB_FAIL, SSB_DONE, SSB_CONTINUE };
 
 
 /*************************************************
@@ -57,7 +71,7 @@ Returns:        nothing
 */
 
 static void
-set_bit(uschar *start_bits, int c, BOOL caseless, compile_data *cd)
+set_bit(uschar *start_bits, unsigned int c, BOOL caseless, compile_data *cd)
 {
 start_bits[c/8] |= (1 << (c&7));
 if (caseless && (cd->ctypes[c] & ctype_letter) != 0)
@@ -67,12 +81,16 @@ if (caseless && (cd->ctypes[c] & ctype_letter) != 0)
 
 
 /*************************************************
-*          Create bitmap of starting chars       *
+*          Create bitmap of starting bytes       *
 *************************************************/
 
-/* This function scans a compiled unanchored expression and attempts to build a
-bitmap of the set of initial characters. If it can't, it returns FALSE. As time
-goes by, we may be able to get more clever at doing this.
+/* This function scans a compiled unanchored expression recursively and
+attempts to build a bitmap of the set of possible starting bytes. As time goes
+by, we may be able to get more clever at doing this. The SSB_CONTINUE return is
+useful for parenthesized groups in patterns such as (a*)b where the group
+provides some optional starting bytes but scanning must continue at the outer
+level to find at least one mandatory byte. At the outermost level, this
+function fails unless the result is SSB_DONE.
 
 Arguments:
   code         points to an expression
@@ -81,14 +99,24 @@ Arguments:
   utf8         TRUE if in UTF-8 mode
   cd           the block with char table pointers
 
-Returns:       TRUE if table built, FALSE otherwise
+Returns:       SSB_FAIL     => Failed to find any starting bytes
+               SSB_DONE     => Found mandatory starting bytes
+               SSB_CONTINUE => Found optional starting bytes
 */
 
-static BOOL
+static int
 set_start_bits(const uschar *code, uschar *start_bits, BOOL caseless,
   BOOL utf8, compile_data *cd)
 {
 register int c;
+int yield = SSB_DONE;
+
+#if 0
+/* ========================================================================= */
+/* The following comment and code was inserted in January 1999. In May 2006,
+when it was observed to cause compiler warnings about unused values, I took it
+out again. If anybody is still using OS/2, they will have to put it back
+manually. */
 
 /* This next statement and the later reference to dummy are here in order to
 trick the optimizer of the IBM C compiler for OS/2 into generating correct
@@ -97,39 +125,65 @@ disable optimization (in this module it actually makes a big difference, and
 the pcre module can use all the optimization it can get). */
 
 volatile int dummy;
+/* ========================================================================= */
+#endif
 
 do
   {
-  const uschar *tcode = code + 1 + LINK_SIZE;
+  const uschar *tcode = code + (((int)*code == OP_CBRA)? 3:1) + LINK_SIZE;
   BOOL try_next = TRUE;
 
-  while (try_next)
+  while (try_next)    /* Loop for items in this branch */
     {
-    /* If a branch starts with a bracket or a positive lookahead assertion,
-    recurse to set bits from within them. That's all for this branch. */
-
-    if ((int)*tcode >= OP_BRA || *tcode == OP_ASSERT)
+    int rc;
+    switch(*tcode)
       {
-      if (!set_start_bits(tcode, start_bits, caseless, utf8, cd))
-        return FALSE;
-      try_next = FALSE;
-      }
+      /* Fail if we reach something we don't understand */
 
-    else switch(*tcode)
-      {
       default:
-      return FALSE;
+      return SSB_FAIL;
+
+      /* If we hit a bracket or a positive lookahead assertion, recurse to set
+      bits from within the subpattern. If it can't find anything, we have to
+      give up. If it finds some mandatory character(s), we are done for this
+      branch. Otherwise, carry on scanning after the subpattern. */
+
+      case OP_BRA:
+      case OP_SBRA:
+      case OP_CBRA:
+      case OP_SCBRA:
+      case OP_ONCE:
+      case OP_ASSERT:
+      rc = set_start_bits(tcode, start_bits, caseless, utf8, cd);
+      if (rc == SSB_FAIL) return SSB_FAIL;
+      if (rc == SSB_DONE) try_next = FALSE; else
+        {
+        do tcode += GET(tcode, 1); while (*tcode == OP_ALT);
+        tcode += 1 + LINK_SIZE;
+        }
+      break;
+
+      /* If we hit ALT or KET, it means we haven't found anything mandatory in
+      this branch, though we might have found something optional. For ALT, we
+      continue with the next alternative, but we have to arrange that the final
+      result from subpattern is SSB_CONTINUE rather than SSB_DONE. For KET,
+      return SSB_CONTINUE: if this is the top level, that indicates failure,
+      but after a nested subpattern, it causes scanning to continue. */
+
+      case OP_ALT:
+      yield = SSB_CONTINUE;
+      try_next = FALSE;
+      break;
+
+      case OP_KET:
+      case OP_KETRMAX:
+      case OP_KETRMIN:
+      return SSB_CONTINUE;
 
       /* Skip over callout */
 
       case OP_CALLOUT:
-      tcode += 2;
-      break;
-
-      /* Skip over extended extraction bracket number */
-
-      case OP_BRANUMBER:
-      tcode += 3;
+      tcode += 2 + 2*LINK_SIZE;
       break;
 
       /* Skip over lookbehind and negative lookahead assertions */
@@ -138,7 +192,7 @@ do
       case OP_ASSERTBACK:
       case OP_ASSERTBACK_NOT:
       do tcode += GET(tcode, 1); while (*tcode == OP_ALT);
-      tcode += 1+LINK_SIZE;
+      tcode += 1 + LINK_SIZE;
       break;
 
       /* Skip over an option setting, changing the caseless flag */
@@ -152,23 +206,37 @@ do
 
       case OP_BRAZERO:
       case OP_BRAMINZERO:
-      if (!set_start_bits(++tcode, start_bits, caseless, utf8, cd))
-        return FALSE;
+      if (set_start_bits(++tcode, start_bits, caseless, utf8, cd) == SSB_FAIL)
+        return SSB_FAIL;
+/* =========================================================================
+      See the comment at the head of this function concerning the next line,
+      which was an old fudge for the benefit of OS/2.
       dummy = 1;
+  ========================================================================= */
       do tcode += GET(tcode,1); while (*tcode == OP_ALT);
-      tcode += 1+LINK_SIZE;
+      tcode += 1 + LINK_SIZE;
+      break;
+
+      /* SKIPZERO skips the bracket. */
+
+      case OP_SKIPZERO:
+      do tcode += GET(tcode,1); while (*tcode == OP_ALT);
+      tcode += 1 + LINK_SIZE;
       break;
 
       /* Single-char * or ? sets the bit and tries the next item */
 
       case OP_STAR:
       case OP_MINSTAR:
+      case OP_POSSTAR:
       case OP_QUERY:
       case OP_MINQUERY:
+      case OP_POSQUERY:
       set_bit(start_bits, tcode[1], caseless, cd);
       tcode += 2;
 #ifdef SUPPORT_UTF8
-      if (utf8) while ((*tcode & 0xc0) == 0x80) tcode++;
+      if (utf8 && tcode[-1] >= 0xc0)
+        tcode += _pcre_utf8_table4[tcode[-1] & 0x3f];
 #endif
       break;
 
@@ -176,23 +244,25 @@ do
 
       case OP_UPTO:
       case OP_MINUPTO:
+      case OP_POSUPTO:
       set_bit(start_bits, tcode[3], caseless, cd);
       tcode += 4;
 #ifdef SUPPORT_UTF8
-      if (utf8) while ((*tcode & 0xc0) == 0x80) tcode++;
+      if (utf8 && tcode[-1] >= 0xc0)
+        tcode += _pcre_utf8_table4[tcode[-1] & 0x3f];
 #endif
       break;
 
       /* At least one single char sets the bit and stops */
 
       case OP_EXACT:       /* Fall through */
-      tcode++;
+      tcode += 2;
 
-      case OP_CHARS:       /* Fall through */
-      tcode++;
-
+      case OP_CHAR:
+      case OP_CHARNC:
       case OP_PLUS:
       case OP_MINPLUS:
+      case OP_POSPLUS:
       set_bit(start_bits, tcode[1], caseless, cd);
       try_next = FALSE;
       break;
@@ -211,15 +281,29 @@ do
       try_next = FALSE;
       break;
 
+      /* The cbit_space table has vertical tab as whitespace; we have to
+      discard it. */
+
       case OP_NOT_WHITESPACE:
       for (c = 0; c < 32; c++)
-        start_bits[c] |= ~cd->cbits[c+cbit_space];
+        {
+        int d = cd->cbits[c+cbit_space];
+        if (c == 1) d &= ~0x08;
+        start_bits[c] |= ~d;
+        }
       try_next = FALSE;
       break;
 
+      /* The cbit_space table has vertical tab as whitespace; we have to
+      discard it. */
+
       case OP_WHITESPACE:
       for (c = 0; c < 32; c++)
-        start_bits[c] |= cd->cbits[c+cbit_space];
+        {
+        int d = cd->cbits[c+cbit_space];
+        if (c == 1) d &= ~0x08;
+        start_bits[c] |= d;
+        }
       try_next = FALSE;
       break;
 
@@ -252,16 +336,20 @@ do
 
       case OP_TYPEUPTO:
       case OP_TYPEMINUPTO:
+      case OP_TYPEPOSUPTO:
       tcode += 2;               /* Fall through */
 
       case OP_TYPESTAR:
       case OP_TYPEMINSTAR:
+      case OP_TYPEPOSSTAR:
       case OP_TYPEQUERY:
       case OP_TYPEMINQUERY:
+      case OP_TYPEPOSQUERY:
       switch(tcode[1])
         {
         case OP_ANY:
-        return FALSE;
+        case OP_ALLANY:
+        return SSB_FAIL;
 
         case OP_NOT_DIGIT:
         for (c = 0; c < 32; c++)
@@ -273,14 +361,28 @@ do
           start_bits[c] |= cd->cbits[c+cbit_digit];
         break;
 
+        /* The cbit_space table has vertical tab as whitespace; we have to
+        discard it. */
+
         case OP_NOT_WHITESPACE:
         for (c = 0; c < 32; c++)
-          start_bits[c] |= ~cd->cbits[c+cbit_space];
+          {
+          int d = cd->cbits[c+cbit_space];
+          if (c == 1) d &= ~0x08;
+          start_bits[c] |= ~d;
+          }
         break;
+
+        /* The cbit_space table has vertical tab as whitespace; we have to
+        discard it. */
 
         case OP_WHITESPACE:
         for (c = 0; c < 32; c++)
-          start_bits[c] |= cd->cbits[c+cbit_space];
+          {
+          int d = cd->cbits[c+cbit_space];
+          if (c == 1) d &= ~0x08;
+          start_bits[c] |= d;
+          }
         break;
 
         case OP_NOT_WORDCHAR:
@@ -304,11 +406,13 @@ do
       character with a value > 255. */
 
       case OP_NCLASS:
+#ifdef SUPPORT_UTF8
       if (utf8)
         {
         start_bits[24] |= 0xf0;              /* Bits for 0xc4 - 0xc8 */
         memset(start_bits+25, 0xff, 7);      /* Bits for 0xc9 - 0xff */
         }
+#endif
       /* Fall through */
 
       case OP_CLASS:
@@ -321,6 +425,7 @@ do
         value is > 127. In fact, there are only two possible starting bytes for
         characters in the range 128 - 255. */
 
+#ifdef SUPPORT_UTF8
         if (utf8)
           {
           for (c = 0; c < 16; c++) start_bits[c] |= tcode[c];
@@ -338,6 +443,7 @@ do
         /* In non-UTF-8 mode, the two bit maps are completely compatible. */
 
         else
+#endif
           {
           for (c = 0; c < 32; c++) start_bits[c] |= tcode[c];
           }
@@ -373,7 +479,7 @@ do
   code += GET(code, 1);   /* Advance to next branch */
   }
 while (*code == OP_ALT);
-return TRUE;
+return yield;
 }
 
 
@@ -397,16 +503,16 @@ Returns:    pointer to a pcre_extra block, with study_data filled in and the
             NULL on error or if no optimization possible
 */
 
-EXPORT pcre_extra *
+PCRE_EXP_DEFN pcre_extra *
 pcre_study(const pcre *external_re, int options, const char **errorptr)
 {
 uschar start_bits[32];
 pcre_extra *extra;
 pcre_study_data *study;
-const real_pcre *re = (const real_pcre *)external_re;
-uschar *code = (uschar *)re + sizeof(real_pcre) +
-  (re->name_count * re->name_entry_size);
+const uschar *tables;
+uschar *code;
 compile_data compile_block;
+const real_pcre *re = (const real_pcre *)external_re;
 
 *errorptr = NULL;
 
@@ -422,25 +528,34 @@ if ((options & ~PUBLIC_STUDY_OPTIONS) != 0)
   return NULL;
   }
 
+code = (uschar *)re + re->name_table_offset +
+  (re->name_count * re->name_entry_size);
+
 /* For an anchored pattern, or an unanchored pattern that has a first char, or
 a multiline pattern that matches only at "line starts", no further processing
 at present. */
 
-if ((re->options & (PCRE_ANCHORED|PCRE_FIRSTSET|PCRE_STARTLINE)) != 0)
+if ((re->options & PCRE_ANCHORED) != 0 ||
+    (re->flags & (PCRE_FIRSTSET|PCRE_STARTLINE)) != 0)
   return NULL;
 
-/* Set the character tables in the block which is passed around */
+/* Set the character tables in the block that is passed around */
 
-compile_block.lcc = re->tables + lcc_offset;
-compile_block.fcc = re->tables + fcc_offset;
-compile_block.cbits = re->tables + cbits_offset;
-compile_block.ctypes = re->tables + ctypes_offset;
+tables = re->tables;
+if (tables == NULL)
+  (void)pcre_fullinfo(external_re, NULL, PCRE_INFO_DEFAULT_TABLES,
+  (void *)(&tables));
+
+compile_block.lcc = tables + lcc_offset;
+compile_block.fcc = tables + fcc_offset;
+compile_block.cbits = tables + cbits_offset;
+compile_block.ctypes = tables + ctypes_offset;
 
 /* See if we can find a fixed set of initial characters for the pattern. */
 
 memset(start_bits, 0, 32 * sizeof(uschar));
-if (!set_start_bits(code, start_bits, (re->options & PCRE_CASELESS) != 0,
-  (re->options & PCRE_UTF8) != 0, &compile_block)) return NULL;
+if (set_start_bits(code, start_bits, (re->options & PCRE_CASELESS) != 0,
+  (re->options & PCRE_UTF8) != 0, &compile_block) != SSB_DONE) return NULL;
 
 /* Get a pcre_extra block and a pcre_study_data block. The study data is put in
 the latter, which is pointed to by the former, which may also get additional
@@ -449,7 +564,7 @@ pcre_study_data is fixed. We nevertheless save it in a field for returning via
 the pcre_fullinfo() function so that if it becomes variable in the future, we
 don't have to change that code. */
 
-extra = (pcre_extra *)malloc
+extra = (pcre_extra *)(pcre_malloc)
   (sizeof(pcre_extra) + sizeof(pcre_study_data));
 
 if (extra == NULL)
@@ -469,4 +584,4 @@ memcpy(study->start_bits, start_bits, sizeof(start_bits));
 return extra;
 }
 
-/* End of study.c */
+/* End of pcre_study.c */

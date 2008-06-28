@@ -134,7 +134,7 @@ public:
 		ctrlFilterSelContainer(WC_COMBOBOX, this, FILTER_MESSAGE_MAP),
 		initialSize(0), initialMode(SearchManager::SIZE_ATLEAST), initialType(SearchManager::TYPE_ANY),
 		showUI(true), onlyFree(false), closed(false), isHash(false), droppedResults(0), resultsCount(0),
-		expandSR(false), exactSize1(false), exactSize2(0), searches(0)
+		expandSR(false), exactSize1(false), exactSize2(0), searchEndTime(0), searchStartTime(0), waiting(false)
 	{	
 		SearchManager::getInstance()->addListener(this);
 		useGrouping = BOOLSETTING(GROUP_SEARCH_RESULTS);
@@ -249,7 +249,7 @@ public:
 				PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)(*i));
 			}
 			PausedResults.clear();
-			ctrlStatus.SetText(2, (Util::toStringW(ctrlResults.GetItemCount()) + _T(" ") + TSTRING(FILES)).c_str());			
+			ctrlStatus.SetText(3, (Util::toStringW(ctrlResults.GetItemCount()) + _T(" ") + TSTRING(FILES)).c_str());			
 			ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
 		} else {
 			bPaused = true;
@@ -494,8 +494,7 @@ private:
 		HUB_ADDED,
 		HUB_CHANGED,
 		HUB_REMOVED,
-		QUEUE_STATS,
-		SEARCH_START
+		QUEUE_STATS
 	};
 
 	tstring initialString;
@@ -515,8 +514,8 @@ private:
 	CButton ctrlPauseSearch;
 	CButton ctrlPurge;	
 
-	BOOL ListMeasure(HWND hwnd, UINT uCtrlId, MEASUREITEMSTRUCT *mis);
-	BOOL ListDraw(HWND hwnd, UINT uCtrlId, DRAWITEMSTRUCT *dis);
+	BOOL ListMeasure(MEASUREITEMSTRUCT *mis);
+	BOOL ListDraw(DRAWITEMSTRUCT *dis);
 	
 	CContainedWindow searchContainer;
 	CContainedWindow searchBoxContainer;
@@ -557,16 +556,20 @@ private:
 	bool bPaused;
 	bool exactSize1;
 	bool useGrouping;
+	bool waiting;
 	int64_t exactSize2;
 	int64_t resultsCount;
 
+	uint64_t searchEndTime;
+	uint64_t searchStartTime;
+	tstring target;
+	
 	CriticalSection cs;
 
 	static TStringList lastSearches;
 	size_t droppedResults;
 
 	bool closed;
-	int searches;
 
 	StringMap ucLineParams;
 		
@@ -587,8 +590,6 @@ private:
 	void download(const SearchResultPtr& aSR, const tstring& aDir, bool view);
 	
 	void on(SearchManagerListener::SR, const SearchResultPtr& aResult) throw();
-	void on(SearchManagerListener::Searching, const SearchQueueItem* aSearch) throw();
-
 	void on(TimerManagerListener::Second, uint64_t aTick) throw();
 
 	// ClientManagerListener

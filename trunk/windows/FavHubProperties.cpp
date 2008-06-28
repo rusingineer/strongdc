@@ -42,6 +42,7 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_ACTIVE, CTSTRING(SETTINGS_DIRECT));
 	SetDlgItemText(IDC_PASSIVE, CTSTRING(SETTINGS_FIREWALL_PASSIVE));
 	SetDlgItemText(IDC_STEALTH, CTSTRING(STEALTH_MODE));
+	SetDlgItemText(IDC_FAV_SEARCH_INTERVAL, CTSTRING(MINIMUM_SEARCH_INTERVAL));
 
 	// Fill in values
 	SetDlgItemText(IDC_HUBNAME, Text::toT(entry->getName()).c_str());
@@ -57,6 +58,7 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_RAW_FOUR, Text::toT(entry->getRawFour()).c_str());
 	SetDlgItemText(IDC_RAW_FIVE, Text::toT(entry->getRawFive()).c_str());
 	SetDlgItemText(IDC_SERVER, Text::toT(entry->getIP()).c_str());
+	SetDlgItemText(IDC_FAV_SEARCH_INTERVAL_BOX, Util::toStringW(entry->getSearchInterval()).c_str());
 
 	if(entry->getMode() == 0)
 		CheckRadioButton(IDC_ACTIVE, IDC_DEFAULT, IDC_DEFAULT);
@@ -79,6 +81,12 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	tmp.Attach(GetDlgItem(IDC_HUBPASS));
 	tmp.SetPasswordChar('*');
 	tmp.Detach();
+	
+	CUpDownCtrl updown;
+	updown.Attach(GetDlgItem(IDC_FAV_SEARCH_INTERVAL_SPIN));
+	updown.SetRange32(10, 9999);
+	updown.Detach();
+	
 	CenterWindow(GetParent());
 	return FALSE;
 }
@@ -117,6 +125,8 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 		entry->setRawFive(Text::fromT(buf));
 		GetDlgItemText(IDC_SERVER, buf, 512);
 		entry->setIP(Text::fromT(buf));
+		GetDlgItemText(IDC_FAV_SEARCH_INTERVAL_BOX, buf, 512);
+		entry->setSearchInterval(Util::toUInt32(Text::fromT(buf)));
 
 		int	ct = -1;
 		if(IsDlgButtonChecked(IDC_DEFAULT))

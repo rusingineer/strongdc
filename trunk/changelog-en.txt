@@ -11,6 +11,10 @@
 * fixed some problems with returning search results (DC++ BZR)
 * some fixes to chat formatting
 * fixed some crashes
+* implemented Quick Search function (ApexDC++)
+* fixed finished items' total size
+* added option to place usercommands outside of submenu
+
 
 	-- StrongDC++ 2.13 --
 

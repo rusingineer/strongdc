@@ -1905,6 +1905,54 @@ int WinUtil::setButtonPressed(int nID, bool bPressed /* = true */) {
 	return 0;
 }
 
+void WinUtil::loadReBarSettings(HWND bar) {
+	CReBarCtrl rebar = bar;
+	
+	REBARBANDINFO rbi = { 0 };
+	rbi.cbSize = sizeof(rbi);
+	rbi.fMask = RBBIM_ID | RBBIM_SIZE | RBBIM_STYLE;
+	
+	StringTokenizer<string> st(SETTING(TOOLBAR_SETTINGS), ';');
+	StringList &sl = st.getTokens();
+	
+	for(StringList::const_iterator i = sl.begin(); i != sl.end(); i++)
+	{
+		StringTokenizer<string> stBar(*i, ',');
+		StringList &slBar = stBar.getTokens();
+		
+		rebar.MoveBand(rebar.IdToIndex(Util::toUInt32(slBar[1])), i - sl.begin());
+		rebar.GetBandInfo(i - sl.begin(), &rbi);
+		
+		rbi.cx = Util::toUInt32(slBar[0]);
+		
+		if(slBar[2] == "1") {
+			rbi.fStyle |= RBBS_BREAK;
+		} else {
+			rbi.fStyle &= ~RBBS_BREAK;
+		}
+		
+		rebar.SetBandInfo(i - sl.begin(), &rbi);		
+	}
+}
+
+void WinUtil::saveReBarSettings(HWND bar) {
+	string toolbarSettings;
+	CReBarCtrl rebar = bar;
+	
+	REBARBANDINFO rbi = { 0 };
+	rbi.cbSize = sizeof(rbi);
+	rbi.fMask = RBBIM_ID | RBBIM_SIZE | RBBIM_STYLE;
+	
+	for(unsigned int i = 0; i < rebar.GetBandCount(); i++)
+	{
+		rebar.GetBandInfo(i, &rbi);
+		toolbarSettings += Util::toString(rbi.cx) + "," + Util::toString(rbi.wID) + "," + Util::toString((int)(rbi.fStyle & RBBS_BREAK)) + ";";
+	}
+	
+	SettingsManager::getInstance()->set(SettingsManager::TOOLBAR_SETTINGS, toolbarSettings);
+}
+
+
 /**
  * @file
  * $Id$

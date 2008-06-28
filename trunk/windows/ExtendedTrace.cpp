@@ -175,7 +175,7 @@ BOOL InitSymInfo( PCSTR lpszInitialSymbolPath )
 }
 
 // Get the module name from a given address
-static BOOL GetModuleNameFromAddress( UINT address, LPTSTR lpszModule )
+static BOOL GetModuleNameFromAddress( DWORD64 address, LPTSTR lpszModule )
 {
 	BOOL              ret = FALSE;
 	IMAGEHLP_MODULE   moduleInfo;
@@ -200,7 +200,7 @@ static BOOL GetModuleNameFromAddress( UINT address, LPTSTR lpszModule )
 }
 
 // Get function prototype and parameter info from ip address and stack address
-static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, LPTSTR lpszSymbol )
+static BOOL GetFunctionInfoFromAddresses( DWORD64 fnAddress, DWORD64 stackAddress, LPTSTR lpszSymbol )
 {
 	BOOL              ret = FALSE;
 	DWORD64             dwDisp = 0;
@@ -219,7 +219,7 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
 	_tcscpy( lpszSymbol, _T("?") );
 
 	// Get symbol info for IP
-	if ( SymFromAddr( GetCurrentProcess(), (ULONG)fnAddress, &dwDisp, pSym ) )
+	if ( SymFromAddr( GetCurrentProcess(), fnAddress, &dwDisp, pSym ) )
 	{
 	   // Make the symbol readable for humans
 		UnDecorateSymbolName( pSym->Name, lpszNonUnicodeUnDSymbol, BUFFERSIZE, 
@@ -294,7 +294,12 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
 // The output format is: "sourcefile(linenumber)" or
 //                       "modulename!address" or
 //                       "address"
-static BOOL GetSourceInfoFromAddress( UINT address, LPTSTR lpszSourceInfo )
+#ifndef _WIN64
+static BOOL GetSourceInfoFromAddress( DWORD address, LPTSTR lpszSourceInfo )
+#else
+static BOOL GetSourceInfoFromAddress( DWORD64 address, LPTSTR lpszSourceInfo )
+#endif
+
 {
 	BOOL           ret = FALSE;
 	IMAGEHLP_LINE  lineInfo;
@@ -333,7 +338,11 @@ static BOOL GetSourceInfoFromAddress( UINT address, LPTSTR lpszSourceInfo )
 	return ret;
 }
 
+#ifndef _M_AMD64
 void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD eip, DWORD esp, DWORD ebp )
+#else
+void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD64 eip, DWORD64 esp, DWORD64 ebp )
+#endif
 {
 	STACKFRAME     callStack;
 	BOOL           bResult;

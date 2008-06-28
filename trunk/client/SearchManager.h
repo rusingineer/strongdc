@@ -37,38 +37,11 @@
 
 namespace dcpp {
 
-class SearchManager;
 class SocketException;
 
-class SearchQueueItem {
-public:
-	SearchQueueItem() { }
-	SearchQueueItem(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const int *aWindow, const string& aToken) : 
-	  target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), token(aToken) { }
-	SearchQueueItem(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const int *aWindow, const string& aToken) : 
-	  hubs(who), target(aString), size(aSize), typeMode(aFileType), sizeMode(aSizeMode), window(aWindow), token(aToken) { }
-
-	GETSET(string, target, Target);
-	GETSET(string, token, Token);
-	GETSET(int64_t, size, Size);
-	GETSET(int, typeMode, TypeMode);
-	GETSET(int, sizeMode, SizeMode);
-
-	StringList& getHubs() { return hubs; }
-	void setHubs(StringList aHubs) { hubs = aHubs; }
-	const int* getWindow() const { return window; }
-private:
-	StringList hubs;
-	
-	const int* window;
-};
-
-class SearchManager : public Speaker<SearchManagerListener>, private TimerManagerListener, public Singleton<SearchManager>, public Thread
+class SearchManager : public Speaker<SearchManagerListener>, public Singleton<SearchManager>, public Thread
 {
 public:
-	typedef deque<SearchQueueItem> SearchQueueItemList;
-	typedef SearchQueueItemList::iterator SearchQueueIter;
-	typedef SearchQueueItemList::const_iterator SearchQueueIterC;
 
 	enum SizeModes {
 		SIZE_DONTCARE = 0x00,
@@ -89,16 +62,15 @@ public:
 		TYPE_TTH
 	};
 	
-	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const int *aWindow = NULL);
-	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const int *aWindow = NULL) {
-		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow);
+	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL);
+	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL) {
+		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aOwner);
 	}
 
-	void search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const int *aWindow = NULL);
-	void search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const int *aWindow = NULL) {
-		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aWindow);
+	uint64_t search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL);
+	uint64_t search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL) {
+		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aOwner);
  	}
-	void stopSearch(const int *aWindow);
 
 	static string clean(const string& aSearchString);
 	
@@ -117,10 +89,6 @@ public:
 
 	void onRES(const AdcCommand& cmd, const UserPtr& from, const string& removeIp = Util::emptyString);
 	void sendPSR(const string& ip, uint16_t port, bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<uint16_t>& partialInfo);
-
-	uint64_t getLastSearch() const { return lastSearch; }
-	int getSearchQueueNumber(const int* aWindow);
-	
 
 private:
 	class ResultsQueue: public Thread {
@@ -151,9 +119,6 @@ private:
 	} queue;
 
 	CriticalSection cs;
-	SearchQueueItemList searchQueue;	
-
-	uint64_t lastSearch;
 	Socket* socket;
 	uint16_t port;
 	bool stop;
@@ -165,11 +130,9 @@ private:
 
 	~SearchManager() throw();
 
-	void setLastSearch(uint64_t aTime) { lastSearch = aTime; };
 	void onData(const uint8_t* buf, size_t aLen, const string& address);
 
 	string getPartsString(const PartsInfo& partsInfo) const;
-	void on(TimerManagerListener::Second, uint64_t aTick) throw();
 };
 
 } // namespace dcpp

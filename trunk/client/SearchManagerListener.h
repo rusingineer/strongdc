@@ -31,9 +31,7 @@ public:
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> SR;
-	typedef X<1> Searching;
 	virtual void on(SR, const SearchResultPtr&) throw() = 0;
-	virtual void on(Searching, const SearchQueueItem*) throw() { }
 };
 
 } // namespace dcpp
