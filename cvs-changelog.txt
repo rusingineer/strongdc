@@ -1,3 +1,11 @@
+** svn395
+	upload slots settings has its own page
+	search progressbar uses opera-style
+	ADL searching is done via regexp
+	added option to set maximum auto-opened slots (old Kulmegil's patch)
+	fixed memory leak in network settings (ApexDC++)
+	implemented some tweaks to hash progress dialog (old Kulmegil's patch)
+
 ** svn394
 	fixed line ends in PM history
 	quick search position saved

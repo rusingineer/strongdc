@@ -671,6 +671,8 @@ int HashManager::Hasher::run() {
 		s.wait();
 		if(stop)
 			break;
+		if(paused) // KUL - hash progress dialog patch
+			p.wait();
 		if(rebuild) {
 			HashManager::getInstance()->doRebuild();
 			rebuild = false;

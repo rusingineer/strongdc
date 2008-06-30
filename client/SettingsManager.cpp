@@ -125,7 +125,7 @@ const string SettingsManager::settingTags[] =
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
-	"UcSubMenu",
+	"UcSubMenu", "AutoSlots",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -381,6 +381,7 @@ SettingsManager::SettingsManager()
 	setDefault(DISPLAY_CHEATS_IN_MAIN_CHAT, true);	
 	setDefault(SEARCH_TIME, 10);
 	setDefault(SUPPRESS_MAIN_CHAT, false);
+	setDefault(AUTO_SLOTS, 5);	
 	
 	// default sounds
 	setDefault(BEGINFILE, Util::emptyString);

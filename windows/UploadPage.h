@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+/* 
+ * Copyright (C) 2008 Big Muscle
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,46 +25,24 @@
 
 #include <atlcrack.h>
 #include "PropPage.h"
-#include "ExListViewCtrl.h"
-#include "WinUtil.h"
-#include "FolderTree.h"
+
 #include "../client/SettingsManager.h"
 
 class UploadPage : public CPropertyPage<IDD_UPLOADPAGE>, public PropPage
 {
 public:
 	UploadPage(SettingsManager *s) : PropPage(s) {
-		SetTitle(CTSTRING(SETTINGS_UPLOADS));
+		SetTitle(CTSTRING(SETTINGS_UPLOADS_SLOTS));
 		m_psp.dwFlags |= PSP_RTLREADING;
-	}
-	~UploadPage() {
-		ctrlDirectories.Detach();
-		ctrlTotal.Detach();
-	}
+	};
+	~UploadPage() {	};
 
-	BEGIN_MSG_MAP_EX(UploadPage)
+	BEGIN_MSG_MAP(UploadPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
-		MESSAGE_HANDLER(WM_DROPFILES, onDropFiles)
-		NOTIFY_HANDLER(IDC_DIRECTORIES, LVN_ITEMCHANGED, onItemchangedDirectories)
-		NOTIFY_HANDLER(IDC_DIRECTORIES, LVN_KEYDOWN, onKeyDown)
-		NOTIFY_HANDLER(IDC_DIRECTORIES, NM_DBLCLK, onDoubleClick)
-		COMMAND_ID_HANDLER(IDC_ADD, onClickedAdd)
-		COMMAND_ID_HANDLER(IDC_REMOVE, onClickedRemove)
-		COMMAND_ID_HANDLER(IDC_RENAME, onClickedRename)
-		COMMAND_ID_HANDLER(IDC_SHAREHIDDEN, onClickedShareHidden)
-		REFLECT_NOTIFICATIONS()
 	END_MSG_MAP()
 
 	LRESULT onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-	LRESULT onDropFiles(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-	LRESULT onItemchangedDirectories(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
-	LRESULT onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
-	LRESULT onDoubleClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/);
-	LRESULT onClickedAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onClickedRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-
+		
 	// Common PropPage interface
 	PROPSHEETPAGE *getPSP() { return (PROPSHEETPAGE *)*this; }
 	void write();
@@ -72,14 +50,9 @@ public:
 protected:
 	static Item items[];
 	static TextItem texts[];
-	ExListViewCtrl ctrlDirectories;
-	CStatic ctrlTotal;
-
-	void addDirectory(const tstring& aPath);
-	FolderTree ft;
 };
 
-#endif // !defined(UPLOAD_PAGE_H)
+#endif //UPLOAD_PAGE_H
 
 /**
  * @file
