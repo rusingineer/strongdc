@@ -87,7 +87,7 @@ void Client::reloadSettings(bool updateNick) {
 		if(hub->getSearchInterval() < 10)
 			setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL));
 		else
-			setSearchInterval(hub->getSearchInterval() * 1000 + 1000);
+			setSearchInterval(hub->getSearchInterval() * 1000 + 2000);
 	} else {
 		if(updateNick) {
 			setCurrentNick(checkNick(SETTING(NICK)));

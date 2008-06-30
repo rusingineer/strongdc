@@ -47,7 +47,7 @@
 #define IDB_USERS                       210
 #define IDD_ADVANCEDPAGE                210
 #define IDD_DOWNLOADPAGE                211
-#define IDD_UPLOADPAGE                  212
+#define IDD_SHAREPAGE                   212
 #define IDB_TOOLBAR                     213
 #define IDD_APPEARANCEPAGE              213
 #define IDR_FLATTAB                     214
@@ -109,6 +109,7 @@
 #define IDD_NETWORKPAGE                 296
 #define IDD_CERTIFICATESPAGE            297
 #define IDD_QUEUEPAGE                   298
+#define IDD_UPLOADPAGE                  306
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -533,6 +534,7 @@
 #define IDC_OTHER_BORDER                1312
 #define IDC_SETTINGS_SEGMENT            1313
 #define IDC_BOLD_BOOLEANS               1313
+#define IDC_SLOTS_GROUP                 1313
 #define IDC_SETTINGS_BOLD_CONTENTS      1314
 #define IDC_SETTINGS_CONFIRM_OPTIONS    1315
 #define IDC_CONFIRM_OPTIONS             1316
@@ -613,6 +615,10 @@
 #define IDC_STEALTH                     2226
 #define IDC_HELP_GEOIPFILE              2227
 #define IDC_EMOMENU                     2228
+#define IDC_SETTINGS_AUTO_SLOTS         3023
+#define IDC_AUTO_SLOTS                  3024
+#define IDC_AUTO_SLOTS_SPIN             3025
+#define IDC_PAUSE                       3140
 #define IDC_DOWNLOAD_TARGET             5000
 #define IDC_DOWNLOAD_TARGET_DIR         5500
 #define IDC_SELECT_WINDOW               6000
@@ -781,9 +787,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        306
+#define _APS_NEXT_RESOURCE_VALUE        307
 #define _APS_NEXT_COMMAND_VALUE         32795
-#define _APS_NEXT_CONTROL_VALUE         1313
+#define _APS_NEXT_CONTROL_VALUE         1314
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

@@ -347,6 +347,9 @@ bool UploadManager::getAutoSlot() {
 	/** A 0 in settings means disable */
 	if(SETTING(MIN_UPLOAD_SPEED) == 0)
 		return false;
+	/** Max slots */
+	if(getSlots() + SETTING(AUTO_SLOTS) < running)
+		return false;		
 	/** Only grant one slot per 30 sec */
 	if(GET_TICK() < getLastGrant() + 30*1000)
 		return false;

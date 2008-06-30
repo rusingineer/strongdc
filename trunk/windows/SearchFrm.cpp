@@ -23,6 +23,7 @@
 #include "MainFrm.h"
 #include "SearchFrm.h"
 #include "LineDlg.h"
+#include "BarShader.h"
 
 #include "../client/QueueManager.h"
 #include "../client/StringTokenizer.h"
@@ -308,17 +309,10 @@ LRESULT SearchFrame::onDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 			CDC dc(dis->hDC);
 
-			HGDIOBJ oldpen = ::SelectObject(dc, ::CreatePen(PS_SOLID, 0, RGB(255,255,255)));
-			HGDIOBJ oldbr = ::SelectObject(dc, ::CreateSolidBrush(RGB(128,128,128)));
-
 			uint64_t now = GET_TICK();
 			uint64_t length = (rc.right - rc.left) * (now - searchStartTime) / (searchEndTime - searchStartTime);
 
-			dc.Rectangle(rc.left, rc.top, rc.left + (LONG)length, rc.bottom);
-
-			::DeleteObject(::SelectObject(dc, oldpen));
-			::DeleteObject(::SelectObject(dc, oldbr));
-
+			OperaColors::FloodFill(dc, rc.left, rc.top,  rc.left + (LONG)length, rc.bottom, RGB(128,128,128), RGB(160,160,160));
 
 			dc.SetBkMode(TRANSPARENT);
 

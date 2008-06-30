@@ -27,6 +27,7 @@
 
 #include "GeneralPage.h"
 #include "DownloadPage.h"
+#include "SharePage.h"
 #include "UploadPage.h"
 #include "AppearancePage.h"
 #include "AdvancedPage.h"
@@ -56,6 +57,7 @@ PropertiesDlg::PropertiesDlg(HWND parent, SettingsManager *s) : TreePropertyShee
 	pages[n++] = new GeneralPage(s);
 	pages[n++] = new NetworkPage(s);
 	pages[n++] = new DownloadPage(s);
+	pages[n++] = new SharePage(s);
 	pages[n++] = new UploadPage(s);
 	pages[n++] = new AppearancePage(s);
 	pages[n++] = new PropPageTextStyles(s);

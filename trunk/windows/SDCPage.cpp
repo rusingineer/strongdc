@@ -33,7 +33,6 @@ PropPage::TextItem SDCPage::texts[] = {
 	{ IDC_SETTINGS_MBS, ResourceManager::MBPS },
 	{ IDC_SETTINGS_SEARCH_HISTORY, ResourceManager::SETTINGS_SEARCH_HISTORY },
 	{ IDC_SETCZDC_PM_LINES, ResourceManager::SETTINGS_PM_HISTORY },
-	{ IDC_SETTINGS_AUTO_REFRESH_TIME, ResourceManager::SETTINGS_AUTO_REFRESH_TIME },
 	{ IDC_SETTINGS_AUTO_SEARCH_LIMIT, ResourceManager::SETTINGS_AUTO_SEARCH_LIMIT },
 	{ IDC_STATIC1, ResourceManager::PORT },
 	{ IDC_STATIC2, ResourceManager::USER },
@@ -58,7 +57,6 @@ PropPage::Item SDCPage::items[] = {
 	{ IDC_SOCKET_OUT_BUFFER, SettingsManager::SOCKET_OUT_BUFFER, PropPage::T_INT },
 	{ IDC_PM_LINES, SettingsManager::SHOW_LAST_LINES_LOG, PropPage::T_INT },
 	{ IDC_SEARCH_HISTORY, SettingsManager::SEARCH_HISTORY, PropPage::T_INT },
-	{ IDC_AUTO_REFRESH_TIME, SettingsManager::AUTO_REFRESH_TIME, PropPage::T_INT },
 	{ IDC_EDIT1, SettingsManager::WEBSERVER_PORT, PropPage::T_INT }, 
 	{ IDC_EDIT2, SettingsManager::WEBSERVER_USER, PropPage::T_STR }, 
 	{ IDC_EDIT3, SettingsManager::WEBSERVER_PASS, PropPage::T_STR }, 
@@ -87,7 +85,6 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	setMinMax(IDC_READ_SPIN, 1024, 1024*1024);
 	setMinMax(IDC_WRITE_SPIN, 1024, 1024*1024);
 	setMinMax(IDC_TAB_SPIN, 1, 10);
-	setMinMax(IDC_REFRESH_SPIN, 0, 3000);
 	setMinMax(IDC_PM_LINESSPIN, 0, 999);
 	setMinMax(IDC_SEARCH_HISTORY_SPIN, 1, 100);
 	setMinMax(IDC_SHUTDOWN_SPIN , 1, 3600);

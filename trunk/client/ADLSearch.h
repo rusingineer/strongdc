@@ -33,6 +33,7 @@
 #include "StringTokenizer.h"
 #include "Singleton.h"
 #include "DirectoryListing.h"
+#include "pme.h"
 
 namespace dcpp {
 
@@ -231,10 +232,15 @@ private:
 	// Substring searches
 	StringSearch::List stringSearchList;
 	bool SearchAll(const string& s) {
-		// Match all substrings
-		for(StringSearch::List::const_iterator i = stringSearchList.begin(); i != stringSearchList.end(); ++i) {
-			if(!i->match(s)) {
-				return false;
+		PME reg(searchString, "i");
+		if(reg.IsValid()) {
+			return reg.match(s) > 0;
+		} else {
+			// Match all substrings
+			for(StringSearch::List::const_iterator i = stringSearchList.begin(); i != stringSearchList.end(); ++i) {
+				if(!i->match(s)) {
+					return false;
+				}
 			}
 		}
 		return (stringSearchList.size() != 0);

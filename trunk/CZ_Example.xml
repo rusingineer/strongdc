@@ -709,8 +709,8 @@
 		<String Name="SettingsUnfinishedDownloadDirectory">Složka pro nedokončené stahování</String>
 		<String Name="SettingsUploadLineSpeed">Rychlost uploadu linky</String>
 		<String Name="SettingsUploads">Sdílení</String>
-		<String Name="SettingsUploadsMinSpeed">Automaticky otevřít další slot, když je rychlost pod (0 = vyp.)</String>
-		<String Name="SettingsUploadsSlots">Sloty pro Odesílání</String>
+		<String Name="SettingsUploadsMinSpeed">Otevřít další slot, když je rychlost pod (0 = vyp.)</String>
+		<String Name="SettingsUploadsSlots">Sloty pro odesílání</String>
 		<String Name="SettingsUrlHandler">Instalovat ochytávač odkazů dchub://</String>
 		<String Name="SettingsUseCtrlForLineHistory">Použít CTRL (+šipka nahoru/dolu) pro historii odeslaného textu</String>
 		<String Name="SettingsUseExtensionDownto">Použít přípony souborů pro funkci "Stáhnout do" v okně hledání</String>

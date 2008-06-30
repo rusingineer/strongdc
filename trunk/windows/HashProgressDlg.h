@@ -31,7 +31,7 @@ public:
 	enum { IDD = IDD_HASH_PROGRESS };
 	enum { WM_VERSIONDATA = WM_APP + 53 };
 
-	HashProgressDlg(bool aAutoClose) : autoClose(aAutoClose), startTime(GET_TICK()), startBytes(0), startFiles(0) {
+	HashProgressDlg(bool aAutoClose) : autoClose(aAutoClose), startTime(GET_TICK()), startBytes(0), startFiles(0), init(false) { // KUL - hash progress dialog patch
 
 	}
 	~HashProgressDlg() { }
@@ -42,6 +42,9 @@ public:
 		MESSAGE_HANDLER(WM_DESTROY, onDestroy)
 		COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
 		COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
+		// KUL - hash progress dialog patch
+		COMMAND_HANDLER(IDC_MAX_HASH_SPEED, EN_UPDATE ,onMaxHashSpeed)
+		COMMAND_ID_HANDLER(IDC_PAUSE, onPause)
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
@@ -50,10 +53,21 @@ public:
 		SetDlgItemText(IDOK, CTSTRING(HASH_PROGRESS_BACKGROUND));
 		SetDlgItemText(IDC_STATISTICS, CTSTRING(HASH_PROGRESS_STATS));
 		SetDlgItemText(IDC_HASH_INDEXING, CTSTRING(HASH_PROGRESS_TEXT));
+		// KUL - hash progress dialog patch (begin)
+		SetDlgItemText(IDC_SETTINGS_MAX_HASH_SPEED, CTSTRING(SETTINGS_MAX_HASH_SPEED));
+		SetDlgItemText(IDC_MAX_HASH_SPEED, Text::toT(Util::toString(SETTING(MAX_HASH_SPEED))).c_str());
+		SetDlgItemText(IDC_PAUSE, HashManager::getInstance()->isPaused() ? CTSTRING(RESUME) : CTSTRING(PAUSE));
+		init = true;
+		// KUL - hash progress dialog patch (end)
 
 		string tmp;
 		startTime = GET_TICK();
 		HashManager::getInstance()->getStats(tmp, startBytes, startFiles);
+
+		// KUL - hash progress dialog patch
+		hashspin.Attach(GetDlgItem(IDC_HASH_SPIN));
+		hashspin.SetRange(0, 999);
+		hashspin.Detach();
 
 		progress.Attach(GetDlgItem(IDC_HASH_PROGRESS));
 		progress.SetRange(0, 10000);
@@ -65,6 +79,28 @@ public:
 		return TRUE;
 	}
 
+	// KUL - hash progress dialog patch (begin)
+	LRESULT onMaxHashSpeed(WORD /*wNotifyCode*/, WORD, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		if(init) {
+			TCHAR buf[256];
+			GetDlgItemText(IDC_MAX_HASH_SPEED, buf, 256);
+			SettingsManager::getInstance()->set(SettingsManager::MAX_HASH_SPEED, Util::toInt(Text::fromT(buf)));
+		}
+		return 0;
+	}
+
+	LRESULT onPause(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+		if(HashManager::getInstance()->isPaused()) {
+			HashManager::getInstance()->resume();
+			SetDlgItemText(IDC_PAUSE, CTSTRING(PAUSE));
+		} else {
+			HashManager::getInstance()->pause();
+			SetDlgItemText(IDC_PAUSE, CTSTRING(RESUME));
+		}
+		return 0;
+	}
+	// KUL - hash progress dialog patch (end)
+	
 	LRESULT onTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		updateStats();
 		return 0;
@@ -82,6 +118,8 @@ public:
 		size_t files = 0;
 		uint64_t tick = GET_TICK();
 
+		SetDlgItemText(IDC_PAUSE, HashManager::getInstance()->isPaused() ? CTSTRING(RESUME) : CTSTRING(PAUSE)); // KUL - hash progress dialog patch
+
 		HashManager::getInstance()->getStats(file, bytes, files);
 		if(bytes > startBytes)
 			startBytes = bytes;
@@ -94,11 +132,16 @@ public:
 			return;
 		}
 		double diff = static_cast<double>(tick - startTime);
-		if(diff < 1000 || files == 0 || bytes == 0) {
+		if(diff < 1000 || files == 0 || bytes == 0 || HashManager::getInstance()->isPaused()) { // KUL - hash progress dialog patch
 			SetDlgItemText(IDC_FILES_PER_HOUR, Text::toT("-.-- " + STRING(FILES_PER_HOUR) + ", " + Util::toString((uint32_t)files) + " " + STRING(FILES_LEFT)).c_str());
 			SetDlgItemText(IDC_HASH_SPEED, (_T("-.-- B/s, ") + Util::formatBytesW(bytes) + _T(" ") + TSTRING(LEFT)).c_str());
-			SetDlgItemText(IDC_TIME_LEFT, Text::toT("-:--:-- " + STRING(LEFT)).c_str());
-			progress.SetPos(0);
+			// KUL - hash progress dialog patch
+			if(!HashManager::getInstance()->isPaused()) {
+				SetDlgItemText(IDC_TIME_LEFT, Text::toT("-:--:-- " + STRING(LEFT)).c_str());
+				progress.SetPos(0);
+			} else
+				SetDlgItemText(IDC_TIME_LEFT, Text::toT("( " + STRING(PAUSED) + " )").c_str());
+
 		} else {
 			double filestat = (((double)(startFiles - files)) * 60 * 60 * 1000) / diff;
 			double speedStat = (((double)(startBytes - bytes)) * 1000) / diff;
@@ -142,7 +185,9 @@ private:
 	size_t startFiles;
 	uint64_t startTime;
 	CProgressBarCtrl progress;
-	
+	// KUL - hash progress dialog patch
+	CUpDownCtrl hashspin; 
+	bool init;
 };
 
 #endif // !defined(HASH_PROGRESS_DLG_H)

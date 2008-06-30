@@ -412,6 +412,7 @@
 		<String Name="PassiveUser">Passive user</String>
 		<String Name="Password">Password</String>
 		<String Name="Path">Path</String>
+		<String Name="Pause">Pause</String>
 		<String Name="PauseSearch">Pause Search</String>
 		<String Name="Paused">Paused</String>
 		<String Name="Pb">PB</String>
@@ -471,6 +472,7 @@
 		<String Name="RenamedTo"> renamed to </String>
 		<String Name="Report">Report user</String>
 		<String Name="ReportAlternates">Report auto search for alternates in status bar</String>
+		<String Name="Resume">Resume"</String>
 		<String Name="RetrievingData">Retrieving data</String>
 		<String Name="RightColor">Right color</String>
 		<String Name="Running">Running...</String>
@@ -555,6 +557,7 @@
 		<String Name="SettingsAutoSearch">Automatically search for alternative TTH source every</String>
 		<String Name="SettingsAutoSearchAutoMatch">Automatically match queue for auto search hits</String>
 		<String Name="SettingsAutoSearchLimit">Max sources for autosearch</String>
+		<String Name="SettingsAutoSlots">Maximum auto opened"</String>
 		<String Name="SettingsAvipreview">File Preview</String>
 		<String Name="SettingsBindAddress">Bind address</String>
 		<String Name="SettingsBindAddressHelp">Network interface for all connections</String>
@@ -710,7 +713,7 @@
 		<String Name="SettingsUnfinishedDownloadDirectory">Unfinished downloads directory</String>
 		<String Name="SettingsUploadLineSpeed">Line speed (upload)</String>
 		<String Name="SettingsUploads">Sharing</String>
-		<String Name="SettingsUploadsMinSpeed">Automatically open an extra slot if speed is below (0 = disable)</String>
+		<String Name="SettingsUploadsMinSpeed">Open an extra slot if speed is below (0 = disable)</String>
 		<String Name="SettingsUploadsSlots">Upload slots</String>
 		<String Name="SettingsUrlHandler">Install URL handler on startup (to handle dchub:// links)</String>
 		<String Name="SettingsUseCtrlForLineHistory">Use CTRL for line history</String>
