@@ -96,10 +96,10 @@ public:
 	 */
 	int64_t getRunningAverage();
 	
-	size_t getSlots() const { return max(SETTING(SLOTS), max(SETTING(HUB_SLOTS),0) * Client::getTotalCounts()); }
+	uint8_t getSlots() const { return (uint8_t)(max(SETTING(SLOTS), max(SETTING(HUB_SLOTS),0) * Client::getTotalCounts())); }
 
 	/** @return Number of free slots. */
-	size_t getFreeSlots() const { return max((getSlots() - running), (size_t)0); }
+	uint8_t getFreeSlots() const { return (uint8_t)max((getSlots() - running), 0); }
 	
 	/** @internal */
 	int getFreeExtraSlots() const { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
@@ -131,7 +131,7 @@ private:
 	bool isFireball;
 	bool isFileServer;
 	bool mThrottleEnable;
-	size_t running;
+	uint8_t running;
 
 	size_t mBytesSpokenFor, mUploadLimit, mCycleTime, mByteSlice;
 	uint64_t m_iHighSpeedStartTick;

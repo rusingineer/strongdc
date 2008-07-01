@@ -87,7 +87,7 @@ void Client::reloadSettings(bool updateNick) {
 		if(hub->getSearchInterval() < 10)
 			setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL));
 		else
-			setSearchInterval(hub->getSearchInterval() * 1000 + 2000);
+			setSearchInterval(hub->getSearchInterval() * 1000);
 	} else {
 		if(updateNick) {
 			setCurrentNick(checkNick(SETTING(NICK)));
@@ -209,7 +209,7 @@ string Client::getLocalIp() const {
 }
 
 uint64_t Client::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* owner){
-	dcdebug("Queue search %s\n", aString);
+	dcdebug("Queue search %s\n", aString.c_str());
 
 	if(searchQueue.interval){
 		Search s;

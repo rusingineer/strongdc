@@ -1,3 +1,10 @@
+** svn396
+	manual searches have priority before automatic
+	fixed partial file sharing
+	fixed possible race condition with new search queue timer
+	fixed crash when MDI window is activated before creating
+	fixed cheat messages in ADC hubs
+
 ** svn395
 	upload slots settings has its own page
 	search progressbar uses opera-style

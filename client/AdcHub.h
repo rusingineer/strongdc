@@ -50,9 +50,6 @@ public:
 
 	string getMySID() { return AdcCommand::fromSID(sid); }
 
-	/* these functions not implemented yet */
-	void cheatMessage(const string&) { }
-
 private:
 	friend class ClientManager;
 	friend class CommandHandler<AdcHub>;

@@ -27,6 +27,7 @@
 #include "SearchResult.h"
 #include "ResourceManager.h"
 #include "QueueManager.h"
+#include "StringTokenizer.h"
 
 namespace dcpp {
 
@@ -289,11 +290,9 @@ void SearchManager::onData(const uint8_t* buf, size_t aLen, const string& remote
 			} else if(str.compare(0, 2, "PC") == 0) {
 				partialCount = Util::toUInt32(str.substr(2))*2;
 			} else if(str.compare(0, 2, "PI") == 0) {
-				string partialInfoBlocks = str.substr(2);
-				string::size_type i = 0, j = 0;
-				while((j = partialInfoBlocks.find(',', i)) != string::npos) {
-					partialInfo.push_back((uint16_t)Util::toInt(partialInfoBlocks.substr(i, j-i)));
-					i = j + 1;
+				StringTokenizer<string> tok(str.substr(2), ',');
+				for(StringIter i = tok.getTokens().begin(); i != tok.getTokens().end(); ++i) {
+					partialInfo.push_back((uint16_t)Util::toInt(*i));
 				}
 			}
 		}

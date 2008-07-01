@@ -50,10 +50,6 @@ public:
 	void password(const string& aPass) { send("$MyPass " + fromUtf8(aPass) + "|"); }
 	void info(bool force) { myInfo(force); }
 
-	void cheatMessage(const string& aLine) {
-		fire(ClientListener::CheatMessage(), this, unescape(aLine));
-	}    
-
 	size_t getUserCount() const { Lock l(cs); return users.size(); }
 	
 	string escape(string const& str) const { return validateMessage(str, false); }
