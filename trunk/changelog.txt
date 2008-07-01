@@ -14,6 +14,14 @@
 * implementováno Rychlé vyhledávání (ApexDC++)
 * opravena celková velikost dokonèenıch poloek
 * pøidána volba pro umístìní uivatelskı pøíkazù mimo submenu
+* pozice a velikosti lišt jsou ukládány
+* interval pro hledání je závislı na hubu
+* nastavení slotù má svojí vlastní stránku
+* ADL hledání se provádí pøes regulární vırazy
+* opraveno èásteèné sdílení souborù
+* pøidána volba pro nastavení maxima automaticky otevøenıch slotù (Kulmegil)
+* implementovány nìjaká vylepšení do dialogu o stavu hashování (Kulmegil)
+* opraven únik pamì v nastavení sítì (ApexDC++)
 
 
 	-- StrongDC++ 2.13 --

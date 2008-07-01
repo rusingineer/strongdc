@@ -30,9 +30,10 @@ namespace dcpp {
 bool SearchQueue::add(const Search& s)
 {
 	dcassert(s.owners.size() == 1);
-	dcassert(interval >= 15000); // min interval is 15 seconds
+	dcassert(interval >= 10000); // min interval is 15 seconds
 
 	Lock l(cs);
+	
 	for(deque<Search>::iterator i = searchQueue.begin(); i != searchQueue.end(); i++)
 	{
 		// check dupe
@@ -43,7 +44,28 @@ bool SearchQueue::add(const Search& s)
 		}
 	}
 
-	searchQueue.push_back(s);
+	if(s.token == "auto") {
+		// Insert last (automatic search)
+		searchQueue.push_back(s);
+	} else {
+		bool added = false;
+		if(searchQueue.empty()) {
+			searchQueue.push_front(s);
+			added = true;
+		} else {
+			// Insert before the automatic searches (manual search) 
+			for(deque<Search>::iterator i = searchQueue.begin(); i != searchQueue.end(); i++) {
+				if(i->token == "auto") {
+					searchQueue.insert(i, s);
+					added = true;
+					break;
+				}
+			}
+		}
+		if (!added) {
+			searchQueue.push_back(s);
+		}
+	}
 	return true;
 }
 

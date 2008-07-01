@@ -132,7 +132,10 @@ public:
 			setTop(aWnd);
 
 		TabInfo* ti = getTabInfo(aWnd);
-		dcassert(ti != NULL);
+		
+		if(ti == NULL)
+			return;
+			
 		active = ti;
 		ti->dirty = false;
 		calcRows(false);

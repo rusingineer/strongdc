@@ -1405,8 +1405,8 @@ void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		if(BOOLSETTING(THROTTLE_ENABLE)) {
 			// Limitery sem a tam, vsude kam se podivam :o)
 			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
-				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < (int)((5 * UploadManager::getInstance()->getSlots()) + 4) ) {
-					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, (int)((5 * UploadManager::getInstance()->getSlots()) + 4) );
+				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((5 * UploadManager::getInstance()->getSlots()) + 4) ) {
+					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((5 * UploadManager::getInstance()->getSlots()) + 4) );
 				}
 				if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
 					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*7) );
@@ -1414,8 +1414,8 @@ void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 			}
 
 			if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) > 0) {
-				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < (int)((5 * UploadManager::getInstance()->getSlots()) + 4) ) {
-					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, (int)((5 * UploadManager::getInstance()->getSlots()) + 4) );
+				if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((5 * UploadManager::getInstance()->getSlots()) + 4) ) {
+					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((5 * UploadManager::getInstance()->getSlots()) + 4) );
 				}
 				if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
 					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );
