@@ -75,10 +75,14 @@ public:
 		return onlineUsers.find(aUser->getCID()) != onlineUsers.end();
 	}
 	
-	void setIPUser(const string& IP, const UserPtr& user) {
+	void setIPUser(const UserPtr& user, const string& IP, uint16_t udpPort = 0) {
 		Lock l(cs);
 		OnlinePairC p = onlineUsers.equal_range(user->getCID());
-		for (OnlineIterC i = p.first; i != p.second; i++) i->second->getIdentity().setIp(IP);
+		for (OnlineIterC i = p.first; i != p.second; i++) {
+			i->second->getIdentity().setIp(IP);
+			if(udpPort > 0)
+				i->second->getIdentity().setUdpPort(Util::toString(udpPort));
+		}
 	}	
 	
 	string getMyNMDCNick(const UserPtr& p) const {

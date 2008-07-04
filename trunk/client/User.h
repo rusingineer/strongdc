@@ -87,6 +87,7 @@ public:
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
 	Identity(const Identity& rhs) { *this = rhs; } // Use operator= since we have to lock before reading...
 	Identity& operator=(const Identity& rhs) { FastLock l(cs); user = rhs.user; info = rhs.info; return *this; }
+	~Identity() { FastLock l(cs); }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Nick, "NI")
@@ -131,6 +132,9 @@ public:
 	string updateClientType(const OnlineUser& ou);
 	bool matchProfile(const string& aString, const string& aProfile) const;
 
+	static string getVersion(const string& aExp, string aTag);
+	static string splitVersion(const string& aExp, string aTag, size_t part);
+	
 	void getParams(StringMap& map, const string& prefix, bool compatibility) const;
 	UserPtr& getUser() { return user; }
 	GETSET(UserPtr, user, User);
@@ -140,9 +144,6 @@ private:
 	InfMap info;
 
 	static FastCriticalSection cs;
-	
-	string getVersion(const string& aExp, const string& aTag) const;
-	string splitVersion(const string& aExp, const string& aTag, const int part) const;
 };
 
 class NmdcHub;

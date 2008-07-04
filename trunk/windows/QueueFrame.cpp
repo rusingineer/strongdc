@@ -499,7 +499,7 @@ void QueueFrame::on(QueueManagerListener::Removed, const QueueItem* aQI) {
 	speak(REMOVE_ITEM, new StringTask(aQI->getTarget()));
 }
 
-void QueueFrame::on(QueueManagerListener::Moved, const QueueItem* aQI, const string& oldTarget) {
+void QueueFrame::on(QueueManagerListener::Moved, const QueueItem*, const string& oldTarget) {
 	speak(REMOVE_ITEM, new StringTask(oldTarget));
 	
 	// we need to call speaker now to properly remove item before other actions

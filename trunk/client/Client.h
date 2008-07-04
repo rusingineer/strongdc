@@ -34,7 +34,7 @@ namespace dcpp {
 /** Yes, this should probably be called a Hub */
 class Client : public Speaker<ClientListener>, public BufferedSocketListener, protected TimerManagerListener {
 public:
-	typedef slist<Client*> List;
+	typedef list<Client*> List;
 	typedef List::const_iterator Iter;
 
 	virtual void connect();

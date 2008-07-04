@@ -5,7 +5,6 @@
 #include "WinUtil.h"
 
 #include "ClientProfileDlg.h"
-#include "../client/pme.h"
 
 #define GET_TEXT(id, var) \
 	GetDlgItemText(id, buf, 1024); \
@@ -232,7 +231,7 @@ LRESULT ClientProfileDlg::onMatch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 				tstring::size_type j = exp.find(_T("%[version]"));
 				if(j != string::npos) {
 					formattedExp.replace(j, 10, _T(".*"));
-					version = Text::toT(getVersion(Text::fromT(exp), Text::fromT(text)));
+					version = Text::toT(Identity::getVersion(Text::fromT(exp), Text::fromT(text)));
 					GET_TEXT(IDC_CLIENT_VERSION, versionExp)
 				}
 				switch(matchExp(Text::fromT(formattedExp), Text::fromT(text))) {
@@ -270,7 +269,7 @@ LRESULT ClientProfileDlg::onMatch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 				tstring::size_type j = exp.find(_T("%[version]"));
 				if(j != string::npos) {
 					formattedExp.replace(j, 10, _T(".*"));
-					version = Text::toT(getVersion(Text::fromT(exp), Text::fromT(text)));
+					version = Text::toT(Identity::getVersion(Text::fromT(exp), Text::fromT(text)));
 					GET_TEXT(IDC_CLIENT_VERSION, versionExp)
 				}
 				switch(matchExp(Text::fromT(formattedExp), Text::fromT(text))) {
@@ -305,23 +304,12 @@ LRESULT ClientProfileDlg::onMatch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 }
 
 int ClientProfileDlg::matchExp(const string& aExp, const string& aString) {
-	PME reg(aExp);
-	if(!reg.IsValid()) { return INVALID; }
-	return reg.match(aString) ? MATCH : MISMATCH;
-}
-
-string ClientProfileDlg::getVersion(const string& aExp, const string& aTag) {
-	string::size_type i = aExp.find("%[version]");
-	if (i == string::npos) { 
-		i = aExp.find("%[version2]"); 
-		return splitVersion(aExp.substr(i + 11), splitVersion(aExp.substr(0, i), aTag, 1), 0);
+	try {
+		boost::regex reg(aExp);
+		return boost::regex_search(aString.begin(), aString.end(), reg) ? MATCH : MISMATCH;
+	} catch(...) {
 	}
-	return splitVersion(aExp.substr(i + 10), splitVersion(aExp.substr(0, i), aTag, 1), 0);
+	
+	return INVALID;
 }
 
-string ClientProfileDlg::splitVersion(const string& aExp, const string& aTag, const int part) {
-	PME reg(aExp);
-	if(!reg.IsValid()) { return ""; }
-	reg.split(aTag, 2);
-	return reg[part];
-}

@@ -31,8 +31,6 @@
 #include "../client/TimerManager.h"
 #include "../client/SearchManager.h"
 
-#include "../client/pme.h"
-
 TStringList SearchFrame::lastSearches;
 
 int SearchFrame::columnIndexes[] = { COLUMN_FILENAME, COLUMN_HITS, COLUMN_NICK, COLUMN_TYPE, COLUMN_SIZE,
@@ -1596,11 +1594,13 @@ bool SearchFrame::matchFilter(SearchInfo* si, int sel, bool doSizeCompare, Filte
 			case NOT_EQUAL: insert = (size != si->sr->getSize()); break;
 		}
 	} else {
-		PME reg(filter, _T("i"));
-		if(!reg.IsValid()) {
+		try {
+			boost::wregex reg(filter, boost::regex_constants::icase);
+			tstring s = si->getText(static_cast<uint8_t>(sel));
+
+			insert = boost::regex_search(s.begin(), s.end(), reg);
+		} catch(...) {
 			insert = true;
-		} else {
-			insert = reg.match(si->getText(static_cast<uint8_t>(sel))) > 0;
 		}
 	}
 	return insert;

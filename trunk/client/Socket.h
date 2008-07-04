@@ -214,7 +214,7 @@ private:
 		} 
 		return ret;
 	}
-	static socket_t check(socket_t ret, bool blockOk = false) { 
+	static int check(socket_t ret, bool blockOk = false) { 
 		if(ret == SOCKET_ERROR) {
 			int error = getLastError();
 			if(blockOk && error == WSAEWOULDBLOCK) {

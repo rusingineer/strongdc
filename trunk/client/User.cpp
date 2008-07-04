@@ -26,7 +26,6 @@
 
 #include "ClientManager.h"
 #include "ClientProfileManager.h"
-#include "pme.h"
 #include "UserCommand.h"
 #include "ResourceManager.h"
 #include "FavoriteManager.h"
@@ -42,7 +41,7 @@ OnlineUser::OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_) : ide
 void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility) const {
 	{
 		FastLock l(cs);
-		for(InfMap::const_iterator i = info.begin(); i != info.end(); ++i) {
+		for(InfIter i = info.begin(); i != info.end(); ++i) {
 			sm[prefix + string((char*)(&i->first), 2)] = i->second;
 		}
 	}
@@ -88,13 +87,13 @@ string Identity::getTag() const {
 
 string Identity::get(const char* name) const {
 	FastLock l(cs);
-	InfMap::const_iterator i = info.find(*(short*)name);
+	InfIter i = info.find(*(short*)name);
 	return i == info.end() ? Util::emptyString : i->second;
 }
 
 bool Identity::isSet(const char* name) const {
 	FastLock l(cs);
-	InfMap::const_iterator i = info.find(*(short*)name);
+	InfIter i = info.find(*(short*)name);
 	return i != info.end();
 }
 
@@ -293,11 +292,17 @@ string Identity::updateClientType(const OnlineUser& ou) {
 
 bool Identity::matchProfile(const string& aString, const string& aProfile) const {
 	DETECTION_DEBUG("\t\tMatching String: " + aString + " to Profile: " + aProfile);
-	PME reg(aProfile);
-	return reg.IsValid() ? (reg.match(aString) > 0) : false;
+	
+	try {
+		boost::regex reg(aProfile);
+		return boost::regex_search(aString.begin(), aString.end(), reg);
+	} catch(...) {
+	}
+	
+	return false;
 }
 
-string Identity::getVersion(const string& aExp, const string& aTag) const {
+string Identity::getVersion(const string& aExp, string aTag) {
 	string::size_type i = aExp.find("%[version]");
 	if (i == string::npos) { 
 		i = aExp.find("%[version2]"); 
@@ -306,11 +311,21 @@ string Identity::getVersion(const string& aExp, const string& aTag) const {
 	return splitVersion(aExp.substr(i + 10), splitVersion(aExp.substr(0, i), aTag, 1), 0);
 }
 
-string Identity::splitVersion(const string& aExp, const string& aTag, const int part) const {
-	PME reg(aExp);
-	if(!reg.IsValid()) { return ""; }
-	reg.split(aTag, 2);
-	return reg[part];
+string Identity::splitVersion(const string& aExp, string aTag, size_t part) {
+	try {
+		boost::regex reg(aExp);
+
+		vector<string> out;
+		boost::regex_split(std::back_inserter(out), aTag, reg, boost::regex_constants::match_default, 2);
+		
+		if(part >= out.size())
+			return "";
+		
+		return out[part];
+	} catch(...) {
+	}
+	
+	return "";
 }
 
 int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col)  {

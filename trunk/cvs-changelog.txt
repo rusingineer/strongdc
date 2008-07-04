@@ -1,3 +1,8 @@
+** svn397
+	added support for partial file sharing in ADC hubs
+	all UDP commands moved to queue thread
+	PCRE changed to boost's regex
+
 ** svn396
 	manual searches have priority before automatic
 	fixed partial file sharing

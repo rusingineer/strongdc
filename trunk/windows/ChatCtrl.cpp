@@ -334,7 +334,7 @@ bool ChatCtrl::HitNick(const POINT& p, tstring& sNick, int& iBegin, int& iEnd) {
 	GetTextRange(lSelBegin, lSelEnd, &sText[0]);
 
 	size_t iLeft = 0, iRight = 0, iCRLF = sText.size(), iPos = sText.find(_T('<'));
-	if(iPos >= 0) {
+	if(iPos != tstring::npos) {
 		iLeft = iPos + 1;
 		iPos = sText.find(_T('>'), iLeft);
 		if(iPos == tstring::npos) 
