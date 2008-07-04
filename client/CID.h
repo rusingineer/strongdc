@@ -57,13 +57,14 @@ private:
 
 } // namespace dcpp
 
-namespace std {
+namespace std { //namespace tr1 { 
 template<>
 struct hash<dcpp::CID> {
 	size_t operator()(const dcpp::CID& rhs) const {
 		return *reinterpret_cast<const size_t*>(rhs.data());
 	}
 };
+//}
 }
 
 #endif // !defined(CID_H)

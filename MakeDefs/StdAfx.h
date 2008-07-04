@@ -28,7 +28,8 @@
 #include <vector>
 
 using namespace dcpp;
-using namespace _STL;
+using namespace std;
+using namespace std::tr1;
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

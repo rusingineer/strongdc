@@ -37,8 +37,6 @@
 #include "../client/ConnectionManager.h" 
 #include "../client/NmdcHub.h"
 
-#include "../client/pme.h"
-
 HubFrame::FrameMap HubFrame::frames;
 HubFrame::IgnoreMap HubFrame::ignoreList;
 
@@ -1914,19 +1912,23 @@ bool HubFrame::matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare, Fi
 			case NONE: ; break;
 		}
 	} else {
-		PME reg(filter,_T("i"));
-		if(!reg.IsValid()) { 
-			insert = true;
-		} else if(sel >= OnlineUser::COLUMN_LAST) {
-			for(uint8_t i = OnlineUser::COLUMN_FIRST; i < OnlineUser::COLUMN_LAST; ++i) {
-				if(reg.match(ui.getText(i))) {
-					insert = true;
-					break;
+		try {
+			boost::wregex reg(filter, boost::regex_constants::icase);
+			if(sel >= OnlineUser::COLUMN_LAST) {
+				for(uint8_t i = OnlineUser::COLUMN_FIRST; i < OnlineUser::COLUMN_LAST; ++i) {
+					tstring s = ui.getText(i);
+					if(boost::regex_search(s.begin(), s.end(), reg)) {
+						insert = true;
+						break;
+					}
 				}
+			} else {
+				tstring s = ui.getText(static_cast<uint8_t>(sel));
+				if(boost::regex_search(s.begin(), s.end(), reg))
+					insert = true;
 			}
-		} else {
-			if(reg.match(ui.getText(static_cast<uint8_t>(sel))))
-				insert = true;
+		} catch(...) {
+			insert = true;
 		}
 	}
 

@@ -451,10 +451,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\pme.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\client\QueueItem.cpp"
 				>
 			</File>
@@ -785,10 +781,6 @@
 			</File>
 			<File
 				RelativePath=".\client\NmdcHub.h"
-				>
-			</File>
-			<File
-				RelativePath=".\client\pme.h"
 				>
 			</File>
 			<File

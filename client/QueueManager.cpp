@@ -461,7 +461,15 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	// Request parts info from partial file sharing sources
 	for(vector<const PartsInfoReqParam*>::const_iterator i = params.begin(); i != params.end(); i++){
 		const PartsInfoReqParam* param = *i;
-		SearchManager::getInstance()->sendPSR(param->ip, param->udpPort, true, param->myNick, param->hubIpPort, param->tth, param->parts);
+		
+		try {
+			AdcCommand cmd = SearchManager::getInstance()->toPSR(true, param->myNick, param->hubIpPort, param->tth, param->parts);
+			Socket s;
+			s.writeTo(Socket::resolve(param->ip), param->udpPort, cmd.toString(ClientManager::getInstance()->getMyCID()));
+		} catch(...) {
+			dcdebug("Partial search caught error\n");		
+		}
+		
 		delete param;
 	}
 

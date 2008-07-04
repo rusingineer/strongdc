@@ -109,8 +109,6 @@ private:
 	void updateControls();
 	void getProfile();
 	int matchExp(const string& aExp, const string& aString);
-	string getVersion(const string& aExp, const string& aTag);
-	string splitVersion(const string& aExp, const string& aTag, const int part);
 	StringMap params;
 };
 

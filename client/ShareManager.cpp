@@ -449,7 +449,7 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 	}
 #endif
 
-	slist<string> removeMap;
+	list<string> removeMap;
 	{
 		Lock l(cs);
 		
@@ -465,7 +465,7 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 		}
 	}
 
-	for(slist<string>::const_iterator i = removeMap.begin(); i != removeMap.end(); i++) {
+	for(list<string>::const_iterator i = removeMap.begin(); i != removeMap.end(); i++) {
 		removeDirectory(*i);
 	}
 	
