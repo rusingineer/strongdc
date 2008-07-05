@@ -412,51 +412,13 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			}
 		}
 		u.getIdentity().setConnection(connection);
-
-		char status = param[j-1];
-		switch(status) {
-			case 1:
-				u.getUser()->unsetFlag(User::AWAY);
-      			u.getUser()->unsetFlag(User::SERVER);
-       			u.getUser()->unsetFlag(User::FIREBALL);
-				break;
-            case 2:
-            case 3:
-				u.getUser()->setFlag(User::AWAY);
-				u.getUser()->unsetFlag(User::SERVER);
-				u.getUser()->unsetFlag(User::FIREBALL);
-           		break;
-       		case 4:
-            case 5:
-				u.getUser()->setFlag(User::SERVER);
-				u.getUser()->unsetFlag(User::AWAY);
-				u.getUser()->unsetFlag(User::FIREBALL);
-           		break;
-       		case 6:
-            case 7:
-				u.getUser()->setFlag(User::SERVER);
-				u.getUser()->setFlag(User::AWAY);
-				u.getUser()->unsetFlag(User::FIREBALL);
-           		break;
-           	case 8:
-            case 9:
-				u.getUser()->setFlag(User::FIREBALL);
-				u.getUser()->unsetFlag(User::AWAY);
-				u.getUser()->unsetFlag(User::SERVER);
-           		break;
-           	case 10:
-            case 11:
-				u.getUser()->setFlag(User::FIREBALL);
-				u.getUser()->setFlag(User::AWAY);
-				u.getUser()->unsetFlag(User::SERVER);
-           		break;
-           	default:
-				u.getUser()->unsetFlag(User::AWAY);
-				u.getUser()->unsetFlag(User::SERVER);
-				u.getUser()->unsetFlag(User::FIREBALL);
-				break;
+		u.getIdentity().setStatus(Util::toString(param[j-1]));
+		
+		if(u.getIdentity().getStatus() & Identity::TLS) {
+			u.getUser()->setFlag(User::TLS);
+		} else {
+			u.getUser()->unsetFlag(User::TLS);
 		}
-		u.getIdentity().setStatus(Util::toString(status));
 
 		i = j + 1;
 		j = param.find('$', i);
@@ -510,8 +472,18 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			return;
 		}
 		string port = param.substr(j+1);
+		
+		bool secure = false;
+		if(port.rfind("S") == port.length() - 1) {
+			if(CryptoManager::getInstance()->TLSOk()) {
+				secure = true;
+			} else {
+				port.erase(port.length() - 1);
+			}
+		}
+		
 		// For simplicity, we make the assumption that users on a hub have the same character encoding
-		ConnectionManager::getInstance()->nmdcConnect(server, static_cast<uint16_t>(Util::toInt(port)), getMyNick(), getHubUrl(), getEncoding(), getStealth());
+		ConnectionManager::getInstance()->nmdcConnect(server, static_cast<uint16_t>(Util::toInt(port)), getMyNick(), getHubUrl(), getEncoding(), getStealth(), secure);
 	} else if(cmd == "$RevConnectToMe") {
 		if(state != STATE_NORMAL) {
 			return;
@@ -840,7 +812,10 @@ void NmdcHub::connectToMe(const OnlineUser& aUser) {
 	string nick = fromUtf8(aUser.getIdentity().getNick());
 	ConnectionManager::getInstance()->nmdcExpect(nick, getMyNick(), getHubUrl());
 	ConnectionManager::iConnToMeCount++;
-	send("$ConnectToMe " + nick + " " + getLocalIp() + ":" + Util::toString(ConnectionManager::getInstance()->getPort()) + "|");
+	
+	bool secure = CryptoManager::getInstance()->TLSOk() && aUser.getUser()->isSet(User::TLS);
+	uint16_t port = secure ? ConnectionManager::getInstance()->getSecurePort() : ConnectionManager::getInstance()->getPort();
+	send("$ConnectToMe " + nick + " " + getLocalIp() + ":" + Util::toString(port) + (secure ? "S" : "") + "|");
 }
 
 void NmdcHub::revConnectToMe(const OnlineUser& aUser) {
@@ -862,7 +837,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	reloadSettings(false);
 	
 	dcdebug("MyInfo %s...\n", getMyNick().c_str());
-	char StatusMode = '\x01';
+	char StatusMode = Identity::NORMAL;
 
 	char modeChar = '?';
 	if(SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5)
@@ -887,14 +862,17 @@ void NmdcHub::myInfo(bool alwaysSend) {
 #else
 		version = VERSIONSTRING;
 #endif
-		if (UploadManager::getInstance()->getFireballStatus()) {
-			StatusMode += 8;
-		} else if (UploadManager::getInstance()->getFileServerStatus()) {
-			StatusMode += 4;
-		}
-
 		if(Util::getAway()) {
-			StatusMode += 2;
+			StatusMode |= Identity::AWAY;
+		}
+		if (UploadManager::getInstance()->getFileServerStatus()) {
+			StatusMode |= Identity::SERVER;
+		}
+		if (UploadManager::getInstance()->getFireballStatus()) {
+			StatusMode |= Identity::FIREBALL;
+		}
+		if (CryptoManager::getInstance()->TLSOk()) {
+			StatusMode |= Identity::TLS;
 		}
 	}
 

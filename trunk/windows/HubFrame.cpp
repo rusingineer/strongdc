@@ -2182,9 +2182,9 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 				cd->clrText = SETTING(RESERVED_SLOT_COLOR);
 			} else if (ignoreList.find(ui->getUser()) != ignoreList.end()) {
 				cd->clrText = SETTING(IGNORED_COLOR);
-			} else if(ui->getUser()->isSet(User::FIREBALL)) {
+			} else if(ui->getIdentity().getStatus() & Identity::FIREBALL) {
 				cd->clrText = SETTING(FIREBALL_COLOR);
-			} else if(ui->getUser()->isSet(User::SERVER)) {
+			} else if(ui->getIdentity().getStatus() & Identity::SERVER) {
 				cd->clrText = SETTING(SERVER_COLOR);
 			} else if(ui->getIdentity().isOp()) {
 				cd->clrText = SETTING(OP_COLOR);

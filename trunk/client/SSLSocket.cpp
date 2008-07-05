@@ -94,6 +94,9 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 			case SSL_ERROR_WANT_READ:	// Fallthrough
 			case SSL_ERROR_WANT_WRITE:
 				return -1;
+			case SSL_ERROR_ZERO_RETURN:
+				// The TLS/SSL connection has been closed.
+				throw SocketException(STRING(CONNECTION_CLOSED));
 			default:
 				{
 					ssl.reset();

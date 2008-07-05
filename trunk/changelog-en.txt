@@ -22,6 +22,8 @@
 * added option to set maximum auto-opened slots (old Kulmegil's patch)
 * implemented some tweaks to hash progress dialog (old Kulmegil's patch)
 * fixed memory leak in network settings (ApexDC++)
+* fixes for partial file sharing
+* added support for encrypted NMDC transfers
 
 
 	-- StrongDC++ 2.13 --

@@ -572,6 +572,8 @@ private:
 	bool closed;
 
 	StringMap ucLineParams;
+	
+	std::string token;
 		
 	static int columnIndexes[];
 	static int columnSizes[];

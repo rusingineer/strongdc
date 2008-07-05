@@ -133,6 +133,8 @@ private:
 	ServerSocket socket;
 	HWND m_hWnd;
 
+	std::string token;
+	
 	map<string, uint64_t> loggedin;
 	int row;
 public:
@@ -149,8 +151,11 @@ public:
 			if((SearchManager::TypeModes)search_type == SearchManager::TYPE_TTH) {
 				search_str = "TTH:" + search_str;
 			}
+			
+			token = Util::toString(Util::rand());
+			
 			SearchManager::getInstance()->addListener(this);
-			SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE, "manual");
+			SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE, token);
 			results = Util::emptyString;
 			row = 0;
 			sended_search = true;
