@@ -461,11 +461,12 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	// Request parts info from partial file sharing sources
 	for(vector<const PartsInfoReqParam*>::const_iterator i = params.begin(); i != params.end(); i++){
 		const PartsInfoReqParam* param = *i;
+		dcassert(param->udpPort > 0);
 		
 		try {
 			AdcCommand cmd = SearchManager::getInstance()->toPSR(true, param->myNick, param->hubIpPort, param->tth, param->parts);
 			Socket s;
-			s.writeTo(Socket::resolve(param->ip), param->udpPort, cmd.toString(ClientManager::getInstance()->getMyCID()));
+			s.writeTo(param->ip, param->udpPort, cmd.toString(ClientManager::getInstance()->getMyCID()));
 		} catch(...) {
 			dcdebug("Partial search caught error\n");		
 		}
@@ -1851,9 +1852,12 @@ bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth
 				si = qi->getSource(aUser);
 				si->setFlag(QueueItem::Source::FLAG_PARTIAL);
 
-				QueueItem::PartialSource* ps = new QueueItem::PartialSource(partialSource.getMyNick(),
-					partialSource.getHubIpPort(), partialSource.getIp(), partialSource.getUdpPort());
-				si->setPartialSource(ps);
+				if(partialSource.getUdpPort() > 0) {
+					// no worth to save partial sources without udp port
+					QueueItem::PartialSource* ps = new QueueItem::PartialSource(partialSource.getMyNick(),
+						partialSource.getHubIpPort(), partialSource.getIp(), partialSource.getUdpPort());
+					si->setPartialSource(ps);
+				}
 
 				userQueue.add(qi, aUser);
 				dcassert(si != qi->getSources().end());

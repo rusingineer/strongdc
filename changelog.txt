@@ -22,6 +22,8 @@
 * pøidána volba pro nastavení maxima automaticky otevøenıch slotù (Kulmegil)
 * implementovány nìjaká vylepšení do dialogu o stavu hashování (Kulmegil)
 * opraven únik pamì v nastavení sítì (ApexDC++)
+* opravy pro èásteèné sdílení souborù
+* pøidána podpora pro šifrované pøenosy v NMDC hubech
 
 
 	-- StrongDC++ 2.13 --

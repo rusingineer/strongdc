@@ -1,3 +1,11 @@
+** svn398
+	fixed search tokens in ADC hubs
+	cleanup NMDC status flags code
+	added support for encrypted NMDC transfers
+	SSL error code 6 translated to understandable message
+	transfer main item displays all available flags
+	fixed 64-bit builds
+
 ** svn397
 	added support for partial file sharing in ADC hubs
 	all UDP commands moved to queue thread

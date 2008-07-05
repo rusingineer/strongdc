@@ -552,6 +552,11 @@ void WebServerManager::onSearchResult(const SearchResultPtr& aResult) {
 	// Check that this is really a relevant search result...
 	{
 		Lock l(cs);
+		
+		if(!aResult->getToken().empty() && token != aResult->getToken()) {
+			return;
+		}
+				
 		if(aResult->getType() == SearchResult::TYPE_FILE) {
 			results += "<form method='GET' name=\"form" + Util::toString(row) + "\" ACTION='search.html'>";
 			//results += "<input type=\"hidden\" name='file' value='" + aResult->getFile() + "'>";

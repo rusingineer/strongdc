@@ -35,19 +35,16 @@ class User : public FastAlloc<User>, public intrusive_ptr_base, public Flags
 public:
 	/** Each flag is set if it's true in at least one hub */
 	enum UserFlags {
-		ONLINE		= 0x01,
-		DCPLUSPLUS	= 0x02,
-		PASSIVE		= 0x04,
-		NMDC		= 0x08,
-		BOT			= 0x10,
-		TLS			= 0x20,	//< Client supports TLS
-		OLD_CLIENT	= 0x40, //< Can't download - old client
-		AWAY		= 0x80,
-		SERVER		= 0x100,
-		FIREBALL	= 0x200,
-		NO_ADC_1_0_PROTOCOL = 0x400,	//< Doesn't support "ADC/1.0" (dc++ <=0.703)
-		NO_ADC_0_10_PROTOCOL = 0x800,	//< Doesn't support "ADC/0.10"
-		NO_ADCS_0_10_PROTOCOL = 0x1000	//< Doesn't support "ADCS/0.10"
+		ONLINE					=  0x01,
+		DCPLUSPLUS				=  0x02,
+		PASSIVE					=  0x04,
+		NMDC					=  0x08,
+		BOT						=  0x10,
+		TLS						=  0x20,	//< Client supports TLS
+		OLD_CLIENT				=  0x40,	//< Can't download - old client
+		NO_ADC_1_0_PROTOCOL		=  0x80,	//< Doesn't support "ADC/1.0" (dc++ <=0.703)
+		NO_ADC_0_10_PROTOCOL	= 0x100,	//< Doesn't support "ADC/0.10"
+		NO_ADCS_0_10_PROTOCOL	= 0x200		//< Doesn't support "ADCS/0.10"
 	};
 
 	struct Hash {
@@ -83,6 +80,14 @@ public:
 		CT_HUB = 32
 	};
 	
+	enum StatusFlags {
+		NORMAL		= 0x01,
+		AWAY		= 0x02,
+		SERVER		= 0x04,
+		FIREBALL	= 0x08,
+		TLS			= 0x10
+	};
+	
 	Identity() { }
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
 	Identity(const Identity& rhs) { *this = rhs; } // Use operator= since we have to lock before reading...
@@ -95,13 +100,15 @@ public:
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
-	GS(Status, "ST")
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
 	
 	void setConnection(const string& name) { set("US", name); }
 	string getConnection() const;
+	
+	void setStatus(const string& st) { set("ST", st); }
+	StatusFlags getStatus() const { return static_cast<StatusFlags>(Util::toInt(get("ST"))); }
 
 	void setOp(bool op) { set("OP", op ? "1" : Util::emptyString); }
 	void setHub(bool hub) { set("HU", hub ? "1" : Util::emptyString); }
@@ -114,7 +121,7 @@ public:
 	bool isRegistered() const { return isClientType(CT_REGGED) || isSet("RG"); }
 	bool isHidden() const { return isSet("HI"); }
 	bool isBot() const { return isClientType(CT_BOT) || isSet("BO"); }
-	bool isAway() const { return isSet("AW"); }
+	bool isAway() const { return (getStatus() & AWAY) || isSet("AW"); }
 	bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
 	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 	string get(const char* name) const;

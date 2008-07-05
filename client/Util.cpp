@@ -29,6 +29,7 @@
 #include "version.h"
 #include "File.h"
 #include "SimpleXML.h"
+#include "User.h"
 
 #ifndef _WIN32
 #include <sys/socket.h>
@@ -1117,7 +1118,28 @@ TCHAR* Util::strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound) {
 	return NULL;
 }
 
+string Util::formatStatus(int iStatus) {
+	string status;
 
+	if(iStatus & Identity::NORMAL) {
+		status += "Normal ";
+	}
+	if(iStatus & Identity::AWAY) {
+		status += "Away ";
+	}
+	if(iStatus & Identity::SERVER) {
+		status += "Fileserver ";
+	}
+	if(iStatus & Identity::FIREBALL) {
+		status += "Fireball ";
+	}
+	if(iStatus & Identity::TLS) {
+		status += "TLS ";
+	}	
+	
+	return status + "(" + toString(iStatus) + ")";
+}
+	
 } // namespace dcpp
 
 /**

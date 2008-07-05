@@ -48,9 +48,9 @@ public:
 
 		if(u.isOp()) {
 			image = 0;
-		} else if(u.getUser()->isSet(User::FIREBALL)) {
+		} else if(u.getStatus() & Identity::FIREBALL) {
 			image = 1;
-		} else if(u.getUser()->isSet(User::SERVER)) {
+		} else if(u.getStatus() & Identity::SERVER) {
 			image = 2;
 		} else {
 			string conn = u.getConnection();
@@ -85,16 +85,16 @@ public:
 				}
 			}
 		}
-		if(u.getUser()->isSet(User::AWAY)) {
-			image+=13;
+		if(u.isAway()) {
+			image += 13;
 		}
 		if(u.getUser()->isSet(User::DCPLUSPLUS)) {
-			image+=26;
+			image += 26;
 		}
 
 		if(!u.isTcpActive()) {
 			// Users we can't connect to...
-			image+=52;
+			image += 52;
 		}		
 
 		return image;

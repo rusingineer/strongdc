@@ -313,7 +313,7 @@ int SearchManager::UdpQueue::run() {
 			}
 
 			PartsInfo outPartialInfo;
-			QueueItem::PartialSource ps(ClientManager::getInstance()->getMyNMDCNick(user), hubIpPort, remoteIp, udpPort);
+			QueueItem::PartialSource ps(user->isNMDC() ? ClientManager::getInstance()->getMyNMDCNick(user) : Util::emptyString, hubIpPort, remoteIp, udpPort);
 			ps.setPartialInfo(partialInfo);
 
 			QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), ps, outPartialInfo);
@@ -321,8 +321,7 @@ int SearchManager::UdpQueue::run() {
 			if((udpPort > 0) && !outPartialInfo.empty()) {
 				try {
 					AdcCommand cmd = SearchManager::getInstance()->toPSR(false, ps.getMyNick(), hubIpPort, tth, outPartialInfo);
-					Socket s;
-					s.writeTo(remoteIp, udpPort, cmd.toString(ClientManager::getInstance()->getMyCID()));
+					ClientManager::getInstance()->send(cmd, user->getCID());
 				} catch(...) {
 					dcdebug("Partial search caught error\n");		
 				}
@@ -400,7 +399,7 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from) {
 
 	adc.getParam("TO", 0, token);
 
-	// TODO: partial file sharing in ADC hubs
+	// TODO: don't send replies to passive users
 	if(results.empty()) {
 		string tth;
 		if(!adc.getParam("TR", 0, tth))

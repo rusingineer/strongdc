@@ -207,22 +207,7 @@ public:
 	static void decodeUrl(const string& aUrl, string& aServer, uint16_t& aPort, string& aFile);
 	static string validateFileName(string aFile);
 	static string cleanPathChars(string aNick);
-	static string formatStatus(int iStatus) {
-		switch(iStatus) {
-			case 1: return "Normal (1)";
-			case 2: return "Away (2)";
-			case 3: return "Away (3)";
-			case 4: return "Fileserver (4)";
-			case 5: return "Fileserver (5)";
-			case 6: return "Fileserver Away (6)";
-			case 7: return "Fileserver Away (7)";
-			case 8: return "Fireball (8)";
-			case 9: return "Fireball (9)";
-			case 10: return "Fireball Away (10)";
-			case 11: return "Fireball Away (11)";
-			default: return "Unknown (" + toString(iStatus) + ")";
-		}
-	}
+	static string formatStatus(int iStatus);
 	
 	static string formatBytes(const string& aString) { return formatBytes(toInt64(aString)); }
 	static string formatMessage(const string& nick, const string& message, bool thirdPerson);
@@ -356,33 +341,27 @@ public:
 		return tmp;
 	}
 
-	static wstring toStringW( long val ) {
+	static wstring toStringW( int32_t val ) {
 		wchar_t buf[32];
 		snwprintf(buf, sizeof(buf), L"%ld", val);
 		return buf;
 	}
 
+	static wstring toStringW( uint32_t val ) {
+		wchar_t buf[32];
+		snwprintf(buf, sizeof(buf), L"%d", val);
+		return buf;
+	}
+	
 	static wstring toStringW( int64_t val ) {
 		wchar_t buf[32];
 		snwprintf(buf, sizeof(buf), _T(I64_FMT), val);
 		return buf;
 	}
 
-	static wstring toStringW( DWORD val ) {
-		wchar_t buf[16];
-		snwprintf(buf, sizeof(buf), L"%d", val);
-		return buf;
-	}
-
-	static wstring toStringW( int val ) {
-		wchar_t buf[16];
-		snwprintf(buf, sizeof(buf), L"%d", val);
-		return buf;
-	}
-
-	static wstring toStringW( size_t val ) {
-		wchar_t buf[16];
-		snwprintf(buf, sizeof(buf), L"%d", val);
+	static wstring toStringW( uint64_t val ) {
+		wchar_t buf[32];
+		snwprintf(buf, sizeof(buf), _T(I64_FMT), val);
 		return buf;
 	}
 

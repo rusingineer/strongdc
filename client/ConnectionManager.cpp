@@ -302,14 +302,14 @@ bool ConnectionManager::checkIpFlood(const string& aServer, uint16_t aPort) {
 	return false;
 } 
 	
-void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const string& aNick, const string& hubUrl, string* encoding, bool stealth) {
+void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const string& aNick, const string& hubUrl, string* encoding, bool stealth, bool secure) {
 	if(shuttingDown)
 		return;
 		
 	if(checkIpFlood(aServer, aPort))
 		return;
 
-	UserConnection* uc = getConnection(true, false);
+	UserConnection* uc = getConnection(true, secure);
 	uc->setToken(aNick);
 	uc->setHubUrl(hubUrl);
 	uc->setEncoding(encoding);

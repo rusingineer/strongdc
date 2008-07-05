@@ -214,11 +214,11 @@ private:
 		} 
 		return ret;
 	}
-	static int check(socket_t ret, bool blockOk = false) { 
+	static socket_t check(socket_t ret, bool blockOk = false) { 
 		if(ret == SOCKET_ERROR) {
 			int error = getLastError();
 			if(blockOk && error == WSAEWOULDBLOCK) {
-				return -1;
+				return INVALID_SOCKET;
 			} else {
 				throw SocketException(error); 
 			}

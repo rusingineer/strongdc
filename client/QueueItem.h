@@ -93,8 +93,8 @@ public:
 		typedef boost::intrusive_ptr<PartialSource> Ptr;
 
 		GETSET(PartsInfo, partialInfo, PartialInfo);
-		GETSET(string, myNick, MyNick);
-		GETSET(string, hubIpPort, HubIpPort);
+		GETSET(string, myNick, MyNick);			// for NMDC support only
+		GETSET(string, hubIpPort, HubIpPort);	// for NMDC support only
 		GETSET(string, ip, Ip);
 		GETSET(uint64_t, nextQueryTime, NextQueryTime);
 		GETSET(uint16_t, udpPort, UdpPort);

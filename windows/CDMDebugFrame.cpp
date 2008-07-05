@@ -57,12 +57,17 @@ LRESULT CDMDebugFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	m_hWndClient = ctrlPad;
 	m_hMenu = WinUtil::mainMenu;
 
+	start();
+	DebugManager::getInstance()->addListener(this);
+		
 	bHandled = FALSE;
 	return 1;
 }
 
 LRESULT CDMDebugFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
 	if(!closed) {
+		DebugManager::getInstance()->removeListener(this);
+		
 		closed = true;
 		stop = true;
 		s.signal();

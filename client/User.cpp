@@ -165,7 +165,7 @@ string Identity::getReport() const {
 	report += "\r\nPk:		" + get("PK");
 	report += "\r\nTag:		" + getTag();
 	report += "\r\nSupports:		" + get("SU");
-	report += "\r\nStatus:		" + Util::formatStatus(Util::toInt(getStatus()));
+	report += "\r\nStatus:		" + Util::formatStatus(getStatus());
 	report += "\r\nTestSUR:		" + get("TS");
 	report += "\r\nDisconnects:	" + get("FD");
 	report += "\r\nTimeouts:		" + get("TO");
@@ -248,7 +248,7 @@ string Identity::updateClientType(const OnlineUser& ou) {
 		if (!matchProfile(get("PK"), formattedPkExp)) { continue; }
 		if (!matchProfile(get("SU"), cp.getSupports())) { continue; }
 		if (!matchProfile(get("TS"), cp.getTestSUR())) { continue; }
-		if (!matchProfile(getStatus(), cp.getStatus())) { continue; }
+		if (!matchProfile(get("ST"), cp.getStatus())) { continue; }
 		if (!matchProfile(get("UC"), cp.getUserConCom())) { continue; }
 		if (!matchProfile(getDescription(), formattedExtTagExp))	{ continue; }
 		if (!matchProfile(getConnection(), cp.getConnection()))	{ continue; }
