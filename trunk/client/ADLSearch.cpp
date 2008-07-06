@@ -296,7 +296,7 @@ void ADLSearchManager::PrepareDestinationDirectories(DestDirList& destDirVector,
 		bool isNew = true;
 		long ddIndex = 0;
 		for(id = destDirVector.begin(); id != destDirVector.end(); ++id, ++ddIndex) {
-			if(Util::stricmp(is->destDir.c_str(), id->name.c_str()) == 0) {
+			if(stricmp(is->destDir.c_str(), id->name.c_str()) == 0) {
 				// Already exists, reuse index
 				is->ddIndex = ddIndex;
 				isNew = false;

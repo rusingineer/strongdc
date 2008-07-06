@@ -132,7 +132,7 @@ void LogPage::write()
 
 	for(int i = 0; i < LogManager::LAST; ++i) {
 		string tmp = Text::fromT(options[i].first);
-		if(Util::stricmp(Util::getFileExt(tmp), ".log") != 0)
+		if(stricmp(Util::getFileExt(tmp), ".log") != 0)
 			tmp += ".log";
 
 		LogManager::getInstance()->saveSetting(i, LogManager::FILE, tmp);

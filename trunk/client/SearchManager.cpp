@@ -261,71 +261,13 @@ int SearchManager::UdpQueue::run() {
 			if(cid.size() != 39)
 				continue;
 
-			c.getParameters().erase(c.getParameters().begin());
-
-			uint16_t udpPort = 0;
-			uint32_t partialCount = 0;
-			string tth;
-			string hubIpPort;
-			string nick;
-			PartsInfo partialInfo;
-
-			for(StringIterC i = c.getParameters().begin(); i != c.getParameters().end(); ++i) {
-				const string& str = *i;
-				if(str.compare(0, 2, "U4") == 0) {
-					udpPort = (uint16_t)Util::toInt(str.substr(2));
-				} else if(str.compare(0, 2, "NI") == 0) {
-					nick = str.substr(2);
-				} else if(str.compare(0, 2, "HI") == 0) {
-					hubIpPort = str.substr(2);
-				} else if(str.compare(0, 2, "TR") == 0) {
-					tth = str.substr(2);
-				} else if(str.compare(0, 2, "PC") == 0) {
-					partialCount = Util::toUInt32(str.substr(2))*2;
-				} else if(str.compare(0, 2, "PI") == 0) {
-					StringTokenizer<string> tok(str.substr(2), ',');
-					for(StringIter i = tok.getTokens().begin(); i != tok.getTokens().end(); ++i) {
-						partialInfo.push_back((uint16_t)Util::toInt(*i));
-					}
-				}
-			}
-
 			UserPtr user = ClientManager::getInstance()->findUser(CID(cid));
-			if(!user) {
-				// for NMDC support
-				string url = ClientManager::getInstance()->findHub(hubIpPort);
-				user = ClientManager::getInstance()->findUser(nick, url);
-				if(!user) {
-					// Could happen if hub has multiple URLs / IPs
-					user = ClientManager::getInstance()->findLegacyUser(nick);
-					if(!user) {
-						dcdebug("Search result from unknown user");
-						continue;
-					}
-				}
-			}
+			// when user == NULL then it is probably NMDC user, check it later
 			
-			ClientManager::getInstance()->setIPUser(user, remoteIp, udpPort);
-
-			if(partialInfo.size() != partialCount) {
-				// what to do now ? just ignore partial search result :-/
-				continue;
-			}
-
-			PartsInfo outPartialInfo;
-			QueueItem::PartialSource ps(user->isNMDC() ? ClientManager::getInstance()->getMyNMDCNick(user) : Util::emptyString, hubIpPort, remoteIp, udpPort);
-			ps.setPartialInfo(partialInfo);
-
-			QueueManager::getInstance()->handlePartialResult(user, TTHValue(tth), ps, outPartialInfo);
+			c.getParameters().erase(c.getParameters().begin());			
 			
-			if((udpPort > 0) && !outPartialInfo.empty()) {
-				try {
-					AdcCommand cmd = SearchManager::getInstance()->toPSR(false, ps.getMyNick(), hubIpPort, tth, outPartialInfo);
-					ClientManager::getInstance()->send(cmd, user->getCID());
-				} catch(...) {
-					dcdebug("Partial search caught error\n");		
-				}
-			}
+			SearchManager::getInstance()->onPSR(c, user, remoteIp);
+			
 		} /*else if(x.compare(1, 4, "SCH ") == 0 && x[x.length() - 1] == 0x0a) {
 			try {
 				respond(AdcCommand(x.substr(0, x.length()-1)));
@@ -381,6 +323,78 @@ void SearchManager::onRES(const AdcCommand& cmd, const UserPtr& from, const stri
 			file, hubName, remoteIp, TTHValue(tth), token));
 			fire(SearchManagerListener::SR(), sr);
 	}
+}
+
+void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& remoteIp) {
+
+	uint16_t udpPort = 0;
+	uint32_t partialCount = 0;
+	string tth;
+	string hubIpPort;
+	string nick;
+	PartsInfo partialInfo;
+
+	for(StringIterC i = cmd.getParameters().begin(); i != cmd.getParameters().end(); ++i) {
+		const string& str = *i;
+		if(str.compare(0, 2, "U4") == 0) {
+			udpPort = (uint16_t)Util::toInt(str.substr(2));
+		} else if(str.compare(0, 2, "NI") == 0) {
+			nick = str.substr(2);
+		} else if(str.compare(0, 2, "HI") == 0) {
+			hubIpPort = str.substr(2);
+		} else if(str.compare(0, 2, "TR") == 0) {
+			tth = str.substr(2);
+		} else if(str.compare(0, 2, "PC") == 0) {
+			partialCount = Util::toUInt32(str.substr(2))*2;
+		} else if(str.compare(0, 2, "PI") == 0) {
+			StringTokenizer<string> tok(str.substr(2), ',');
+			for(StringIter i = tok.getTokens().begin(); i != tok.getTokens().end(); ++i) {
+				partialInfo.push_back((uint16_t)Util::toInt(*i));
+			}
+		}
+	}
+
+	if(!from || from == ClientManager::getInstance()->getMe()) {
+		// for NMDC support
+		
+		if(nick.empty() || hubIpPort.empty()) {
+			return;
+		}
+		
+		string url = ClientManager::getInstance()->findHub(hubIpPort);
+		from = ClientManager::getInstance()->findUser(nick, url);
+		if(!from) {
+			// Could happen if hub has multiple URLs / IPs
+			from = ClientManager::getInstance()->findLegacyUser(nick);
+			if(!from) {
+				dcdebug("Search result from unknown user");
+				return;
+			}
+		}
+	}
+	
+	ClientManager::getInstance()->setIPUser(from, remoteIp, udpPort);
+
+	if(partialInfo.size() != partialCount) {
+		// what to do now ? just ignore partial search result :-/
+		return;
+	}
+
+	PartsInfo outPartialInfo;
+	QueueItem::PartialSource ps(from->isNMDC() ? ClientManager::getInstance()->getMyNMDCNick(from) : Util::emptyString, hubIpPort, remoteIp, udpPort);
+	ps.setPartialInfo(partialInfo);
+
+	QueueManager::getInstance()->handlePartialResult(from, TTHValue(tth), ps, outPartialInfo);
+	
+	if((udpPort > 0) && !outPartialInfo.empty()) {
+		try {
+			AdcCommand cmd = SearchManager::getInstance()->toPSR(false, ps.getMyNick(), hubIpPort, tth, outPartialInfo);
+			ClientManager::getInstance()->send(cmd, from->getCID());
+		} catch(...) {
+			dcdebug("Partial search caught error\n");		
+		}
+	}
+
 }
 
 void SearchManager::respond(const AdcCommand& adc, const CID& from) {

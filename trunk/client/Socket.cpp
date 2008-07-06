@@ -24,6 +24,7 @@
 #include "SettingsManager.h"
 #include "ResourceManager.h"
 #include "TimerManager.h"
+#include "LogManager.h"
 
 namespace dcpp {
 
@@ -391,6 +392,12 @@ int Socket::write(const void* aBuffer, int aLen) throw(SocketException) {
 void Socket::writeTo(const string& aAddr, uint16_t aPort, const void* aBuffer, int aLen, bool proxy) throw(SocketException) {
 	if(aLen <= 0) 
 		return;
+		
+	// Temporary fix to avoid spamming
+	if(aPort == 80 || aPort == 2501) {
+		LogManager::getInstance()->message("Someone is trying to use your client to spam " + aAddr + ", please urge hub owner to fix this");
+		return;
+	}		
 
 	uint8_t* buf = (uint8_t*)aBuffer;
 	if(sock == INVALID_SOCKET) {

@@ -219,7 +219,7 @@ LRESULT SharePage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 			virt.description = TSTRING(VIRTUAL_NAME_LONG);
 			virt.line = vName;
 			if(virt.DoModal(m_hWnd) == IDOK) {
-				if (Util::stricmp(buf, virt.line) != 0) {
+				if (stricmp(buf, virt.line) != 0) {
 					ShareManager::getInstance()->renameDirectory(Text::fromT(rPath), Text::fromT(virt.line));
 					ctrlDirectories.SetItemText(i, 0, virt.line.c_str());
 

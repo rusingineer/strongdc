@@ -110,7 +110,7 @@ void QueueManager::FileQueue::find(QueueItem::List& sl, int64_t aSize, const str
 		if(i->second->getSize() == aSize) {
 			const string& t = i->second->getTarget();
 			if(suffix.empty() || (suffix.length() < t.length() &&
-				Util::stricmp(suffix.c_str(), t.c_str() + (t.length() - suffix.length())) == 0) )
+				stricmp(suffix.c_str(), t.c_str() + (t.length() - suffix.length())) == 0) )
 				sl.push_back(i->second);
 		}
 	}
@@ -669,7 +669,7 @@ void QueueManager::addDirectory(const string& aDir, const UserPtr& aUser, const 
 		DirectoryItem::DirectoryPair dp = directories.equal_range(aUser);
 		
 		for(DirectoryItem::DirectoryIter i = dp.first; i != dp.second; ++i) {
-			if(Util::stricmp(aTarget.c_str(), i->second->getName().c_str()) == 0)
+			if(stricmp(aTarget.c_str(), i->second->getName().c_str()) == 0)
 				return;
 		}
 		
@@ -767,7 +767,7 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 
 		// Let's see if the target exists...then things get complicated...
 		QueueItem* qt = fileQueue.find(target);
-		if(qt == NULL || Util::stricmp(aSource, target) == 0) {
+		if(qt == NULL || stricmp(aSource, target) == 0) {
 			// Good, update the target and move in the queue...
 			fire(QueueManagerListener::Moved(), qs, aSource);
 			fileQueue.move(qs, target);
@@ -1125,7 +1125,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 							}
 						
 							// Check if we need to move the file
-							if( !aDownload->getTempTarget().empty() && (Util::stricmp(aDownload->getPath().c_str(), aDownload->getTempTarget().c_str()) != 0) ) {
+							if( !aDownload->getTempTarget().empty() && (stricmp(aDownload->getPath().c_str(), aDownload->getTempTarget().c_str()) != 0) ) {
 								moveFile(aDownload->getTempTarget(), aDownload->getPath());
 							}
 

@@ -226,7 +226,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 
 		bool thirdPerson = false;
-		if(Util::strnicmp(message, "/me ", 4) == 0) {
+		if(strnicmp(message, "/me ", 4) == 0) {
 			thirdPerson = true;
 			message = message.substr(4);
 		}
@@ -282,7 +282,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			}
 		} else {
 			// Hub:seeker
-			if(Util::stricmp(seeker.c_str() + 4, getMyNick().c_str()) == 0) {
+			if(stricmp(seeker.c_str() + 4, getMyNick().c_str()) == 0) {
 				return;
 			}
 		}
@@ -772,7 +772,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 
 		bool thirdPerson = false;
-		if(Util::strnicmp(msg, "/me ", 4) == 0) {
+		if(strnicmp(msg, "/me ", 4) == 0) {
 			thirdPerson = true;
 			msg = msg.substr(4);
 		}

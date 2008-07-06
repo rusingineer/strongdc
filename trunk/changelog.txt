@@ -1,5 +1,12 @@
 	-- StrongDC++ --
 
+*** VAROVÁNÍ ***
+  Všechna spojení mezi StrongDC++ jsou nyní automaticky šifrovány.
+  Pokud se vyskytnou problémy, mùete to vypnout v nastavení bezpeènostních certifikátù.
+
+  Od této verze nelze pouívat pøímé spojení na portech 80 a 2501.
+*** VAROVÁNÍ ***
+
 * pøidany nìjaké další knihovny, které by mohly zpùsobit pád
 * opraveno sdílení podsloek sloky Windows
 * opraveny problémy s vypnutım segmentovım stahováním
@@ -24,6 +31,8 @@
 * opraven únik pamì v nastavení sítì (ApexDC++)
 * opravy pro èásteèné sdílení souborù
 * pøidána podpora pro šifrované pøenosy v NMDC hubech
+* implementován novı systém detekce klientù (THX adrian_007)
+* pøidána doèasná oprava, aby se pøedešlo spamování portù 80 a 2501
 
 
 	-- StrongDC++ 2.13 --

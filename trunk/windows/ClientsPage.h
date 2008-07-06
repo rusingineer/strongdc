@@ -8,12 +8,11 @@
 #include "PropPage.h"
 #include "ExListViewCtrl.h"
 
-#include "../client/ClientProfileManager.h"
 #include "../client/HttpConnection.h"
 #include "../client/File.h"
+#include "../client/DetectionManager.h"
 
-class ClientsPage : public CPropertyPage<IDD_CLIENTS_PAGE>, public PropPage, private HttpConnectionListener
-{
+class ClientsPage : public CPropertyPage<IDD_DETECTION_LIST_PAGE>, public PropPage, private HttpConnectionListener {
 public:
 	enum { WM_PROFILE = WM_APP + 53 };
 
@@ -73,12 +72,14 @@ private:
 	static Item items[];
 	static TextItem texts[];
 	TCHAR* title;
-	void addEntry(const ClientProfile& cp, int pos);
+
+	void addEntry(const DetectionEntry& de, int pos);
+	void reload();
+	void reloadFromHttp();
 
 	void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
 		downBuf.append((char*)buf, len);
 	}
-
 	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw() {
 		conn->removeListener(this);
 		if(!downBuf.empty()) {
@@ -88,12 +89,11 @@ private:
 			f.close();
 			File::deleteFile(fname);
 			File::renameFile(fname + ".tmp", fname);
-				reloadFromHttp();
+			reloadFromHttp();
 			MessageBox(_T("Client profiles now updated."), _T("Updated"), MB_OK);
 		}
 		::EnableWindow(GetDlgItem(IDC_UPDATE), true);
 	}
-
 	void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
 		conn->removeListener(this);
 		{
@@ -102,9 +102,6 @@ private:
 		}
 		::EnableWindow(GetDlgItem(IDC_UPDATE), true);
 	}
-	void reload();
-	void reloadFromHttp();
-
 	HttpConnection c;
 	string downBuf;
 };

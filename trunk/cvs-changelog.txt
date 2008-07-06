@@ -1,3 +1,9 @@
+** svn399
+	implemented new CDM system (THX adrian_007)
+	support for passive PSR in ADC hubs
+	removed internal string comparison functions
+	added temporary fix to avoid spamming ports 80 and 2501
+
 ** svn398
 	fixed search tokens in ADC hubs
 	cleanup NMDC status flags code

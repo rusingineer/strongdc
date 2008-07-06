@@ -504,6 +504,15 @@ void AdcHub::handle(AdcCommand::RES, AdcCommand& c) throw() {
 	SearchManager::getInstance()->onRES(c, ou->getUser());
 }
 
+void AdcHub::handle(AdcCommand::PSR, AdcCommand& c) throw() {
+	OnlineUser* ou = findUser(c.getFrom());
+	if(!ou) {
+		dcdebug("Invalid user in AdcHub::onPSR\n");
+		return;
+	}
+	SearchManager::getInstance()->onPSR(c, ou->getUser());
+}
+
 void AdcHub::handle(AdcCommand::GET, AdcCommand& c) throw() {
 	if(c.getParameters().size() < 5) {
 		dcdebug("Get with few parameters");

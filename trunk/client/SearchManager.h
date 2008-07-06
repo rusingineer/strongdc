@@ -87,7 +87,8 @@ public:
 		onData((const uint8_t*)aLine.data(), aLine.length(), Util::emptyString);
 	}
 
-	void onRES(const AdcCommand& cmd, const UserPtr& from, const string& removeIp = Util::emptyString);
+	void onRES(const AdcCommand& cmd, const UserPtr& from, const string& remoteIp = Util::emptyString);
+	void onPSR(const AdcCommand& cmd, UserPtr from, const string& remoteIp = Util::emptyString);
 	AdcCommand toPSR(bool wantResponse, const string& myNick, const string& hubIpPort, const string& tth, const vector<uint16_t>& partialInfo) const;
 
 private:

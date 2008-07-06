@@ -17,13 +17,13 @@
  */
 
 #define APPNAME "StrongDC++"
-#define VERSIONSTRING "2.13"
-#define VERSIONFLOAT 2.13
+#define VERSIONSTRING "2.14"
+#define VERSIONFLOAT 2.14
 
 #define DCVERSIONSTRING "0.707"
 #define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
 
-#define SVNVERSION "svn398"
+#define SVNVERSION "svn399"
 
 /* Update the .rc file as well... */
 

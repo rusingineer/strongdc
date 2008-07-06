@@ -76,6 +76,9 @@ public:
 	}
 	
 	void setIPUser(const UserPtr& user, const string& IP, uint16_t udpPort = 0) {
+		if(IP.empty())
+			return;
+			
 		Lock l(cs);
 		OnlinePairC p = onlineUsers.equal_range(user->getCID());
 		for (OnlineIterC i = p.first; i != p.second; i++) {

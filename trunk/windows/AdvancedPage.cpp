@@ -65,6 +65,7 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::FILTER_ENTER, ResourceManager::SETTINGS_FILTER_ENTER },
 	{ SettingsManager::SHOW_SHELL_MENU, ResourceManager::SETTINGS_SHOW_SHELL_MENU },
 	{ SettingsManager::MAGNET_ASK, ResourceManager::MAGNET_ASK },
+	{ SettingsManager::CORAL, ResourceManager::CORAL },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

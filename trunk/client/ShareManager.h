@@ -117,13 +117,13 @@ private:
 		struct File {
 			struct StringComp {
 				StringComp(const string& s) : a(s) { }
-				bool operator()(const File& b) const { return Util::stricmp(a, b.getName()) == 0; }
+				bool operator()(const File& b) const { return stricmp(a, b.getName()) == 0; }
 				const string& a;
 			private:
 				StringComp& operator=(const StringComp&);
 			};
 			struct FileLess {
-				bool operator()(const File& a, const File& b) const { return (Util::stricmp(a.getName(), b.getName()) < 0); }
+				bool operator()(const File& a, const File& b) const { return (stricmp(a.getName(), b.getName()) < 0); }
 			};
 			typedef set<File, FileLess> Set;
 
@@ -141,7 +141,7 @@ private:
 			}
 
 			bool operator==(const File& rhs) const {
-				return getParent() == rhs.getParent() && (Util::stricmp(getName(), rhs.getName()) == 0);
+				return getParent() == rhs.getParent() && (stricmp(getName(), rhs.getName()) == 0);
 			}
 
 			string getADCPath() const { return parent->getADCPath() + name; }
@@ -221,7 +221,7 @@ private:
 			if(ext.empty())
 				return true;
 			for(StringIterC i = ext.begin(); i != ext.end(); ++i) {
-				if(name.length() >= i->length() && Util::stricmp(name.c_str() + name.length() - i->length(), i->c_str()) == 0)
+				if(name.length() >= i->length() && stricmp(name.c_str() + name.length() - i->length(), i->c_str()) == 0)
 					return true;
 			}
 			return false;

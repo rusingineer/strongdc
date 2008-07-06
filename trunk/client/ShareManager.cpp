@@ -117,7 +117,7 @@ string ShareManager::Directory::getRealPath(const std::string& path) const throw
 
 string ShareManager::findRealRoot(const string& virtualRoot, const string& virtualPath) const throw(ShareException) {
 	for(StringMap::const_iterator i = shares.begin(); i != shares.end(); ++i) {
-		if(Util::stricmp(i->second, virtualRoot) == 0) {
+		if(stricmp(i->second, virtualRoot) == 0) {
 			std::string name = i->first + virtualPath;
 			dcdebug("Matching %s\n", name.c_str());
 			if(File::getSize(name) != -1) {
@@ -332,7 +332,7 @@ struct ShareLoader : public SimpleXMLReader::CallBack {
 			if(!name.empty()) {
 				if(depth == 0) {
 					for(ShareManager::DirList::iterator i = dirs.begin(); i != dirs.end(); ++i) {
-						if(Util::stricmp((*i)->getName(), name) == 0) {
+						if(stricmp((*i)->getName(), name) == 0) {
 							cur = *i;
 							break;
 						}
@@ -434,7 +434,7 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 		throw ShareException(STRING(NO_DIRECTORY_SPECIFIED));
 	}
 
-	if(Util::stricmp(SETTING(TEMP_DOWNLOAD_DIRECTORY), realPath) == 0) {
+	if(stricmp(SETTING(TEMP_DOWNLOAD_DIRECTORY), realPath) == 0) {
 		throw ShareException(STRING(DONT_SHARE_TEMP_DIRECTORY));
 	}
 
@@ -442,7 +442,7 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 	// don't share Windows directory
 	TCHAR path[MAX_PATH];
 	::SHGetFolderPath(NULL, CSIDL_WINDOWS, NULL, SHGFP_TYPE_CURRENT, path);
-	if(Util::strnicmp(realPath, Text::fromT((tstring)path) + PATH_SEPARATOR, _tcslen(path) + 1) == 0) {
+	if(strnicmp(realPath, Text::fromT((tstring)path) + PATH_SEPARATOR, _tcslen(path) + 1) == 0) {
 		char buf[MAX_PATH];
 		snprintf(buf, sizeof(buf), CSTRING(CHECK_FORBIDDEN), realPath.c_str());
 		throw ShareException(buf);
@@ -455,10 +455,10 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 		
 		StringMap a = shares;
 		for(StringMapIter i = a.begin(); i != a.end(); ++i) {
-			if(Util::strnicmp(realPath, i->first, i->first.length()) == 0) {
+			if(strnicmp(realPath, i->first, i->first.length()) == 0) {
 				// Trying to share an already shared directory
 				removeMap.push_front(i->first);
-			} else if(Util::strnicmp(realPath, i->first, realPath.length()) == 0) {
+			} else if(strnicmp(realPath, i->first, realPath.length()) == 0) {
 				// Trying to share a parent directory
 				removeMap.push_front(i->first);	
 			}
@@ -486,7 +486,7 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 
 ShareManager::Directory* ShareManager::merge(Directory* directory) {
 	for(DirList::iterator i = directories.begin(); i != directories.end(); ++i) {
-		if(Util::stricmp((*i)->getName(), directory->getName()) == 0) {
+		if(stricmp((*i)->getName(), directory->getName()) == 0) {
 			dcdebug("Merging directory %s\n", directory->getName().c_str());
 			(*i)->merge(directory);
 			return *i;
@@ -547,7 +547,7 @@ void ShareManager::removeDirectory(const string& realPath) {
 
 	std::string vName = i->second;
 	for(DirList::iterator j = directories.begin(); j != directories.end(); ) {
-		if(Util::stricmp((*j)->getName(), vName) == 0) {
+		if(stricmp((*j)->getName(), vName) == 0) {
 			delete *j;
 			directories.erase(j++);
 		} else {
@@ -559,7 +559,7 @@ void ShareManager::removeDirectory(const string& realPath) {
 
 	// Readd all directories with the same vName
 	for(i = shares.begin(); i != shares.end(); ++i) {
-		if(Util::stricmp(i->second, vName) == 0) {
+		if(stricmp(i->second, vName) == 0) {
 			Directory* dp = buildTree(i->first, 0);
 			dp->setName(i->second);
 			merge(dp);
@@ -577,7 +577,7 @@ void ShareManager::renameDirectory(const string& realPath, const string& virtual
 
 ShareManager::DirList::const_iterator ShareManager::getByVirtual(const string& virtualName) const throw() {
 	for(DirList::const_iterator i = directories.begin(); i != directories.end(); ++i) {
-		if(Util::stricmp((*i)->getName(), virtualName) == 0) {
+		if(stricmp((*i)->getName(), virtualName) == 0) {
 			return i;
 		}
 	}
@@ -781,9 +781,9 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 		if(BOOLSETTING(REMOVE_FORBIDDEN)) {
 			string::size_type nameLen = name.size();
 			string fileExt = Util::getFileExt(name);
-			if ((Util::stricmp(fileExt.c_str(), ".tdc") == 0) ||
-				(Util::stricmp(fileExt.c_str(), ".GetRight") == 0) ||
-				(Util::stricmp(fileExt.c_str(), ".temp") == 0) ||
+			if ((stricmp(fileExt.c_str(), ".tdc") == 0) ||
+				(stricmp(fileExt.c_str(), ".GetRight") == 0) ||
+				(stricmp(fileExt.c_str(), ".temp") == 0) ||
 				(nameLen > 9 && name.rfind("part.met") == nameLen - 8) ||				
 				(name.find("__INCOMPLETE__") == 0) ||		//winmx
 				(name.find("__incomplete__") == 0) ||		//winmx
@@ -804,23 +804,23 @@ ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory*
 			// don't share Windows directory
 			TCHAR path[MAX_PATH];
 			::SHGetFolderPath(NULL, CSIDL_WINDOWS, NULL, SHGFP_TYPE_CURRENT, path);
-			if(Util::strnicmp(newName, Text::fromT((tstring)path) + PATH_SEPARATOR, _tcslen(path) + 1) == 0)
+			if(strnicmp(newName, Text::fromT((tstring)path) + PATH_SEPARATOR, _tcslen(path) + 1) == 0)
 				continue;
 #endif
 
-			if((Util::stricmp(newName, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) && shareFolder(newName)) {
+			if((stricmp(newName, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) && shareFolder(newName)) {
 				dir->directories[name] = buildTree(newName, dir);
 			}
 		} else {
 			// Not a directory, assume it's a file...make sure we're not sharing the settings file...
-			if( (Util::stricmp(name.c_str(), "DCPlusPlus.xml") != 0) && 
-				(Util::stricmp(name.c_str(), "Favorites.xml") != 0) &&
-				(Util::stricmp(Util::getFileExt(name).c_str(), ".dctmp") != 0) &&
-				(Util::stricmp(Util::getFileExt(name).c_str(), ".antifrag") != 0) ){
+			if( (stricmp(name.c_str(), "DCPlusPlus.xml") != 0) && 
+				(stricmp(name.c_str(), "Favorites.xml") != 0) &&
+				(stricmp(Util::getFileExt(name).c_str(), ".dctmp") != 0) &&
+				(stricmp(Util::getFileExt(name).c_str(), ".antifrag") != 0) ){
 
 				int64_t size = i->getSize();
 				string fileName = aName + name;
-				if(Util::stricmp(fileName, SETTING(TLS_PRIVATE_KEY_FILE)) == 0) {
+				if(stricmp(fileName, SETTING(TLS_PRIVATE_KEY_FILE)) == 0) {
 					continue;
 				}
 				try {
@@ -1146,7 +1146,7 @@ static const string type2Picture[] = { ".ai", ".ps", ".pict", ".jpeg", ".tiff" }
 static const string type2Video[] = { ".rm", ".divx", ".mpeg", ".mp1v", ".mp2v", ".mpv1", ".mpv2", ".qt", ".rv", ".vivo" };
 
 #define IS_TYPE(x) ( type == (*((uint32_t*)x)) )
-#define IS_TYPE2(x) (Util::stricmp(aString.c_str() + aString.length() - x.length(), x.c_str()) == 0)
+#define IS_TYPE2(x) (stricmp(aString.c_str() + aString.length() - x.length(), x.c_str()) == 0)
 
 static bool checkType(const string& aString, int aType) {
 	if(aType == SearchManager::TYPE_ANY)
@@ -1492,10 +1492,10 @@ void ShareManager::search(SearchResultList& results, const StringList& params, S
 
 ShareManager::Directory* ShareManager::getDirectory(const string& fname) {
 	for(StringMapIter mi = shares.begin(); mi != shares.end(); ++mi) {
-		if(Util::strnicmp(fname, mi->first, mi->first.length()) == 0) {
+		if(strnicmp(fname, mi->first, mi->first.length()) == 0) {
 			Directory* d = NULL;
 			for(DirList::iterator i = directories.begin(); i != directories.end(); ++i) {
-				if(Util::stricmp((*i)->getName(), mi->second) == 0) {
+				if(stricmp((*i)->getName(), mi->second) == 0) {
 					d = *i;
 				}
 			}
@@ -1525,7 +1525,7 @@ void ShareManager::on(DownloadManagerListener::Complete, const Download* d, bool
 		Lock l(cs);
 		const string& n = d->getPath();
 		for(StringMapIter i = shares.begin(); i != shares.end(); i++) {
-			if(Util::strnicmp(i->first, n, i->first.size()) == 0 && n[i->first.size()] == PATH_SEPARATOR) {
+			if(strnicmp(i->first, n, i->first.size()) == 0 && n[i->first.size()] == PATH_SEPARATOR) {
 				string s = n.substr(i->first.size()+1);
 				try {
 					// Schedule for hashing, it'll be added automatically later on...
@@ -1576,13 +1576,13 @@ bool ShareManager::shareFolder(const string& path, bool thoroughCheck /* = false
 		for(StringMap::const_iterator i = shares.begin(); i != shares.end(); ++i)
 		{
 			// is it a perfect match
-			if((path.size() == i->first.size()) && (Util::stricmp(path, i->first) == 0))
+			if((path.size() == i->first.size()) && (stricmp(path, i->first) == 0))
 				return true;
 			else if (path.size() > i->first.size()) // this might be a subfolder of a shared folder
 			{
 				string temp = path.substr(0, i->first.size());
 				// if the left-hand side matches and there is a \ in the remainder then it is a subfolder
-				if((Util::stricmp(temp, i->first) == 0) && (path.find('\\', i->first.size()) != string::npos))
+				if((stricmp(temp, i->first) == 0) && (path.find('\\', i->first.size()) != string::npos))
 				{
 					result = true;
 					break;
@@ -1597,7 +1597,7 @@ bool ShareManager::shareFolder(const string& path, bool thoroughCheck /* = false
 	// check if it's an excluded folder or a sub folder of an excluded folder
 	for(StringIterC j = notShared.begin(); j != notShared.end(); ++j)
 	{		
-		if(Util::stricmp(path, *j) == 0)
+		if(stricmp(path, *j) == 0)
 			return false;
 
 		if(thoroughCheck)
@@ -1605,7 +1605,7 @@ bool ShareManager::shareFolder(const string& path, bool thoroughCheck /* = false
 			if(path.size() > (*j).size())
 			{
 				string temp = path.substr(0, (*j).size());
-				if((Util::stricmp(temp, *j) == 0) && (path[(*j).size()] == '\\'))
+				if((stricmp(temp, *j) == 0) && (path[(*j).size()] == '\\'))
 					return false;
 			}
 		}
@@ -1621,7 +1621,7 @@ int64_t ShareManager::addExcludeFolder(const string &path) {
 		if(path.size() > i->first.size())
 		{
 			string temp = path.substr(0, i->first.size());
-			if(Util::stricmp(temp, i->first) == 0)
+			if(stricmp(temp, i->first) == 0)
 			{
 				result = true;
 				break;
@@ -1638,7 +1638,7 @@ int64_t ShareManager::addExcludeFolder(const string &path) {
 		if(path.size() >= (*j).size())
 		{
 			string temp = path.substr(0, (*j).size());
-			if(Util::stricmp(temp, *j) == 0)
+			if(stricmp(temp, *j) == 0)
 				return 0;
 		}
 	}
@@ -1650,7 +1650,7 @@ int64_t ShareManager::addExcludeFolder(const string &path) {
 		if(path.size() < (*j).size())
 		{
 			string temp = (*j).substr(0, path.size());
-			if(Util::stricmp(temp, path) == 0)
+			if(stricmp(temp, path) == 0)
 			{
 				bytesNotCounted += Util::getDirSize(*j);
 				j = notShared.erase(j);
@@ -1675,7 +1675,7 @@ int64_t ShareManager::removeExcludeFolder(const string &path, bool returnSize /*
 		if(path.size() <= (*j).size())
 		{
 			string temp = (*j).substr(0, path.size());
-			if(Util::stricmp(temp, path) == 0)
+			if(stricmp(temp, path) == 0)
 			{
 				if(returnSize) // this needs to be false if the files don't exist anymore
 					bytesAdded += Util::getDirSize(*j);

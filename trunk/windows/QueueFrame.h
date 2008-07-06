@@ -332,7 +332,7 @@ private:
 		}
 	}
 
-	bool isCurDir(const string& aDir) const { return Util::stricmp(curDir, aDir) == 0; }
+	bool isCurDir(const string& aDir) const { return stricmp(curDir, aDir) == 0; }
 
 	void moveSelected();	
 	void moveSelectedDir();

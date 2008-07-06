@@ -25,7 +25,7 @@
 #include "FavoriteUser.h"
 
 #include "ClientManager.h"
-#include "ClientProfileManager.h"
+#include "DetectionManager.h"
 #include "UserCommand.h"
 #include "ResourceManager.h"
 #include "FavoriteManager.h"
@@ -50,6 +50,7 @@ void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility
 		sm[prefix + "SID"] = getSIDString();
 		sm[prefix + "CID"] = user->getCID().toBase32();
 		sm[prefix + "TAG"] = getTag();
+		sm[prefix + "CO"] = getConnection();
 		sm[prefix + "SSshort"] = Util::formatBytes(get("SS"));
 
 		if(compatibility) {
@@ -211,82 +212,130 @@ string Identity::updateClientType(const OnlineUser& ou) {
 		}
 	}
 
-	int64_t tick = GET_TICK();
+	uint64_t tick = GET_TICK();
 
 	StringMap params;
-	const ClientProfile::List& lst = ClientProfileManager::getInstance()->getClientProfiles(params);
+	getDetectionParams(params); // get identity fields and escape them, then get the rest and leave as-is
+	const DetectionManager::DetectionItems& profiles = DetectionManager::getInstance()->getProfiles(params);
+   
+	for(DetectionManager::DetectionItems::const_iterator i = profiles.begin(); i != profiles.end(); ++i) {
+		const DetectionEntry& entry = *i;
+		if(!entry.isEnabled)
+			continue;
+		DetectionEntry::INFMap INFList;
+		if(!entry.defaultMap.empty()) {
+			// fields to check for both, adc and nmdc
+			INFList = entry.defaultMap;
+		} 
 
-	for(ClientProfile::List::const_iterator i = lst.begin(); i != lst.end(); ++i) {
-		const ClientProfile& cp = *i;
-		string version, pkVersion, extraVersion, formattedTagExp, verTagExp;
-
-		verTagExp = Util::formatRegExp(cp.getTag(), params);
-
-		formattedTagExp = verTagExp;
-		string::size_type j = formattedTagExp.find("%[version]");
-		if(j != string::npos) {
-			formattedTagExp.replace(j, 10, ".*");
+		if(getUser()->isSet(User::NMDC) && !entry.nmdcMap.empty()) {
+			INFList.insert(INFList.end(), entry.nmdcMap.begin(), entry.nmdcMap.end());
+		} else if(!entry.adcMap.empty()) {
+			INFList.insert(INFList.end(), entry.adcMap.begin(), entry.adcMap.end());
 		}
 
-		string pkExp = cp.getPk();
-		string formattedPkExp = pkExp;
-		j = pkExp.find("%[version]");
-		if(j != string::npos) {
-			formattedPkExp.replace(j, 10, ".*");
+		if(INFList.empty())
+			continue;
+
+		bool _continue = false;
+
+		DETECTION_DEBUG("\tChecking profile: " + entry.name);
+
+		for(DetectionEntry::INFMap::const_iterator j = INFList.begin(); j != INFList.end(); ++j) {
+			string aPattern = Util::formatRegExp(j->second, params);
+			string aField = getDetectionField(j->first);
+			DETECTION_DEBUG("Pattern: " + aPattern + " Field: " + aField);
+			if(!Identity::matchProfile(aField, aPattern)) {
+				_continue = true;
+				break;
+			}
 		}
-		string extTagExp = cp.getExtendedTag();
-		string formattedExtTagExp = extTagExp;
-		j = extTagExp.find("%[version2]");
-		if(j != string::npos) {
-			formattedExtTagExp.replace(j, 11, ".*");
+		if(_continue)
+			continue;
+
+		DETECTION_DEBUG("Client found: " + entry.name + " time taken: " + Util::toString(GET_TICK()-tick) + " milliseconds");
+
+		set("CL", entry.name);
+		set("CM", entry.comment);
+		set("BC", entry.cheat.empty() ? Util::emptyString : "1");
+
+		if(entry.checkMismatch && getUser()->isSet(User::NMDC) &&  (params["VE"] != params["PKVE"])) { 
+			set("CL", entry.name + " Version mis-match");
+			return setCheat(ou.getClient(), entry.cheat + " Version mis-match", true);
 		}
 
-		DETECTION_DEBUG("\tChecking profile: " + cp.getName());
-
-		if (!matchProfile(get("LO"), cp.getLock())) { continue; }
-		if (!matchProfile(getTag(), formattedTagExp)) { continue; } 
-		if (!matchProfile(get("PK"), formattedPkExp)) { continue; }
-		if (!matchProfile(get("SU"), cp.getSupports())) { continue; }
-		if (!matchProfile(get("TS"), cp.getTestSUR())) { continue; }
-		if (!matchProfile(get("ST"), cp.getStatus())) { continue; }
-		if (!matchProfile(get("UC"), cp.getUserConCom())) { continue; }
-		if (!matchProfile(getDescription(), formattedExtTagExp))	{ continue; }
-		if (!matchProfile(getConnection(), cp.getConnection()))	{ continue; }
-
-		if (verTagExp.find("%[version]") != string::npos) { version = getVersion(verTagExp, getTag()); }
-		if (extTagExp.find("%[version2]") != string::npos) { extraVersion = getVersion(extTagExp, getDescription()); }
-		if (pkExp.find("%[version]") != string::npos) { pkVersion = getVersion(pkExp, get("PK")); }
-
-		if (!(cp.getVersion().empty()) && !matchProfile(version, cp.getVersion())) { continue; }
-
-		DETECTION_DEBUG("Client found: " + cp.getName() + " time taken: " + Util::toString(GET_TICK()-tick) + " milliseconds");
-		if (cp.getUseExtraVersion()) {
-			set("CL", cp.getName() + " " + extraVersion );
-		} else {
-			set("CL", cp.getName() + " " + version);
-		}
-		set("CS", cp.getCheatingDescription());
-		set("CM", cp.getComment());
-		set("BC", cp.getCheatingDescription().empty() ? Util::emptyString : "1");
-
-		if (cp.getCheckMismatch() && version.compare(pkVersion) != 0) { 
-			set("CL", get("CL") + " Version mis-match");
-			set("CS", get("CS") + " Version mis-match");
-			set("BC", "1");
-			string report = setCheat(ou.getClient(), get("CS"), true);
-			return report;
-		}
 		string report = Util::emptyString;
-		if(!get("BC").empty()) report = setCheat(ou.getClient(), get("CS"), true);
-		if(cp.getRawToSend() > 0) {
-			ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), cp.getRawToSend());
+		if(!entry.cheat.empty()) {
+			report = setCheat(ou.getClient(), entry.cheat, true);
 		}
+
+		ClientManager::getInstance()->sendRawCommand(getUser(), ou.getClient(), entry.rawToSend);
 		return report;
 	}
+
 	set("CL", "Unknown");
 	set("CS", Util::emptyString);
 	set("BC", Util::emptyString);
+	return Util::emptyString;
+}
 
+string Identity::getDetectionField(const string& aName) const {
+	if(aName.length() == 2) {
+		if(aName == "TA")
+			return getTag();
+		else if(aName == "CO")
+			return getConnection();
+		else
+			return get(aName.c_str());
+	} else {
+		if(aName == "PKVE") {
+			return getPkVersion();
+		}
+		return Util::emptyString;
+	}
+}
+
+void Identity::getDetectionParams(StringMap& p) {
+	getParams(p, "", false);
+	p["PKVE"] = getPkVersion();
+	//p["VEformat"] = getVersion();
+   
+	if(!user->isSet(User::NMDC)) {
+		string version = get("VE");
+		string::size_type i = version.find(' ');
+		if(i != string::npos)
+			p["VEformat"] = version.substr(i+1);
+		else
+			p["VEformat"] = version;
+	} else {
+		p["VEformat"] = get("VE");
+	}
+
+	// convert all special chars to make regex happy
+	for(StringMap::iterator i = p.begin(); i != p.end(); ++i) {
+		// looks really bad... but do the job
+		Util::replace(i->second, "\\", "\\\\"); // this one must be first
+		Util::replace(i->second, "[", "\\[");
+		Util::replace(i->second, "]", "\\]");
+		Util::replace(i->second, "^", "\\^");
+		Util::replace(i->second, "$", "\\$");
+		Util::replace(i->second, ".", "\\.");
+		Util::replace(i->second, "|", "\\|");
+		Util::replace(i->second, "?", "\\?");
+		Util::replace(i->second, "*", "\\*");
+		Util::replace(i->second, "+", "\\+");
+		Util::replace(i->second, "(", "\\(");
+		Util::replace(i->second, ")", "\\)");
+		Util::replace(i->second, "{", "\\{");
+		Util::replace(i->second, "}", "\\}");
+	}
+}
+
+string Identity::getPkVersion() const {
+	string pk = get("PK");
+	if(pk.find("DCPLUSPLUS") != string::npos && pk.find("ABCABC") != string::npos) {
+		return pk.substr(10, pk.length() - 16);
+	}
 	return Util::emptyString;
 }
 

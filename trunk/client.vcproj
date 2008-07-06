@@ -387,10 +387,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\ClientProfileManager.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\client\ConnectionManager.cpp"
 				>
 			</File>
@@ -400,6 +396,10 @@
 			</File>
 			<File
 				RelativePath=".\client\DCPlusPlus.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\client\DetectionManager.cpp"
 				>
 			</File>
 			<File
@@ -656,10 +656,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\ClientProfileManager.h"
-				>
-			</File>
-			<File
 				RelativePath=".\client\ConnectionManager.h"
 				>
 			</File>
@@ -681,6 +677,14 @@
 			</File>
 			<File
 				RelativePath=".\client\DebugManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\DetectionEntry.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\DetectionManager.h"
 				>
 			</File>
 			<File

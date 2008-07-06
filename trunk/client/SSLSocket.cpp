@@ -28,7 +28,6 @@
 namespace dcpp {
 
 SSLSocket::SSLSocket(SSL_CTX* context) throw(SocketException) : ctx(context), ssl(0) {
-
 }
 
 void SSLSocket::connect(const string& aIp, uint16_t aPort) throw(SocketException) {
@@ -94,6 +93,7 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 			case SSL_ERROR_WANT_READ:	// Fallthrough
 			case SSL_ERROR_WANT_WRITE:
 				return -1;
+			case SSL_ERROR_SYSCALL:
 			case SSL_ERROR_ZERO_RETURN:
 				// The TLS/SSL connection has been closed.
 				throw SocketException(STRING(CONNECTION_CLOSED));

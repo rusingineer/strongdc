@@ -58,7 +58,8 @@
 # pragma warning(disable: 4201) // nonstadard extension used : nameless struct/union
 
 #ifdef _WIN64
-//# pragma warning(disable: 4267) // conversion from 'xxx' to 'yyy', possible loss of data
+# pragma warning(disable: 4244) // conversion from 'xxx' to 'yyy', possible loss of data
+# pragma warning(disable: 4267) // conversion from 'xxx' to 'yyy', possible loss of data
 #endif
 
 typedef signed __int8 int8_t;

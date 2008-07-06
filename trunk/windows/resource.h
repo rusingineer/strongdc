@@ -87,8 +87,6 @@
 #define IDD_TOOLBARPAGE                 259
 #define IDD_DOWNLOADDIR                 260
 #define IDD_FAVORITE_DIRSPAGE           261
-#define IDD_CLIENT_PROFILE              263
-#define IDD_CLIENTS_PAGE                264
 #define IDB_SPEEDS                      266
 #define IDR_CDM                         270
 #define IDD_UPDATE                      274
@@ -109,7 +107,10 @@
 #define IDD_NETWORKPAGE                 296
 #define IDD_CERTIFICATESPAGE            297
 #define IDD_QUEUEPAGE                   298
+#define IDD_PARAM_DLG                   302
 #define IDD_UPLOADPAGE                  306
+#define IDD_DETECTION_LIST_PAGE         327
+#define IDD_DETECTION_ENTRY             328
 #define IDC_REFRESH                     1000
 #define IDC_NICK                        1001
 #define IDC_EMAIL                       1002
@@ -198,6 +199,7 @@
 #define IDC_NEXT                        1082
 #define IDC_FINISHED                    1084
 #define IDC_TEMP_DOWNLOAD_DIRECTORY     1084
+#define IDC_CHANGE                      1084
 #define IDC_BROWSETEMPDIR               1085
 #define IDC_SOCKS_RESOLVE               1086
 #define IDC_PROGRESS_BUMPED             1086
@@ -442,6 +444,7 @@
 #define IDC_UPDATE_URL                  1264
 #define IDC_REGEXP_TESTER_TEXT          1264
 #define IDC_LIST_EDIT                   1264
+#define IDC_CHEAT                       1264
 #define IDC_CHANGE_COLOR                1266
 #define IDC_PORT_UDP                    1266
 #define IDC_USERLIST_IMAGE              1267
@@ -511,15 +514,18 @@
 #define IDC_SETTINGS_PRIO_HIGHEST       1304
 #define IDC_READ_SPIN                   1304
 #define IDC_POPUPGROUP                  1304
+#define IDC_PARAM_NAME                  1304
 #define IDC_FIREWALL_PASSIVE            1305
 #define IDC_SETTINGS_PRIO_HIGH          1305
 #define IDC_AUTO_SEARCH_LIMIT_SPIN      1305
+#define IDC_PARAM_REGEXP                1305
 #define IDC_DIRECT_OUT                  1306
 #define IDC_SETTINGS_PRIO_NORMAL        1306
 #define IDC_TAB_SPIN                    1306
 #define IDC_SOCKS5                      1307
 #define IDC_SETTINGS_PRIO_LOW           1307
 #define IDC_WRITE_SPIN                  1307
+#define IDC_CHECK_MISMATCH              1307
 #define IDC_SETTINGS_KB3                1308
 #define IDC_HASH_SPIN                   1308
 #define IDC_SETTINGS_KB4                1309
@@ -536,18 +542,25 @@
 #define IDC_BOLD_BOOLEANS               1313
 #define IDC_SLOTS_GROUP                 1313
 #define IDC_SETTINGS_BOLD_CONTENTS      1314
+#define IDC_UPDATE_CLIENTS              1314
+#define IDC_ENABLE                      1314
 #define IDC_SETTINGS_CONFIRM_OPTIONS    1315
+#define IDC_PROFILE_MESSAGE             1315
 #define IDC_CONFIRM_OPTIONS             1316
 #define IDC_SOCKET_IN_BUFFER            1317
 #define IDC_SOCKET_OUT_BUFFER           1318
 #define IDC_TLS_CERTIFICATE_FILE        1318
 #define IDC_PORT_TLS                    1318
 #define IDC_SETTINGS_SOCKET_OUT_BUFFER  1319
+#define IDC_PROFILE_COUNT               1319
 #define IDC_SETTINGS_SOCKET_IN_BUFFER   1320
+#define IDC_PROFILE_VERSION             1320
+#define IDC_RAW                         1322
 #define IDC_BW_SIMPLE                   1324
 #define IDC_BW_BOTH                     1325
 #define IDC_SETTINGS_NOMINALBW          1326
 #define IDC_HELP_TRANSLATIONS           1327
+#define IDC_BACK                        1333
 #define IDC_OTHER_QUEUE_OPTIONS         1400
 #define IDC_FILELIST_DIFF               1406
 #define IDC_SETTINGS_MEBIBYES           1406
@@ -583,9 +596,15 @@
 #define IDC_HISTORY_STATUS              1451
 #define IDC_UPDATE_DOWNLOAD             1452
 #define IDC_UPDATE                      1453
+#define IDC_PARAMS                      1491
+#define IDC_DETECT_ID                   1499
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
 #define IDC_TIMEOUTS_NO                 1505
 #define IDC_DISCONNECTS_NO              1506
+#define IDC_ID_EDIT                     1511
+#define IDC_REGEX_TESTER                1513
+#define IDC_LEVEL                       1514
+#define IDC_INFMAP_TYPE                 1515
 #define IDC_USERLIST_COLORS             1517
 #define IDC_TABCOLOR_LIST               1522
 #define IDC_SELECT_TAB_COLOR            1523
@@ -789,7 +808,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        307
 #define _APS_NEXT_COMMAND_VALUE         32795
-#define _APS_NEXT_CONTROL_VALUE         1314
+#define _APS_NEXT_CONTROL_VALUE         1316
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

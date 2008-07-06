@@ -216,7 +216,7 @@ bool ShareEnumerator::IsShared(const tstring& sPath)
 			for (DWORD i=0; i<m_dwShares && !bShared; i++)
 			{
 				tstring sShare(m_pNTShareInfo[i].shi502_path);
-				bShared = (Util::stricmp(sPath, sShare) == 0) && ((m_pNTShareInfo[i].shi502_type == STYPE_DISKTREE) || ((m_pNTShareInfo[i].shi502_type == STYPE_PRINTQ)));
+				bShared = (stricmp(sPath, sShare) == 0) && ((m_pNTShareInfo[i].shi502_type == STYPE_DISKTREE) || ((m_pNTShareInfo[i].shi502_type == STYPE_PRINTQ)));
 			}
 		}
 	}
@@ -227,7 +227,7 @@ bool ShareEnumerator::IsShared(const tstring& sPath)
 			for (DWORD i=0; i<m_dwShares && !bShared; i++)
 			{
 				tstring sShare(Text::toT(m_pWin9xShareInfo[i].shi50_path));
-				bShared = (Util::stricmp(sPath, sShare) == 0) &&
+				bShared = (stricmp(sPath, sShare) == 0) &&
 						((m_pWin9xShareInfo[i].shi50_type == STYPE_DISKTREE) || ((m_pWin9xShareInfo[i].shi50_type == STYPE_PRINTQ)));
 			}
 		}
@@ -909,7 +909,7 @@ int CALLBACK FolderTree::CompareByFilenameNoCase(LPARAM lParam1, LPARAM lParam2,
 	FolderTreeItemInfo* pItem1 = (FolderTreeItemInfo*) lParam1;
 	FolderTreeItemInfo* pItem2 = (FolderTreeItemInfo*) lParam2;
 
-	return Util::stricmp(pItem1->m_sRelativePath, pItem2->m_sRelativePath);
+	return stricmp(pItem1->m_sRelativePath, pItem2->m_sRelativePath);
 }
 
 void FolderTree::SetHasPlusButton(HTREEITEM hItem, bool bHavePlus)
@@ -1030,7 +1030,7 @@ HTREEITEM FolderTree::FindSibling(HTREEITEM hParent, const tstring &sItem) const
 	{
 		FolderTreeItemInfo* pItem = (FolderTreeItemInfo*) GetItemData(hChild);
 		
-		if (Util::stricmp(pItem->m_sRelativePath, sItem) == 0)
+		if (stricmp(pItem->m_sRelativePath, sItem) == 0)
 			return hChild;
 		hChild = GetNextItem(hChild, TVGN_NEXT);
 	}
@@ -1500,7 +1500,7 @@ bool FolderTree::GetHasSharedChildren(HTREEITEM hItem)
 	{
 		if((i->second).size() > (searchStr.size() + startPos))
 		{
-			if(Util::stricmp((i->second).substr(startPos, searchStr.size()), Text::fromT(searchStr)) == 0) {
+			if(stricmp((i->second).substr(startPos, searchStr.size()), Text::fromT(searchStr)) == 0) {
 				if(searchStr.size() <= 3) {
 				return Util::fileExists(i->second + PATH_SEPARATOR);
 				} else {

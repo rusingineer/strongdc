@@ -44,15 +44,15 @@ UserPtr DirectoryListing::getUserFromFilename(const string& fileName) {
 	string name = Util::getFileName(fileName);
 
 	// Strip off any extensions
-	if(Util::stricmp(name.c_str() + name.length() - 6, ".DcLst") == 0) {
+	if(stricmp(name.c_str() + name.length() - 6, ".DcLst") == 0) {
 		name.erase(name.length() - 6);
 	}
 
-	if(Util::stricmp(name.c_str() + name.length() - 4, ".bz2") == 0) {
+	if(stricmp(name.c_str() + name.length() - 4, ".bz2") == 0) {
 		name.erase(name.length() - 4);
 	}
 
-	if(Util::stricmp(name.c_str() + name.length() - 4, ".xml") == 0) {
+	if(stricmp(name.c_str() + name.length() - 4, ".xml") == 0) {
 		name.erase(name.length() - 4);
 	}
 
@@ -80,7 +80,7 @@ void DirectoryListing::loadFile(const string& name) throw(Exception) {
 	// For now, we detect type by ending...
 	string ext = Util::getFileExt(name);
 
-	if(Util::stricmp(ext, ".bz2") == 0) {
+	if(stricmp(ext, ".bz2") == 0) {
 		dcpp::File ff(name, dcpp::File::READ, dcpp::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
 		const size_t BUF_SIZE = 64*1024;
@@ -93,7 +93,7 @@ void DirectoryListing::loadFile(const string& name) throw(Exception) {
 			if(len < BUF_SIZE)
 				break;
 		}
-	} else if(Util::stricmp(ext, ".xml") == 0) {
+	} else if(stricmp(ext, ".xml") == 0) {
 		int64_t sz = dcpp::File::getSize(name);
 		if(sz == -1 || sz >= static_cast<int64_t>(txt.max_size()))
 			throw FileException(STRING(FILE_NOT_AVAILABLE));

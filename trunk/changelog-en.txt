@@ -1,5 +1,12 @@
 	-- StrongDC++ --
 
+*** WARNING ***
+  All connections between StrongDC++ are automatically encrypted now.
+  If you experience problems, you can disable it in Security Certificates settings.
+
+  Since this version, you can't use direct connection on ports 80 and 2501.
+*** WARNING ***
+
 * added some other libraries which could cause crash
 * fixed that Windows subfolders were shared
 * fixed problems with disabled segmented downloads
@@ -24,6 +31,8 @@
 * fixed memory leak in network settings (ApexDC++)
 * fixes for partial file sharing
 * added support for encrypted NMDC transfers
+* implemented new clients detection system (THX adrian_007)
+* added temporary fix to avoid spamming ports 80 and 2501
 
 
 	-- StrongDC++ 2.13 --
