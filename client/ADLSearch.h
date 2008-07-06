@@ -93,11 +93,11 @@ public:
 	} sourceType;
 
 	SourceType StringToSourceType(const string& s) {
-		if(Util::stricmp(s.c_str(), "Filename") == 0) {
+		if(stricmp(s.c_str(), "Filename") == 0) {
 			return OnlyFile;
-		} else if(Util::stricmp(s.c_str(), "Directory") == 0) {
+		} else if(stricmp(s.c_str(), "Directory") == 0) {
 			return OnlyDirectory;
-		} else if(Util::stricmp(s.c_str(), "Full Path") == 0) {
+		} else if(stricmp(s.c_str(), "Full Path") == 0) {
 			return FullPath;
 		} else {
 			return OnlyFile;
@@ -137,13 +137,13 @@ public:
 	SizeType typeFileSize;
 
 	SizeType StringToSizeType(const string& s) {
-		if(Util::stricmp(s.c_str(), "B") == 0) {
+		if(stricmp(s.c_str(), "B") == 0) {
 			return SizeBytes;
-		} else if(Util::stricmp(s.c_str(), "kB") == 0) {
+		} else if(stricmp(s.c_str(), "kB") == 0) {
 			return SizeKiloBytes;
-		} else if(Util::stricmp(s.c_str(), "MB") == 0) {
+		} else if(stricmp(s.c_str(), "MB") == 0) {
 			return SizeMegaBytes;
-		} else if(Util::stricmp(s.c_str(), "GB") == 0) {
+		} else if(stricmp(s.c_str(), "GB") == 0) {
 			return SizeGigaBytes;
 		} else {
 			return SizeBytes;
@@ -314,7 +314,7 @@ private:
 		for(vector<DestDir>::iterator id = destDirVector.begin(); id != destDirVector.end(); ++id) {
 			if(id->dir->files.size() == 0 && id->dir->directories.size() == 0) {
 				delete (id->dir);
-			} else if(Util::stricmp(id->dir->getName(), szDiscard) == 0) {
+			} else if(stricmp(id->dir->getName(), szDiscard) == 0) {
 				delete (id->dir);
 			} else {
 				root->directories.push_back(id->dir);

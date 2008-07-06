@@ -402,28 +402,10 @@ public:
 	 */
 	static string::size_type findSubString(const string& aString, const string& aSubString, string::size_type start = 0) throw();
 	static wstring::size_type findSubString(const wstring& aString, const wstring& aSubString, wstring::size_type start = 0) throw();
-
-	/* Utf-8 versions of strnicmp and stricmp, unicode char code order (!) */
-	static int stricmp(const char* a, const char* b);
-	static int strnicmp(const char* a, const char* b, size_t n);
-
-	static int stricmp(const wchar_t* a, const wchar_t* b) {
-		while(*a && Text::toLower(*a) == Text::toLower(*b))
-			++a, ++b;
-		return ((int)Text::toLower(*a)) - ((int)Text::toLower(*b));
-	}
-	static int strnicmp(const wchar_t* a, const wchar_t* b, size_t n) {
-		while(n && *a && Text::toLower(*a) == Text::toLower(*b))
-			--n, ++a, ++b;
-
-		return n == 0 ? 0 : ((int)Text::toLower(*a)) - ((int)Text::toLower(*b));
-	}
-
-	static int stricmp(const string& a, const string& b) { return stricmp(a.c_str(), b.c_str()); }
-	static int strnicmp(const string& a, const string& b, size_t n) { return strnicmp(a.c_str(), b.c_str(), n); }
-	static int stricmp(const wstring& a, const wstring& b) { return stricmp(a.c_str(), b.c_str()); }
-	static int strnicmp(const wstring& a, const wstring& b, size_t n) { return strnicmp(a.c_str(), b.c_str(), n); }
-
+	
+	static void replace(string& aString, const string& findStr, const string& replaceStr);
+	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
+	
 	static string getIpCountry (const string& IP);
 
 	static bool getAway() { return away; }
@@ -440,7 +422,6 @@ public:
 	static uint32_t rand(uint32_t low, uint32_t high) { return rand(high-low) + low; }
 	static double randd() { return ((double)rand()) / ((double)0xffffffff); }
 
-	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
 	static int getNetLimiterLimit();
 
 private:
@@ -500,32 +481,32 @@ struct noCaseStringHash {
 	}
 
 	bool operator()(const string* a, const string* b) const {
-		return Util::stricmp(*a, *b) < 0;
+		return stricmp(*a, *b) < 0;
 	}
 	bool operator()(const string& a, const string& b) const {
-		return Util::stricmp(a, b) < 0;
+		return stricmp(a, b) < 0;
 	}
 	bool operator()(const wstring* a, const wstring* b) const {
-		return Util::stricmp(*a, *b) < 0;
+		return stricmp(*a, *b) < 0;
 	}
 	bool operator()(const wstring& a, const wstring& b) const {
-		return Util::stricmp(a, b) < 0;
+		return stricmp(a, b) < 0;
 	}
 };
 
 /** Case insensitive string comparison */
 struct noCaseStringEq {
 	bool operator()(const string* a, const string* b) const {
-		return a == b || Util::stricmp(*a, *b) == 0;
+		return a == b || stricmp(*a, *b) == 0;
 	}
 	bool operator()(const string& a, const string& b) const {
-		return Util::stricmp(a, b) == 0;
+		return stricmp(a, b) == 0;
 	}
 	bool operator()(const wstring* a, const wstring* b) const {
-		return a == b || Util::stricmp(*a, *b) == 0;
+		return a == b || stricmp(*a, *b) == 0;
 	}
 	bool operator()(const wstring& a, const wstring& b) const {
-		return Util::stricmp(a, b) == 0;
+		return stricmp(a, b) == 0;
 	}
 };
 

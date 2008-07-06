@@ -127,6 +127,7 @@ private:
 	void handle(AdcCommand::CMD, AdcCommand& c) throw();
 	void handle(AdcCommand::RES, AdcCommand& c) throw();
 	void handle(AdcCommand::GET, AdcCommand& c) throw();
+	void handle(AdcCommand::PSR, AdcCommand& c) throw();
 
 	template<typename T> void handle(T, AdcCommand&) { }
 

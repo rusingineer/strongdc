@@ -37,7 +37,7 @@
 #include "StringTokenizer.h"
 
 #include "DebugManager.h"
-#include "ClientProfileManager.h"
+#include "DetectionManager.h"
 #include "WebServerManager.h"
 #include "../windows/PopupManager.h"
 
@@ -83,7 +83,7 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
 	DebugManager::newInstance();
-	ClientProfileManager::newInstance();	
+	DetectionManager::newInstance();	
 	PopupManager::newInstance();
 
 	SettingsManager::getInstance()->load();	
@@ -94,7 +94,7 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 
 	FavoriteManager::getInstance()->load();
 	CryptoManager::getInstance()->loadCertificates();
-	ClientProfileManager::getInstance()->load();	
+	DetectionManager::getInstance()->load();
 	WebServerManager::newInstance();
 
 	if(f != NULL)
@@ -118,8 +118,9 @@ void shutdown() {
 	QueueManager::getInstance()->saveQueue();
 	SettingsManager::getInstance()->save();
 
+	DebugManager::deleteInstance();
 	WebServerManager::deleteInstance();
-	ClientProfileManager::deleteInstance();	
+	DetectionManager::deleteInstance();	
 	PopupManager::deleteInstance();
 	ADLSearchManager::deleteInstance();
 	FinishedManager::deleteInstance();
@@ -136,7 +137,6 @@ void shutdown() {
 	LogManager::deleteInstance();
 	SettingsManager::deleteInstance();
 	TimerManager::deleteInstance();
-	DebugManager::deleteInstance();
 	ResourceManager::deleteInstance();
 
 #ifdef _WIN32	

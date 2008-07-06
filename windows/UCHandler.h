@@ -109,7 +109,7 @@ public:
 							for(int k = 0; k < cur.GetMenuItemCount(); k++) {
 								if(cur.GetMenuState(k, MF_BYPOSITION) & MF_POPUP) {
 									cur.GetMenuString(k, buf, 1024, MF_BYPOSITION);
-									if(Util::stricmp(buf, i->c_str()) == 0) {
+									if(stricmp(buf, i->c_str()) == 0) {
 										found = true;
 										cur = (HMENU)cur.GetSubMenu(k);
 									}

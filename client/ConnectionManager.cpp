@@ -282,6 +282,12 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 bool ConnectionManager::checkIpFlood(const string& aServer, uint16_t aPort) {
 	Lock l(cs);
 
+	// Temporary fix to avoid spamming
+	if(aPort == 80 || aPort == 2501) {
+		LogManager::getInstance()->message("Someone is trying to use your client to spam " + aServer + ", please urge hub owner to fix this");
+		return true;
+	}	
+	
 	// We don't want to be used as a flooding instrument
 	uint8_t count = 0;
 	for(UserConnectionList::const_iterator j = userConnections.begin(); j != userConnections.end(); ++j) {

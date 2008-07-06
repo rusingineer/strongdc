@@ -722,15 +722,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\windows\ClientProfileDlg.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\windows\ClientsPage.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\windows\CommandDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\windows\DetectionEntryDlg.cpp"
 				>
 			</File>
 			<File
@@ -1051,6 +1051,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\windows\DetectionEntryDlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\windows\DimEdit.h"
 				>
 			</File>
@@ -1168,6 +1172,10 @@
 			</File>
 			<File
 				RelativePath=".\windows\OperaColorsPage.h"
+				>
+			</File>
+			<File
+				RelativePath=".\windows\ParamDlg.h"
 				>
 			</File>
 			<File

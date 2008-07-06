@@ -280,7 +280,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 		lSearchFrom = lMyNickEnd;
 
 		if(	!SETTING(CHATNAMEFILE).empty() && !BOOLSETTING(SOUNDS_DISABLED) &&
-			!sAuthor.empty() && (Util::stricmp(sAuthor.c_str(), sNick) != 0)) {
+			!sAuthor.empty() && (stricmp(sAuthor.c_str(), sNick) != 0)) {
 				::PlaySound(Text::toT(SETTING(CHATNAMEFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);	 	
         }
 	}

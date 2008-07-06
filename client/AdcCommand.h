@@ -195,6 +195,7 @@ public:
 				C(SND);
 				C(SID);
 				C(CMD);
+				C(PSR);
 			default: 
 				dcdebug("Unknown ADC command: %.50s\n", aLine.c_str());
 				break;

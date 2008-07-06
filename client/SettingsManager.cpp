@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -125,7 +125,7 @@ const string SettingsManager::settingTags[] =
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
-	"UcSubMenu", "AutoSlots",
+	"UcSubMenu", "AutoSlots", "Coral",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -301,7 +301,8 @@ SettingsManager::SettingsManager()
 	setDefault(FAST_HASH, true);
 	setDefault(SORT_FAVUSERS_FIRST, false);
 	setDefault(SHOW_SHELL_MENU, false);
-	setDefault(SEND_BLOOM, true);		
+	setDefault(SEND_BLOOM, true);
+	setDefault(CORAL, true);	
 	setDefault(NUMBER_OF_SEGMENTS, 3);
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);

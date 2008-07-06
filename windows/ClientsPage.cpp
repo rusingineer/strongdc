@@ -1,13 +1,11 @@
 
 #include "stdafx.h"
-
 #include "../client/DCPlusPlus.h"
 #include "../client/SettingsManager.h"
-#include "../client/ClientProfileManager.h"
-
 #include "Resource.h"
+
 #include "ClientsPage.h"
-#include "ClientProfileDlg.h"
+#include "DetectionEntryDlg.h"
 
 PropPage::TextItem ClientsPage::texts[] = {
 	{ IDC_MOVE_CLIENT_UP, ResourceManager::MOVE_UP },
@@ -19,7 +17,7 @@ PropPage::TextItem ClientsPage::texts[] = {
 };
 
 PropPage::Item ClientsPage::items[] = {
-	{ IDC_UPDATE_URL, SettingsManager::UPDATE_URL, PropPage::T_STR }, 
+	{ IDC_UPDATE_URL, SettingsManager::UPDATE_URL, PropPage::T_STR },
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -33,50 +31,34 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlProfiles.Attach(GetDlgItem(IDC_CLIENT_ITEMS));
 	ctrlProfiles.GetClientRect(rc);
 
-	ctrlProfiles.InsertColumn(0, CTSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width() / 2, 0);
-	ctrlProfiles.InsertColumn(1, _T("Comment"), LVCFMT_LEFT, rc.Width() / 2, 1);
+	ctrlProfiles.InsertColumn(0, CTSTRING(SETTINGS_NAME),	LVCFMT_LEFT, rc.Width() / 3, 0);
+	ctrlProfiles.InsertColumn(1, CTSTRING(COMMENT),			LVCFMT_LEFT, rc.Width() / 2 - 18, 1);
+	ctrlProfiles.InsertColumn(2, _T("Raw"),					LVCFMT_LEFT, rc.Width() / 6, 0);
 
-	ctrlProfiles.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+	ctrlProfiles.SetExtendedListViewStyle(LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT);
 
 	// Do specialized reading here
-	ClientProfile::List lst = ClientProfileManager::getInstance()->getClientProfiles();
-
-	for(ClientProfile::List::const_iterator i = lst.begin(); i != lst.end(); ++i) {
-		const ClientProfile& cp = *i;	
-		addEntry(cp, ctrlProfiles.GetItemCount());
+	const DetectionManager::DetectionItems& lst = DetectionManager::getInstance()->getProfiles();
+	for(DetectionManager::DetectionItems::const_iterator i = lst.begin(); i != lst.end(); ++i) {
+		const DetectionEntry& de = *i;
+		addEntry(de, ctrlProfiles.GetItemCount());
 	}
-	
+
+	SetDlgItemText(IDC_PROFILE_COUNT, Text::toT(STRING(PROFILE_COUNT) + ": " + Util::toString(ctrlProfiles.GetItemCount())).c_str());
+	SetDlgItemText(IDC_PROFILE_VERSION, Text::toT(STRING(PROFILE_VERSION) + ": " + DetectionManager::getInstance()->getProfileVersion()).c_str());
+	SetDlgItemText(IDC_PROFILE_MESSAGE, Text::toT(STRING(PROFILE_MESSAGE) + ": " + DetectionManager::getInstance()->getProfileMessage()).c_str());
 	return TRUE;
 }
 
 LRESULT ClientsPage::onAddClient(WORD , WORD , HWND , BOOL& ) {
-	ClientProfileDlg dlg;
-	dlg.currentProfileId = -1;
+	DetectionEntry de;
+	DetectionEntryDlg dlg(de);
 
 	if(dlg.DoModal() == IDOK) {
-		addEntry(ClientProfileManager::getInstance()->addClientProfile(
-			Text::fromT(dlg.name), 
-			Text::fromT(dlg.version), 
-			Text::fromT(dlg.tag), 
-			Text::fromT(dlg.extendedTag), 
-			Text::fromT(dlg.lock), 
-			Text::fromT(dlg.pk), 
-			Text::fromT(dlg.supports), 
-			Text::fromT(dlg.testSUR), 
-			Text::fromT(dlg.userConCom), 
-			Text::fromT(dlg.status),
-			Text::fromT(dlg.cheatingDescription),
-			dlg.rawToSend, 
-//			dlg.tagVersion, 
-			dlg.useExtraVersion,
-			dlg.checkMismatch,
-			Text::fromT(dlg.connection),
-			Text::fromT(dlg.comment),
-			false,
-			false
-			), ctrlProfiles.GetItemCount());
-		
+		addEntry(de, ctrlProfiles.GetItemCount());
+		SetDlgItemText(IDC_PROFILE_COUNT, Text::toT(STRING(PROFILE_COUNT) + ": " + Util::toString(ctrlProfiles.GetItemCount())).c_str());
 	}
+
 	return 0;
 }
 
@@ -108,52 +90,30 @@ LRESULT ClientsPage::onKeyDown(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled) {
 LRESULT ClientsPage::onChangeClient(WORD , WORD , HWND , BOOL& ) {
 	if(ctrlProfiles.GetSelectedCount() == 1) {
 		int sel = ctrlProfiles.GetSelectedIndex();
-		
-		ClientProfileDlg dlg;
+		DetectionEntry de;
 
-		dlg.currentProfileId = ctrlProfiles.GetItemData(sel);
+		if(DetectionManager::getInstance()->getDetectionItem(ctrlProfiles.GetItemData(sel), de)) {
+			DetectionEntryDlg dlg(de);
+			dlg.DoModal();
 
-		if(dlg.DoModal() == IDOK) {
-			ctrlProfiles.SetItemText(dlg.currentProfileId, 0, dlg.name.c_str());
-			ctrlProfiles.SetItemText(dlg.currentProfileId, 1, dlg.version.c_str());
-			dlg.currentProfile.setName(Text::fromT(dlg.name));
-			dlg.currentProfile.setVersion(Text::fromT(dlg.version));
-			dlg.currentProfile.setTag(Text::fromT(dlg.tag));
-			dlg.currentProfile.setExtendedTag(Text::fromT(dlg.extendedTag));
-			dlg.currentProfile.setLock(Text::fromT(dlg.lock));
-			dlg.currentProfile.setPk(Text::fromT(dlg.pk));
-			dlg.currentProfile.setSupports(Text::fromT(dlg.supports));
-			dlg.currentProfile.setTestSUR(Text::fromT(dlg.testSUR));
-			dlg.currentProfile.setUserConCom(Text::fromT(dlg.userConCom));
-			dlg.currentProfile.setStatus(Text::fromT(dlg.status));
-			dlg.currentProfile.setCheatingDescription(Text::fromT(dlg.cheatingDescription));
-			dlg.currentProfile.setRawToSend(dlg.rawToSend);
-//			dlg.currentProfile.setTagVersion(dlg.tagVersion);
-			dlg.currentProfile.setUseExtraVersion(dlg.useExtraVersion);
-			dlg.currentProfile.setCheckMismatch(dlg.checkMismatch);
-			dlg.currentProfile.setConnection(Text::fromT(dlg.connection));
-			dlg.currentProfile.setComment(Text::fromT(dlg.comment));
-//			dlg.currentProfile.setRecheck(dlg.recheck);
-//			dlg.currentProfile.setSkipExtended(dlg.skipExtended);
-			ClientProfileManager::getInstance()->updateClientProfile(dlg.currentProfile);
+			ctrlProfiles.SetRedraw(FALSE);
+			ctrlProfiles.DeleteAllItems();
+			const DetectionManager::DetectionItems& lst = DetectionManager::getInstance()->getProfiles();
+			for(DetectionManager::DetectionItems::const_iterator i = lst.begin(); i != lst.end(); ++i) {
+				addEntry(*i, ctrlProfiles.GetItemCount());
+			}
+			ctrlProfiles.SelectItem(sel);
+			ctrlProfiles.SetRedraw(TRUE);
 		}
-		ctrlProfiles.SetRedraw(FALSE);
-		ctrlProfiles.DeleteAllItems();
-		ClientProfile::List lst = ClientProfileManager::getInstance()->getClientProfiles();
-		for(ClientProfile::List::const_iterator j = lst.begin(); j != lst.end(); ++j) {
-			const ClientProfile& cp = *j;	
-			addEntry(cp, ctrlProfiles.GetItemCount());
-		}
-		ctrlProfiles.SelectItem(sel);
-		ctrlProfiles.SetRedraw(TRUE);
 	}
+
 	return 0;
 }
 
 LRESULT ClientsPage::onRemoveClient(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(ctrlProfiles.GetSelectedCount() == 1) {
 		int i = ctrlProfiles.GetNextItem(-1, LVNI_SELECTED);
-		ClientProfileManager::getInstance()->removeClientProfile(ctrlProfiles.GetItemData(i));
+		DetectionManager::getInstance()->removeDetectionItem(ctrlProfiles.GetItemData(i));
 		ctrlProfiles.DeleteItem(i);
 	}
 	return 0;
@@ -163,12 +123,12 @@ LRESULT ClientsPage::onMoveClientUp(WORD , WORD , HWND , BOOL& ) {
 	int i = ctrlProfiles.GetSelectedIndex();
 	if(i != -1 && i != 0) {
 		int n = ctrlProfiles.GetItemData(i);
-		ClientProfileManager::getInstance()->moveClientProfile(n, -1);
+		DetectionManager::getInstance()->moveDetectionItem(n, -1);
 		ctrlProfiles.SetRedraw(FALSE);
 		ctrlProfiles.DeleteItem(i);
-		ClientProfile cp;
-		ClientProfileManager::getInstance()->getClientProfile(n, cp);
-		addEntry(cp, i-1);
+		DetectionEntry de;
+		DetectionManager::getInstance()->getDetectionItem(n, de);
+		addEntry(de, i-1);
 		ctrlProfiles.SelectItem(i-1);
 		ctrlProfiles.EnsureVisible(i-1, FALSE);
 		ctrlProfiles.SetRedraw(TRUE);
@@ -180,12 +140,12 @@ LRESULT ClientsPage::onMoveClientDown(WORD , WORD , HWND , BOOL& ) {
 	int i = ctrlProfiles.GetSelectedIndex();
 	if(i != -1 && i != (ctrlProfiles.GetItemCount()-1) ) {
 		int n = ctrlProfiles.GetItemData(i);
-		ClientProfileManager::getInstance()->moveClientProfile(n, 1);
+		DetectionManager::getInstance()->moveDetectionItem(n, 1);
 		ctrlProfiles.SetRedraw(FALSE);
 		ctrlProfiles.DeleteItem(i);
-		ClientProfile cp;
-		ClientProfileManager::getInstance()->getClientProfile(n, cp);
-		addEntry(cp, i+1);
+		DetectionEntry de;
+		DetectionManager::getInstance()->getDetectionItem(n, de);
+		addEntry(de, i+1);
 		ctrlProfiles.SelectItem(i+1);
 		ctrlProfiles.EnsureVisible(i+1, FALSE);
 		ctrlProfiles.SetRedraw(TRUE);
@@ -200,8 +160,7 @@ LRESULT ClientsPage::onReload(WORD , WORD , HWND , BOOL& ) {
 
 LRESULT ClientsPage::onUpdate(WORD , WORD , HWND , BOOL& ) {
 	char buf[MAX_PATH];
-	GetWindowTextA(GetDlgItem(IDC_UPDATE_URL), buf, MAX_PATH);
-
+	GetWindowTextA(GetDlgItem(IDC_UPDATE_URL), buf, MAX_PATH); 
 	::EnableWindow(GetDlgItem(IDC_UPDATE), false);
 	c.downloadFile(string(buf) + "Profiles.xml");
 	return 0;
@@ -211,14 +170,12 @@ LRESULT ClientsPage::onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	int item = ctrlProfiles.GetHotItem();
 	if(item != -1) {
 		NMLVGETINFOTIP* lpnmtdi = (NMLVGETINFOTIP*) pnmh;
-		ClientProfile cp;
 
-		ClientProfileManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(item), cp);
-
-		tstring infoTip = Text::toT("Name: " + cp.getName() +
-			"\r\nComment: " + cp.getComment() +
-			"\r\nCheating description: " + cp.getCheatingDescription());
-		//	"\r\nRaw command: ");
+		DetectionEntry de;
+		DetectionManager::getInstance()->getDetectionItem(ctrlProfiles.GetItemData(item), de);
+		tstring infoTip = Text::toT(STRING(NAME) + ": " + de.name +
+			"\r\n" + STRING(COMMENT) + ": " + de.comment +
+			"\r\n" + STRING(CHEATING_DESCRIPTION) + ": " + de.cheat);
 
 		_tcscpy(lpnmtdi->pszText, infoTip.c_str());
 	}
@@ -228,35 +185,51 @@ LRESULT ClientsPage::onInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 void ClientsPage::reload() {
 	ctrlProfiles.SetRedraw(FALSE);
 	ctrlProfiles.DeleteAllItems();
-	ClientProfile::List lst = ClientProfileManager::getInstance()->reloadClientProfiles();
-	for(ClientProfile::List::const_iterator j = lst.begin(); j != lst.end(); ++j) {
-		const ClientProfile& cp = *j;	
-		addEntry(cp, ctrlProfiles.GetItemCount());
+	DetectionManager::getInstance()->reload();
+	const DetectionManager::DetectionItems& lst = DetectionManager::getInstance()->getProfiles();
+	for(DetectionManager::DetectionItems::const_iterator i = lst.begin(); i != lst.end(); ++i) {
+		const DetectionEntry& de = *i;
+		addEntry(de, ctrlProfiles.GetItemCount());
 	}
+	SetDlgItemText(IDC_PROFILE_COUNT, Text::toT(STRING(PROFILE_COUNT) + ": " + Util::toString(ctrlProfiles.GetItemCount())).c_str());
+	SetDlgItemText(IDC_PROFILE_VERSION, Text::toT(STRING(PROFILE_VERSION) + ": " + DetectionManager::getInstance()->getProfileVersion()).c_str());
+	SetDlgItemText(IDC_PROFILE_MESSAGE, Text::toT(STRING(PROFILE_MESSAGE) + ": " + DetectionManager::getInstance()->getProfileMessage()).c_str());
 	ctrlProfiles.SetRedraw(TRUE);
 }
 
 void ClientsPage::reloadFromHttp() {
 	ctrlProfiles.SetRedraw(FALSE);
 	ctrlProfiles.DeleteAllItems();
-	ClientProfile::List lst = ClientProfileManager::getInstance()->reloadClientProfilesFromHttp();
-	for(ClientProfile::List::const_iterator j = lst.begin(); j != lst.end(); ++j) {
-		const ClientProfile& cp = *j;	
-		addEntry(cp, ctrlProfiles.GetItemCount());
+
+	const DetectionManager::DetectionItems& lst = DetectionManager::getInstance()->reloadFromHttp();
+	for(DetectionManager::DetectionItems::const_iterator i = lst.begin(); i != lst.end(); ++i) {
+		const DetectionEntry& de = *i;
+		addEntry(de, ctrlProfiles.GetItemCount());
 	}
+	SetDlgItemText(IDC_PROFILE_COUNT, Text::toT(STRING(PROFILE_COUNT) + ": " + Util::toString(ctrlProfiles.GetItemCount())).c_str());
+	SetDlgItemText(IDC_PROFILE_VERSION, Text::toT(STRING(PROFILE_VERSION) + ": " + DetectionManager::getInstance()->getProfileVersion()).c_str());
+	SetDlgItemText(IDC_PROFILE_MESSAGE, Text::toT(STRING(PROFILE_MESSAGE) + ": " + DetectionManager::getInstance()->getProfileMessage()).c_str());
 	ctrlProfiles.SetRedraw(TRUE);
 }
 
-void ClientsPage::addEntry(const ClientProfile& cp, int pos) {
+void ClientsPage::addEntry(const DetectionEntry& de, int pos) {
 	TStringList lst;
 
-	lst.push_back(Text::toT(cp.getName()));
-	lst.push_back(Text::toT(cp.getComment()));
-	ctrlProfiles.insert(pos, lst, 0, (LPARAM)cp.getId());
+	lst.push_back(Text::toT(de.name));
+	lst.push_back(Text::toT(de.comment));
+	switch(de.rawToSend) {
+		case 1: lst.push_back(_T("Raw 1")); break;
+		case 2: lst.push_back(_T("Raw 2")); break;
+		case 3: lst.push_back(_T("Raw 3")); break;
+		case 4: lst.push_back(_T("Raw 4")); break;
+		case 5: lst.push_back(_T("Raw 5")); break;
+		default: lst.push_back(_T("No action"));
+	}
+	ctrlProfiles.insert(pos, lst, 0, (LPARAM)de.Id);
 }
 
 void ClientsPage::write() {
-	ClientProfileManager::getInstance()->saveClientProfiles();
+	DetectionManager::getInstance()->save();
 	PropPage::write((HWND)*this, items);
 }
 // iDC++
@@ -270,10 +243,15 @@ LRESULT ClientsPage::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled
 	case CDDS_ITEMPREPAINT:
 		{
 			try	{
-				ClientProfile cp;
-				ClientProfileManager::getInstance()->getClientProfile(ctrlProfiles.GetItemData(cd->nmcd.dwItemSpec), cp);
-				if (!cp.getCheatingDescription().empty()) {
+				DetectionEntry de;
+				DetectionManager::getInstance()->getDetectionItem(ctrlProfiles.GetItemData(cd->nmcd.dwItemSpec), de);
+				if (de.rawToSend) {
 					cd->clrText = SETTING(BAD_CLIENT_COLOUR);
+				} else if (!de.cheat.empty()) {
+					cd->clrText = SETTING(BAD_FILELIST_COLOUR);
+				}
+				if(cd->nmcd.dwItemSpec % 2 == 0) {
+					cd->clrTextBk = RGB(245, 245, 245);
 				}
 				return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
 			}

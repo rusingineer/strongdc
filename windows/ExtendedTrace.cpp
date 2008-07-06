@@ -80,7 +80,7 @@ TCHAR* crashLibs[LIBCOUNT][2] = {
 static void checkBuggyLibrary(PCSTR library) {
 	for(int i = 0; i < LIBCOUNT; i++) {
 		string lib = Text::fromT(crashLibs[i][0]); tstring app = crashLibs[i][1];
-		if(Util::stricmp(library, lib) == 0) {
+		if(stricmp(library, lib) == 0) {
 			size_t BUF_SIZE = TSTRING(LIB_CRASH).size() + app.size() + 16;
 			
 			tstring buf;

@@ -371,7 +371,7 @@ const string& convert(const string& str, string& tmp, const string& fromCharset,
 		return str;
 
 #ifdef _WIN32
-	if (Util::stricmp(fromCharset, toCharset) == 0)
+	if (stricmp(fromCharset, toCharset) == 0)
 		return str;
 	if(toCharset == utf8 || toLower(toCharset, tmp) == utf8)
 		return acpToUtf8(str, tmp);

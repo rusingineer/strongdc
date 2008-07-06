@@ -42,7 +42,7 @@ public:
 		typedef File* Ptr;
 		struct FileSort {
 			bool operator()(const Ptr& a, const Ptr& b) const {
-				return Util::stricmp(a->getName().c_str(), b->getName().c_str()) < 0;
+				return stricmp(a->getName().c_str(), b->getName().c_str()) < 0;
 			}
 		};
 		typedef vector<Ptr> List;
@@ -76,7 +76,7 @@ public:
 		typedef Directory* Ptr;
 		struct DirSort {
 			bool operator()(const Ptr& a, const Ptr& b) const {
-				return Util::stricmp(a->getName().c_str(), b->getName().c_str()) < 0;
+				return stricmp(a->getName().c_str(), b->getName().c_str()) < 0;
 			}
 		};
 		typedef vector<Ptr> List;
@@ -168,8 +168,8 @@ private:
 	
 };
 
-inline bool operator==(DirectoryListing::Directory::Ptr a, const string& b) { return Util::stricmp(a->getName(), b) == 0; }
-inline bool operator==(DirectoryListing::File::Ptr a, const string& b) { return Util::stricmp(a->getName(), b) == 0; }
+inline bool operator==(DirectoryListing::Directory::Ptr a, const string& b) { return stricmp(a->getName(), b) == 0; }
+inline bool operator==(DirectoryListing::File::Ptr a, const string& b) { return stricmp(a->getName(), b) == 0; }
 
 } // namespace dcpp
 

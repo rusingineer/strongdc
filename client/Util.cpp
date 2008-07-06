@@ -664,46 +664,6 @@ wstring::size_type Util::findSubString(const wstring& aString, const wstring& aS
 	return static_cast<wstring::size_type>(wstring::npos);
 }
 
-int Util::stricmp(const char* a, const char* b) {
-	while(*a) {
-			wchar_t ca = 0, cb = 0;
-			int na = Text::utf8ToWc(a, ca);
-			int nb = Text::utf8ToWc(b, cb);
-			ca = Text::toLower(ca);
-			cb = Text::toLower(cb);
-			if(ca != cb) {
-			return (int)ca - (int)cb;
-			}
-		a += abs(na);
-		b += abs(nb);
-	}
-	wchar_t ca = 0, cb = 0;
-	Text::utf8ToWc(a, ca);
-	Text::utf8ToWc(b, cb);
-
-	return (int)Text::toLower(ca) - (int)Text::toLower(cb);
-}
-
-int Util::strnicmp(const char* a, const char* b, size_t n) {
-	const char* end = a + n;
-	while(*a && a < end) {
-		wchar_t ca = 0, cb = 0;
-		int na = Text::utf8ToWc(a, ca);
-		int nb = Text::utf8ToWc(b, cb);
-		ca = Text::toLower(ca);
-		cb = Text::toLower(cb);
-		if(ca != cb) {
-			return (int)ca - (int)cb;
-		}
-		a += abs(na);
-		b += abs(nb);
-	}
-	wchar_t ca = 0, cb = 0;
-	Text::utf8ToWc(a, ca);
-	Text::utf8ToWc(b, cb);
-	return (a >= end) ? 0 : ((int)Text::toLower(ca) - (int)Text::toLower(cb));
-}
-
 string Util::encodeURI(const string& aString, bool reverse) {
 	// reference: rfc2396
 	string tmp = aString;
@@ -862,13 +822,13 @@ uint64_t Util::getDirSize(const string &sFullPath) {
 				continue;
 			if(fData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				string newName = sFullPath + PATH_SEPARATOR + name;
-				if(Util::stricmp(newName + PATH_SEPARATOR, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) {
+				if(stricmp(newName + PATH_SEPARATOR, SETTING(TEMP_DOWNLOAD_DIRECTORY)) != 0) {
 					total += getDirSize(newName);
 				}
 			} else {
 				// Not a directory, assume it's a file...make sure we're not sharing the settings file...
-				if( (Util::stricmp(name.c_str(), "DCPlusPlus.xml") != 0) && 
-					(Util::stricmp(name.c_str(), "Favorites.xml") != 0)) {
+				if( (stricmp(name.c_str(), "DCPlusPlus.xml") != 0) && 
+					(stricmp(name.c_str(), "Favorites.xml") != 0)) {
 
 					total+=(uint64_t)fData.nFileSizeLow | ((uint64_t)fData.nFileSizeHigh)<<32;
 				}
@@ -1096,9 +1056,9 @@ string Util::toNmdcFile(const string& file) {
 
 TCHAR* Util::strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound) {
 	TCHAR *s1, *s2;
-	TCHAR *cp = (TCHAR *)str1;
+	TCHAR *cp = const_cast<TCHAR*>(str1);
 	if (!*str2)
-		return (TCHAR *)str1;
+		return const_cast<TCHAR*>(str1);
 	int nIdx = 0;
 	while (*cp) {
 		s1 = cp;
@@ -1138,6 +1098,14 @@ string Util::formatStatus(int iStatus) {
 	}	
 	
 	return status + "(" + toString(iStatus) + ")";
+}
+
+void Util::replace(string& aString, const string& findStr, const string& replaceStr) {
+   string::size_type offset = 0;
+   while((offset = aString.find(findStr, offset)) != string::npos) {
+      aString.replace(offset, findStr.length(), replaceStr);
+      offset += replaceStr.length();
+   }
 }
 	
 } // namespace dcpp

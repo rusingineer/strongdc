@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -223,10 +223,10 @@ bool FavoriteManager::addFavoriteDir(const string& aDirectory, const string & aN
 		path += PATH_SEPARATOR;
 
 	for(StringPairIter i = favoriteDirs.begin(); i != favoriteDirs.end(); ++i) {
-		if((Util::strnicmp(path, i->first, i->first.length()) == 0) && (Util::strnicmp(path, i->first, path.length()) == 0)) {
+		if((strnicmp(path, i->first, i->first.length()) == 0) && (strnicmp(path, i->first, path.length()) == 0)) {
 			return false;
 		}
-		if(Util::stricmp(aName, i->second) == 0) {
+		if(stricmp(aName, i->second) == 0) {
 			return false;
 		}
 	}
@@ -242,7 +242,7 @@ bool FavoriteManager::removeFavoriteDir(const string& aName) {
 		d += PATH_SEPARATOR;
 
 	for(StringPairIter j = favoriteDirs.begin(); j != favoriteDirs.end(); ++j) {
-		if(Util::stricmp(j->first.c_str(), d.c_str()) == 0) {
+		if(stricmp(j->first.c_str(), d.c_str()) == 0) {
 			favoriteDirs.erase(j);
 			save();
 			return true;
@@ -254,7 +254,7 @@ bool FavoriteManager::removeFavoriteDir(const string& aName) {
 bool FavoriteManager::renameFavoriteDir(const string& aName, const string& anotherName) {
 
 	for(StringPairIter j = favoriteDirs.begin(); j != favoriteDirs.end(); ++j) {
-		if(Util::stricmp(j->second.c_str(), aName.c_str()) == 0) {
+		if(stricmp(j->second.c_str(), aName.c_str()) == 0) {
 			j->second = anotherName;
 			save();
 			return true;
@@ -655,7 +655,7 @@ void FavoriteManager::userUpdated(const OnlineUser& info) {
 FavoriteHubEntry* FavoriteManager::getFavoriteHubEntry(const string& aServer) const {
 	for(FavoriteHubEntryList::const_iterator i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
 		FavoriteHubEntry* hub = *i;
-		if(Util::stricmp(hub->getServer(), aServer) == 0) {
+		if(stricmp(hub->getServer(), aServer) == 0) {
 			return hub;
 		}
 	}
@@ -722,7 +722,7 @@ StringList FavoriteManager::getHubLists() {
 
 FavoriteHubEntryList::const_iterator FavoriteManager::getFavoriteHub(const string& aServer) {
 	for(FavoriteHubEntryList::const_iterator i = favoriteHubs.begin(); i != favoriteHubs.end(); ++i) {
-		if(Util::stricmp((*i)->getServer(), aServer) == 0) {
+		if(stricmp((*i)->getServer(), aServer) == 0) {
 			return i;
 		}
 	}
@@ -740,7 +740,7 @@ void FavoriteManager::refresh(bool forceDownload /* = false */) {
 	if(sl.empty())
 		return;
 	publicListServer = sl[(lastServer) % sl.size()];
-	if(Util::strnicmp(publicListServer.c_str(), "http://", 7) != 0) {
+	if(strnicmp(publicListServer.c_str(), "http://", 7) != 0) {
 		lastServer++;
 		return;
 	}
@@ -753,7 +753,7 @@ void FavoriteManager::refresh(bool forceDownload /* = false */) {
 				Lock l(cs);
 				publicListMatrix[publicListServer].clear();
 			}
-			listType = (Util::stricmp(path.substr(path.size() - 4), ".bz2") == 0) ? TYPE_BZIP2 : TYPE_NORMAL;
+			listType = (stricmp(path.substr(path.size() - 4), ".bz2") == 0) ? TYPE_BZIP2 : TYPE_NORMAL;
 			try {
 				downloadBuf = File(path, File::READ, File::OPEN).read();
 			} catch(const FileException&) {

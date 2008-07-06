@@ -215,7 +215,7 @@ public:
 	RecentHubEntry* getRecentHubEntry(const string& aServer) {
 		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
 			RecentHubEntry* r = *i;
-			if(Util::stricmp(r->getServer(), aServer) == 0) {
+			if(stricmp(r->getServer(), aServer) == 0) {
 				return r;
 			}
 		}
@@ -302,7 +302,7 @@ private:
 
 	RecentHubEntry::Iter getRecentHub(const string& aServer) const {
 		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
-			if(Util::stricmp((*i)->getServer(), aServer) == 0) {
+			if(stricmp((*i)->getServer(), aServer) == 0) {
 				return i;
 			}
 		}
