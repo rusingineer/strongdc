@@ -1,11 +1,60 @@
+* Added setting for max characters per tab (poy)
+* [L#234458] Added "File size" and "% transferred" columns in finished windows (poy, emtee)
+* Fix absent country code for IPs > 128.0.0.0 in MSVC builds (poy)
+* Remove useless chars in some paths that could lead to a Shell menu crash (poy)
+* [L#234458] Disable some menu commands in finished windows when files don't exist (poy)
+* Added option to always display tray icon and reorganized its menu
+* [L#234897] Improve error message when file list is too big (thanks steven sheehy)
+* [L#234529] Right-alight sizes
+* [L#243908] Better nick sorting in search results (thanks emtee)
+* [L#231447] Fix file list positioning from search
+* Fix bogus menus when they contain more than 200 dynamic items (poy)
+* Shell menus are now sub-menus, loaded only when requested (poy)
+* [L#243728] Make Shell menus Vista-compliant (poy)
+* Don't re-log logs when opening PM windows (poy)
+* [L#243201] Save excluded search terms correctly in search history (thanks emtee)
+* Search spy tab highlighting (poy)
+* Help updates (emtee, poy)
+
+-- 0.707 2008-06-22 --
 * Fixed crash when pressing F1 twice
 * [L#203213] Search results with same tth are grouped
 * [L#209419] Keep nick when user goes offline
 * [L#208615] Fix finished frames being spammed by segments (thanks poy)
 * Fixed a potential loss of connection with compressed transfers
-* Fixed crash on shell menu when browsing own file list (poy)
-* Help updates (eMTee, poy)
+* Fixed crash on Shell menu when browsing own file list (poy)
+* Help updates (emtee, poy, bsod, pseudonym)
 * [L#217878] Use system messages for file errors on nix (thanks individ)
+* [L#185549] Fix connection hang on local hub connection
+* [L#226188] Fix small chunks uploaded without slot (thanks pseudonym)
+* [L#228059] Fix UI not updating after "Find" in a file list window yields no result (poy)
+* Fixed invisible menu items in large owner-drawn menus (poy)
+* [L#230972] Copy any field of hubframe userlist to clipboard (cologic)
+* Prevent transfer tabs from being closed (poy)
+* [dwt] Improved richedit support (thanks cologic)
+* [L#228285] No "beep" sound when starting a search with the enter key (poy)
+* Upgraded to OpenSSL 0.9.8h (poy)
+* [L#237396] Fix crash when segmented downloads are switched off (thanks bigmuscle)
+* [L#238333] Fix a possible remote crash on partial file list requests (thanks crise)
+* [L#238522] Make translations work with wide path names (poy)
+* Extra mouse buttons can be used to switch between tabs (poy)
+* Fixed Alt+key combinations in the file list window (poy)
+* Added a drop-down menu next to the toolbar icon for favorite hubs (poy)
+* [L#237682] Fix bug that would make DC++ not return correct search results
+* Fixed directories not being returned when searching for directories only
+* Fix wrong default settings in some cases (poy)
+* Fixed favorite hubs & ADLSearch windows scrolled down when opened (emtee)
+* Fix removal of multiple favorite users at the same time (poy)
+* Double-click on status bars to open corresponding log files (poy)
+* The number of filtered items shown in public hubs (emtee)
+* [L#225592] Fix file corruption when partially downloaded file is corrupted (part emtee)
+* [L#239793] Automagically retry if coral fails (thanks emtee)
+* Updated Icelandic, Greek, Polish, Turkish, German, Finnish, Chinese, Slovak,
+  Arabic, Norwegian, Dutch, Ukranian, Czech, Spanish, Estonian, Brazilian,
+  Hungarian, French, UK English, Romanian, Hebrew, Swedish, Russian,
+  Portuguese and Slovenian translations (thanks to the respective translators)
+* [L#228271] Right-click selects user in waiting users
+* [L#235852] Add 1000 mbit upload speed
 
 -- 0.706 2008-04-24 --
 * [L#202563] Fixed some missing translations
@@ -82,7 +131,7 @@
 * [L#186429] Fix right-click issue when chat history is long (thanks poy)
 * [L#188107] In waiting users, show requested chunk (since we can't know % done)
 * [L#188585] Fixed crash when download connection was disconnected before any data was received
-* Fixed crash due to race condition on idle check (thans bigmuscle)
+* Fixed crash due to race condition on idle check (thanks bigmuscle)
 * Fixed crash when copying identity
 * Fixed potential timer race condition (thanks bigmuscle)
 * The good parts of partially downloaded segments are now added to queue (thanks bigmuscle)
@@ -204,7 +253,7 @@
 * [B#1139] Fixed download delay in some cases (thanks mikael eman)
 * [B#1144] Added possibility to add many hub lists in one go (use ; as separator) (thanks poy)
 * [B#1152] Only refresh if there are directories shared (thanks ullner)
-* [B#1153] More shell menus (thanks poy)
+* [B#1153] More Shell menus (thanks poy)
 * [B#1159] Removed unnecessary resume position reset (thanks cologic)
 * Removed rollback support - advanced TTH resume is now always used (thanks cologic)
 * Switched to mingw/stlport5.1
@@ -238,7 +287,7 @@
 * [B#1085] Better sound playing settings (thanks cologic / ullner)
 * [B#1111] OpenSSL compatibility and some unix fixes (thanks steven sheehy)
 * [B#1056] Added option to sort fav users above other users in hub frame (thanks poy)
-* [B#1063] Added option to show shell context menu in finished frame (thanks poy)
+* [B#1063] Added option to show Shell context menu in finished frame (thanks poy)
 * [B#1092] Fixed TTH tree being redownloaded (thanks stephan hohe)
 * [B#1097] Fixed waiting users being removed (thanks stephan hohe)
 * [B#1110] Added new adc hub list (thanks mafa_45)

@@ -60,6 +60,7 @@
 		<String Name="CertificateGenerated">Vygenerován nový TLS certifikát</String>		
 		<String Name="CertificateNotTrusted">Nelze navázat připojení, certifikát je neplatný</String>
 		<String Name="CertificateGenerationFailed">TLS kódování je zakázáno, nepodařilo se generovat certifikát: </String>
+		<String Name="CheatingDescription">Popis podvádění</String>
 		<String Name="Cid">CID</String>
 		<String Name="Clear">Vyčistit chat</String>
 		<String Name="Clientid">Identifikace klienta</String>
@@ -71,6 +72,7 @@
 		<String Name="ColorPasive">Pasivní uživatel</String>
 		<String Name="ColorServer">Uživatel se serverem</String>
 		<String Name="CommandTooLong">Příkaz přesáhl maximální délku znaků</String>
+		<String Name="Comment">Poznámka</String>
 		<String Name="Compressed">Komprimovaný</String>
 		<String Name="CompressionError">Chyba během komprimace</String>
 		<String Name="Configure">&amp;Konfigurovat</String>
@@ -94,6 +96,7 @@
 		<String Name="CopyMagnetLink">Kopírovat magnet link</String>
 		<String Name="CopyNick">Kopírovat přezdívku</String>
 		<String Name="CopyUrl">Kopírovat odkaz</String>
+		<String Name="Coral">Používat síť Coral při stahování seznamu hubů (zvyšuje spolehlivost)</String>		
 		<String Name="CouldNotOpenTargetFile">Nelze otevřít cílový soubor: </String>
 		<String Name="Count">Počet</String>
 		<String Name="Country">Země</String>
@@ -371,6 +374,7 @@
 		<String Name="MoveDown">&amp;Dolu</String>
 		<String Name="MoveUp">&amp;Nahoru</String>
 		<String Name="MynickInChat">Vlastní přezdívka v chatu</String>
+		<String Name="Name">Název</String>		
 		<String Name="NetworkStatistics">Statistiky sítě</String>
 		<String Name="New">&amp;Nový...</String>
 		<String Name="NewDisconnect">Odstranit uživatele z fronty, je li rychlost pod</String>
@@ -409,9 +413,11 @@
 		<String Name="OverlapChunks">Překrýt pomalé segmenty rychlejším uživatelem když se soubor blíží ke konci</String>
 		<String Name="OverlappedSlowSegment">Nahrazeno rychlejším uživatelem</String>
 		<String Name="Parts">Odchod: </String>
+		<String Name="ParamExists">Parametr se stejným názvem již existuje!</String>		
 		<String Name="PassiveUser">Pasivní uživatel</String>
 		<String Name="Password">Heslo</String>
 		<String Name="Path">Cesta</String>
+		<String Name="Pause">Pozastavit</String>		
 		<String Name="PauseSearch">Zastavit hledání</String>
 		<String Name="Paused">Pozastaveno</String>
 		<String Name="Pb">PB</String>
@@ -436,6 +442,9 @@
 		<String Name="Priority">Priorita</String>
 		<String Name="PrivateMessage">Přišla nová Soukromá zpráva</String>
 		<String Name="PrivateMessageFrom">Soukromá zpráva od: </String>
+		<String Name="ProfileVersion">Verze</String>
+		<String Name="ProfileCount">Počet</String>
+		<String Name="ProfileMessage">Zpráva</String>	
 		<String Name="ProgressBack">Ukazatel přenosů - pozadí</String>
 		<String Name="ProgressCompress">Ukazatel přenosu - dekomprimovaná část</String>
 		<String Name="ProgressDownloaded">Ukazatel ve frontě - stažené bloky</String>
@@ -446,7 +455,13 @@
 		<String Name="Properties">&amp;Vlastnosti</String>
 		<String Name="PublicHubs">Veřejné huby</String>
 		<String Name="Purge">Vyčistit</String>
-		<String Name="Queued">Ve frontě: </String>		
+		<String Name="RegexpTester">Testování regulárních výrazů</String>
+		<String Name="RegexpMatch">Souhlasí!</String>
+		<String Name="RegexpMismatch">Nesouhlasí.</String>
+		<String Name="RegexpInvalid">Chybný regulární výraz!</String>
+		<String Name="Regexp">Regulární výraz</String>
+		<String Name="QsearchStr">Rychlé hledání...</String>
+		<String Name="Queued">Ve frontě: </String>
 		<String Name="QuickConnect">Rychlé připojení</String>
 		<String Name="Rating">Hodnocení</String>
 		<String Name="Ratio">Poměr</String>
@@ -470,6 +485,7 @@
 		<String Name="RenamedTo"> přejmenovat na </String>
 		<String Name="Report">Info o uživateli</String>
 		<String Name="ReportAlternates">Hlásit automatické hledání ve stavovém řádku</String>
+		<String Name="Resume">Obnovit</String>		
 		<String Name="RetrievingData">Přijímám data</String>
 		<String Name="RightColor">Barva vpravo</String>
 		<String Name="Running">Probíhá...</String>
@@ -552,8 +568,9 @@
 		<String Name="SettingsAutoPriorityDefault">Standardně používat automatickou prioritu</String>
 		<String Name="SettingsAutoRefreshTime">Obnovovat sdílení každých</String>
 		<String Name="SettingsAutoSearch">Automaticky hledat alternativy každých</String>
-		<String Name="SettingsAutoSearchAutoMatch">Automaticky porovnávání fronty stahování</String>
+		<String Name="SettingsAutoSearchAutoMatch">Automaticky porovnávat fronty stahování</String>
 		<String Name="SettingsAutoSearchLimit">Max zdrojů pro auto-hledání</String>
+		<String Name="SettingsAutoSlots">Maximum automaticky otevřených</String>		
 		<String Name="SettingsAvipreview">Náhled souboru</String>
 		<String Name="SettingsBindAddress">Rozhraní sítě</String>
 		<String Name="SettingsBindAddressHelp">Rozhraní sítě pro všechny připojení</String>
@@ -717,7 +734,6 @@
 		<String Name="SettingsUseOldSharingUi">Použít staré prostředí pro sdílení</String>
 		<String Name="SettingsUseSystemIcons">Použít systémové ikonky při prohlížení souborů</String>
 		<String Name="SettingsUseTls">Použít šifrované připojení TLS, pokud to klient podporuje</String>
-		<String Name="SettingsUseVerticalView">Standardně používat vodorovné zobrazení</String>
 		<String Name="SettingsUserColors">Seznam uživatelů</String>
 		<String Name="SettingsUserCommands">Uživatelské příkazy</String>
 		<String Name="SettingsUserMenu">Položky uživatelského menu</String>
@@ -806,6 +822,7 @@ Výchozí: %H:%M:%S</String>
 		<String Name="TimestampHelpDesc">Časy-Nápověda</String>
 		<String Name="TimestampsDisabled">Časy-Vypnuty</String>
 		<String Name="TimestampsEnabled">Časy-Zapnuty</String>
+		<String Name="ToggleQsearch">Rychlé hledání	Ctrl+4</String>		
 		<String Name="TooMuchData">Bylo odesláno více dat, než se očekávalo</String>
 		<String Name="Total">Celkem: </String>
 		<String Name="Transferlistdblclickaction">Dvojklik v okně přenosů</String>
@@ -815,6 +832,7 @@ Výchozí: %H:%M:%S</String>
 		<String Name="TthRoot">TTH Root</String>
 		<String Name="TwoColors">Dvoubarevný</String>
 		<String Name="Type">Typ</String>
+		<String Name="UcSubmenu">Umístit uživatelské příkazy do podnabídky</String>
 		<String Name="UnableToCreateThread">Nepodařilo se vytvořit vlákno</String>
 		<String Name="UnableToOpenFilelist">Nepodařilo se otevřít seznam souborů: </String>
 		<String Name="UnableToRename">Nelze přejmenovat </String>
@@ -865,7 +883,6 @@ Výchozí: %H:%M:%S</String>
 		<String Name="VirtualNameExists">Virtuální adresář již existuje</String>
 		<String Name="VirtualNameLong">Název pod kterým jiní složku uvidí</String>
 		<String Name="Waiting">Čekám...</String>
-		<String Name="WaitingFor">Zbývá %i sekund před dalším hledáním...</String>
 		<String Name="WaitingTime">Čas čekání</String>
 		<String Name="WaitingToRetry">Čekám na další pokus...</String>
 		<String Name="WaitingUserOnline">Čekám (Uživatel je připojen)</String>
