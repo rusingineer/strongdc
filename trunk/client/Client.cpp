@@ -85,7 +85,7 @@ void Client::reloadSettings(bool updateNick) {
 		setFavIp(hub->getIP());
 		
 		if(hub->getSearchInterval() < 10)
-			setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL));
+			setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL) * 1000);
 		else
 			setSearchInterval(hub->getSearchInterval() * 1000);
 	} else {
@@ -95,7 +95,7 @@ void Client::reloadSettings(bool updateNick) {
 		setCurrentDescription(SETTING(DESCRIPTION));
 		setStealth(true);
 		setFavIp(Util::emptyString);
-		setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL));
+		setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL) * 1000);
 	}
 }
 

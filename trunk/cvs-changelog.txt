@@ -1,3 +1,6 @@
+** svn401
+	fixed searching interval
+
 ** svn400
 	added missing files
 

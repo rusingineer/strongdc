@@ -474,14 +474,16 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		string port = param.substr(j+1);
 		
 		bool secure = false;
-		if(port.rfind("S") == port.length() - 1) {
+		if(port[port.size() - 1] == 'S') {
+			port.erase(port.size() - 1);
 			if(CryptoManager::getInstance()->TLSOk()) {
 				secure = true;
-			} else {
-				port.erase(port.length() - 1);
 			}
 		}
 		
+		if(port.empty())
+			return;
+			
 		// For simplicity, we make the assumption that users on a hub have the same character encoding
 		ConnectionManager::getInstance()->nmdcConnect(server, static_cast<uint16_t>(Util::toInt(port)), getMyNick(), getHubUrl(), getEncoding(), getStealth(), secure);
 	} else if(cmd == "$RevConnectToMe") {

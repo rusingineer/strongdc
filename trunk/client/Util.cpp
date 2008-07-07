@@ -1095,9 +1095,9 @@ string Util::formatStatus(int iStatus) {
 	}
 	if(iStatus & Identity::TLS) {
 		status += "TLS ";
-	}	
+	}
 	
-	return status + "(" + toString(iStatus) + ")";
+	return (status.empty() ? "Unknown " : status) + "(" + toString(iStatus) + ")";
 }
 
 void Util::replace(string& aString, const string& findStr, const string& replaceStr) {
