@@ -236,7 +236,7 @@
 			IntermediateDirectory="$(SolutionDir)vc9\$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			CharacterSet="1"
-			WholeProgramOptimization="2"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"

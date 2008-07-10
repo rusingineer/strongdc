@@ -4,6 +4,7 @@
 	Version="9,00"
 	Name="zlib"
 	ProjectGUID="{DFBBE42A-45F4-4188-89C2-17F5DFE50673}"
+	RootNamespace="zlib"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -260,7 +261,7 @@
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
-			WholeProgramOptimization="2"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"

@@ -36,10 +36,6 @@ public:
 		TYPE_DIRECTORY
 	};
 
-	//typedef SearchResult* Ptr;
-	//typedef vector<Ptr> List;
-	//typedef List::const_iterator Iter;
-	
 	SearchResult(Types aType, int64_t aSize, const string& name, const TTHValue& aTTH);
 
 	SearchResult(const UserPtr& aUser, Types aType, uint8_t aSlots, uint8_t aFreeSlots, 

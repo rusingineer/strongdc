@@ -304,7 +304,11 @@ void PrivateFrame::onEnter()
 				addLine(_T("*** ") + WinUtil::commands + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
 			} else {
 				if(replyTo->isOnline()) {
-					sendMessage(tstring(m));
+					if (BOOLSETTING(SEND_UNKNOWN_COMMANDS)) {
+						sendMessage(tstring(m));
+					} else {
+						addClientLine(TSTRING(UNKNOWN_COMMAND) + m);
+					}
 				} else {
 					ctrlStatus.SetText(0, CTSTRING(USER_WENT_OFFLINE));
 					resetText = false;

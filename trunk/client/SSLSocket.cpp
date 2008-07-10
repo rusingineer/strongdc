@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,33 +28,83 @@
 namespace dcpp {
 
 SSLSocket::SSLSocket(SSL_CTX* context) throw(SocketException) : ctx(context), ssl(0) {
+
 }
 
 void SSLSocket::connect(const string& aIp, uint16_t aPort) throw(SocketException) {
 	Socket::setBlocking(true);
 	Socket::connect(aIp, aPort);
 	
+	waitConnected(0);
+}
+
+bool SSLSocket::waitConnected(uint64_t millis) {
+	if(!ssl) {
+		if(!Socket::waitConnected(millis)) {
+			return false;
+		}
 	ssl.reset(SSL_new(ctx));
 	if(!ssl)
 		checkSSL(-1);
 
 	checkSSL(SSL_set_fd(ssl, sock));
-	checkSSL(SSL_connect(ssl));
-	dcdebug("Connected to SSL server using %s\n", SSL_get_cipher(ssl));
-	Socket::setBlocking(false);
+	}
+
+	while(true) {
+		int ret = SSL_connect(ssl);
+		if(ret == 1) {
+			dcdebug("Connected to SSL server using %s\n", SSL_get_cipher(ssl));
+			return true;
+		}
+		if(!waitWant(ret, millis)) {
+			return false;
+		}
+	}
 }
 
 void SSLSocket::accept(const Socket& listeningSocket) throw(SocketException) {
 	Socket::accept(listeningSocket);
 
+	waitAccepted(0);
+}
+
+bool SSLSocket::waitAccepted(uint64_t millis) {
+	if(!ssl) {
+		if(!Socket::waitAccepted(millis)) {
+			return false;
+		}
 	ssl.reset(SSL_new(ctx));
 	if(!ssl)
 		checkSSL(-1);
 
 	checkSSL(SSL_set_fd(ssl, sock));
-	/// @todo fix blocking if accept fails
-	checkSSL(SSL_accept(ssl));
-	dcdebug("Connected to SSL client using %s\n", SSL_get_cipher(ssl));
+	}
+
+	while(true) {
+		int ret = SSL_accept(ssl);
+		if(ret == 1) {
+			dcdebug("Connected to SSL client using %s\n", SSL_get_cipher(ssl));
+			return true;
+		}
+		if(!waitWant(ret, millis)) {
+			return false;
+		}
+	}
+}
+
+bool SSLSocket::waitWant(int ret, uint64_t millis) {
+	int err = SSL_get_error(ssl, ret);
+	switch(err) {
+	case SSL_ERROR_WANT_READ:
+		return wait(millis, Socket::WAIT_READ) == WAIT_READ;
+	case SSL_ERROR_WANT_WRITE:
+		return wait(millis, Socket::WAIT_WRITE) == WAIT_WRITE;
+	// Check if this is a fatal error...
+	default: checkSSL(ret);
+	}
+	dcdebug("SSL: Unexpected fallthrough");
+	// There was no error?
+	return true;
 }
 
 int SSLSocket::read(void* aBuffer, int aBufLen) throw(SocketException) {
@@ -88,28 +138,25 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 	}
 	if(ret <= 0) {
 		int err = SSL_get_error(ssl, ret);
-		switch(SSL_get_error(ssl, ret)) {
+		switch(err) {
 			case SSL_ERROR_NONE:		// Fallthrough - YaSSL doesn't for example return an openssl compatible error on recv fail
 			case SSL_ERROR_WANT_READ:	// Fallthrough
 			case SSL_ERROR_WANT_WRITE:
 				return -1;
-			case SSL_ERROR_SYSCALL:
-			case SSL_ERROR_ZERO_RETURN:
-				// The TLS/SSL connection has been closed.
-				throw SocketException(STRING(CONNECTION_CLOSED));
 			default:
 				{
 					ssl.reset();
 					// @todo replace 80 with MAX_ERROR_SZ or whatever's appropriate for yaSSL in some nice way...
-					char errbuf[80];
-					throw SocketException(string("SSL Error: ") + ERR_error_string(err, errbuf) + " (" + Util::toString(ret) + ", " + Util::toString(err) + ")"); // @todo Translate
+					//char errbuf[80];
+					//throw SocketException(string("SSL Error: ") + ERR_error_string(err, errbuf) + " (" + Util::toString(ret) + ", " + Util::toString(err) + ")"); // @todo Translate
+					throw SocketException(STRING(CONNECTION_CLOSED));
 				}
 		}
 	}
 	return ret;
 }
 
-int SSLSocket::wait(uint32_t millis, int waitFor) throw(SocketException) {
+int SSLSocket::wait(uint64_t millis, int waitFor) throw(SocketException) {
 	if(ssl && (waitFor & Socket::WAIT_READ)) {
 		/** @todo Take writing into account as well if reading is possible? */
 		char c;

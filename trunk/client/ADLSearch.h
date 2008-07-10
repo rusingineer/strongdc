@@ -231,19 +231,19 @@ private:
 	// Substring searches
 	StringSearch::List stringSearchList;
 	bool SearchAll(const string& s) {
-		boost::regex reg(searchString, boost::regex_constants::icase);
-		return boost::regex_search(s.begin(), s.end(), reg);
-		//if(reg.IsValid()) {
-		//	return reg.match(s) > 0;
-		//} else {
-		//	// Match all substrings
-		//	for(StringSearch::List::const_iterator i = stringSearchList.begin(); i != stringSearchList.end(); ++i) {
-		//		if(!i->match(s)) {
-		//			return false;
-		//		}
-		//	}
-		//}
-		//return (stringSearchList.size() != 0);
+		try {
+			boost::regex reg(searchString, boost::regex_constants::icase);
+			return boost::regex_search(s.begin(), s.end(), reg);
+		} catch(...) {
+		}
+		
+		// Match all substrings
+		for(StringSearch::List::const_iterator i = stringSearchList.begin(); i != stringSearchList.end(); ++i) {
+			if(!i->match(s)) {
+				return false;
+			}
+		}
+		return (stringSearchList.size() != 0);
 	}
 };
 

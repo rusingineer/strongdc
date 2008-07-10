@@ -92,7 +92,7 @@ public:
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
 	Identity(const Identity& rhs) { *this = rhs; } // Use operator= since we have to lock before reading...
 	Identity& operator=(const Identity& rhs) { FastLock l(cs); user = rhs.user; info = rhs.info; return *this; }
-	~Identity() { FastLock l(cs); }
+	~Identity() { }
 
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Nick, "NI")
@@ -122,7 +122,7 @@ public:
 	bool isHidden() const { return isSet("HI"); }
 	bool isBot() const { return isClientType(CT_BOT) || isSet("BO"); }
 	bool isAway() const { return (getStatus() & AWAY) || isSet("AW"); }
-	bool isTcpActive() const { return (!user->isSet(User::NMDC) && !getIp().empty()) || !user->isSet(User::PASSIVE); }
+	bool isTcpActive() const { return user->isSet(User::NMDC) ? !user->isSet(User::PASSIVE) : !getIp().empty(); }
 	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 	string get(const char* name) const;
 	void set(const char* name, const string& val);

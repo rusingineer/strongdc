@@ -1,4 +1,4 @@
-	-- StrongDC++ --
+	-- StrongDC++ 2.2 --
 
 *** VAROVÁNÍ ***
   Všechna spojení mezi StrongDC++ jsou nyní automaticky šifrovány.
@@ -25,7 +25,6 @@
 * interval pro hledání je závislı na hubu
 * nastavení slotù má svojí vlastní stránku
 * ADL hledání se provádí pøes regulární vırazy
-* opraveno èásteèné sdílení souborù
 * pøidána volba pro nastavení maxima automaticky otevøenıch slotù (Kulmegil)
 * implementovány nìjaká vylepšení do dialogu o stavu hashování (Kulmegil)
 * opraven únik pamì v nastavení sítì (ApexDC++)

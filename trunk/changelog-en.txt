@@ -1,4 +1,4 @@
-	-- StrongDC++ --
+	-- StrongDC++ 2.2 --
 
 *** WARNING ***
   All connections between StrongDC++ are automatically encrypted now.
@@ -25,7 +25,6 @@
 * search interval is hub dependent
 * upload slots settings has its own page
 * ADL search is done via regexp
-* fixed partial file sharing
 * added option to set maximum auto-opened slots (old Kulmegil's patch)
 * implemented some tweaks to hash progress dialog (old Kulmegil's patch)
 * fixed memory leak in network settings (ApexDC++)

@@ -31,6 +31,7 @@ PropPage::TextItem Sounds::texts[] = {
 	{ IDC_CZDC_PM_SOUND, ResourceManager::SETCZDC_PRIVATE_SOUND },
 	{ IDC_BROWSE, ResourceManager::BROWSE },	
 	{ IDC_PLAY, ResourceManager::PLAY },
+	{ IDC_NONE, ResourceManager::NONE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
