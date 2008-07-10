@@ -140,6 +140,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 			ClientManager::getInstance()->setUnknownCommand(getUser(), aLine);
 		
 		dcdebug("Unknown NMDC command: %.50s\n", aLine.c_str());
+		unsetFlag(FLAG_NMDC);
 	}
 }
 

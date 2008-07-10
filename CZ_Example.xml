@@ -62,6 +62,7 @@
 		<String Name="CertificateGenerationFailed">TLS kódování je zakázáno, nepodařilo se generovat certifikát: </String>
 		<String Name="CheatingDescription">Popis podvádění</String>
 		<String Name="Cid">CID</String>
+		<String Name="Cipher">Šifra</String>		
 		<String Name="Clear">Vyčistit chat</String>
 		<String Name="Clientid">Identifikace klienta</String>
 		<String Name="Close">Zavřít</String>
@@ -176,6 +177,7 @@
 		<String Name="FavoriteUsers">Oblíbení uživatelé</String>
 		<String Name="FavuserOnline">Oblíbený uživatel se připojil</String>
 		<String Name="File">Soubor</String>
+		<String Name="FileList">seznam souborů</String>		
 		<String Name="FileListDiff">Porovnat seznam souborů</String>
 		<String Name="FileListRefreshFailed">Obnovení seznamu souborů selhalo: </String>
 		<String Name="FileListRefreshFinished">Dokončeno obnovení seznamu souborů</String>
@@ -202,6 +204,7 @@
 		<String Name="GarbageIncoming">Odeslat bordel při příchozím spojení</String>
 		<String Name="GarbageOutgoing">Odeslat bordel pri odchozím spojení</String>
 		<String Name="Gb">GB</String>
+		<String Name="GenerateCertificates">Vygenerovat certifikáty</String>		
 		<String Name="GetFileList">Stáhnout seznam souborů</String>
 		<String Name="GetUserResponses">Zjistit odezvu uživatele</String>
 		<String Name="GoToDirectory">Jít do složky</String>
@@ -395,6 +398,7 @@
 		<String Name="NoSlotsAvailable">Nejsou k dispozici žádné sloty</String>
 		<String Name="NoUsers">Žádní uživatelé</String>
 		<String Name="NoUsersToDownloadFrom">Není od koho stahovat</String>
+		<String Name="None">Žádný</String>		
 		<String Name="Normal">Normální</String>
 		<String Name="NotListening">Neodposlouchávám připojení - prosím restartujte StrongDC++</String>
 		<String Name="Notepad">Poznámkový blok</String>
@@ -412,6 +416,7 @@
 		<String Name="OpenUserLog">Otevřít záznam uživatele</String>
 		<String Name="OverlapChunks">Překrýt pomalé segmenty rychlejším uživatelem když se soubor blíží ke konci</String>
 		<String Name="OverlappedSlowSegment">Nahrazeno rychlejším uživatelem</String>
+		<String Name="OwnCertificateFile">Soubor s vlastním certifikátem</String>		
 		<String Name="Parts">Odchod: </String>
 		<String Name="ParamExists">Parametr se stejným názvem již existuje!</String>		
 		<String Name="PassiveUser">Pasivní uživatel</String>
@@ -440,6 +445,7 @@
 		<String Name="PreviewMenu">Náhled</String>
 		<String Name="PreviousFolders">Předchozí složky</String>
 		<String Name="Priority">Priorita</String>
+		<String Name="PrivateKeyFile">Soubor s privátním klíčem</String>		
 		<String Name="PrivateMessage">Přišla nová Soukromá zpráva</String>
 		<String Name="PrivateMessageFrom">Soukromá zpráva od: </String>
 		<String Name="ProfileVersion">Verze</String>
@@ -476,6 +482,7 @@
 		<String Name="Refresh">&amp;Obnovit</String>
 		<String Name="RefreshUserList">Obnovit seznam uživatelů</String>
 		<String Name="Reliability">Spolehlivost</String>
+		<String Name="Requesting">Posílám požadavek o</String>		
 		<String Name="Remove">&amp;Odstranit</String>
 		<String Name="RemoveAll">Odstranit vše</String>
 		<String Name="RemoveExtraSlot">Odebrat extraslot</String>
@@ -827,6 +834,7 @@ Výchozí: %H:%M:%S</String>
 		<String Name="Total">Celkem: </String>
 		<String Name="Transferlistdblclickaction">Dvojklik v okně přenosů</String>
 		<String Name="Transferred">Přeneseno</String>
+		<String Name="TrustedCertificatesPath">Cesta k důvěryhodným certifikátům</String>		
 		<String Name="TthAlreadyShared">Soubor se stejným datovým obsahem již existuje ve Vašem sdílení.</String>
 		<String Name="TthInconsistency">Nesouhlasí TTH</String>
 		<String Name="TthRoot">TTH Root</String>

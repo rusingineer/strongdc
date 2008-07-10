@@ -1,3 +1,20 @@
+** svn403
+	fixed crash #15455
+	fixed crashes in QueueManager::findPFSSources
+	disable boost asserts in release build
+	strings in Certificate settings are translatable
+	"Send unknown commands" settings applies to PM too
+	added Cipher column to transfer window
+	removed SSLSocket's virtual table
+	nonfiltered kick messages are coloured as server messages
+	added transfer message when asking for a slot
+	64-bit build results in StrongDC64.exe/pdb
+	some changes around SSL_connect and SSL_accept - needs more fixes to work correctly (DC++ BZR)
+	fixed passive flag in ADC hubs (passive flag must be fixed for me in NMDC hubs)
+
+** svn402
+	released 2.2
+
 ** svn401
 	fixed searching interval
 

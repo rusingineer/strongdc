@@ -28,7 +28,7 @@
 
 namespace dcpp {
 
-class Transfer {
+class Transfer : private boost::noncopyable {
 public:
 	enum Type {
 		TYPE_FILE,
@@ -89,9 +89,6 @@ private:
 	typedef std::pair<uint64_t, int64_t> Sample;
 	typedef deque<Sample> SampleList;
 	
-	Transfer(const Transfer&);
-	Transfer& operator=(const Transfer&);
-
 	SampleList samples;
 	mutable CriticalSection cs;
 	

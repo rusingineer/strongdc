@@ -147,14 +147,33 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 				sText = _tcschr(sText + 1 + (int)thirdPerson, thirdPerson ? _T(' ') : _T('>'));
                 if(sText != NULL) {
                     LONG iAuthorLen = (LONG)(sText - sMsg.c_str());
+                    
+                    bool isOp = false, isFavorite = false;
+                    if(client != NULL) {
+						tstring nick(sMsg.c_str() + 1);
+						nick.erase(iAuthorLen - 1);
+						
+						const OnlineUser* ou = client->findUser(Text::fromT(nick));
+						if(ou != NULL) {
+							isFavorite = FavoriteManager::getInstance()->isFavoriteUser(ou->getUser());
+							isOp = ou->getIdentity().isOp();
+						}
+                    }
+                    
 		            lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
 		            SetSel(lSelEnd, lSelEnd);
             		ReplaceSel(sMsg.substr(0, iAuthorLen).c_str(), false);
-        			if(BOOLSETTING(BOLD_AUTHOR_MESS)) {
+        			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isFavorite || isOp) {
         				SetSel(lSelBegin, lSelBegin + 1);
         				SetSelectionCharFormat(cf);
                         SetSel(lSelBegin + 1, lSelBegin + iAuthorLen);
-        				SetSelectionCharFormat(WinUtil::m_TextStyleBold);
+						if(isFavorite){
+							SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);
+						} else if(isOp) {
+							SetSelectionCharFormat(WinUtil::m_TextStyleOPs);
+						} else {
+							SetSelectionCharFormat(WinUtil::m_TextStyleBold);
+						}
         			} else {
         				SetSel(lSelBegin, lSelBegin + iAuthorLen);
         				SetSelectionCharFormat(cf);

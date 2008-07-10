@@ -190,7 +190,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn) {
 		Lock l(cs);
 		downloads.push_back(d);
 	}
-	// TODO fire(DownloadManagerListener::Requesting(), d);
+	fire(DownloadManagerListener::Requesting(), d);
 	aConn->send(d->getCommand(aConn->isSet(UserConnection::FLAG_SUPPORTS_ZLIB_GET)));
 }
 

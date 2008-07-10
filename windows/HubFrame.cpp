@@ -1674,7 +1674,7 @@ void HubFrame::on(Message, const Client*, const OnlineUser& from, const string& 
 }	
 
 void HubFrame::on(StatusMessage, const Client*, const string& line, int statusFlags) {
-	if(SETTING(FILTER_MESSAGES) && (statusFlags & ClientListener::FLAG_IS_SPAM)) {
+	if(statusFlags & ClientListener::FLAG_IS_SPAM) {
 		speak(KICK_MSG, Identity(NULL, 0), Text::toDOS(line));
 	} else {
 		speak(ADD_CHAT_LINE, Identity(NULL, 0), Text::toDOS(line));

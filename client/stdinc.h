@@ -23,6 +23,7 @@
 
 #ifndef _DEBUG
 # define _SECURE_SCL  0
+# define BOOST_DISABLE_ASSERTS 1
 #endif
 
 // This enables stlport's debug mode (and slows it down to a crawl...)

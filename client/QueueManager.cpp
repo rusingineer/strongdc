@@ -1852,12 +1852,9 @@ bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth
 				si = qi->getSource(aUser);
 				si->setFlag(QueueItem::Source::FLAG_PARTIAL);
 
-				if(partialSource.getUdpPort() > 0) {
-					// no worth to save partial sources without udp port
-					QueueItem::PartialSource* ps = new QueueItem::PartialSource(partialSource.getMyNick(),
-						partialSource.getHubIpPort(), partialSource.getIp(), partialSource.getUdpPort());
-					si->setPartialSource(ps);
-				}
+				QueueItem::PartialSource* ps = new QueueItem::PartialSource(partialSource.getMyNick(),
+					partialSource.getHubIpPort(), partialSource.getIp(), partialSource.getUdpPort());
+				si->setPartialSource(ps);
 
 				userQueue.add(qi, aUser);
 				dcassert(si != qi->getSources().end());
@@ -1921,7 +1918,7 @@ void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl)
 
 		for(QueueItem::SourceConstIter j = sources.begin(); j != sources.end(); ++j) {
 			if(	(*j).isSet(QueueItem::Source::FLAG_PARTIAL) && (*j).getPartialSource()->getNextQueryTime() <= now &&
-				(*j).getPartialSource()->getPendingQueryCount() < 10)
+				(*j).getPartialSource()->getPendingQueryCount() < 10 && (*j).getPartialSource()->getUdpPort() > 0)
 			{
 				buffer.insert(make_pair((*j).getPartialSource()->getNextQueryTime(), make_pair(j, q)));
 			}
@@ -1929,7 +1926,8 @@ void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl)
 
 		for(QueueItem::SourceConstIter j = badSources.begin(); j != badSources.end(); ++j) {
 			if(	(*j).isSet(QueueItem::Source::FLAG_TTH_INCONSISTENCY) == false && (*j).isSet(QueueItem::Source::FLAG_PARTIAL) &&
-				(*j).getPartialSource()->getNextQueryTime() <= now && (*j).getPartialSource()->getPendingQueryCount() < 10 )
+				(*j).getPartialSource()->getNextQueryTime() <= now && (*j).getPartialSource()->getPendingQueryCount() < 10 &&
+				(*j).getPartialSource()->getUdpPort() > 0)
 			{
 				buffer.insert(make_pair((*j).getPartialSource()->getNextQueryTime(), make_pair(j, q)));
 			}

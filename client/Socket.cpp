@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -537,6 +537,15 @@ int Socket::wait(uint64_t millis, int waitFor) throw(SocketException) {
 	}
 
 	return waitFor;
+}
+
+bool Socket::waitConnected(uint64_t millis) {
+	return wait(millis, Socket::WAIT_CONNECT) == WAIT_CONNECT;
+}
+
+bool Socket::waitAccepted(uint64_t millis) {
+	// Normal sockets are always connected after a call to accept
+	return true;
 }
 
 string Socket::resolve(const string& aDns) {

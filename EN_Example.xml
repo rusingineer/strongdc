@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Language Name="Example Language" Author="BigMuscle" Version="2.14" Revision="1">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Language Name="Example Language" Author="BigMuscle" Version="2.21" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Accepted Disconnects</String>
 		<String Name="AcceptedTimeouts">Accepted Timeouts</String>
@@ -62,6 +62,7 @@
 		<String Name="CertificateGenerationFailed">TLS disabled, failed to generate certificate: </String>
 		<String Name="CheatingDescription">Cheating Description</String>
 		<String Name="Cid">CID</String>
+		<String Name="Cipher">Cipher</String>
 		<String Name="Clear">Clear chat</String>
 		<String Name="Clientid">Client</String>
 		<String Name="Close">Close</String>
@@ -176,6 +177,7 @@
 		<String Name="FavoriteUsers">Favorite Users</String>
 		<String Name="FavuserOnline">Favorite user online</String>
 		<String Name="File">File</String>
+		<String Name="FileList">file list</String>
 		<String Name="FileListDiff">Subtract list</String>
 		<String Name="FileListRefreshFailed">File list refresh failed: </String>
 		<String Name="FileListRefreshFinished">File list refresh finished</String>
@@ -202,6 +204,7 @@
 		<String Name="GarbageIncoming">Send garbage on incomming connection (to avoid ISP P2P throttling)</String>
 		<String Name="GarbageOutgoing">Send garbage on outgoing connection (to avoid ISP P2P throttling)</String>
 		<String Name="Gb">GB</String>
+		<String Name="GenerateCertificates">Generate certificates</String>
 		<String Name="GetFileList">Get file list</String>
 		<String Name="GetUserResponses">Get user response</String>
 		<String Name="GoToDirectory">Go to directory</String>
@@ -395,6 +398,7 @@
 		<String Name="NoSlotsAvailable">No slots available</String>
 		<String Name="NoUsers">No users</String>
 		<String Name="NoUsersToDownloadFrom">No users to download from</String>
+		<String Name="None">None</String>
 		<String Name="Normal">Normal</String>
 		<String Name="NotListening">Not listening for connections - please restart StrongDC++</String>
 		<String Name="Notepad">Notepad</String>
@@ -412,6 +416,7 @@
 		<String Name="OpenUserLog">Open user log</String>
 		<String Name="OverlapChunks">Overlap slow chunks by faster user when file is going to be finished</String>
 		<String Name="OverlappedSlowSegment">Overlapped by faster user</String>
+		<String Name="OwnCertificateFile">Own certificate file</String>
 		<String Name="Parts">Parts: </String>
 		<String Name="ParamExists">Param with same name already exists!</String>
 		<String Name="PassiveUser">Passive user</String>
@@ -440,6 +445,7 @@
 		<String Name="PreviewMenu">Preview</String>
 		<String Name="PreviousFolders">Previous folders</String>
 		<String Name="Priority">Priority</String>
+		<String Name="PrivateKeyFile">Private key file</String>
 		<String Name="PrivateMessage">Private message</String>
 		<String Name="PrivateMessageFrom">Private message from </String>
 		<String Name="ProfileVersion">Version</String>
@@ -476,6 +482,7 @@
 		<String Name="Refresh">&amp;Refresh</String>
 		<String Name="RefreshUserList">Refresh user list</String>
 		<String Name="Reliability">Reliability</String>
+		<String Name="Requesting">Requesting</String>
 		<String Name="Remove">&amp;Remove</String>
 		<String Name="RemoveAll">Remove all</String>
 		<String Name="RemoveExtraSlot">Remove extra slot</String>
@@ -827,6 +834,7 @@ Default: %H:%M:%S</String>
 		<String Name="Total">Total: </String>
 		<String Name="Transferlistdblclickaction">Transferlist double click action</String>
 		<String Name="Transferred">Transferred</String>
+		<String Name="TrustedCertificatesPath">Trusted certificates path</String>
 		<String Name="TthAlreadyShared">A file with the same hash already exists in your share</String>
 		<String Name="TthInconsistency">TTH Inconsistency</String>
 		<String Name="TthRoot">TTH Root</String>

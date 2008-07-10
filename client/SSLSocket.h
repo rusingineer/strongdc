@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,20 +38,24 @@ class CryptoManager;
 
 class SSLSocket : public Socket {
 public:
-	virtual ~SSLSocket() throw() {}
+	~SSLSocket() throw() {}
 
-	virtual void accept(const Socket& listeningSocket) throw(SocketException);
-	virtual void connect(const string& aIp, uint16_t aPort) throw(SocketException);
-	virtual int read(void* aBuffer, int aBufLen) throw(SocketException);
-	virtual int write(const void* aBuffer, int aLen) throw(SocketException);
-	virtual int wait(uint32_t millis, int waitFor) throw(SocketException);
-	virtual void shutdown() throw();
-	virtual void close() throw();
+	void accept(const Socket& listeningSocket) throw(SocketException);
+	void connect(const string& aIp, uint16_t aPort) throw(SocketException);
+	int read(void* aBuffer, int aBufLen) throw(SocketException);
+	int write(const void* aBuffer, int aLen) throw(SocketException);
+	int wait(uint64_t millis, int waitFor) throw(SocketException);
+	void shutdown() throw();
+	void close() throw();
 
-	virtual bool isSecure() const throw() { return true; }
-	virtual bool isTrusted() const throw();
-	virtual std::string getCipherName() const throw();
-	virtual std::string getDigest() const throw();
+	bool isSecure() const throw() { return true; }
+	bool isTrusted() const throw();
+	std::string getCipherName() const throw();
+	std::string getDigest() const throw();
+
+	bool waitConnected(uint64_t millis);
+	bool waitAccepted(uint64_t millis);
+
 
 private:
 	friend class CryptoManager;
@@ -64,6 +68,7 @@ private:
 	ssl::SSL ssl;
 
 	int checkSSL(int ret) throw(SocketException);
+	bool waitWant(int ret, uint64_t millis);
 };
 
 } // namespace dcpp
