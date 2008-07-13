@@ -76,7 +76,7 @@ void Socket::create(uint8_t aType /* = TYPE_TCP */) throw(SocketException) {
 		dcasserta(0);
 	}
 	type = aType;
-	setBlocking(true);
+	setBlocking(false);
 }
 
 void Socket::accept(const Socket& listeningSocket) throw(SocketException) {
@@ -100,7 +100,7 @@ void Socket::accept(const Socket& listeningSocket) throw(SocketException) {
 
 	setIp(inet_ntoa(sock_addr.sin_addr));
 	connected = true;
-	setBlocking(true);
+	setBlocking(false);
 }
 
 
@@ -168,9 +168,6 @@ void Socket::socksConnect(const string& aAddr, uint16_t aPort, uint32_t timeout)
 		throw SocketException(STRING(SOCKS_FAILED));
 	}
 
-	bool oldblock = getBlocking();
-	setBlocking(false);
-
 	uint64_t start = GET_TICK();
 
 	connect(SETTING(SOCKS_SERVER), static_cast<uint16_t>(SETTING(SOCKS_PORT)));
@@ -221,9 +218,6 @@ void Socket::socksConnect(const string& aAddr, uint16_t aPort, uint32_t timeout)
 	memzero(&sock_addr, sizeof(sock_addr));
 	sock_addr.s_addr = *((unsigned long*)&connStr[4]);
 	setIp(inet_ntoa(sock_addr));
-
-	if(oldblock)
-		setBlocking(oldblock);
 }
 
 void Socket::socksAuth(uint64_t timeout) throw(SocketException) {

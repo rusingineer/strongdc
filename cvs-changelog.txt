@@ -1,3 +1,12 @@
+** svn404
+	other changes to SSLSocket (DC++ BZR)
+	try to fix crashes around OnlineUser/Identity
+	included x86 OpenSSL debug libraries
+	removed x64 OpenSSL libraries - x86 libs will be removed too and users will have to compile it on their own
+	CDM fix (adrian_007)
+	removed obsolete garbage commands
+	fixed SSL threading issues
+	
 ** svn403
 	fixed crash #15455
 	fixed crashes in QueueManager::findPFSSources

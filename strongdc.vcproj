@@ -81,7 +81,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="libeay32.lib ssleay32.lib unicows.lib SHFolder.lib ws2_32.lib winmm.lib powrprof.lib msimg32.lib"
+				AdditionalDependencies="libeay32d.lib ssleay32d.lib unicows.lib SHFolder.lib ws2_32.lib winmm.lib powrprof.lib msimg32.lib"
 				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)openssl/lib&quot;"
@@ -181,7 +181,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="libeay64.lib ssleay64.lib SHFolder.lib ws2_32.lib winmm.lib powrprof.lib msimg32.lib"
+				AdditionalDependencies="libeay64d.lib ssleay64d.lib SHFolder.lib ws2_32.lib winmm.lib powrprof.lib msimg32.lib"
 				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)openssl/lib&quot;"

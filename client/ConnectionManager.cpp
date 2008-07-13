@@ -428,8 +428,6 @@ void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aS
 	}
 
 	dcassert(aSource->getState() == UserConnection::STATE_CONNECT);
-	if (SETTING(GARBAGE_COMMAND_OUTGOING) && !aSource->isSet(UserConnection::FLAG_STEALTH))
-		aSource->garbageCommand();
 	if(aSource->isSet(UserConnection::FLAG_NMDC)) {
 		aSource->myNick(aSource->getToken());
 		aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk());
@@ -507,8 +505,6 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 		aSource->setFlag(UserConnection::FLAG_OP);
 
 	if( aSource->isSet(UserConnection::FLAG_INCOMING) ) {
-		if(SETTING(GARBAGE_COMMAND_INCOMING) && !aSource->isSet(UserConnection::FLAG_STEALTH))
-			aSource->garbageCommand();
 		aSource->myNick(aSource->getToken()); 
 		aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk());
 	}

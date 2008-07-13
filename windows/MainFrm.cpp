@@ -1114,7 +1114,7 @@ LRESULT MainFrame::onLink(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL
 	switch(wID) {
 		case IDC_HELP_HOMEPAGE: site = _T("http://strongdc.sf.net"); break;
 		case IDC_HELP_GEOIPFILE: site = _T("http://www.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip"); break;
-		case IDC_HELP_TRANSLATIONS: site = _T("http://strongdc.sf.net/forum/viewtopic.php?t=3818"); break;
+		case IDC_HELP_TRANSLATIONS: site = _T("http://strongdc.sf.net/forum/viewtopic.php?t=5201"); break;
 		case IDC_HELP_FAQ: site = _T("http://strongdc.sf.net/forum/viewtopic.php?t=4067"); break;
 		case IDC_HELP_DISCUSS: site = _T("http://strongdc.sf.net/forum/index.php"); break;
 		case IDC_HELP_DONATE: site = _T("http://strongdc.sf.net/donate.php"); break;

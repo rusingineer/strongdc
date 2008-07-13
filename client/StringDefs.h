@@ -200,8 +200,6 @@ enum Strings { // @DontAdd
 	FOLDER, // "Folder"
 	FORBIDDEN, // "Forbidden"
 	FORCE_ATTEMPT, // "Force attempt"
-	GARBAGE_INCOMING, // "Send garbage on incomming connection (to avoid ISP P2P throttling)"
-	GARBAGE_OUTGOING, // "Send garbage on outgoing connection (to avoid ISP P2P throttling)"
 	GB, // "GB"
 	GENERATE_CERTIFICATES, // "Generate certificates"
 	GET_FILE_LIST, // "Get file list"

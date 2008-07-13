@@ -179,8 +179,8 @@ public:
 		COLUMN_LAST
 	};
 
-	typedef vector<OnlineUser*> List;
-	typedef List::const_iterator Iter;
+	//typedef vector<OnlineUser*> List;
+	//typedef List::const_iterator Iter;
 
 	OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_);
 	~OnlineUser() { }

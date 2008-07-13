@@ -67,7 +67,8 @@ class Identity;
 class InputStream;
 
 class OnlineUser;
-typedef OnlineUser* OnlineUserPtr;
+//typedef OnlineUser* OnlineUserPtr;
+typedef boost::intrusive_ptr<OnlineUser> OnlineUserPtr;
 typedef std::vector<OnlineUserPtr> OnlineUserList;
 
 class QueueItem;

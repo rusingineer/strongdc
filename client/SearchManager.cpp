@@ -65,6 +65,7 @@ void SearchManager::listen() throw(SocketException) {
 
 	socket = new Socket();
 	socket->create(Socket::TYPE_UDP);
+	socket->setBlocking(true);
 	port = socket->bind(static_cast<uint16_t>(SETTING(UDP_PORT)), SETTING(BIND_ADDRESS));
 
 	start();

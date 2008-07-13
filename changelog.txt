@@ -1,3 +1,15 @@
+	-- StrongDC++ 2.21 --
+
+* opravy stability
+* opravy šifrovaných pøenosù
+* øetìzce v nastavení certifikátù lze pøeložit
+* nastavení "Odesílat neznámé pøíkazy na hub" se aplikuje i na soukromé zprávy
+* pøidán sloupec se šifrou do okna pøenosù
+* nefiltrované zprávy o kopnutí jsou obarvené jako zprávy serveru
+* pøidána hláška pøi žádání o slot
+* odstranìn starý pøíkaz pro odesílání bordelu
+
+
 	-- StrongDC++ 2.2 --
 
 *** VAROVÁNÍ ***

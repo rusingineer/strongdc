@@ -153,7 +153,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 						tstring nick(sMsg.c_str() + 1);
 						nick.erase(iAuthorLen - 1);
 						
-						const OnlineUser* ou = client->findUser(Text::fromT(nick));
+						const OnlineUserPtr ou = client->findUser(Text::fromT(nick));
 						if(ou != NULL) {
 							isFavorite = FavoriteManager::getInstance()->isFavoriteUser(ou->getUser());
 							isOp = ou->getIdentity().isOp();
@@ -590,7 +590,7 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 			menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
 			menu.AppendMenu(MF_SEPARATOR);
 			
-			const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+			const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 			if (client->isOp() || !ou->getIdentity().isOp()) {
 				if(HubFrame::ignoreList.find(ou->getUser()) == HubFrame::ignoreList.end()) {
 					menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
@@ -748,7 +748,7 @@ LRESULT ChatCtrl::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 }
 
 LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		StringMap params;
 
@@ -770,7 +770,7 @@ LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 }
 
 LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
 		PrivateFrame::openWindow(ou->getUser(), client);
 
@@ -778,7 +778,7 @@ LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT ChatCtrl::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
 		ou->getList();
 
@@ -786,7 +786,7 @@ LRESULT ChatCtrl::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 }
 
 LRESULT ChatCtrl::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
 		ou->matchQueue();
 
@@ -794,7 +794,7 @@ LRESULT ChatCtrl::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 }
 
 LRESULT ChatCtrl::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		uint64_t time = 0;
 		switch(wID) {
@@ -815,7 +815,7 @@ LRESULT ChatCtrl::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 }
 
 LRESULT ChatCtrl::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
 		ou->addFav();
 
@@ -823,7 +823,7 @@ LRESULT ChatCtrl::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT ChatCtrl::onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/){
-	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
 		HubFrame::ignoreList.insert(ou->getUser());
 
@@ -831,7 +831,7 @@ LRESULT ChatCtrl::onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BO
 }
 
 LRESULT ChatCtrl::onUnignore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/){
-	OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
 		HubFrame::ignoreList.erase(ou->getUser());
 
@@ -841,7 +841,7 @@ LRESULT ChatCtrl::onUnignore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, 
 LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring sCopy;
 	
-	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		sCopy = ou->getText(static_cast<uint8_t>(wID - IDC_COPY));
 	}
@@ -853,7 +853,7 @@ LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 }
 
 LRESULT ChatCtrl::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
 		ClientManager::getInstance()->reportUser(ou->getUser());
 
@@ -861,7 +861,7 @@ LRESULT ChatCtrl::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 }
 
 LRESULT ChatCtrl::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		try {
 			QueueManager::getInstance()->addTestSUR(ou->getUser(), false);
@@ -874,7 +874,7 @@ LRESULT ChatCtrl::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 }
 
 LRESULT ChatCtrl::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		try {
 			QueueManager::getInstance()->addList(ou->getUser(), QueueItem::FLAG_CHECK_FILE_LIST);
@@ -895,7 +895,7 @@ void ChatCtrl::runUserCommand(UserCommand& uc) {
 	client->getMyIdentity().getParams(ucParams, "my", true);
 	client->getHubIdentity().getParams(ucParams, "hub", false);
 
-	const OnlineUser* ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou != NULL) {
 		StringMap tmp = ucParams;
 		ou->getIdentity().getParams(tmp, "user", true);

@@ -37,7 +37,7 @@
 
 namespace dcpp {
 
-
+CriticalSection* CryptoManager::cs = NULL;
 
 CryptoManager::CryptoManager() 
 :	
@@ -46,7 +46,10 @@ CryptoManager::CryptoManager()
 	pk("DCPLUSPLUS" DCVERSIONSTRING "ABCABC")
 {
 	SSL_library_init();
-
+	
+	cs = new CriticalSection[CRYPTO_num_locks()];
+	CRYPTO_set_locking_callback(locking_function);
+	
 	clientContext.reset(SSL_CTX_new(TLSv1_client_method()));
 	clientVerContext.reset(SSL_CTX_new(TLSv1_client_method()));
 	serverContext.reset(SSL_CTX_new(TLSv1_server_method()));
@@ -99,25 +102,25 @@ CryptoManager::CryptoManager()
                 0x7E,0x97,0x2A,0x96,0x50,0x14,0x0D,0xEA,0x02,0xB1,0xD2,0x22,
                 0xEB,0xE7,0xF4,0xAC,0xB6,0x37,0xCA,0xAB,0x4A,0x1E,0x4D,0x4E,
                 0xCF,0xFE,0x5D,0xEF,0x23,0x78,0xC6,0xBB,
-	};
+		};
 
         static unsigned char dh4096_g[]={
-		0x02,
-	};
+			0x02,
+		};
 
-	if(dh) {
+		if(dh) {
 			dh->p = BN_bin2bn(dh4096_p, sizeof(dh4096_p), 0);
 			dh->g = BN_bin2bn(dh4096_g, sizeof(dh4096_g), 0);
 
-		if (!dh->p || !dh->g) {
+			if (!dh->p || !dh->g) {
 				dh.reset();
-		} else {
+			} else {
 				SSL_CTX_set_options(serverContext, SSL_OP_SINGLE_DH_USE);
 				SSL_CTX_set_options(serverVerContext, SSL_OP_SINGLE_DH_USE);
 				SSL_CTX_set_tmp_dh(serverContext, (DH*)dh);
 				SSL_CTX_set_tmp_dh(serverVerContext, (DH*)dh);
+			}
 		}
-	}
 
 		SSL_CTX_set_verify(serverContext, SSL_VERIFY_NONE, 0);
 		SSL_CTX_set_verify(clientContext, SSL_VERIFY_NONE, 0);
@@ -127,6 +130,8 @@ CryptoManager::CryptoManager()
 }
 
 CryptoManager::~CryptoManager() {
+	CRYPTO_set_locking_callback(NULL);
+	delete[] cs;
 }
 
 bool CryptoManager::TLSOk() const throw() { 
@@ -431,6 +436,15 @@ string CryptoManager::makeKey(const string& aLock) {
 	}
 	
 	return keySubst(&temp[0], aLock.length(), extra);
+}
+
+void CryptoManager::locking_function(int mode, int n, const char *file, int line)
+{
+    if (mode & CRYPTO_LOCK) {
+        cs[n].enter();
+    } else {
+        cs[n].leave();
+    }
 }
 
 } // namespace dcpp

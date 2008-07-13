@@ -64,10 +64,9 @@ private:
 	typedef unordered_map<uint32_t, OnlineUser*> SIDMap;
 	typedef SIDMap::const_iterator SIDIter;
 
-	void getUserList(OnlineUser::List& list) const {
+	void getUserList(OnlineUserList& list) const {
 		Lock l(cs);
 		for(SIDIter i = users.begin(); i != users.end(); i++) {
-			i->second->inc();
 			list.push_back(i->second);
 		}
 	}
@@ -100,7 +99,7 @@ private:
 	OnlineUser* findUser(const CID& cid) const;
 	
 	// just a workaround
-	OnlineUser* AdcHub::findUser(const string& aNick) const { 
+	OnlineUserPtr AdcHub::findUser(const string& aNick) const { 
 	   Lock l(cs); 
 	   for(SIDMap::const_iterator i = users.begin(); i != users.end(); ++i) { 
 		  if(i->second->getIdentity().getNick() == aNick) { 
