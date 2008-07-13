@@ -1,3 +1,15 @@
+	-- StrongDC++ 2.21 --
+
+* stability fixes
+* encrypted transfers fixes
+* strings in Certificate settings are translatable
+* "Send unknown commands to hub" settings applies to PM too
+* added Cipher column to transfer window
+* nonfiltered kick messages are coloured as server messages
+* added transfer message when asking for a slot
+* removed obsolete garbage commands
+
+
 	-- StrongDC++ 2.2 --
 
 *** WARNING ***

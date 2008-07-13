@@ -201,8 +201,6 @@
 		<String Name="Folder">Folder</String>
 		<String Name="Forbidden">Forbidden</String>
 		<String Name="ForceAttempt">Force attempt</String>
-		<String Name="GarbageIncoming">Send garbage on incomming connection (to avoid ISP P2P throttling)</String>
-		<String Name="GarbageOutgoing">Send garbage on outgoing connection (to avoid ISP P2P throttling)</String>
 		<String Name="Gb">GB</String>
 		<String Name="GenerateCertificates">Generate certificates</String>
 		<String Name="GetFileList">Get file list</String>

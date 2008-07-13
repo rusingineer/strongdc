@@ -285,10 +285,10 @@ private:
 	};
 
 	struct UserTask : public Task {
-		UserTask(const OnlineUser& ou) : onlineUser(const_cast<OnlineUser*>(&ou)) { onlineUser->inc(); }
-		~UserTask() { onlineUser->dec(); }
+		UserTask(const OnlineUser& ou) : onlineUser(const_cast<OnlineUser*>(&ou)) { }
+		~UserTask() { }
 		
-		OnlineUser* onlineUser;
+		const OnlineUserPtr onlineUser;
 	};
 
 	struct MessageTask : public StringTask {
@@ -420,9 +420,9 @@ private:
 	static int columnSizes[OnlineUser::COLUMN_LAST];
 	
 	bool updateUser(const UserTask& u);
-	void removeUser(OnlineUser* aUser);
+	void removeUser(const OnlineUserPtr& aUser);
 
-	void updateUserList(OnlineUser* ui = NULL);
+	void updateUserList(OnlineUserPtr ui = NULL);
 	bool parseFilter(FilterModes& mode, int64_t& size);
 	bool matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
 
@@ -454,7 +454,7 @@ private:
 	void on(Connecting, const Client*) throw();
 	void on(Connected, const Client*) throw();
 	void on(UserUpdated, const Client*, const OnlineUser&) throw();
-	void on(UsersUpdated, const Client*, const OnlineUser::List&) throw();
+	void on(UsersUpdated, const Client*, const OnlineUserList&) throw();
 	void on(ClientListener::UserRemoved, const Client*, const OnlineUser&) throw();
 	void on(Redirect, const Client*, const string&) throw();
 	void on(Failed, const Client*, const string&) throw();

@@ -7,9 +7,6 @@
 #endif
 #ifndef OPENSSL_DOING_MAKEDEPEND
 
-#ifndef OPENSSL_NO_CAMELLIA
-# define OPENSSL_NO_CAMELLIA
-#endif
 #ifndef OPENSSL_NO_GMP
 # define OPENSSL_NO_GMP
 #endif
@@ -25,12 +22,6 @@
 #ifndef OPENSSL_NO_RFC3779
 # define OPENSSL_NO_RFC3779
 #endif
-#ifndef OPENSSL_NO_SEED
-# define OPENSSL_NO_SEED
-#endif
-#ifndef OPENSSL_NO_TLSEXT
-# define OPENSSL_NO_TLSEXT
-#endif
 
 #endif /* OPENSSL_DOING_MAKEDEPEND */
 #ifndef OPENSSL_THREADS
@@ -42,9 +33,6 @@
    who haven't had the time to do the appropriate changes in their
    applications.  */
 #ifdef OPENSSL_ALGORITHM_DEFINES
-# if defined(OPENSSL_NO_CAMELLIA) && !defined(NO_CAMELLIA)
-#  define NO_CAMELLIA
-# endif
 # if defined(OPENSSL_NO_GMP) && !defined(NO_GMP)
 #  define NO_GMP
 # endif
@@ -60,13 +48,9 @@
 # if defined(OPENSSL_NO_RFC3779) && !defined(NO_RFC3779)
 #  define NO_RFC3779
 # endif
-# if defined(OPENSSL_NO_SEED) && !defined(NO_SEED)
-#  define NO_SEED
-# endif
-# if defined(OPENSSL_NO_TLSEXT) && !defined(NO_TLSEXT)
-#  define NO_TLSEXT
-# endif
 #endif
+
+#define OPENSSL_CPUID_OBJ
 
 /* crypto/opensslconf.h.in */
 
@@ -75,8 +59,8 @@
 
 #if !(defined(VMS) || defined(__VMS)) /* VMS uses logical names instead */
 #if defined(HEADER_CRYPTLIB_H) && !defined(OPENSSLDIR)
-#define ENGINESDIR "./dir/lib/engines"
-#define OPENSSLDIR "./dir/./dir/ssl"
+#define ENGINESDIR "/usr/local/ssl/lib/engines"
+#define OPENSSLDIR "/usr/local/ssl"
 #endif
 #endif
 
@@ -134,14 +118,9 @@
 /* Should we define BN_DIV2W here? */
 
 /* Only one for the following should be defined */
-/* The prime number generation stuff may not work when
- * EIGHT_BIT but I don't care since I've only used this mode
- * for debuging the bignum libraries */
 #undef SIXTY_FOUR_BIT_LONG
 #undef SIXTY_FOUR_BIT
 #define THIRTY_TWO_BIT
-#undef SIXTEEN_BIT
-#undef EIGHT_BIT
 #endif
 
 #if defined(HEADER_RC4_LOCL_H) && !defined(CONFIG_HEADER_RC4_LOCL_H)

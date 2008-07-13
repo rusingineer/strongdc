@@ -38,12 +38,13 @@ void DetectionManager::load() {
 				while(xml.findChild("DetectionProfile")) {
 					xml.stepIn();
 					if(xml.findChild("DetectionEntry")) {
-						lastId = Util::toUInt32(xml.getChildAttrib("ProfileID", Util::toString(++lastId)));
-						if(lastId < 1) continue;
+						uint32_t curId = Util::toUInt32(xml.getChildAttrib("ProfileID", Util::toString(++lastId)));
+		                if(curId < 1) continue;
 						xml.stepIn();
 
 						DetectionEntry item;
-						item.Id = lastId;
+						lastId = std::max(curId, lastId);
+						item.Id = curId;
 
 						if(xml.findChild("Name")) {
 							item.name = xml.getChildData();

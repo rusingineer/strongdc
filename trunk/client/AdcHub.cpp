@@ -766,7 +766,7 @@ void AdcHub::info(bool /*alwaysSend*/) {
 void AdcHub::refreshUserList(bool) {
 	Lock l(cs);
 
-	OnlineUser::List v;
+	OnlineUserList v;
 	for(SIDIter i = users.begin(); i != users.end(); ++i) {
 		v.push_back(i->second);
 	}

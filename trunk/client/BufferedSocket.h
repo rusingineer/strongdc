@@ -149,6 +149,7 @@ private:
 	int run();
 
 	void threadConnect(const string& aAddr, uint16_t aPort, bool proxy) throw(SocketException);
+	void threadAccept() throw(SocketException);
 	void threadRead() throw(SocketException);
 	void threadSendFile(InputStream* is) throw(Exception);
 	void threadSendData();

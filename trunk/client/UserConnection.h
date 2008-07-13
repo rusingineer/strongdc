@@ -199,14 +199,6 @@ public:
 	GETSET(string*, encoding, Encoding);
 	
 	BufferedSocket const* getSocket() { return socket; } 
-	void garbageCommand() { 
-		string tmp;
-		tmp.reserve(20);
-		for(int i = 0; i < 20; i++) {
-			tmp.append(1, (char)Util::rand('a', 'z'));
-		}
-		send("$"+tmp+"|");
-	}
 
 private:
 	int64_t chunkSize;

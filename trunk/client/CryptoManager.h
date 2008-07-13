@@ -52,6 +52,8 @@ public:
 	bool checkCertificate() throw();
 
 	bool TLSOk() const throw();
+	
+	static void locking_function(int mode, int n, const char *file, int line);
 private:
 
 	friend class Singleton<CryptoManager>;
@@ -70,6 +72,8 @@ private:
 
 	const string lock;
 	const string pk;
+	
+	static CriticalSection* cs;
 
 	string keySubst(const uint8_t* aKey, size_t len, size_t n);
 	bool isExtra(uint8_t b) const {

@@ -78,7 +78,6 @@ void BufferedSocket::setSocket(std::auto_ptr<Socket> s) {
 		s->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
 	if(SETTING(SOCKET_OUT_BUFFER) > 0)
 		s->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
-	s->setBlocking(false);
 
 	inbuf.resize(s->getSocketOptInt(SO_RCVBUF));
 	
@@ -127,7 +126,7 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, bool pro
 		sock->connect(aAddr, aPort);
 	}
 
-	while(sock->wait(POLL_TIMEOUT, Socket::WAIT_CONNECT) != Socket::WAIT_CONNECT) {
+	while(!sock->waitConnected(POLL_TIMEOUT)) {
 		if(disconnecting)
 			return;
 
@@ -138,6 +137,24 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, bool pro
 
 	fire(BufferedSocketListener::Connected());
 }	
+
+void BufferedSocket::threadAccept() throw(SocketException) {
+	dcassert(state == STARTING);
+
+	dcdebug("threadAccept\n");
+
+	state = RUNNING;
+
+	uint64_t startTime = GET_TICK();
+	while(!sock->waitAccepted(POLL_TIMEOUT)) {
+		if(disconnecting)
+			return;
+
+		if((startTime + 30000) < GET_TICK()) {
+			throw SocketException(STRING(CONNECTION_TIMEOUT));
+		}
+	}
+}
 
 void BufferedSocket::threadRead() throw(SocketException) {
 	if(state != RUNNING)
@@ -454,7 +471,7 @@ bool BufferedSocket::checkEvents() {
 				ConnectInfo* ci = static_cast<ConnectInfo*>(p.second.get());
 				threadConnect(ci->addr, ci->port, ci->proxy);
 			} else if(p.first == ACCEPTED) {
-				state = RUNNING;
+				threadAccept();
 			} else {
 				dcdebug("%d unexpected in STARTING state\n", p.first);
 			}

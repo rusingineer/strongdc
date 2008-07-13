@@ -78,8 +78,8 @@ public:
 		TYPE_UDP
 	};
 
-	Socket() throw(SocketException) : sock(INVALID_SOCKET), connected(false), blocking(true) { }
-	Socket(const string& aIp, uint16_t aPort) throw(SocketException) : sock(INVALID_SOCKET), connected(false), blocking(true) { connect(aIp, aPort); }
+	Socket() throw(SocketException) : sock(INVALID_SOCKET), connected(false) { }
+	Socket(const string& aIp, uint16_t aPort) throw(SocketException) : sock(INVALID_SOCKET), connected(false) { connect(aIp, aPort); }
 	virtual ~Socket() throw() { Socket::disconnect(); }
 
 	/**
@@ -150,7 +150,6 @@ public:
 	void setBlocking(bool block) throw() {
 		u_long b = block ? 0 : 1;
 		ioctlsocket(sock, FIONBIO, &b);
-		blocking = block;
 	}
 #else
 	void setBlocking(bool block) throw() {
@@ -160,10 +159,8 @@ public:
 		} else {
 			fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 		}
-		blocking = block;
 	}
 #endif
-	bool getBlocking() const throw() { return blocking; }
 
 	string getLocalIp() const throw();
 
@@ -192,7 +189,6 @@ public:
 protected:
 	uint8_t type;
 	bool connected;
-	bool blocking;
 
 	class Stats {
 	public:
@@ -213,13 +209,13 @@ private:
 
 #ifdef _WIN32
 	static int getLastError() {  return ::WSAGetLastError(); }
-	static socket_t checksocket(socket_t ret) { 
+	static socket_t checksocket(socket_t ret) {
 		if(ret == SOCKET_ERROR) { 
 			throw SocketException(getLastError()); 
 		} 
 		return ret;
 	}
-	static socket_t check(socket_t ret, bool blockOk = false) { 
+	static socket_t check(socket_t ret, bool blockOk = false) {
 		if(ret == SOCKET_ERROR) {
 			int error = getLastError();
 			if(blockOk && error == WSAEWOULDBLOCK) {

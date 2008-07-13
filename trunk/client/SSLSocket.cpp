@@ -32,7 +32,6 @@ SSLSocket::SSLSocket(SSL_CTX* context) throw(SocketException) : ctx(context), ss
 }
 
 void SSLSocket::connect(const string& aIp, uint16_t aPort) throw(SocketException) {
-	Socket::setBlocking(true);
 	Socket::connect(aIp, aPort);
 	
 	waitConnected(0);
@@ -43,11 +42,15 @@ bool SSLSocket::waitConnected(uint64_t millis) {
 		if(!Socket::waitConnected(millis)) {
 			return false;
 		}
-	ssl.reset(SSL_new(ctx));
-	if(!ssl)
-		checkSSL(-1);
+		ssl.reset(SSL_new(ctx));
+		if(!ssl)
+			checkSSL(-1);
 
-	checkSSL(SSL_set_fd(ssl, sock));
+		checkSSL(SSL_set_fd(ssl, sock));
+	}
+
+	if(SSL_is_init_finished(ssl)) {
+		return true;
 	}
 
 	while(true) {
@@ -73,11 +76,15 @@ bool SSLSocket::waitAccepted(uint64_t millis) {
 		if(!Socket::waitAccepted(millis)) {
 			return false;
 		}
-	ssl.reset(SSL_new(ctx));
-	if(!ssl)
-		checkSSL(-1);
+		ssl.reset(SSL_new(ctx));
+		if(!ssl)
+			checkSSL(-1);
 
-	checkSSL(SSL_set_fd(ssl, sock));
+		checkSSL(SSL_set_fd(ssl, sock));
+	}
+
+	if(SSL_is_init_finished(ssl)) {
+		return true;
 	}
 
 	while(true) {
@@ -143,13 +150,18 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 			case SSL_ERROR_WANT_READ:	// Fallthrough
 			case SSL_ERROR_WANT_WRITE:
 				return -1;
+			case SSL_ERROR_ZERO_RETURN:
+				throw SocketException(STRING(CONNECTION_CLOSED));
+			case SSL_ERROR_SYSCALL:
+				if(ret == 0)
+					throw SocketException(STRING(CONNECTION_CLOSED));
 			default:
 				{
 					ssl.reset();
 					// @todo replace 80 with MAX_ERROR_SZ or whatever's appropriate for yaSSL in some nice way...
-					//char errbuf[80];
-					//throw SocketException(string("SSL Error: ") + ERR_error_string(err, errbuf) + " (" + Util::toString(ret) + ", " + Util::toString(err) + ")"); // @todo Translate
-					throw SocketException(STRING(CONNECTION_CLOSED));
+					char errbuf[80];
+					throw SocketException(string("SSL Error: ") + ERR_error_string(err, errbuf) + " (" + Util::toString(ret) + ", " + Util::toString(err) + ")"); // @todo Translate
+					//throw SocketException(STRING(CONNECTION_CLOSED));
 				}
 		}
 	}
