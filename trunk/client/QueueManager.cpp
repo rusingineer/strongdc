@@ -72,6 +72,10 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 		
 		if(!aTempTarget.empty()) {
 			qi->setTempTarget(aTempTarget);
+			if(!Util::fileExists(aTempTarget) && Util::fileExists(aTempTarget + ".antifrag")) {
+				// load old antifrag file
+				File::renameFile(aTempTarget + ".antifrag", qi->getTempTarget());
+	        }
 		}
 		
 		if(p == QueueItem::DEFAULT) {
@@ -869,31 +873,6 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 		return 0;
 	}
 
-	// Check that the file we will be downloading to exists
-	if(q->getDownloadedBytes() > 0) {
-		int64_t tempSize = File::getSize(q->getTempTarget());
-		if(tempSize != q->getSize()) {
-			// <= 0.706 added ".antifrag" to temporary download files if antifrag was enabled...
-			// 0.705 added ".antifrag" even if antifrag was disabled
-			std::string antifrag = q->getTempTarget() + ".antifrag";
-			if(File::getSize(antifrag) > 0) {
-				File::renameFile(antifrag, q->getTempTarget());
-				tempSize = File::getSize(q->getTempTarget());	
-			}	
-			if(tempSize != q->getSize()) {
-				if(tempSize > 0 && tempSize < q->getSize()) {
-					// Probably started with <=0.699 or with 0.705 without antifrag enabled...
-					try {
-						File(q->getTempTarget(), File::WRITE, File::OPEN).setSize(q->getSize()); 
-					} catch(const FileException&) { }		
-				} else {
-					// Temp target gone?
-					q->resetDownloaded();
-				}
-			}
-		}
-	}
-
 	Download* d = new Download(aSource, *q);
 	
 	userQueue.addDownload(q, d);	
@@ -973,15 +952,7 @@ void QueueManager::setFile(Download* d) {
 		}
 		
 		string target = d->getDownloadTarget();
-		
-		if(d->getSegment().getStart() > 0) {
-			if(File::getSize(target) != qi->getSize()) {
-				// When trying the download the next time, the resume pos will be reset
-				throw QueueException("Target file is missing or wrong size");
-			}
-		} else {
-			File::ensureDirectory(target);
-		}
+		File::ensureDirectory(target);
 
 		File* f = new File(target, File::WRITE, File::OPEN | File::CREATE | File::SHARED);
 

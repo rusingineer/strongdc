@@ -137,6 +137,14 @@ string Identity::getConnection() const {
 	}
 }
 
+bool Identity::isTcpActive(const Client* c) const {
+	if(c != NULL && user == ClientManager::getInstance()->getMe()) {
+		return c->isActive();
+	} else {
+		return user->isSet(User::NMDC) ? !user->isSet(User::PASSIVE) : !getIp().empty();
+	}
+}
+
 void FavoriteUser::update(const OnlineUser& info) { 
 	setNick(info.getIdentity().getNick()); 
 	setUrl(info.getClient().getHubUrl()); 
@@ -422,7 +430,7 @@ tstring OnlineUser::getText(uint8_t col) const {
 		}
 		case COLUMN_EMAIL: return Text::toT(identity.getEmail());
 		case COLUMN_VERSION: return Text::toT(identity.get("CL").empty() ? identity.get("VE") : identity.get("CL"));
-		case COLUMN_MODE: return identity.isTcpActive() ? _T("A") : _T("P");
+		case COLUMN_MODE: return identity.isTcpActive(&client) ? _T("A") : _T("P");
 		case COLUMN_HUBS: {
 			const tstring hn = Text::toT(identity.get("HN"));
 			const tstring hr = Text::toT(identity.get("HR"));
