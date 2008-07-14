@@ -43,7 +43,7 @@ public:
 	
 	virtual const UserPtr& getUser() const = 0;
 
-	static uint8_t getImage(const Identity& u) {
+	static uint8_t getImage(const Identity& u, const Client* c) {
 		uint8_t image = 12;
 
 		if(u.isOp()) {
@@ -92,7 +92,7 @@ public:
 			image += 26;
 		}
 
-		if(!u.isTcpActive()) {
+		if(!u.isTcpActive(c)) {
 			// Users we can't connect to...
 			image += 52;
 		}		

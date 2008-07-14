@@ -199,8 +199,10 @@ private:
 
 	// ClientManagerListener
 	void on(ClientManagerListener::UserUpdated, const OnlineUser& aUser) throw() {
-		if(aUser.getUser() == replyTo)
+		if(aUser.getUser() == replyTo) {
+			ctrlClient.setClient(const_cast<Client*>(&aUser.getClient()));
 			PostMessage(WM_SPEAKER, USER_UPDATED);
+		}
 	}
 	void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw() {
 		if(aUser == replyTo)

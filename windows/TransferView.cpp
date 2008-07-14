@@ -985,9 +985,6 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 		if(u->isSet(Upload::FLAG_PARTIAL)) {
 			statusString += _T("[P]");
 		}
-		if(u->isSet(Upload::FLAG_CHUNKED)) {
-			statusString += _T("[C]");
-		}
 		if(u->getUserConnection().isSecure()) {
 			if(u->getUserConnection().isTrusted()) {
 				statusString += _T("[S]");
@@ -998,6 +995,9 @@ void TransferView::on(UploadManagerListener::Tick, const UploadList& ul) {
 		if(u->isSet(Upload::FLAG_ZUPLOAD)) {
 			statusString += _T("[Z]");
 		}
+		if(u->isSet(Upload::FLAG_CHUNKED)) {
+			statusString += _T("[C]");
+		}		
 		if(!statusString.empty()) {
 			statusString += _T(" ");
 		}			

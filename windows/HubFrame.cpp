@@ -529,7 +529,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 
 		if(!u.onlineUser->isHidden()) {
 			u.onlineUser->inc();
-			ctrlUsers.insertItem(u.onlineUser.get(), UserInfoBase::getImage(u.onlineUser->getIdentity()));
+			ctrlUsers.insertItem(u.onlineUser.get(), UserInfoBase::getImage(u.onlineUser->getIdentity(), client));
 		}
 
 		if(!filter.empty())
@@ -548,7 +548,7 @@ bool HubFrame::updateUser(const UserTask& u) {
 				u.onlineUser->dec();				
 			} else {
 				ctrlUsers.updateItem(pos);
-				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, UserInfoBase::getImage(u.onlineUser->getIdentity()), 0, 0, NULL);
+				ctrlUsers.SetItem(pos, 0, LVIF_IMAGE, NULL, UserInfoBase::getImage(u.onlineUser->getIdentity(), client), 0, 0, NULL);
 			}
 		}
 
@@ -636,7 +636,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					}
 						
 					if(BOOLSETTING(CHECK_NEW_USERS)) {
-						if(u.onlineUser->getIdentity().isTcpActive() || client->isActive()) {
+						if(u.onlineUser->getIdentity().isTcpActive(client) || client->isActive()) {
 							try {
 								QueueManager::getInstance()->addTestSUR(u.onlineUser->getUser(), true);
 							} catch(const Exception&) {
@@ -1812,7 +1812,7 @@ void HubFrame::updateUserList(OnlineUserPtr ui) {
 		if(filter.empty()) {
 			if(ctrlUsers.findItem(ui.get()) == -1) {
 				ui->inc();
-				ctrlUsers.insertItem(ui.get(), UserInfoBase::getImage(ui->getIdentity()));
+				ctrlUsers.insertItem(ui.get(), UserInfoBase::getImage(ui->getIdentity(), client));
 			}
 		} else {
 			int sel = ctrlFilterSel.GetCurSel();
@@ -1821,7 +1821,7 @@ void HubFrame::updateUserList(OnlineUserPtr ui) {
 			if(matchFilter(*ui, sel, doSizeCompare, mode, size)) {
 				if(ctrlUsers.findItem(ui.get()) == -1) {
 					ui->inc();
-					ctrlUsers.insertItem(ui.get(), UserInfoBase::getImage(ui->getIdentity()));
+					ctrlUsers.insertItem(ui.get(), UserInfoBase::getImage(ui->getIdentity(), client));
 				}
 			} else {
 				int i = ctrlUsers.findItem(ui.get());
@@ -1843,7 +1843,7 @@ void HubFrame::updateUserList(OnlineUserPtr ui) {
 				const OnlineUserPtr& ui = *i;
 				if(!ui->isHidden()) {
 					ui->inc();
-					ctrlUsers.insertItem(ui.get(), UserInfoBase::getImage(ui->getIdentity()));
+					ctrlUsers.insertItem(ui.get(), UserInfoBase::getImage(ui->getIdentity(), client));
 				}
 			}
 		} else {
@@ -1854,7 +1854,7 @@ void HubFrame::updateUserList(OnlineUserPtr ui) {
 				const OnlineUserPtr& ui = *i;
 				if(!ui->isHidden() && matchFilter(*ui, sel, doSizeCompare, mode, size)) {
 					ui->inc();
-					ctrlUsers.insertItem(ui.get(), UserInfoBase::getImage(ui->getIdentity()));
+					ctrlUsers.insertItem(ui.get(), UserInfoBase::getImage(ui->getIdentity(), client));
 				}
 			}
 		}
@@ -2185,7 +2185,7 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 				cd->clrText = SETTING(SERVER_COLOR);
 			} else if(ui->getIdentity().isOp()) {
 				cd->clrText = SETTING(OP_COLOR);
-			} else if(!ui->getIdentity().isTcpActive()) {
+			} else if(!ui->getIdentity().isTcpActive(client)) {
 				cd->clrText = SETTING(PASIVE_COLOR);
 			} else {
 				cd->clrText = SETTING(NORMAL_COLOUR);

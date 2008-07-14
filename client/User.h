@@ -122,7 +122,7 @@ public:
 	bool isHidden() const { return isSet("HI"); }
 	bool isBot() const { return isClientType(CT_BOT) || isSet("BO"); }
 	bool isAway() const { return (getStatus() & AWAY) || isSet("AW"); }
-	bool isTcpActive() const { return user->isSet(User::NMDC) ? !user->isSet(User::PASSIVE) : !getIp().empty(); }
+	bool isTcpActive(const Client* = NULL) const;
 	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
 	string get(const char* name) const;
 	void set(const char* name, const string& val);
@@ -196,7 +196,7 @@ public:
 
 	/* UserInfo */
 	bool update(int sortCol, const tstring& oldText = Util::emptyStringT);
-	uint8_t imageIndex() const { return UserInfoBase::getImage(identity); }
+	uint8_t imageIndex() const { return UserInfoBase::getImage(identity, &client); }
 	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
 	bool isHidden() const { return identity.isHidden(); }
 	

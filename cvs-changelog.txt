@@ -1,3 +1,10 @@
+** svn406
+	completely fixed passive flag
+	hopefully fixed getting nicks in reconnected PMs
+	fixed download chunked flag
+	revert old code for loading obsolete .antifrag files
+	CTM spam control in ADC hubs
+
 ** svn405
 	webserver respects search interval
 	fixed searching through webserver

@@ -50,9 +50,9 @@ Download::Download(UserConnection& conn, QueueItem& qi) throw() : Transfer(conn,
 	}
 
 	if(qi.isSet(QueueItem::FLAG_CHECK_FILE_LIST))
-		setFlag(Download::FLAG_CHECK_FILE_LIST);
+		setFlag(FLAG_CHECK_FILE_LIST);
 	if(qi.isSet(QueueItem::FLAG_TESTSUR))
-		setFlag(Download::FLAG_TESTSUR);		
+		setFlag(FLAG_TESTSUR);		
 
 	if(getType() == TYPE_FILE && qi.getSize() != -1) {
 		if(HashManager::getInstance()->getTree(getTTH(), getTigerTree())) {
@@ -69,9 +69,13 @@ Download::Download(UserConnection& conn, QueueItem& qi) throw() : Transfer(conn,
 			setTreeValid(true);
 			setSegment(qi.getNextSegment(getTigerTree().getBlockSize(), 0, 0, source->getPartialSource()));
 		}
+		
+		if((getStartPos() + getSize()) != qi.getSize()) {
+			setFlag(FLAG_CHUNKED);
+		}
 
 		if(getSegment().getOverlapped()) {
-			setFlag(Download::FLAG_OVERLAP);
+			setFlag(FLAG_OVERLAP);
 
 			// set overlapped flag to original segment
 			for(DownloadList::const_iterator i = qi.getDownloads().begin(); i != qi.getDownloads().end(); ++i) {
