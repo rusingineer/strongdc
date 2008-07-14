@@ -60,11 +60,7 @@ public:
 		}
 	}
 	// SearchManagerListener
-	void on(SearchManagerListener::SR, const SearchResultPtr& sr) throw() {
-		onSearchResult(sr);
-	}
-		
-	void onSearchResult(const SearchResultPtr& aResult) throw();
+	void on(SearchManagerListener::SR, const SearchResultPtr& aResult) throw();
 	
 	void Start();
 	void Restart(){		
@@ -155,7 +151,7 @@ public:
 			token = Util::toString(Util::rand());
 			
 			SearchManager::getInstance()->addListener(this);
-			SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE, token);
+			searchInterval = SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE, token, (void*)this);
 			results = Util::emptyString;
 			row = 0;
 			sended_search = true;
@@ -183,6 +179,7 @@ public:
 	}
 
 	StringList sClients;
+	uint64_t searchInterval;
 };
 
 class WebServerSocket : public Thread {

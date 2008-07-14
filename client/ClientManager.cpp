@@ -554,9 +554,9 @@ void ClientManager::on(Connected, const Client* c) throw() {
 	fire(ClientManagerListener::ClientConnected(), c);
 }
 
-void ClientManager::on(UserUpdated, const Client*, const OnlineUser& user) throw() {
-	updateNick(user);
-	fire(ClientManagerListener::UserUpdated(), user);
+void ClientManager::on(UserUpdated, const Client*, const OnlineUserPtr& user) throw() {
+	updateNick(*user);
+	fire(ClientManagerListener::UserUpdated(), *user);
 }
 
 void ClientManager::on(UsersUpdated, const Client*, const OnlineUserList& l) throw() {
@@ -703,7 +703,7 @@ void ClientManager::checkCheating(const UserPtr& p, DirectoryListing* dl) {
 		}
 		ou->getIdentity().set("FC", "1");
 	}
-	ou->getClient().updated(*ou);
+	ou->getClient().updated(ou);
 	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))
 		ou->getClient().cheatMessage(report);
 }
@@ -729,7 +729,7 @@ void ClientManager::setCheating(const UserPtr& p, const string& aTestSURString, 
 		if(aRawCommand != -1)
 			sendRawCommand(ou->getUser(), ou->getClient(), aRawCommand);
 	}
-	ou->getClient().updated(*ou);
+	ou->getClient().updated(ou);
 	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))
 		ou->getClient().cheatMessage(report);
 }

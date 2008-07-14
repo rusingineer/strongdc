@@ -33,7 +33,7 @@ WebServerManager* Singleton<WebServerManager>::instance = NULL;
 
 //static const string WEBSERVER_AREA = "WebServer";
 
-WebServerManager::WebServerManager(void) : started(false), page404(NULL), sended_search(false) {
+WebServerManager::WebServerManager(void) : started(false), page404(NULL), sended_search(false), searchInterval(10) {
 	SettingsManager::getInstance()->addListener(this);
 }
 
@@ -167,7 +167,7 @@ string WebServerManager::getPage(const string& file, const string& IP) {
 
 	if((page->id == SEARCH) && (sended_search == true)) {
 		//sended_search = false;
-		pagehtml += "<META HTTP-EQUIV='Refresh' CONTENT='10;URL=search.html?stop=true'>";
+		pagehtml += "<META HTTP-EQUIV='Refresh' CONTENT='" + Util::toString(searchInterval / 1000 + 15) + ";URL=search.html?stop=true'>";
 	}
 
 	pagehtml += "	<div id='prava'>";
@@ -332,23 +332,24 @@ string WebServerManager::getSysLogs(){
 	return ret;
 }
 
-string WebServerManager::getSearch(){
+string WebServerManager::getSearch() {
 	string ret = "<form method='GET' name='search' ACTION='search.html' enctype='multipart/form-data'>";
 
-	/*ClientManager* clientMgr = ClientManager::getInstance();
-	Client::List& clients = clientMgr->getClients();
-
-	Client::List::iterator it;
-	Client::List::iterator endIt = clients.end();
+	ClientManager* clientMgr = ClientManager::getInstance();
+	clientMgr->lock();
+	const Client::List& clients = clientMgr->getClients();
 	sClients.clear();
-	for(it = clients.begin(); it != endIt; ++it) {
+	
+	for(Client::List::const_iterator it = clients.begin(); it != clients.end(); ++it) {
 		Client* client = *it;
 		if (!client->isConnected())
 			continue;
 		
-		ret += "<br> >>> " + client->getName();
-		sClients.push_back(client->getIpPort());
-	}*/
+		ret += "<br> >>> " + client->getHubName();
+		sClients.push_back(client->getHubUrl());
+	}
+	
+	clientMgr->unlock();
 
 	if(sended_search == true) {
 		ret += "<br><br><table width='100%'><tr><td align='center'><b>Searching... Please wait.</b></td></tr>";
@@ -370,7 +371,6 @@ string WebServerManager::getSearch(){
 		ret += "<option value='8'>TTH";
 		ret += "</td></tr></form></table><br>";	
 		ret += "<table width='100%' bgcolor='#EEEEEE'>" + results + "</table>";
-		results = Util::emptyString;
 	}
 
 	return ret;
@@ -548,7 +548,7 @@ int WebServerSocket::run(){
 
 } 
 
-void WebServerManager::onSearchResult(const SearchResultPtr& aResult) {
+void WebServerManager::on(SearchManagerListener::SR, const SearchResultPtr& aResult) throw() {
 	// Check that this is really a relevant search result...
 	{
 		Lock l(cs);

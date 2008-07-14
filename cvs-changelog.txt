@@ -1,3 +1,9 @@
+** svn405
+	webserver respects search interval
+	fixed searching through webserver
+	another changes about OnlineUser
+	playing with anti-flood constants
+
 ** svn404
 	other changes to SSLSocket (DC++ BZR)
 	try to fix crashes around OnlineUser/Identity

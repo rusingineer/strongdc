@@ -70,11 +70,6 @@ public:
 
 	void updateNick(const UserPtr& user, const string& nick) throw();
 
-	bool isOnline(const UserPtr& aUser) const {
-		Lock l(cs);
-		return onlineUsers.find(aUser->getCID()) != onlineUsers.end();
-	}
-	
 	void setIPUser(const UserPtr& user, const string& IP, uint16_t udpPort = 0) {
 		if(IP.empty())
 			return;
@@ -121,7 +116,7 @@ public:
 
 			ou = i->second;
 		}
-		ou->getClient().updated(*ou);
+		ou->getClient().updated(ou);
 	}
 
 	void setPkLock(const UserPtr& p, const string& aPk, const string& aLock) {
@@ -229,7 +224,7 @@ private:
 		
 	// ClientListener
 	void on(Connected, const Client* c) throw();
-	void on(UserUpdated, const Client*, const OnlineUser& user) throw();
+	void on(UserUpdated, const Client*, const OnlineUserPtr& user) throw();
 	void on(UsersUpdated, const Client* c, const OnlineUserList&) throw();
 	void on(Failed, const Client*, const string&) throw();
 	void on(HubUpdated, const Client* c) throw();

@@ -105,7 +105,7 @@ void AdcHub::putUser(const uint32_t aSID, bool disconnect) {
 	if(aSID != AdcCommand::HUB_SID)
 		ClientManager::getInstance()->putOffline(ou, disconnect);
 
-	fire(ClientListener::UserRemoved(), this, *ou);
+	fire(ClientListener::UserRemoved(), this, ou);
 	ou->dec();
 }
 
@@ -192,7 +192,7 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 		setHubIdentity(u->getIdentity());
 		fire(ClientListener::HubUpdated(), this);
 	} else {
-		fire(ClientListener::UserUpdated(), this, *u);
+		fire(ClientListener::UserUpdated(), this, u);
 	}
 }
 
