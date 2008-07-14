@@ -285,7 +285,7 @@ private:
 	};
 
 	struct UserTask : public Task {
-		UserTask(const OnlineUser& ou) : onlineUser(const_cast<OnlineUser*>(&ou)) { }
+		UserTask(const OnlineUserPtr& ou) : onlineUser(ou) { }
 		~UserTask() { }
 		
 		const OnlineUserPtr onlineUser;
@@ -453,9 +453,9 @@ private:
 	// ClientListener
 	void on(Connecting, const Client*) throw();
 	void on(Connected, const Client*) throw();
-	void on(UserUpdated, const Client*, const OnlineUser&) throw();
+	void on(UserUpdated, const Client*, const OnlineUserPtr&) throw();
 	void on(UsersUpdated, const Client*, const OnlineUserList&) throw();
-	void on(ClientListener::UserRemoved, const Client*, const OnlineUser&) throw();
+	void on(ClientListener::UserRemoved, const Client*, const OnlineUserPtr&) throw();
 	void on(Redirect, const Client*, const string&) throw();
 	void on(Failed, const Client*, const string&) throw();
 	void on(GetPassword, const Client*) throw();
@@ -470,7 +470,7 @@ private:
 
 	void speak(Tasks s) { tasks.add(static_cast<uint8_t>(s), 0); PostMessage(WM_SPEAKER); }
 	void speak(Tasks s, const string& msg) { tasks.add(static_cast<uint8_t>(s), new StringTask(msg)); PostMessage(WM_SPEAKER); }
-	void speak(Tasks s, const OnlineUser& u) { tasks.add(static_cast<uint8_t>(s), new UserTask(u)); updateUsers = true; }
+	void speak(Tasks s, const OnlineUserPtr& u) { tasks.add(static_cast<uint8_t>(s), new UserTask(u)); updateUsers = true; }
 	void speak(Tasks s, const Identity& from, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(from, line));  PostMessage(WM_SPEAKER); }
 	void speak(Tasks s, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(from.getIdentity(), to, replyTo, line));  PostMessage(WM_SPEAKER); }
 };

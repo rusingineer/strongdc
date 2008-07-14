@@ -239,7 +239,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			// Assume that messages from unknown users come from the hub
 			o.getIdentity().setHub(true);
 			o.getIdentity().setHidden(true);
-			fire(ClientListener::UserUpdated(), this, o);
+			fire(ClientListener::UserUpdated(), this, &o);
 
 			fire(ClientListener::Message(), this, o, unescape(message), thirdPerson);
 		}
@@ -350,7 +350,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 				if(!u->getUser()->isSet(User::PASSIVE)) {
 					u->getUser()->setFlag(User::PASSIVE);
-					updated(*u);
+					updated(u);
 				}
 			}
 
@@ -441,7 +441,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			setMyIdentity(u.getIdentity());
 		}
 		
-		fire(ClientListener::UserUpdated(), this, u);
+		fire(ClientListener::UserUpdated(), this, &u);
 	} else if(cmd == "$Quit") {
 		if(!param.empty()) {
 			const string& nick = param;
@@ -449,7 +449,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			if(!u)
 				return;
 
-			fire(ClientListener::UserRemoved(), this, *u);
+			fire(ClientListener::UserRemoved(), this, u);
 
 			putUser(nick);
 		}
@@ -507,7 +507,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				u->getUser()->setFlag(User::PASSIVE);
 				// Notify the user that we're passive too...
 				revConnectToMe(*u);
-				updated(*u);
+				updated(u);
 
 				return;
 			}
@@ -633,7 +633,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				myInfo(true);
 			}
 
-			fire(ClientListener::UserUpdated(), this, u);
+			fire(ClientListener::UserUpdated(), this, &u);
 		}
 	} else if(cmd == "$ForceMove") {
 		disconnect(false);
@@ -758,14 +758,14 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				replyTo = &getUser(rtNick);
 				replyTo->getIdentity().setHub(true);
 				replyTo->getIdentity().setHidden(true);
-				fire(ClientListener::UserUpdated(), this, *replyTo);
+				fire(ClientListener::UserUpdated(), this, replyTo);
 			}
 			if(from == 0) {
 				// Assume it's from the hub
 				from = &getUser(fromNick);
 				from->getIdentity().setHub(true);
 				from->getIdentity().setHidden(true);
-				fire(ClientListener::UserUpdated(), this, *from);
+				fire(ClientListener::UserUpdated(), this, from);
 			}
 
 			// Update pointers just in case they've been invalidated

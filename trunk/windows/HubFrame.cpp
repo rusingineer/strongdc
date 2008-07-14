@@ -1621,17 +1621,17 @@ void HubFrame::on(Connecting, const Client*) throw() {
 void HubFrame::on(Connected, const Client*) throw() { 
 	speak(CONNECTED);
 }
-void HubFrame::on(UserUpdated, const Client*, const OnlineUser& user) throw() {
+void HubFrame::on(UserUpdated, const Client*, const OnlineUserPtr& user) throw() {
 	speak(UPDATE_USER_JOIN, user);
 }
 void HubFrame::on(UsersUpdated, const Client*, const OnlineUserList& aList) throw() {
 	for(OnlineUserList::const_iterator i = aList.begin(); i != aList.end(); ++i) {
-		tasks.add(UPDATE_USER, new UserTask(*(*i)));
+		tasks.add(UPDATE_USER, new UserTask(*i));
 	}
 	updateUsers = true;
 }
 
-void HubFrame::on(ClientListener::UserRemoved, const Client*, const OnlineUser& user) throw() {
+void HubFrame::on(ClientListener::UserRemoved, const Client*, const OnlineUserPtr& user) throw() {
 	speak(REMOVE_USER, user);
 }
 

@@ -72,7 +72,7 @@ public:
 	string getIpPort() const { return getIp() + ':' + Util::toString(port); }
 	string getLocalIp() const;
 
-	void updated(const OnlineUser& aUser) { fire(ClientListener::UserUpdated(), this, aUser); }
+	void updated(const OnlineUserPtr& aUser) { fire(ClientListener::UserUpdated(), this, aUser); }
 
 	static int getTotalCounts() {
 		return counts.normal + counts.registered + counts.op;

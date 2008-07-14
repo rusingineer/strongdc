@@ -39,9 +39,9 @@ public:
 	
 	virtual void on(Connecting, const Client*) throw() { }
 	virtual void on(Connected, const Client*) throw() { }
-	virtual void on(UserUpdated, const Client*, const OnlineUser&) throw() { }
+	virtual void on(UserUpdated, const Client*, const OnlineUserPtr&) throw() { }
 	virtual void on(UsersUpdated, const Client*, const OnlineUserList&) throw() { }
-	virtual void on(UserRemoved, const Client*, const OnlineUser&) throw() { }
+	virtual void on(UserRemoved, const Client*, const OnlineUserPtr&) throw() { }
 	virtual void on(Redirect, const Client*, const string&) throw() { }
 	virtual void on(Failed, const Client*, const string&) throw() { }
 	virtual void on(GetPassword, const Client*) throw() { }

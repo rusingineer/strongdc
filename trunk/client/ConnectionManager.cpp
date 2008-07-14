@@ -213,8 +213,8 @@ void ConnectionManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 	}
 }
 
-static const uint32_t FLOOD_TRIGGER = 20000;
-static const uint32_t FLOOD_ADD = 2000;
+static const uint32_t FLOOD_TRIGGER = 10000;
+static const uint32_t FLOOD_ADD = 1000;
 
 ConnectionManager::Server::Server(bool secure_, uint16_t aPort, const string& ip /* = "0.0.0.0" */) : port(0), secure(secure_), die(false) {
 	sock.create();
@@ -487,7 +487,7 @@ void ConnectionManager::on(UserConnectionListener::MyNick, UserConnection* aSour
 		// Make sure we know who it is, i e that he/she is connected...
 
 		aSource->setUser(ClientManager::getInstance()->findUser(cid));
-		if(!aSource->getUser() || !ClientManager::getInstance()->isOnline(aSource->getUser())) {
+		if(!aSource->getUser() || !aSource->getUser()->isOnline()) {
 			dcdebug("CM::onMyNick Incoming connection from unknown user %s\n", nick.c_str());
 			putConnection(aSource);
 			return;
