@@ -286,7 +286,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 		int colIndex = ctrlTransfers.findColumn(cd->iSubItem);
 		cd->clrTextBk = WinUtil::bgColor;
 
-		if((colIndex == COLUMN_STATUS) && (ii->status != ItemInfo::STATUS_WAITING) && (ii->status != ItemInfo::STATUS_REQUESTING)) {
+		if((colIndex == COLUMN_STATUS) && (ii->status != ItemInfo::STATUS_WAITING)) {
 			if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				bHandled = FALSE;
 				return 0;
@@ -613,6 +613,11 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 						ui->updateMask &= ~UpdateInfo::MASK_STATUS_STRING;
 						ui->updateMask &= ~UpdateInfo::MASK_TIMELEFT;
 					}
+					
+					if(ui->status == ItemInfo::STATUS_REQUESTING)
+					{
+						ui->updateMask &= ~UpdateInfo::MASK_STATUS;
+					}
 
 					/* if target has changed, regroup the item */
 					bool changeParent = (ui->updateMask & UpdateInfo::MASK_FILE) && (ui->target != ii->target);
@@ -843,7 +848,6 @@ void TransferView::on(DownloadManagerListener::Requesting, const Download* d) th
 	
 	ui->setActual(d->getActual());
 	ui->setSize(d->getSize());
-	ui->setStatus(ItemInfo::STATUS_REQUESTING);
 	ui->setStatusString(TSTRING(REQUESTING) + _T(" ") + getFile(d) + _T("..."));
 
 	speak(UPDATE_ITEM, ui);

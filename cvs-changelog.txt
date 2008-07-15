@@ -1,3 +1,6 @@
+** svn409
+	fixed fix for transferview :-)
+
 ** svn408
 	CDM fix (adrian_007)
 	forgot to commit transferview patch
