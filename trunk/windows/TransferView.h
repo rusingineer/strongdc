@@ -183,7 +183,8 @@ private:
 			STATUS_RUNNING,
 			STATUS_WAITING,
 			// special statuses
-			TREE_DOWNLOAD
+			TREE_DOWNLOAD,
+			STATUS_REQUESTING
 		};
 
 		ItemInfo(const UserPtr& u, bool aDownload);
