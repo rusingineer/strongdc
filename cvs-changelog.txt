@@ -1,3 +1,8 @@
+** svn407
+	used __cdecl for Release
+	fixed blinking single download items
+	updated OpenSSL
+
 ** svn406
 	completely fixed passive flag
 	hopefully fixed getting nicks in reconnected PMs

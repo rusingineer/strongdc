@@ -315,8 +315,8 @@ typedef struct ASN1_VALUE_st ASN1_VALUE;
 	DECLARE_ASN1_ITEM(itname)
 
 #define	DECLARE_ASN1_ENCODE_FUNCTIONS_const(type, name) \
-	type * __cdecl d2i_##name(type **a, const unsigned char **in, long len); \
-	int __cdecl i2d_##name(const type *a, unsigned char **out); \
+	type *d2i_##name(type **a, const unsigned char **in, long len); \
+	int i2d_##name(const type *a, unsigned char **out); \
 	DECLARE_ASN1_ITEM(name)
 
 #define	DECLARE_ASN1_NDEF_FUNCTION(name) \
@@ -327,8 +327,8 @@ typedef struct ASN1_VALUE_st ASN1_VALUE;
 	DECLARE_ASN1_ENCODE_FUNCTIONS_const(name, name)
 
 #define DECLARE_ASN1_ALLOC_FUNCTIONS_name(type, name) \
-	type * __cdecl name##_new(void); \
-	void __cdecl name##_free(type *a);
+	type *name##_new(void); \
+	void name##_free(type *a);
 
 #define DECLARE_ASN1_PRINT_FUNCTION(stname) \
 	DECLARE_ASN1_PRINT_FUNCTION_fname(stname, stname)
@@ -985,7 +985,7 @@ int ASN1_item_i2d_fp(const ASN1_ITEM *it, FILE *out, void *x);
 int ASN1_STRING_print_ex_fp(FILE *fp, ASN1_STRING *str, unsigned long flags);
 #endif
 
-int __cdecl ASN1_STRING_to_UTF8(unsigned char **out, ASN1_STRING *in);
+int ASN1_STRING_to_UTF8(unsigned char **out, ASN1_STRING *in);
 
 #ifndef OPENSSL_NO_BIO
 void *ASN1_d2i_bio(void *(*xnew)(void), d2i_of_void *d2i, BIO *in, void **x);

@@ -45,10 +45,10 @@ CryptoManager::CryptoManager()
 	lock("EXTENDEDPROTOCOLABCABCABCABCABCABC"), 
 	pk("DCPLUSPLUS" DCVERSIONSTRING "ABCABC")
 {
-	SSL_library_init();
-	
 	cs = new CriticalSection[CRYPTO_num_locks()];
 	CRYPTO_set_locking_callback(locking_function);
+	
+	SSL_library_init();
 	
 	clientContext.reset(SSL_CTX_new(TLSv1_client_method()));
 	clientVerContext.reset(SSL_CTX_new(TLSv1_client_method()));

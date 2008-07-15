@@ -645,14 +645,14 @@ int NETSCAPE_SPKI_print(BIO *out, NETSCAPE_SPKI *spki);
 
 int X509_signature_print(BIO *bp,X509_ALGOR *alg, ASN1_STRING *sig);
 
-int __cdecl X509_sign(X509 *x, EVP_PKEY *pkey, const EVP_MD *md);
+int X509_sign(X509 *x, EVP_PKEY *pkey, const EVP_MD *md);
 int X509_REQ_sign(X509_REQ *x, EVP_PKEY *pkey, const EVP_MD *md);
 int X509_CRL_sign(X509_CRL *x, EVP_PKEY *pkey, const EVP_MD *md);
 int NETSCAPE_SPKI_sign(NETSCAPE_SPKI *x, EVP_PKEY *pkey, const EVP_MD *md);
 
 int X509_pubkey_digest(const X509 *data,const EVP_MD *type,
 		unsigned char *md, unsigned int *len);
-int __cdecl X509_digest(const X509 *data,const EVP_MD *type,
+int X509_digest(const X509 *data,const EVP_MD *type,
 		unsigned char *md, unsigned int *len);
 int X509_CRL_digest(const X509_CRL *data,const EVP_MD *type,
 		unsigned char *md, unsigned int *len);
@@ -754,9 +754,9 @@ X509_NAME *X509_NAME_dup(X509_NAME *xn);
 X509_NAME_ENTRY *X509_NAME_ENTRY_dup(X509_NAME_ENTRY *ne);
 
 int		X509_cmp_time(const ASN1_TIME *s, time_t *t);
-int		__cdecl X509_cmp_current_time(const ASN1_TIME *s);
+int		X509_cmp_current_time(const ASN1_TIME *s);
 ASN1_TIME *	X509_time_adj(ASN1_TIME *s, long adj, time_t *t);
-ASN1_TIME *	__cdecl X509_gmtime_adj(ASN1_TIME *s, long adj);
+ASN1_TIME *	X509_gmtime_adj(ASN1_TIME *s, long adj);
 
 const char *	X509_get_default_cert_area(void );
 const char *	X509_get_default_cert_dir(void );
@@ -884,13 +884,13 @@ int ASN1_item_sign(const ASN1_ITEM *it, X509_ALGOR *algor1, X509_ALGOR *algor2,
 int 		X509_set_version(X509 *x,long version);
 int 		X509_set_serialNumber(X509 *x, ASN1_INTEGER *serial);
 ASN1_INTEGER *	X509_get_serialNumber(X509 *x);
-int 		__cdecl X509_set_issuer_name(X509 *x, X509_NAME *name);
+int 		X509_set_issuer_name(X509 *x, X509_NAME *name);
 X509_NAME *	X509_get_issuer_name(X509 *a);
-int 		__cdecl X509_set_subject_name(X509 *x, X509_NAME *name);
-X509_NAME *	__cdecl X509_get_subject_name(X509 *a);
+int 		X509_set_subject_name(X509 *x, X509_NAME *name);
+X509_NAME *	X509_get_subject_name(X509 *a);
 int 		X509_set_notBefore(X509 *x, const ASN1_TIME *tm);
 int 		X509_set_notAfter(X509 *x, const ASN1_TIME *tm);
-int 		__cdecl X509_set_pubkey(X509 *x, EVP_PKEY *pkey);
+int 		X509_set_pubkey(X509 *x, EVP_PKEY *pkey);
 EVP_PKEY *	X509_get_pubkey(X509 *x);
 ASN1_BIT_STRING * X509_get0_pubkey_bitstr(const X509 *x);
 int		X509_certificate_type(X509 *x,EVP_PKEY *pubkey /* optional */);
@@ -980,10 +980,10 @@ int		X509_NAME_get_text_by_OBJ(X509_NAME *name, ASN1_OBJECT *obj,
 
 /* NOTE: you should be passsing -1, not 0 as lastpos.  The functions that use
  * lastpos, search after that position on. */
-int 		__cdecl X509_NAME_get_index_by_NID(X509_NAME *name,int nid,int lastpos);
+int 		X509_NAME_get_index_by_NID(X509_NAME *name,int nid,int lastpos);
 int 		X509_NAME_get_index_by_OBJ(X509_NAME *name,ASN1_OBJECT *obj,
 			int lastpos);
-X509_NAME_ENTRY * __cdecl X509_NAME_get_entry(X509_NAME *name, int loc);
+X509_NAME_ENTRY *X509_NAME_get_entry(X509_NAME *name, int loc);
 X509_NAME_ENTRY *X509_NAME_delete_entry(X509_NAME *name, int loc);
 int 		X509_NAME_add_entry(X509_NAME *name,X509_NAME_ENTRY *ne,
 			int loc, int set);
@@ -995,7 +995,7 @@ X509_NAME_ENTRY *X509_NAME_ENTRY_create_by_txt(X509_NAME_ENTRY **ne,
 		const char *field, int type, const unsigned char *bytes, int len);
 X509_NAME_ENTRY *X509_NAME_ENTRY_create_by_NID(X509_NAME_ENTRY **ne, int nid,
 			int type,unsigned char *bytes, int len);
-int __cdecl X509_NAME_add_entry_by_txt(X509_NAME *name, const char *field, int type,
+int X509_NAME_add_entry_by_txt(X509_NAME *name, const char *field, int type,
 			const unsigned char *bytes, int len, int loc, int set);
 X509_NAME_ENTRY *X509_NAME_ENTRY_create_by_OBJ(X509_NAME_ENTRY **ne,
 			ASN1_OBJECT *obj, int type,const unsigned char *bytes,
@@ -1005,7 +1005,7 @@ int 		X509_NAME_ENTRY_set_object(X509_NAME_ENTRY *ne,
 int 		X509_NAME_ENTRY_set_data(X509_NAME_ENTRY *ne, int type,
 			const unsigned char *bytes, int len);
 ASN1_OBJECT *	X509_NAME_ENTRY_get_object(X509_NAME_ENTRY *ne);
-ASN1_STRING *	__cdecl X509_NAME_ENTRY_get_data(X509_NAME_ENTRY *ne);
+ASN1_STRING *	X509_NAME_ENTRY_get_data(X509_NAME_ENTRY *ne);
 
 int		X509v3_get_ext_count(const STACK_OF(X509_EXTENSION) *x);
 int		X509v3_get_ext_by_NID(const STACK_OF(X509_EXTENSION) *x,
