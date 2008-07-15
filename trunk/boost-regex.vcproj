@@ -60,8 +60,6 @@
 				UsePrecompiledHeader="0"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
-				CallingConvention="0"
-				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -199,7 +197,6 @@
 				DefaultCharIsUnsigned="true"
 				RuntimeTypeInfo="false"
 				DebugInformationFormat="3"
-				CallingConvention="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -272,7 +269,6 @@
 				DefaultCharIsUnsigned="true"
 				RuntimeTypeInfo="false"
 				DebugInformationFormat="3"
-				CallingConvention="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

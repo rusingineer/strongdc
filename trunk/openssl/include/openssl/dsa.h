@@ -191,7 +191,7 @@ int	DSA_set_method(DSA *dsa, const DSA_METHOD *);
 
 DSA *	DSA_new(void);
 DSA *	DSA_new_method(ENGINE *engine);
-void	__cdecl DSA_free (DSA *r);
+void	DSA_free (DSA *r);
 /* "up" the DSA object's reference count */
 int	DSA_up_ref(DSA *r);
 int	DSA_size(const DSA *);

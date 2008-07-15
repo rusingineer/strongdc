@@ -53,7 +53,7 @@ public:
 
 	bool TLSOk() const throw();
 	
-	static void locking_function(int mode, int n, const char *file, int line);
+	static void __cdecl locking_function(int mode, int n, const char *file, int line);
 private:
 
 	friend class Singleton<CryptoManager>;

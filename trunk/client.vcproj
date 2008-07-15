@@ -61,8 +61,6 @@
 				PrecompiledHeaderFile="$(IntDir)/client.pch"
 				WarningLevel="4"
 				DebugInformationFormat="4"
-				CallingConvention="0"
-				CompileAs="0"
 				DisableSpecificWarnings="4996"
 			/>
 			<Tool
@@ -140,8 +138,6 @@
 				PrecompiledHeaderFile="$(IntDir)/client.pch"
 				WarningLevel="4"
 				DebugInformationFormat="3"
-				CallingConvention="0"
-				CompileAs="0"
 				DisableSpecificWarnings="4996"
 			/>
 			<Tool
@@ -228,7 +224,6 @@
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
-				CallingConvention="1"
 				DisableSpecificWarnings="4996"
 			/>
 			<Tool
@@ -316,7 +311,6 @@
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
-				CallingConvention="1"
 				DisableSpecificWarnings="4996"
 			/>
 			<Tool
