@@ -1,3 +1,7 @@
+** svn408
+	CDM fix (adrian_007)
+	forgot to commit transferview patch
+
 ** svn407
 	used __cdecl for Release
 	fixed blinking single download items

@@ -294,56 +294,80 @@ void DetectionEntryDlg::updateVars() {
 }
 
 void DetectionEntryDlg::updateControls() {
-	if(origId > 0) {
-		ctrlName.SetWindowText(Text::toT(curEntry.name).c_str());
-		ctrlComment.SetWindowText(Text::toT(curEntry.comment).c_str());
-		ctrlCheat.SetWindowText(Text::toT(curEntry.cheat).c_str());
+	if(origId < 0)
+		return;
+	ctrlName.SetWindowText(Text::toT(curEntry.name).c_str());
+	ctrlComment.SetWindowText(Text::toT(curEntry.comment).c_str());
+	ctrlCheat.SetWindowText(Text::toT(curEntry.cheat).c_str());
 
-		// params...
-		if(!curEntry.defaultMap.empty()) {
-			TStringList cols;
-			sharedMap = curEntry.defaultMap;
-			if(ctrlProtocol.GetCurSel() == 0) {
-				for(DetectionEntry::INFMap::const_iterator j = sharedMap.begin(); j != sharedMap.end(); ++j) {
-					cols.push_back(Text::toT(j->first));
-					cols.push_back(Text::toT(j->second));
-					ctrlParams.insert(cols);
-					cols.clear();
-				}
+	// params...
+	if(!curEntry.defaultMap.empty()) {
+		TStringList cols;
+		sharedMap = curEntry.defaultMap;
+		if(ctrlProtocol.GetCurSel() == 0) {
+			for(DetectionEntry::INFMap::const_iterator j = sharedMap.begin(); j != sharedMap.end(); ++j) {
+				cols.push_back(Text::toT(j->first));
+				cols.push_back(Text::toT(j->second));
+				ctrlParams.insert(cols);
+				cols.clear();
 			}
 		}
-
-		if(!curEntry.nmdcMap.empty()) {
-			TStringList cols;
-			nmdcMap = curEntry.nmdcMap;
-			if(ctrlProtocol.GetCurSel() == 1) {
-				for(DetectionEntry::INFMap::const_iterator j = nmdcMap.begin(); j != nmdcMap.end(); ++j) {
-					cols.push_back(Text::toT(j->first));
-					cols.push_back(Text::toT(j->second));
-					ctrlParams.insert(cols);
-					cols.clear();
-				}
-			}
-		}
-
-		if(!curEntry.adcMap.empty()) {
-			TStringList cols;
-			adcMap = curEntry.adcMap;
-			if(ctrlProtocol.GetCurSel() == 2) {
-				for(DetectionEntry::INFMap::const_iterator j = adcMap.begin(); j != adcMap.end(); ++j) {
-					cols.push_back(Text::toT(j->first));
-					cols.push_back(Text::toT(j->second));
-					ctrlParams.insert(cols);
-					cols.clear();
-				}
-			}
-		}
-
-		SetDlgItemText(IDC_DETECT_ID, Text::toT(Util::toString(curEntry.Id)).c_str());
 	}
+
+	if(!curEntry.nmdcMap.empty()) {
+		TStringList cols;
+		nmdcMap = curEntry.nmdcMap;
+		if(ctrlProtocol.GetCurSel() == 1) {
+			for(DetectionEntry::INFMap::const_iterator j = nmdcMap.begin(); j != nmdcMap.end(); ++j) {
+				cols.push_back(Text::toT(j->first));
+				cols.push_back(Text::toT(j->second));
+				ctrlParams.insert(cols);
+				cols.clear();
+			}
+		}
+	}
+
+	if(!curEntry.adcMap.empty()) {
+		TStringList cols;
+		adcMap = curEntry.adcMap;
+		if(ctrlProtocol.GetCurSel() == 2) {
+			for(DetectionEntry::INFMap::const_iterator j = adcMap.begin(); j != adcMap.end(); ++j) {
+				cols.push_back(Text::toT(j->first));
+				cols.push_back(Text::toT(j->second));
+				ctrlParams.insert(cols);
+				cols.clear();
+			}
+		}
+	}
+
+	SetDlgItemText(IDC_DETECT_ID, Text::toT(Util::toString(curEntry.Id)).c_str());
 
 	CheckDlgButton(IDC_CHECK_MISMATCH, curEntry.checkMismatch ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(IDC_ENABLE, curEntry.isEnabled ? BST_CHECKED : BST_UNCHECKED);
 	ctrlRaw.SetCurSel(curEntry.rawToSend);
 	ctrlLevel.SetCurSel(curEntry.clientFlag - 1);
+	{
+		BOOL h = false;
+		onEnable(0,0,0,h);
+	}
+}
+
+LRESULT DetectionEntryDlg::onEnable(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	bool state = IsDlgButtonChecked(IDC_ENABLE) == BST_CHECKED;
+#define _EnableItem(id) ::EnableWindow(GetDlgItem(id), state)
+	_EnableItem(IDC_CHECK_MISMATCH);
+	_EnableItem(IDC_RAW);
+	_EnableItem(IDC_INFMAP_TYPE);
+	_EnableItem(IDC_LEVEL);
+	_EnableItem(IDC_PARAMS);
+	_EnableItem(IDC_CHEAT);
+	_EnableItem(IDC_COMMENT);
+	_EnableItem(IDC_NAME);
+	_EnableItem(IDC_ADD);
+	_EnableItem(IDC_REMOVE);
+	_EnableItem(IDC_CHANGE);
+	_EnableItem(IDC_MATCH);
+	_EnableItem(IDC_REGEX_TESTER);
+#undef _EnableItem
+	return 0;
 }

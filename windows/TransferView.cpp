@@ -286,7 +286,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 		int colIndex = ctrlTransfers.findColumn(cd->iSubItem);
 		cd->clrTextBk = WinUtil::bgColor;
 
-		if((colIndex == COLUMN_STATUS) && (ii->status != ItemInfo::STATUS_WAITING)) {
+		if((colIndex == COLUMN_STATUS) && (ii->status != ItemInfo::STATUS_WAITING) && (ii->status != ItemInfo::STATUS_REQUESTING)) {
 			if(!BOOLSETTING(SHOW_PROGRESS_BARS)) {
 				bHandled = FALSE;
 				return 0;
@@ -605,7 +605,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 					ItemInfo* parent = ii->parent ? ii->parent : ii;
 
 					/* parent item must be updated with correct info about whole file */
-					if(	(ui->status == ItemInfo::STATUS_RUNNING) &&	(parent->hits == -1))
+					if(	(ui->status == ItemInfo::STATUS_RUNNING || ui->status == ItemInfo::STATUS_REQUESTING) && (parent->hits == -1))
 					{
 						ui->updateMask &= ~UpdateInfo::MASK_POS;
 						ui->updateMask &= ~UpdateInfo::MASK_ACTUAL;
@@ -843,7 +843,7 @@ void TransferView::on(DownloadManagerListener::Requesting, const Download* d) th
 	
 	ui->setActual(d->getActual());
 	ui->setSize(d->getSize());
-	ui->setStatus(ItemInfo::STATUS_WAITING);
+	ui->setStatus(ItemInfo::STATUS_REQUESTING);
 	ui->setStatusString(TSTRING(REQUESTING) + _T(" ") + getFile(d) + _T("..."));
 
 	speak(UPDATE_ITEM, ui);
