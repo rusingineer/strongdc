@@ -40,6 +40,7 @@
 #include "DetectionManager.h"
 #include "WebServerManager.h"
 #include "../windows/PopupManager.h"
+#include "DecentralizationManager.h"
 
 /*
 #ifdef _STLP_DEBUG
@@ -106,9 +107,13 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	if(f != NULL)
 		(*f)(p, TSTRING(DOWNLOAD_QUEUE));
 	QueueManager::getInstance()->loadQueue();
+	
+	DecentralizationManager::newInstance();
 }
 
 void shutdown() {
+	DecentralizationManager::deleteInstance();
+	
 	TimerManager::getInstance()->shutdown();
 	HashManager::getInstance()->shutdown();
 	ConnectionManager::getInstance()->shutdown();

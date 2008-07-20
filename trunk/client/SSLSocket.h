@@ -38,7 +38,7 @@ class CryptoManager;
 
 class SSLSocket : public Socket {
 public:
-	~SSLSocket() throw() {}
+	~SSLSocket() throw() { disconnect(); }
 
 	void accept(const Socket& listeningSocket) throw(SocketException);
 	void connect(const string& aIp, uint16_t aPort) throw(SocketException);
@@ -59,7 +59,8 @@ public:
 
 private:
 	friend class CryptoManager;
-
+	friend class DecentralizationManager;
+	
 	SSLSocket(SSL_CTX* context) throw(SocketException);
 	SSLSocket(const SSLSocket&);
 	SSLSocket& operator=(const SSLSocket&);

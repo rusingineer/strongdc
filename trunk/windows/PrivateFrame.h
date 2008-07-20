@@ -41,9 +41,10 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 	private ClientManagerListener, public UCHandler<PrivateFrame>, private SettingsManagerListener
 {
 public:
-	static void gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo,  Client* client, const tstring& aMessage);
-	static void openWindow(const UserPtr& replyTo, Client* client = NULL, const tstring& aMessage = Util::emptyStringT);
-	static bool isOpen(const UserPtr u) { return frames.find(u) != frames.end(); }
+	static void gotMessage(const Identity& from, const OnlineUserPtr& to, const OnlineUserPtr& replyTo, const tstring& aMessage);
+	static void openWindow(const OnlineUserPtr& replyTo, const tstring& aMessage = Util::emptyStringT);
+	static void openWindow(const UserPtr& user);
+	static bool isOpen(const OnlineUserPtr u) { return frames.find(u) != frames.end(); }
 	static void closeAll();
 	static void closeAllOffline();
 
@@ -163,14 +164,14 @@ public:
 	void sendMessage(const tstring& msg, bool thirdPerson = false);
 
 private:
-	PrivateFrame(const UserPtr& replyTo_) : replyTo(replyTo_), 
+	PrivateFrame(const OnlineUserPtr& replyTo_) : replyTo(replyTo_), 
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
 		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) { }
 	
 	~PrivateFrame() { }
 
 	bool created;
-	typedef unordered_map<UserPtr, PrivateFrame*, User::Hash> FrameMap;
+	typedef unordered_map<OnlineUserPtr, PrivateFrame*, OnlineUser::Hash> FrameMap;
 	typedef FrameMap::const_iterator FrameIter;
 	static FrameMap frames;
 	ChatCtrl ctrlClient;
@@ -182,7 +183,7 @@ private:
 	CButton ctrlEmoticons;
 	HBITMAP hEmoticonBmp;
 
-	UserPtr replyTo;
+	OnlineUserPtr replyTo;
 	CContainedWindow ctrlMessageContainer;
 	CContainedWindow ctrlClientContainer;
 
@@ -193,23 +194,37 @@ private:
 
 	void updateTitle();
 	
+	tstring hubName;
+	string hubURL;
+	
 	TStringList prevCommands;
 	tstring currentCommand;
 	TStringList::size_type curCommandPosition;
 
 	// ClientManagerListener
 	void on(ClientManagerListener::UserUpdated, const OnlineUser& aUser) throw() {
-		if(aUser.getUser() == replyTo) {
-			ctrlClient.setClient(const_cast<Client*>(&aUser.getClient()));
+		if(aUser.getUser() == replyTo->getUser()) {
+			if(isoffline) {
+				FrameMap::iterator i = frames.find(replyTo);
+				dcassert(i != frames.end());
+				frames.erase(i);
+				
+				replyTo = const_cast<OnlineUser*>(&aUser);	
+				frames[replyTo] = this;
+			
+				if(!(aUser.getIdentity().getStatus() & Identity::DSN)) {
+					ctrlClient.setClient(const_cast<Client*>(&aUser.getClient()));
+				}
+			}
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 		}
 	}
 	void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw() {
-		if(aUser == replyTo)
-			PostMessage(WM_SPEAKER, USER_UPDATED);
+		//if(aUser == replyTo->getUser())
+		//	PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
 	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
-		if(aUser == replyTo)
+		if(aUser == replyTo->getUser())
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
 	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();

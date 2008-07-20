@@ -216,8 +216,9 @@ void ConnectionManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 static const uint32_t FLOOD_TRIGGER = 20000;
 static const uint32_t FLOOD_ADD = 2000;
 
-ConnectionManager::Server::Server(bool secure_, uint16_t aPort, const string& ip /* = "0.0.0.0" */) : port(0), secure(secure_), die(false) {
+ConnectionManager::Server::Server(bool secure_, uint16_t aPort, const string& ip_ /* = "0.0.0.0" */) : port(0), secure(secure_), die(false) {
 	sock.create();
+	ip = ip_;
 	sock.setSocketOpt(SO_REUSEADDR, 1);
 	port = sock.bind(aPort, ip);
 	sock.listen();
@@ -228,14 +229,42 @@ ConnectionManager::Server::Server(bool secure_, uint16_t aPort, const string& ip
 static const uint32_t POLL_TIMEOUT = 250;
 
 int ConnectionManager::Server::run() throw() {
+	while(!die) {
 	try {
+			while(!die) {
+				if(sock.wait(POLL_TIMEOUT, Socket::WAIT_READ) == Socket::WAIT_READ) {
+					ConnectionManager::getInstance()->accept(sock, secure);
+				}
+			}
+		} catch(const Exception& e) {
+			dcdebug("ConnectionManager::Server::run Error: %s\n", e.getError().c_str());
+		}			
+
+		bool failed = false;
 		while(!die) {
-			if(sock.wait(POLL_TIMEOUT, Socket::WAIT_READ) == Socket::WAIT_READ) {
-				ConnectionManager::getInstance()->accept(sock, secure);
+			try {
+				sock.disconnect();
+				sock.create();
+				sock.bind(port, ip);
+				sock.listen();
+				if(failed) {
+					LogManager::getInstance()->message("Connectivity restored"); // TODO: translate
+					failed = false;
+				}
+			} catch(const SocketException& e) {
+				dcdebug("ConnectionManager::Server::run Stopped listening: %s\n", e.getError().c_str());
+
+				if(!failed) {
+					LogManager::getInstance()->message("Connectivity error: " + e.getError());
+					failed = true;
+				}
+
+				// Spin for 60 seconds
+				for(int i = 0; i < 60 && !die; ++i) {
+					Thread::sleep(1000);
+				}
 			}
 		}
-	} catch(const Exception& e) {
-		LogManager::getInstance()->message(STRING(LISTENER_FAILED) + e.getError());
 	}
 	return 0;
 }

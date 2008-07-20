@@ -29,24 +29,24 @@
 #include "QueueManager.h"
 #include "StringTokenizer.h"
 #include "FinishedManager.h"
+#include "DecentralizationManager.h"
 
 namespace dcpp {
 
 SearchManager::SearchManager() :
-	socket(NULL),
 	port(0),
 	stop(false)
 {
+
 }
 
 SearchManager::~SearchManager() throw() {
-	if(socket) {
+	if(socket.get()) {
 		stop = true;
 		socket->disconnect();
 #ifdef _WIN32
 		join();
 #endif
-		delete socket;
 	}
 }
 
@@ -58,21 +58,25 @@ uint64_t SearchManager::search(StringList& who, const string& aName, int64_t aSi
 	return ClientManager::getInstance()->search(who, aSizeMode, aSize, aTypeMode, aName, aToken, aOwner);
 }
 
-
 void SearchManager::listen() throw(SocketException) {
 
 	disconnect();
 
-	socket = new Socket();
-	socket->create(Socket::TYPE_UDP);
-	socket->setBlocking(true);
-	port = socket->bind(static_cast<uint16_t>(SETTING(UDP_PORT)), SETTING(BIND_ADDRESS));
-
-	start();
+	try {
+		socket.reset(new Socket);
+		socket->create(Socket::TYPE_UDP);
+		socket->setBlocking(true);
+		port = socket->bind(static_cast<uint16_t>(SETTING(UDP_PORT)), SETTING(BIND_ADDRESS));
+	
+		start();
+	} catch(...) {
+		socket.reset();
+		throw;
+	}
 }
 
 void SearchManager::disconnect() throw() {
-	if(socket != NULL) {
+	if(socket.get()) {
 		stop = true;
 		queue.shutdown();
 		socket->disconnect();
@@ -80,42 +84,54 @@ void SearchManager::disconnect() throw() {
 
 		join();
 
+		socket.reset();
+
 		stop = false;
 	}
 }
 
 #define BUFSIZE 8192
 int SearchManager::run() {
-	
 	boost::scoped_array<uint8_t> buf(new uint8_t[BUFSIZE]);
 	int len;
+	string remoteAddr;
 
 	queue.start();
-	while(true) {
-
-		string remoteAddr;
+	while(!stop) {
 		try {
-			while( (len = socket->read(&buf[0], BUFSIZE, remoteAddr)) != 0) {
+			while( (len = socket->read(&buf[0], BUFSIZE, remoteAddr)) > 0) {
 				onData(&buf[0], len, remoteAddr);
 			}
 		} catch(const SocketException& e) {
 			dcdebug("SearchManager::run Error: %s\n", e.getError().c_str());
 		}
-		if(stop) {
-			return 0;
-		}
 
-		try {
-			socket->disconnect();
-			socket->create(Socket::TYPE_UDP);
-			socket->bind(port, SETTING(BIND_ADDRESS));
-		} catch(const SocketException& e) {
-			// Oops, fatal this time...
-			dcdebug("SearchManager::run Stopped listening: %s\n", e.getError().c_str());
-			return 1;
+		bool failed = false;
+		while(!stop) {
+			try {
+				socket->disconnect();
+				socket->create(Socket::TYPE_UDP);
+				socket->setBlocking(true);
+				socket->bind(port, SETTING(BIND_ADDRESS));
+				if(failed) {
+					LogManager::getInstance()->message("Search enabled again"); // TODO: translate
+					failed = false;
+				}
+			} catch(const SocketException& e) {
+				dcdebug("SearchManager::run Stopped listening: %s\n", e.getError().c_str());
+
+				if(!failed) {
+					LogManager::getInstance()->message("Search disabled: " + e.getError()); // TODO: translate
+					failed = true;
+				}
+
+				// Spin for 60 seconds
+				for(int i = 0; i < 60 && !stop; ++i) {
+					Thread::sleep(1000);
+				}
+			}
 		}
 	}
-	
 	return 0;
 }
 
@@ -268,6 +284,11 @@ int SearchManager::UdpQueue::run() {
 			c.getParameters().erase(c.getParameters().begin());			
 			
 			SearchManager::getInstance()->onPSR(c, user, remoteIp);
+		
+		} if(x.compare(1, 4, "INF ") == 0 && x[x.length() - 1] == 0x0a) {
+			// Decentralized network can bootstrap here
+			AdcCommand c(x.substr(0, x.length()-1));
+			DecentralizationManager::getInstance()->onINF(c);
 			
 		} /*else if(x.compare(1, 4, "SCH ") == 0 && x[x.length() - 1] == 0x0a) {
 			try {
@@ -296,14 +317,14 @@ void SearchManager::onRES(const AdcCommand& cmd, const UserPtr& from, const stri
 
 	for(StringIterC i = cmd.getParameters().begin(); i != cmd.getParameters().end(); ++i) {
 		const string& str = *i;
-			if(str.compare(0, 2, "FN") == 0) {
-				file = Util::toNmdcFile(str.substr(2));
-			} else if(str.compare(0, 2, "SL") == 0) {
-				freeSlots = Util::toInt(str.substr(2));
-			} else if(str.compare(0, 2, "SI") == 0) {
-				size = Util::toInt64(str.substr(2));
-			} else if(str.compare(0, 2, "TR") == 0) {
-				tth = str.substr(2);
+		if(str.compare(0, 2, "FN") == 0) {
+			file = Util::toNmdcFile(str.substr(2));
+		} else if(str.compare(0, 2, "SL") == 0) {
+			freeSlots = Util::toInt(str.substr(2));
+		} else if(str.compare(0, 2, "SI") == 0) {
+			size = Util::toInt64(str.substr(2));
+		} else if(str.compare(0, 2, "TR") == 0) {
+			tth = str.substr(2);
 		} else if(str.compare(0, 2, "TO") == 0) {
 			token = str.substr(2);
 		}

@@ -64,6 +64,7 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::SHOW_SHELL_MENU, ResourceManager::SETTINGS_SHOW_SHELL_MENU },
 	{ SettingsManager::MAGNET_ASK, ResourceManager::MAGNET_ASK },
 	{ SettingsManager::CORAL, ResourceManager::CORAL },
+	{ SettingsManager::ENABLE_DECENTRALIZED_NETWORK, ResourceManager::ENABLE_DECENTRALIZED_NETWORK },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

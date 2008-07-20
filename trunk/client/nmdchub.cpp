@@ -27,6 +27,7 @@
 #include "ShareManager.h"
 #include "CryptoManager.h"
 #include "ConnectionManager.h"
+#include "DecentralizationManager.h"
 
 #include "Socket.h"
 #include "UserCommand.h"
@@ -779,8 +780,8 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			msg = msg.substr(4);
 		}
 
-		const OnlineUser& to = getUser(getMyNick());
-		fire(ClientListener::PrivateMessage(), this, *from, to, *replyTo, unescape(msg), thirdPerson);
+		OnlineUser& to = getUser(getMyNick());
+		fire(ClientListener::PrivateMessage(), this, *from, &to, replyTo, unescape(msg), thirdPerson);
 	} else if(cmd == "$GetPass") {
 		OnlineUser& ou = getUser(getMyNick());
 		ou.getIdentity().set("RG", "1");
@@ -838,7 +839,6 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	
 	reloadSettings(false);
 	
-	dcdebug("MyInfo %s...\n", getMyNick().c_str());
 	char StatusMode = Identity::NORMAL;
 
 	char modeChar = '?';
@@ -876,6 +876,9 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		if (CryptoManager::getInstance()->TLSOk()) {
 			StatusMode |= Identity::TLS;
 		}
+		if (DecentralizationManager::getInstance()->needsBootstrap()) {
+			StatusMode |= Identity::DSN;
+		}
 	}
 
 	if (BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
@@ -891,6 +894,8 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	int64_t newBytesShared = ShareManager::getInstance()->getShareSize();
 	if (strcmp(myInfo, lastMyInfo.c_str()) != 0 || alwaysSend || (newBytesShared != lastBytesShared && lastUpdate + 15*60*1000 < GET_TICK())) {
 		snprintf(tag, sizeof(tag), "%s%lld$|", myInfo, newBytesShared);
+		
+		dcdebug("MyInfo %s...\n", getMyNick().c_str());		
 		send(tag);
 		lastMyInfo = myInfo;
 		lastBytesShared = newBytesShared;
@@ -970,15 +975,15 @@ string NmdcHub::validateMessage(string tmp, bool reverse) {
 	return tmp;
 }
 
-void NmdcHub::privateMessage(const OnlineUser& aUser, const string& aMessage, bool thirdPerson) {
+void NmdcHub::privateMessage(const OnlineUserPtr& aUser, const string& aMessage, bool thirdPerson) {
 	checkstate();
 
-	send("$To: " + fromUtf8(aUser.getIdentity().getNick()) + " From: " + fromUtf8(getMyNick()) + " $" + fromUtf8(escape("<" + getMyNick() + "> " + (thirdPerson ? "/me " + aMessage : aMessage))) + "|");
+	send("$To: " + fromUtf8(aUser->getIdentity().getNick()) + " From: " + fromUtf8(getMyNick()) + " $" + fromUtf8(escape("<" + getMyNick() + "> " + (thirdPerson ? "/me " + aMessage : aMessage))) + "|");
 	// Emulate a returning message...
 	Lock l(cs);
 	OnlineUserPtr ou = findUser(getMyNick());
 	if(ou) {
-		fire(ClientListener::PrivateMessage(), this, *ou, aUser, *ou, aMessage, thirdPerson);
+		fire(ClientListener::PrivateMessage(), this, *ou, aUser, ou, aMessage, thirdPerson);
 	}
 }
 

@@ -59,6 +59,7 @@
 #include "../client/LogManager.h"
 #include "../client/WebServerManager.h"
 #include "../client/Thread.h"
+#include "../client/DecentralizationManager.h"
 
 
 MainFrame* MainFrame::anyMF = NULL;
@@ -67,11 +68,10 @@ uint64_t MainFrame::iCurrentShutdownTime = 0;
 bool MainFrame::isShutdownStatus = false;
 
 MainFrame::MainFrame() : trayMessage(0), maximized(false), lastUpload(-1), lastUpdate(0), 
-lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
-closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT), tabsontop(false),
-bTrayIcon(false), bAppMinimized(false), bIsPM(false), UPnP_TCPConnection(NULL), UPnP_UDPConnection(NULL),
-QuickSearchBoxContainer(WC_COMBOBOX, this, QUICK_SEARCH_MAP), QuickSearchEditContainer(WC_EDIT ,this, QUICK_SEARCH_MAP),
-m_bDisableAutoComplete(false)
+	lastUp(0), lastDown(0), oldshutdown(false), stopperThread(NULL), c(new HttpConnection()), 
+	closing(false), awaybyminimize(false), missedAutoConnect(false), lastTTHdir(Util::emptyStringT), tabsontop(false),
+	bTrayIcon(false), bAppMinimized(false), bIsPM(false), m_bDisableAutoComplete(false),
+	QuickSearchBoxContainer(WC_COMBOBOX, this, QUICK_SEARCH_MAP), QuickSearchEditContainer(WC_EDIT ,this, QUICK_SEARCH_MAP)
 { 
 		memzero(statusSizes, sizeof(statusSizes));
 		anyMF = this;
@@ -466,6 +466,7 @@ void MainFrame::updateQuickSearches() {
 void MainFrame::startSocket() {
 	SearchManager::getInstance()->disconnect();
 	ConnectionManager::getInstance()->disconnect();
+	DecentralizationManager::getInstance()->disconnect();
 
 //	if(ClientManager::getInstance()->isActive()) {
 		try {
@@ -478,6 +479,11 @@ void MainFrame::startSocket() {
 		} catch(const Exception&) {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}
+		try {
+			DecentralizationManager::getInstance()->listen();
+		} catch(const Exception&) {
+			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
+		}		
 //	}
 
 	startUPnP();
@@ -487,59 +493,84 @@ void MainFrame::startUPnP() {
 	stopUPnP();
 
 	if( SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_UPNP ) {
-		UPnP_TCPConnection = new UPnP( Util::getLocalIp(), "TCP", APPNAME " Download Port (" + Util::toString(ConnectionManager::getInstance()->getPort()) + " TCP)", ConnectionManager::getInstance()->getPort() );
-		UPnP_UDPConnection = new UPnP( Util::getLocalIp(), "UDP", APPNAME " Search Port (" + Util::toString(SearchManager::getInstance()->getPort()) + " UDP)", SearchManager::getInstance()->getPort() );
-		
-		if ( FAILED(UPnP_UDPConnection->OpenPorts()) || FAILED(UPnP_TCPConnection->OpenPorts()) )
-		{
-			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
-			MessageBox(CTSTRING(UPNP_FAILED_TO_CREATE_MAPPINGS), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONWARNING);
-				
-			// We failed! thus reset the objects
-			delete UPnP_TCPConnection;
-			delete UPnP_UDPConnection;
-			UPnP_TCPConnection = UPnP_UDPConnection = NULL;
+		bool ok = true;
+
+		uint16_t port = ConnectionManager::getInstance()->getPort();
+		if(port != 0) {
+			UPnP_TCP.reset(new UPnP( Util::getLocalIp(), "TCP", APPNAME " Transfer Port (" + Util::toString(port) + " TCP)", port));
+			ok &= UPnP_TCP->open();
 		}
-		else
-		{
+		port = ConnectionManager::getInstance()->getSecurePort();
+		if(ok && port != 0) {
+			UPnP_TLS.reset(new UPnP( Util::getLocalIp(), "TCP", APPNAME " Encrypted Transfer Port (" + Util::toString(port) + " TCP)", port));
+			ok &= UPnP_TLS->open();
+		}
+		port = SearchManager::getInstance()->getPort();
+		if(ok && port != 0) {
+			UPnP_UDP.reset(new UPnP( Util::getLocalIp(), "UDP", APPNAME " Search Port (" + Util::toString(port) + " UDP)", port));
+			ok &= UPnP_UDP->open();
+		}
+
+		if(BOOLSETTING(ENABLE_DECENTRALIZED_NETWORK)) {
+			port = DecentralizationManager::getInstance()->getPort();
+			if(port != 0) {
+				UPnP_DSN.reset(new UPnP( Util::getLocalIp(), "UDP", APPNAME " Decentralized Network Port (" + Util::toString(port) + " UDP)", port));
+				if (!UPnP_DSN->open())
+				{
+					LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
+					UPnP_DSN.reset();
+				}
+			}
+		}
+		
+		if(ok) {
 			if(!BOOLSETTING(NO_IP_OVERRIDE)) {
 				// now lets configure the external IP (connect to me) address
-				string ExternalIP = UPnP_TCPConnection->GetExternalIP();
+				string ExternalIP = UPnP_TCP->GetExternalIP();
 				if ( !ExternalIP.empty() ) {
 					// woohoo, we got the external IP from the UPnP framework
 					SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, ExternalIP );
 				} else {
-					//:-(  Looks like we have to rely on the user setting the external IP manually
+					//:-( Looks like we have to rely on the user setting the external IP manually
 					// no need to do cleanup here because the mappings work
 					LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_GET_EXTERNAL_IP));
 					MessageBox(CTSTRING(UPNP_FAILED_TO_GET_EXTERNAL_IP), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONWARNING);
 				}
 			}
+		} else {
+			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
+			MessageBox(CTSTRING(UPNP_FAILED_TO_CREATE_MAPPINGS), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONWARNING);
+			stopUPnP();
 		}
-	}
+	}	
 }
 
 void MainFrame::stopUPnP() {
 	// Just check if the port mapping objects are initialized (NOT NULL)
-	if ( UPnP_TCPConnection != NULL )
-	{
-		if (FAILED(UPnP_TCPConnection->ClosePorts()) )
-		{
+	if(UPnP_TCP.get()) {
+		if(!UPnP_TCP->close()) {
 			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS));
 		}
-		delete UPnP_TCPConnection;
+		UPnP_TCP.reset();
 	}
-	if ( UPnP_UDPConnection != NULL )
-	{
-		if (FAILED(UPnP_UDPConnection->ClosePorts()) )
-		{
+	if(UPnP_TLS.get()) {
+		if(!UPnP_TLS->close()) {
 			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS));
 		}
-		delete UPnP_UDPConnection;
+		UPnP_TLS.reset();
 	}
-	// Not sure this is required (i.e. Objects are checked later in execution)
-	// But its better being on the save side :P
-	UPnP_TCPConnection = UPnP_UDPConnection = NULL;
+	if(UPnP_UDP.get()) {
+		if(!UPnP_UDP->close()) {
+			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS));
+		}
+		UPnP_UDP.reset();
+	}	
+	if(UPnP_DSN.get()) {
+		if(!UPnP_DSN->close()) {
+			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS));
+		}
+		UPnP_DSN.reset();
+	}
 }
 
 HWND MainFrame::createToolbar() {
@@ -619,19 +650,18 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 			for(int i = 1; i < 8; i++) {
 				int w = WinUtil::getTextWidth(str[i], dc);
 				
-			if(statusSizes[i] < w) {
+				if(statusSizes[i] < w) {
 					statusSizes[i] = w;
-						  u = true;
-						}
-					ctrlStatus.SetText(i+1, str[i].c_str());
+					u = true;
 				}
+				ctrlStatus.SetText(i+1, str[i].c_str());
+			}
 			::ReleaseDC(ctrlStatus.m_hWnd, dc);
 			if(u)
 				UpdateLayout(TRUE);
-		}
-		if (bShutdown) {
-			uint64_t iSec = GET_TICK() / 1000;
-			if (ctrlStatus.IsWindow()) {
+
+			if (bShutdown) {
+				uint64_t iSec = GET_TICK() / 1000;
 				if(!isShutdownStatus) {
 					ctrlStatus.SetIcon(9, hShutdownIcon);
 					isShutdownStatus = true;
@@ -656,14 +686,12 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 						bShutdown = false;
 					}
 				}
-			}
-		} else {
-			if (ctrlStatus.IsWindow()) {
+			} else {
 				if(isShutdownStatus) {
-					ctrlStatus.SetText(9, _T(""));
 					ctrlStatus.SetIcon(9, NULL);
 					isShutdownStatus = false;
 				}
+				ctrlStatus.SetText(9, str[8].c_str());
 			}
 		}
 	} else if(wParam == AUTO_CONNECT) {
@@ -1390,6 +1418,7 @@ void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		str->push_back(_T("U: ") + Util::formatBytesW(Socket::getTotalUp()));
 		str->push_back(_T("D: [") + Util::toStringW(DownloadManager::getInstance()->getDownloadCount()) + _T("][") + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? (tstring)_T("N") : Util::toStringW((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + _T("k")) + _T("] ") + Util::formatBytesW(downdiff*1000I64/diff) + _T("/s"));
 		str->push_back(_T("U: [") + Util::toStringW(UploadManager::getInstance()->getUploadCount()) + _T("][") + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? (tstring)_T("N") : Util::toStringW((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + _T("k")) + _T("] ") + Util::formatBytesW(updiff*1000I64/diff) + _T("/s"));
+		str->push_back(Util::formatBytesW(DecentralizationManager::getInstance()->getAvailableBytes()));
 		PostMessage(WM_SPEAKER, STATS, (LPARAM)str);
 
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_UPLOAD, SETTING(TOTAL_UPLOAD) + updiff);

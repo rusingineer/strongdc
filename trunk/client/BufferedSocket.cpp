@@ -40,7 +40,7 @@ namespace dcpp {
 
 BufferedSocket::BufferedSocket(char aSeparator) throw(ThreadException) :
 separator(aSeparator), mode(MODE_LINE), dataBytes(0), rollback(0), state(STARTING),
-disconnecting(false), sock(0)
+disconnecting(false)
 {
 	start();
 	
@@ -522,7 +522,9 @@ int BufferedSocket::run() {
 }
 
 void BufferedSocket::fail(const string& aError) {
-	sock->disconnect();
+	if(sock.get()) {
+		sock->disconnect();
+	}
 	
 	if(state == RUNNING) {
 		state = FAILED;
@@ -537,7 +539,7 @@ void BufferedSocket::shutdown() {
 }
 
 void BufferedSocket::addTask(Tasks task, TaskData* data) { 
-	//dcassert(task == SHUTDOWN || sock.get());
+	dcassert(task == DISCONNECT || task == SHUTDOWN || task == UPDATED || sock.get());
 	tasks.push_back(make_pair(task, data)); taskSem.signal();
 }
 

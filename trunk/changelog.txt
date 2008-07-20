@@ -32,7 +32,7 @@
 * opraveno nìkolik málo pádù
 * implementováno Rychlé vyhledávání (ApexDC++)
 * opravena celková velikost dokonèených položek
-* pøidána volba pro umístìní uživatelský pøíkazù mimo submenu
+* pøidána volba pro umístìní uživatelských pøíkazù mimo submenu
 * pozice a velikosti lišt jsou ukládány
 * interval pro hledání je závislý na hubu
 * nastavení slotù má svojí vlastní stránku

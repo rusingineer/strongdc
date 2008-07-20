@@ -269,12 +269,12 @@ void CryptoManager::loadCertificates() throw() {
 	certs.insert(certs.end(), certs2.begin(), certs2.end());
 
 	for(StringIter i = certs.begin(); i != certs.end(); ++i) {
-			if(
+		if(
 			SSL_CTX_load_verify_locations(clientContext, i->c_str(), NULL) != SSL_SUCCESS ||
 			SSL_CTX_load_verify_locations(clientVerContext, i->c_str(), NULL) != SSL_SUCCESS ||
 			SSL_CTX_load_verify_locations(serverContext, i->c_str(), NULL) != SSL_SUCCESS ||
 			SSL_CTX_load_verify_locations(serverVerContext, i->c_str(), NULL) != SSL_SUCCESS
-			) {
+		) {
 			LogManager::getInstance()->message("Failed to load trusted certificate from " + *i);
 		}
 	}
@@ -339,7 +339,6 @@ SSLSocket* CryptoManager::getClientSocket(bool allowUntrusted) throw(SocketExcep
 SSLSocket* CryptoManager::getServerSocket(bool allowUntrusted) throw(SocketException) {
 	return new SSLSocket(allowUntrusted ? serverContext : serverVerContext);
 }
-
 
 void CryptoManager::decodeBZ2(const uint8_t* is, unsigned int sz, string& os) throw (CryptoException) {
 	bz_stream bs = { 0 };

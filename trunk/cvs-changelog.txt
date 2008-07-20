@@ -1,3 +1,18 @@
+** svn411
+	used magnet icon from ApexDC++
+	fast speed optimization for regex library
+	better URL detection, slower but more precise (please all report nonworking URLs)
+	segmented downloads option made as a checkbox
+	maximum hashing speed settings moved to share settings
+	fixed crash #15604
+	removed detection of too many same numbers in share size
+	PM frame is hub-dependent
+	begun work on decentralized StrongDC++ network
+	some DC++ BZR merge
+
+** svn410
+	released 2.21
+
 ** svn409
 	fixed fix for transferview :-)
 

@@ -153,27 +153,6 @@ void WaitingUsersFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	SetSplitterRect(rc);
 }
 
-LRESULT WaitingUsersFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(usingUserMenu) {
-		UserPtr User = getSelectedUser();
-		if(User) {
-			try {
-				QueueManager::getInstance()->addList(User, QueueItem::FLAG_CLIENT_VIEW);
-			} catch(const Exception&) {
-			}
-		}
-	} else {
-		int i = -1;
-		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			try {
-				QueueManager::getInstance()->addList(((UploadQueueItem*)ctrlList.getItemData(i))->getUser(), QueueItem::FLAG_CLIENT_VIEW);
-			} catch(const Exception&) {
-			}
-		}
-	}
-	return 0;
-}
-
 LRESULT WaitingUsersFrame::onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if(usingUserMenu) {
 		UserPtr User = getSelectedUser();
@@ -203,13 +182,12 @@ LRESULT WaitingUsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 		return TRUE;
 	}
 
+	usingUserMenu = reinterpret_cast<HWND>(wParam) == ctrlQueued;
+	
 	OMenu contextMenu;
 	contextMenu.CreatePopupMenu();
 	contextMenu.InsertSeparatorFirst(CTSTRING(WAITING_USERS));
-	contextMenu.AppendMenu(MF_STRING, IDC_GETLIST, CTSTRING(GET_FILE_LIST));
-	contextMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
-	contextMenu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
-	contextMenu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
+	appendUserItems(contextMenu);
 	contextMenu.AppendMenu(MF_SEPARATOR);
 	contextMenu.AppendMenu(MF_STRING, IDC_REMOVE, CTSTRING(REMOVE));
 
@@ -217,7 +195,6 @@ LRESULT WaitingUsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
      	if(pt.x == -1 && pt.y == -1) {
     		WinUtil::getContextMenuPos(ctrlList, pt);
     	}
-		usingUserMenu = false;
 		contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		return TRUE;
 	} else if(reinterpret_cast<HWND>(wParam) == ctrlQueued && ctrlQueued.GetSelectedItem() != NULL) {
@@ -227,84 +204,20 @@ LRESULT WaitingUsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 			UINT a = 0;
     		ctrlQueued.ScreenToClient(&pt);
 			HTREEITEM ht = ctrlQueued.HitTest(pt, &a);
+			
+			if(ht == rootItem)
+				return FALSE;
+				
 			if(ht != NULL && ht != ctrlQueued.GetSelectedItem())
 				ctrlQueued.SelectItem(ht);
     
 			ctrlQueued.ClientToScreen(&pt);
         }
-        usingUserMenu = true;
 		contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		return TRUE;
 	}	
 	return FALSE; 
 }
-
-LRESULT WaitingUsersFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(usingUserMenu) {
-		UserPtr User = getSelectedUser();
-		if(User) {
-			PrivateFrame::openWindow(User);
-		}
-	} else {
-		int i = -1;
-		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			PrivateFrame::openWindow(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
-		}
-	}
-	return 0;
-}
-
-LRESULT WaitingUsersFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) { 
-	if(usingUserMenu) {
-		UserPtr user = getSelectedUser();
-		if(user) {
-			uint64_t time = 0;
-			switch(wID) {
-				case IDC_GRANTSLOT:			time = 600; break;
-				case IDC_GRANTSLOT_DAY:		time = 3600; break;
-				case IDC_GRANTSLOT_HOUR:	time = 24*3600; break;
-				case IDC_GRANTSLOT_WEEK:	time = 7*24*3600; break;
-				case IDC_UNGRANTSLOT:		time = 0; break;
-			}
-			if(time > 0)
-				UploadManager::getInstance()->reserveSlot(user, time);
-			else
-				UploadManager::getInstance()->unreserveSlot(user);
-		}
-	} else {
-		int i = -1;
-		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			uint64_t time = 0;
-			switch(wID) {
-				case IDC_GRANTSLOT:			time = 600; break;
-				case IDC_GRANTSLOT_DAY:		time = 3600; break;
-				case IDC_GRANTSLOT_HOUR:	time = 24*3600; break;
-				case IDC_GRANTSLOT_WEEK:	time = 7*24*3600; break;
-				case IDC_UNGRANTSLOT:		time = 0; break;
-			}
-			if(time > 0)
-				UploadManager::getInstance()->reserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->getUser(), time);
-			else
-				UploadManager::getInstance()->unreserveSlot(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
-		}
-	}
-	return 0; 
-};
-
-LRESULT WaitingUsersFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(usingUserMenu) {
-		UserPtr User = getSelectedUser();
-		if(User) {
-			FavoriteManager::getInstance()->addFavoriteUser(User);
-		}
-	} else {
-		int i = -1;
-		while((i = ctrlList.GetNextItem(i, LVNI_SELECTED)) != -1) {
-			FavoriteManager::getInstance()->addFavoriteUser(((UploadQueueItem*)ctrlList.getItemData(i))->getUser());
-		}
-	}
-	return 0;
-};
 
 void WaitingUsersFrame::LoadAll() {
 	ctrlList.SetRedraw(FALSE);

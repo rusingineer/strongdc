@@ -53,8 +53,6 @@ protected:
 	static TextItem texts[];
 	static ListItem optionItems[];
 	TCHAR* title;
-
-	CComboBox ctrlMultiSource;
 };
 
 #endif // !defined(QUEUE_PAGE_H)

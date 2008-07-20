@@ -31,7 +31,7 @@
 
 namespace dcpp {
 
-class UploadQueueItem : public FastAlloc<UploadQueueItem>, public intrusive_ptr_base {
+class UploadQueueItem : public FastAlloc<UploadQueueItem>, public intrusive_ptr_base, public UserInfoBase {
 public:
 	UploadQueueItem(UserPtr u, const string& file, int64_t p, int64_t sz, uint64_t itime) :
 		user(u), file(file), pos(p), size(sz), time(itime) { inc(); }

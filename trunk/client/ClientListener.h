@@ -48,7 +48,7 @@ public:
 	virtual void on(HubUpdated, const Client*) throw() { }
 	virtual void on(Message, const Client*, const OnlineUser&, const string&, bool = false) throw() { }
 	virtual void on(StatusMessage, const Client*, const string&, int = FLAG_NORMAL) throw() { }
-	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUser&, const OnlineUser&, const string&, bool = false) throw() { }
+	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUserPtr&, const OnlineUserPtr&, const string&, bool = false) throw() { }
 	virtual void on(HubUserCommand, const Client*, int, int, const string&, const string&) throw() { }
 	virtual void on(HubFull, const Client*) throw() { }
 	virtual void on(NickTaken, const Client*) throw() { }

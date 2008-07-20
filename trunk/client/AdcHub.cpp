@@ -31,6 +31,7 @@
 #include "CryptoManager.h"
 #include "ResourceManager.h"
 #include "LogManager.h"
+#include "DecentralizationManager.h"
 
 namespace dcpp {
 
@@ -186,6 +187,10 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 		setAutoReconnect(true);
 		setMyIdentity(u->getIdentity());
 		updateCounts(false);
+	} else {
+		if(u->getIdentity().isSet("D4")) {
+			DecentralizationManager::getInstance()->info(u, true);
+		}
 	}
 
 	if(u->getIdentity().isHub()) {
@@ -256,7 +261,7 @@ void AdcHub::handle(AdcCommand::MSG, AdcCommand& c) throw() {
 		if(!replyTo)
 			return;
 
-		fire(ClientListener::PrivateMessage(), this, *from, *to, *replyTo, c.getParam(0), c.hasFlag("ME", 1));
+		fire(ClientListener::PrivateMessage(), this, *from, to, replyTo, c.getParam(0), c.hasFlag("ME", 1));
 	} else {
 		fire(ClientListener::Message(), this, *from, c.getParam(0), c.hasFlag("ME", 1));
 	}
@@ -608,10 +613,10 @@ void AdcHub::hubMessage(const string& aMessage, bool thirdPerson) {
 	send(c);
 }
 
-void AdcHub::privateMessage(const OnlineUser& user, const string& aMessage, bool thirdPerson) {
+void AdcHub::privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson) {
 	if(state != STATE_NORMAL)
 		return;
-	AdcCommand c(AdcCommand::CMD_MSG, user.getIdentity().getSID(), AdcCommand::TYPE_ECHO);
+	AdcCommand c(AdcCommand::CMD_MSG, user->getIdentity().getSID(), AdcCommand::TYPE_ECHO);
 	c.addParam(aMessage);
 	if(thirdPerson)
 		c.addParam("ME", "1");
@@ -735,6 +740,10 @@ void AdcHub::info(bool /*alwaysSend*/) {
 		addParam(lastInfoMap, c, "DS", Util::emptyString);
 	}
 
+	if (DecentralizationManager::getInstance()->needsBootstrap()) {
+		addParam(lastInfoMap, c, "D4", Util::toString(SETTING(TLS_PORT)));
+	}
+	
 	string su;
 	if(CryptoManager::getInstance()->TLSOk()) {
 		su += ADCS_FEATURE + ",";

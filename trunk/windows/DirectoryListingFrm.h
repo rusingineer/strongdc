@@ -40,7 +40,7 @@ class ThreadedDirectoryListing;
 #define STATUS_MESSAGE_MAP 9
 #define CONTROL_MESSAGE_MAP 10
 class DirectoryListingFrame : public MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY>, public CSplitterImpl<DirectoryListingFrame>, 
-	public UCHandler<DirectoryListingFrame>, private SettingsManagerListener
+	public UCHandler<DirectoryListingFrame>, private SettingsManagerListener, public UserInfoBaseHandler<DirectoryListingFrame>
 
 {
 public:
@@ -50,6 +50,7 @@ public:
 
 	typedef MDITabChildWindowImpl<DirectoryListingFrame, RGB(255, 0, 255), IDR_DIRECTORY> baseClass;
 	typedef UCHandler<DirectoryListingFrame> ucBase;
+	typedef UserInfoBaseHandler<DirectoryListingFrame> uibBase;
 
 	enum {
 		COLUMN_FILENAME,
@@ -113,8 +114,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchByTTH)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopy)
 		COMMAND_ID_HANDLER(IDC_COPY_TTH, onCopy)
-		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
-		COMMAND_ID_HANDLER(IDC_PRIVATEMESSAGE, onPM)
 		COMMAND_ID_HANDLER(IDC_COPY_NICK, onCopy);
 		COMMAND_ID_HANDLER(IDC_COPY_FILENAME, onCopy);
 		COMMAND_ID_HANDLER(IDC_COPY_SIZE, onCopy);
@@ -126,6 +125,7 @@ public:
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_FAVORITE_DIRS, IDC_DOWNLOAD_FAVORITE_DIRS + FavoriteManager::getInstance()->getFavoriteDirs().size(), onDownloadFavoriteDirs)
 		COMMAND_RANGE_HANDLER(IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS, IDC_DOWNLOAD_WHOLE_FAVORITE_DIRS + FavoriteManager::getInstance()->getFavoriteDirs().size(), onDownloadWholeFavoriteDirs)
 		CHAIN_COMMANDS(ucBase)
+		CHAIN_COMMANDS(uibBase)
 		CHAIN_MSG_MAP(baseClass)
 		CHAIN_MSG_MAP(CSplitterImpl<DirectoryListingFrame>)
 	ALT_MSG_MAP(STATUS_MESSAGE_MAP)
@@ -148,8 +148,6 @@ public:
 	LRESULT onViewAsText(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGoToDirectory(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadTarget(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onDownloadTargetDir(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -244,6 +242,25 @@ public:
 		PostMessage(WM_CLOSE);
 		return 0;
 	}
+	
+	struct UserListHandler {
+		UserListHandler(DirectoryListing& _dl) : dl(_dl) { }
+		
+		void forEachSelected(void (UserInfoBase::*func)()) {
+			(dl.*func)();
+		}
+		
+		template<class _Function>
+		_Function forEachSelectedT(_Function pred) {
+			pred(&dl);
+			return pred;
+		}
+		
+	private:
+		DirectoryListing& dl;	
+	};
+	
+	UserListHandler getUserList() { return UserListHandler(*dl.get()); }
 
 private:
 	friend class ThreadedDirectoryListing;

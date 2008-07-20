@@ -485,8 +485,10 @@ private:
 	void on(PartialList, const UserPtr&, const string& text) throw();
 
 	// UPnP connectors
-	UPnP* UPnP_TCPConnection;
-	UPnP* UPnP_UDPConnection;
+	std::auto_ptr<UPnP> UPnP_TCP;
+	std::auto_ptr<UPnP> UPnP_TLS;
+	std::auto_ptr<UPnP> UPnP_UDP;
+	std::auto_ptr<UPnP> UPnP_DSN;
 };
 
 #endif // !defined(MAIN_FRM_H)
