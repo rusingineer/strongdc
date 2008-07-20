@@ -133,6 +133,7 @@ private:
 
 		Socket sock;
 		uint16_t port;
+		string ip;
 		bool secure;
 		bool die;
 	};

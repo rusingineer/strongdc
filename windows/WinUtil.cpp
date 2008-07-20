@@ -1052,6 +1052,10 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 			params["channels"] = waChannelName;
 			//params["channels"] = (waChannels==2?"stereo":"mono"); // 3+ channels? 0 channels?
 			message = Text::toT(Util::formatParams(SETTING(WINAMP_FORMAT), params, false));
+			thirdPerson = strnicmp(message.c_str(), _T("/me "), 4) == 0;
+			if(thirdPerson) {
+				message = message.substr(4);
+			}
 		} else {
 			status = _T("Supported version of Winamp is not running");
 		}

@@ -37,6 +37,7 @@
 
 #include "QueueManager.h"
 #include "FinishedManager.h"
+#include "DecentralizationManager.h"
 
 namespace dcpp {
 
@@ -82,7 +83,9 @@ StringList ClientManager::getHubs(const CID& cid) const {
 	StringList lst;
 	OnlinePairC op = onlineUsers.equal_range(cid);
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
-		lst.push_back(i->second->getClient().getHubUrl());
+		if(!(i->second->getIdentity().getStatus() & Identity::DSN)) {
+			lst.push_back(i->second->getClient().getHubUrl());
+		}
 	}
 	return lst;
 }
@@ -92,7 +95,11 @@ StringList ClientManager::getHubNames(const CID& cid) const {
 	StringList lst;
 	OnlinePairC op = onlineUsers.equal_range(cid);
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
-		lst.push_back(i->second->getClient().getHubName());
+		if(i->second->getIdentity().getStatus() & Identity::DSN) {
+			lst.push_back(DecentralizationManager::getInstance()->getName());
+		} else {
+			lst.push_back(i->second->getClient().getHubName());
+		}
 	}
 	return lst;
 }
@@ -202,7 +209,7 @@ UserPtr ClientManager::getUser(const string& aNick, const string& aHubUrl) throw
 	CID cid = makeCid(aNick, aHubUrl);
 	Lock l(cs);
 
-	UserIter ui = users.find(cid);
+	UserMap::const_iterator ui = users.find(cid);
 	if(ui != users.end()) {
 		ui->second->setFlag(User::NMDC);
 		return ui->second;
@@ -310,17 +317,23 @@ void ClientManager::connect(const UserPtr& p, const string& token) {
 	OnlineIterC i = onlineUsers.find(p->getCID());
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
-		u->getClient().connect(*u, token);
+		
+		if(i->second->getIdentity().getStatus() & Identity::DSN) {
+			DecentralizationManager::getInstance()->connect(*u, token);
+		} else {
+			u->getClient().connect(*u, token);
+		}
 	}
 }
 
-void ClientManager::privateMessage(const UserPtr& p, const string& msg, bool thirdPerson) {
+OnlineUserPtr ClientManager::findOnlineUser(const CID& cid) const throw(){
 	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(p->getCID());
+	OnlineIterC i = onlineUsers.find(cid);
 	if(i != onlineUsers.end()) {
-		OnlineUser* u = i->second;
-		u->getClient().privateMessage(*u, msg, thirdPerson);
+		return i->second;
 	}
+	
+	return NULL;
 }
 
 void ClientManager::send(AdcCommand& cmd, const CID& cid) {
@@ -467,6 +480,10 @@ void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const st
 			(*i)->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
 		}
 	}
+	
+	if(BOOLSETTING(ENABLE_DECENTRALIZED_NETWORK)) {
+		DecentralizationManager::getInstance()->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
+	}	
 }
 
 uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
@@ -476,14 +493,26 @@ uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, in
 	
 	for(StringIter it = who.begin(); it != who.end(); ++it) {
 		string& client = *it;
-		for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
-			Client* c = *j;
-			if(c->isConnected() && c->getHubUrl() == client) {
-				uint64_t ret = c->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
+		
+		if(client.empty())
+		{
+			if(BOOLSETTING(ENABLE_DECENTRALIZED_NETWORK)) {
+				uint64_t ret = DecentralizationManager::getInstance()->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
 				estimateSearchSpan = max(estimateSearchSpan, ret);
+			}		
+		}
+		else
+		{
+			for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
+				Client* c = *j;
+				if(c->isConnected() && c->getHubUrl() == client) {
+					uint64_t ret = c->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
+					estimateSearchSpan = max(estimateSearchSpan, ret);
+				}
 			}
 		}
 	}
+	
 	return estimateSearchSpan;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,15 @@
 #ifndef DCPLUSPLUS_WIN32_UPNP_H
 #define DCPLUSPLUS_WIN32_UPNP_H
 
-#include "natupnp.h"
+#include <natupnp.h>
 
 class UPnP
 {
 public:
 	UPnP( const string, const string, const string, const unsigned short );
 	~UPnP();
-	HRESULT OpenPorts();
-	HRESULT ClosePorts();
+	bool open();
+	bool close();
 	string GetExternalIP();
 private:
 	bool PortsAreOpen;
@@ -37,8 +37,6 @@ private:
 	BSTR bstrProtocol;			// protocol (TCP or UDP)
 	BSTR bstrExternalIP;		// external IP address
 	IUPnPNAT* pUN;				// pointer to the UPnPNAT interface
-	IStaticPortMappingCollection* pSPMC; // pointer to the collection
-	IStaticPortMapping * pSPM;	// pointer to the port map
 };
 
 #endif // UPNP_H

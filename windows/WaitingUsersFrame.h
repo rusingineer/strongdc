@@ -33,7 +33,7 @@
 #define SHOWTREE_MESSAGE_MAP 12
 
 class WaitingUsersFrame : public MDITabChildWindowImpl<WaitingUsersFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE>, public StaticFrame<WaitingUsersFrame, ResourceManager::WAITING_USERS, IDC_UPLOAD_QUEUE>,
-	private UploadManagerListener, public CSplitterImpl<WaitingUsersFrame>, private SettingsManagerListener
+	private UploadManagerListener, public CSplitterImpl<WaitingUsersFrame>, private SettingsManagerListener, public UserInfoBaseHandler<WaitingUsersFrame>
 {
 public:
 	DECLARE_FRAME_WND_CLASS_EX(_T("WaitingUsersFrame"), IDR_UPLOAD_QUEUE, 0, COLOR_3DFACE);
@@ -52,6 +52,7 @@ public:
 
 	typedef MDITabChildWindowImpl<WaitingUsersFrame, RGB(0, 0, 0), IDR_UPLOAD_QUEUE> baseClass;
 	typedef CSplitterImpl<WaitingUsersFrame> splitBase;
+	typedef UserInfoBaseHandler<WaitingUsersFrame> uibBase;
 
 	// Inline message map
 	BEGIN_MSG_MAP(WaitingUsersFrame)
@@ -59,11 +60,7 @@ public:
 		MESSAGE_HANDLER(WM_CLOSE, onClose)
 		MESSAGE_HANDLER(WM_CONTEXTMENU, onContextMenu)
 		MESSAGE_HANDLER(WM_SPEAKER, onSpeaker)
-		COMMAND_HANDLER(IDC_GETLIST, BN_CLICKED, onGetList)
 		COMMAND_HANDLER(IDC_REMOVE, BN_CLICKED, onRemove)
-		COMMAND_RANGE_HANDLER(IDC_GRANTSLOT, IDC_UNGRANTSLOT, onGrantSlot)
-		COMMAND_HANDLER(IDC_ADD_TO_FAVORITES, BN_CLICKED, onAddToFavorites)
-		COMMAND_HANDLER(IDC_PRIVATEMESSAGE, BN_CLICKED, onPrivateMessage)
 		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE, LVN_GETDISPINFO, ctrlList.onGetDispInfo)
 		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE, LVN_COLUMNCLICK, ctrlList.onColumnClick)
 //		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE, LVN_ITEMCHANGED, onItemChangedQueue)
@@ -71,7 +68,7 @@ public:
 		NOTIFY_HANDLER(IDC_DIRECTORIES, TVN_SELCHANGED, onItemChanged)
 		NOTIFY_HANDLER(IDC_DIRECTORIES, TVN_KEYDOWN, onKeyDownDirs)
 		NOTIFY_HANDLER(IDC_UPLOAD_QUEUE, NM_CUSTOMDRAW, onCustomDraw)
-
+		CHAIN_COMMANDS(uibBase)
 		CHAIN_MSG_MAP(splitBase)
 		CHAIN_MSG_MAP(baseClass)
 	ALT_MSG_MAP(SHOWTREE_MESSAGE_MAP)
@@ -81,13 +78,9 @@ public:
 	// Message handlers
 	LRESULT onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
 	LRESULT onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
-	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onRemove(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
-	LRESULT onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onGrantSlot(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled);
 	LRESULT onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled);
 
@@ -102,14 +95,51 @@ public:
 	
 	// Update control layouts
 	void UpdateLayout(BOOL bResizeBars = TRUE);
+	
+	struct UserListHandler {
+		UserListHandler(TypedListViewCtrl<UploadQueueItem, IDC_UPLOAD_QUEUE>& a, CTreeViewCtrl& b, bool c) : ctrlList(a), ctrlQueued(b), usingUserMenu(c) { }
+		
+		void forEachSelected(void (UserInfoBase::*func)()) {
+			if(usingUserMenu) {
+				HTREEITEM selectedItem = ctrlQueued.GetSelectedItem();
+				UserItem* ui = reinterpret_cast<UserItem*>(ctrlQueued.GetItemData(selectedItem));
+				if(selectedItem && ui)
+					(ui->*func)();
+			} else {
+				ctrlList.forEachSelected(func);
+			}
+		}
+		
+		template<class _Function>
+		_Function forEachSelectedT(_Function pred) {
+			if(usingUserMenu) {
+				HTREEITEM selectedItem = ctrlQueued.GetSelectedItem();
+				UserItem* ui = reinterpret_cast<UserItem*>(ctrlQueued.GetItemData(selectedItem));
+				if(selectedItem && ui)
+					pred(ui);
+				return pred;
+			} else {
+				return ctrlList.forEachSelectedT(pred);
+			}		
+		}
+		
+	private:
+		TypedListViewCtrl<UploadQueueItem, IDC_UPLOAD_QUEUE>& ctrlList;
+		bool usingUserMenu;
+		CTreeViewCtrl& ctrlQueued;		
+	};
+	
+	UserListHandler getUserList() { return UserListHandler(ctrlList, ctrlQueued, usingUserMenu); }
 
 private:
 	static int columnSizes[UploadQueueItem::COLUMN_LAST];
 	static int columnIndexes[UploadQueueItem::COLUMN_LAST];
 
-	struct UserItem {
+	struct UserItem : UserInfoBase {
 		UserPtr u;
 		UserItem(UserPtr u) : u(u) { }
+		
+		const UserPtr& getUser() const { return u; }
 	};
 		
 	const UserPtr getSelectedUser() {

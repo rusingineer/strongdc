@@ -32,7 +32,7 @@ namespace dcpp {
 class ListLoader;
 STANDARD_EXCEPTION(AbortException);
 
-class DirectoryListing  
+class DirectoryListing : public UserInfoBase
 {
 public:
 	class Directory;

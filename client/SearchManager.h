@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(SEARCH_MANAGER_H)
-#define SEARCH_MANAGER_H
+#ifndef DCPLUSPLUS_DCPP_SEARCH_MANAGER_H
+#define DCPLUSPLUS_DCPP_SEARCH_MANAGER_H
 
 #include "SettingsManager.h"
 
@@ -42,7 +42,6 @@ class SocketException;
 class SearchManager : public Speaker<SearchManagerListener>, public Singleton<SearchManager>, public Thread
 {
 public:
-
 	enum SizeModes {
 		SIZE_DONTCARE = 0x00,
 		SIZE_ATLEAST = 0x01,
@@ -71,7 +70,6 @@ public:
 	uint64_t search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL) {
 		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aOwner);
  	}
-
 	static string clean(const string& aSearchString);
 	
 	void respond(const AdcCommand& cmd, const CID& cid);
@@ -120,7 +118,7 @@ private:
 	} queue;
 
 	CriticalSection cs;
-	Socket* socket;
+	std::auto_ptr<Socket> socket;
 	uint16_t port;
 	bool stop;
 	friend class Singleton<SearchManager>;

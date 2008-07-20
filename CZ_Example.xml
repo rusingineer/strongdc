@@ -655,7 +655,7 @@
 		<String Name="SettingsLogs">Záznamy</String>
 		<String Name="SettingsMaxCompress">Max kompresní poměr</String>
 		<String Name="SettingsMaxHashSpeed">Max rychlost hashování</String>
-		<String Name="SettingsMaxTabRows">Max sloupců</String>
+		<String Name="SettingsMaxTabRows">Max řádků záložek</String>
 		<String Name="SettingsMinimizeOnStartup">Minimalizovat při spuštění</String>
 		<String Name="SettingsMinimizeTray">Minimalizovat na systémovou lištu (vedle hodin)</String>
 		<String Name="SettingsMouseOver">Při přejíždění myší (mouseover)</String>

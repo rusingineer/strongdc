@@ -67,7 +67,8 @@ public:
 	UserPtr findUser(const string& aNick, const string& aHubUrl) const throw() { return findUser(makeCid(aNick, aHubUrl)); }
 	UserPtr findUser(const CID& cid) const throw();
 	UserPtr findLegacyUser(const string& aNick) const throw();
-
+	OnlineUserPtr findOnlineUser(const CID& cid) const throw();
+	
 	void updateNick(const UserPtr& user, const string& nick) throw();
 
 	void setIPUser(const UserPtr& user, const string& IP, uint16_t udpPort = 0) {
@@ -161,7 +162,6 @@ public:
 	
 	void connect(const UserPtr& p, const string& token);
 	void send(AdcCommand& c, const CID& to);
-	void privateMessage(const UserPtr& p, const string& msg, bool thirdPerson);
 
 	void userCommand(const UserPtr& p, const UserCommand& uc, StringMap& params, bool compatibility);
 	void sendRawCommand(const UserPtr& user, const Client& c, const int aRawCommand);

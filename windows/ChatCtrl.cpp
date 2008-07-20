@@ -267,23 +267,27 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 	SetSelectionCharFormat(isMyMessage ? WinUtil::m_ChatTextMyOwn : cf);
 	
 	// Zvyrazneni vsech URL a nastaveni "klikatelnosti"
-	long lSearchFrom = 0;
+	size_t lSearchFrom = 0;
 	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
-		long linkStart = (long)sMsgLower.find(Links[i], lSearchFrom);
-		while(linkStart > 0) {
-			long linkEnd;
-			long linkEndSpace = (long)sMsgLower.find(_T(" "), linkStart);
-			long linkEndLine = (long)sMsgLower.find(_T("\n"), linkStart);
-			if((linkEndSpace <= linkStart && linkEndLine > linkStart) || (linkEndSpace > linkEndLine && linkEndLine > linkStart)) {
-				linkEnd = linkEndLine;
-			} else if(linkEndSpace > linkStart) {
-				linkEnd = linkEndSpace;
-			} else {
-				linkEnd = (long)sMsgLower.size();
+		size_t linkStart = sMsgLower.find(Links[i], lSearchFrom);
+		while(linkStart != tstring::npos) {
+			size_t linkEnd = linkStart + _tcslen(Links[i]);
+			
+			try {
+				boost::match_results<tstring::const_iterator> result;
+				// TODO: complete regexp for URLs
+				boost::wregex reg(_T("^([@\\w-]+(\\.)*)+(:[\\d]+)?(/[-/?%&=\\w\\.\\+\\*]*)*"));
+				if(boost::regex_search(sMsgLower.c_str() + linkEnd, result, reg)) {
+					dcassert(!result.empty());
+					
+					linkEnd += ((tstring)(result[0])).size();
+					SetSel(lSelBegin + linkStart, lSelBegin + linkEnd);
+					SetSelectionCharFormat(WinUtil::m_TextStyleURL);
+				}
+			} catch(...) {
 			}
-			SetSel(lSelBegin + linkStart, lSelBegin + linkEnd);
-			SetSelectionCharFormat(WinUtil::m_TextStyleURL);
-			linkStart = (long)sMsgLower.find(Links[i], linkEnd);
+			
+			linkStart = sMsgLower.find(Links[i], linkEnd);			
 		}
 	}
 
@@ -772,7 +776,7 @@ LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
-		PrivateFrame::openWindow(ou->getUser(), client);
+		PrivateFrame::openWindow(ou);
 
 	return 0;
 }

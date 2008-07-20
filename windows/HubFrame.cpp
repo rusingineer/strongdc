@@ -353,18 +353,16 @@ void HubFrame::onEnter() {
 
 					if(ui) {
 						if(param.size() > j + 1)
-							PrivateFrame::openWindow(ui->getUser(), client, param.substr(j+1));
+							PrivateFrame::openWindow(ui, param.substr(j+1));
 						else
-							PrivateFrame::openWindow(ui->getUser(), client);
+							PrivateFrame::openWindow(ui);
 					}
 				} else if(!param.empty()) {
 					const OnlineUserPtr ui = client->findUser(Text::fromT(param));
 					if(ui) {
-						PrivateFrame::openWindow(ui->getUser(), client);
+						PrivateFrame::openWindow(ui);
 					}
 				}
-			} else if(stricmp(cmd.c_str(), _T("me")) == 0) {
-				client->hubMessage(Text::fromT(s));
 			} else if(stricmp(cmd.c_str(), _T("stats")) == 0) {
 			    if(client->isOp())
 					client->hubMessage(WinUtil::generateStats());
@@ -502,7 +500,7 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 				break;
 		    }    
 		    case 2:
-				ctrlUsers.getItemData(item->iItem)->pm();
+				PrivateFrame::openWindow(ctrlUsers.getItemData(item->iItem));
 		        break;
 		    case 3:
 		        ctrlUsers.getItemData(item->iItem)->matchQueue();
@@ -596,45 +594,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u.onlineUser->getIdentity().getNick()), WinUtil::m_ChatTextSystem);
 				}	
 
-				if(client->isOp() && !u.onlineUser->getIdentity().isBot() && !u.onlineUser->getIdentity().isHub()) {
-					int64_t bytesSharedInt64 = u.onlineUser->getIdentity().getBytesShared();
-					if(bytesSharedInt64 > 0) {
-						string bytesShared = Util::toString(bytesSharedInt64);
-						bool samenumbers = false;
-						const char* sSameNumbers[] = { "000000", "111111", "222222", "333333", "444444", "555555", "666666", "777777", "888888", "999999" };
-						for(int i = 0; i < 10; ++i) {
-							if(strstr(bytesShared.c_str(), sSameNumbers[i]) != 0) {
-								samenumbers = true;
-								break;
-							}
-						}
-						if(samenumbers) {
-							tstring detectString = Util::formatExactSize(u.onlineUser->getIdentity().getBytesShared()) + _T(" - the share size had too many same numbers in it");
-							u.onlineUser->getIdentity().set("BF", "1");
-							u.onlineUser->getIdentity().setCheat(u.onlineUser->getClient(), Text::fromT(detectString), false);
-							
-							TCHAR buf[512];
-							snwprintf(buf, sizeof(buf), _T("*** %s %s - %s"), TSTRING(USER).c_str(), Text::toT(u.onlineUser->getIdentity().getNick()).c_str(), detectString.c_str());
-
-							if(BOOLSETTING(POPUP_CHEATING_USER)) {
-								MainFrame::getMainFrame()->ShowBalloonTip(tstring(buf), TSTRING(CHEATING_USER));
-							}
-
-							if(BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT)) {
-								CHARFORMAT2 cf;
-								memzero(&cf, sizeof(CHARFORMAT2));
-								cf.cbSize = sizeof(cf);
-								cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
-								cf.crBackColor = SETTING(BACKGROUND_COLOR);
-								cf.crTextColor = SETTING(ERROR_COLOR);							
-								
-								addLine((tstring)buf, cf);
-							}
-
-							ClientManager::getInstance()->sendRawCommand(u.onlineUser->getUser(), *client, SETTING(FAKESHARE_RAW));
-						}
-					}
-						
+				if(client->isOp() && !u.onlineUser->getIdentity().isBot() && !u.onlineUser->getIdentity().isHub()) {			
 					if(BOOLSETTING(CHECK_NEW_USERS)) {
 						if(u.onlineUser->getIdentity().isTcpActive(client) || client->isActive()) {
 							try {
@@ -729,13 +689,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			tstring nick = Text::toT(pm.from.getNick());
 			if(!pm.from.getUser() || (ignoreList.find(pm.from.getUser()) == ignoreList.end()) ||
 			  (pm.from.isOp() && !client->isOp())) {
-				bool myPM = pm.replyTo == ClientManager::getInstance()->getMe();
-				const UserPtr& user = myPM ? pm.to : pm.replyTo;
+				bool myPM = pm.replyTo->getUser() == ClientManager::getInstance()->getMe();
+				const OnlineUserPtr& user = myPM ? pm.to : pm.replyTo;
 				if(pm.hub) {
 					if(BOOLSETTING(IGNORE_HUB_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), false);
 					} else if(BOOLSETTING(POPUP_HUB_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
@@ -743,13 +703,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					if(BOOLSETTING(IGNORE_BOT_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), WinUtil::m_ChatTextPrivate, false);
 					} else if(BOOLSETTING(POPUP_BOT_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 				} else {
 					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
@@ -1018,7 +978,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 			if(ui) {
 				bHandled = true;
 				if (wParam & MK_CONTROL) { // MK_CONTROL = 0x0008
-					PrivateFrame::openWindow(ui->getUser(), client);
+					PrivateFrame::openWindow(ui);
 				} else if (wParam & MK_SHIFT) {
 					try {
 						QueueManager::getInstance()->addList(ui->getUser(), QueueItem::FLAG_CLIENT_VIEW);
@@ -1063,7 +1023,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					     break;
 					}
 					case 2:
-						ui->pm();
+						PrivateFrame::openWindow(ui);
 					    break;
 					case 3:
 					    ui->getList();
@@ -1681,7 +1641,7 @@ void HubFrame::on(StatusMessage, const Client*, const string& line, int statusFl
 	}
 }
 
-void HubFrame::on(PrivateMessage, const Client*, const OnlineUser& from, const OnlineUser& to, const OnlineUser& replyTo, const string& line, bool thirdPerson) throw() { 
+void HubFrame::on(PrivateMessage, const Client*, const OnlineUser& from, const OnlineUserPtr& to, const OnlineUserPtr& replyTo, const string& line, bool thirdPerson) throw() { 
 	speak(PRIVATE_MESSAGE, from, to, replyTo, Util::formatMessage(from.getIdentity().getNick(), line, thirdPerson));
 }
 void HubFrame::on(NickTaken, const Client*) throw() {
@@ -2052,7 +2012,7 @@ LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 LRESULT HubFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		PrivateFrame::openWindow(((OnlineUser*)ctrlUsers.getItemData(i))->getUser(), client);
+		PrivateFrame::openWindow(ctrlUsers.getItemData(i));
 	}
 
 	return 0;

@@ -30,6 +30,7 @@
 #include "../client/ClientManager.h"
 #include "../client/TimerManager.h"
 #include "../client/SearchManager.h"
+#include "../client/DecentralizationManager.h"
 
 TStringList SearchFrame::lastSearches;
 
@@ -394,7 +395,7 @@ void SearchFrame::onEnter() {
 		SettingsManager::getInstance()->set(SettingsManager::FREE_SLOTS_DEFAULT, onlyFree);
 
 	int n = ctrlHubs.GetItemCount();
-	for(int i = 0; i < n; i++) {
+	for(int i = 1; i < n; i++) {
 		if(ctrlHubs.GetCheckState(i)) {
 			clients.push_back(Text::fromT(ctrlHubs.getItemData(i)->url));
 		}
@@ -1303,6 +1304,12 @@ LRESULT SearchFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 void SearchFrame::initHubs() {
 	ctrlHubs.insertItem(new HubInfo(Util::emptyStringT, TSTRING(ONLY_WHERE_OP), false), 0);
 	ctrlHubs.SetCheckState(0, false);
+	
+	if(BOOLSETTING(ENABLE_DECENTRALIZED_NETWORK) && DecentralizationManager::getInstance()->getAvailableBytes() > 0)
+	{
+		ctrlHubs.insertItem(new HubInfo(Util::emptyStringT, Text::toT(DecentralizationManager::getInstance()->getName()), false), 0);
+		ctrlHubs.SetCheckState(1, true);
+	}
 
 	ClientManager* clientMgr = ClientManager::getInstance();
 	clientMgr->lock();

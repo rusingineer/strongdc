@@ -38,13 +38,16 @@ PropPage::TextItem SharePage::texts[] = {
 	{ IDC_ADD, ResourceManager::SETTINGS_ADD_FOLDER },
 	{ IDC_RENAME, ResourceManager::SETTINGS_RENAME_FOLDER },
 	{ IDC_SETTINGS_ONLY_HASHED, ResourceManager::SETTINGS_ONLY_HASHED },
-	{ IDC_SETTINGS_AUTO_REFRESH_TIME, ResourceManager::SETTINGS_AUTO_REFRESH_TIME },		
+	{ IDC_SETTINGS_AUTO_REFRESH_TIME, ResourceManager::SETTINGS_AUTO_REFRESH_TIME },
+	{ IDC_SETTINGS_MAX_HASH_SPEED, ResourceManager::SETTINGS_MAX_HASH_SPEED },
+	{ IDC_SETTINGS_MBS, ResourceManager::MBPS },	
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
 PropPage::Item SharePage::items[] = {
 	{ IDC_SHAREHIDDEN, SettingsManager::SHARE_HIDDEN, PropPage::T_BOOL },
-	{ IDC_AUTO_REFRESH_TIME, SettingsManager::AUTO_REFRESH_TIME, PropPage::T_INT },		
+	{ IDC_AUTO_REFRESH_TIME, SettingsManager::AUTO_REFRESH_TIME, PropPage::T_INT },
+	{ IDC_MAX_HASH_SPEED, SettingsManager::MAX_HASH_SPEED, PropPage::T_INT },	
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -84,7 +87,11 @@ LRESULT SharePage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	CUpDownCtrl updown;
 	updown.Attach(GetDlgItem(IDC_REFRESH_SPIN));
 	updown.SetRange32(0, 3000); 
-	updown.Detach();	
+	updown.Detach();
+
+	updown.Attach(GetDlgItem(IDC_HASH_SPIN));
+	updown.SetRange32(0, 999);
+	updown.Detach();
 	
 	ft.SubclassWindow(GetDlgItem(IDC_TREE1));
 	ft.SetStaticCtrl(&ctrlTotal);

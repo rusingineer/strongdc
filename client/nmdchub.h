@@ -44,7 +44,7 @@ public:
 	void connect(const OnlineUser& aUser, const string&);
 
 	void hubMessage(const string& aMessage, bool /*thirdPerson*/ = false);
-	void privateMessage(const OnlineUser& aUser, const string& aMessage, bool /*thirdPerson*/ = false);
+	void privateMessage(const OnlineUserPtr& aUser, const string& aMessage, bool /*thirdPerson*/ = false);
 	void sendUserCmd(const string& aUserCmd) throw() { send(fromUtf8(aUserCmd)); }
 	void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	void password(const string& aPass) { send("$MyPass " + fromUtf8(aPass) + "|"); }
