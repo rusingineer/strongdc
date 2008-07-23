@@ -133,7 +133,16 @@ public:
 		fci->h = h;
 		fci->mapper = fcim;
 		
-		HBITMAP hBitmap = CreateBitmap(w, h, 1, 32, NULL);
+		BITMAPINFOHEADER bih;
+		ZeroMemory(&bih, sizeof(BITMAPINFOHEADER));
+		bih.biSize = sizeof(BITMAPINFOHEADER);
+		bih.biWidth = w;
+		bih.biHeight = -h;
+		bih.biPlanes = 1;
+		bih.biBitCount = 32;
+		bih.biCompression = BI_RGB;
+		bih.biClrUsed = 32;
+		HBITMAP hBitmap = ::CreateDIBitmap(hDC.m_hDC, &bih, 0, NULL, NULL, DIB_RGB_COLORS);
 		::DeleteObject(::SelectObject(fci->hDC, hBitmap));
 
 		if (!light) {

@@ -53,7 +53,7 @@ Client* ClientManager::getClient(const string& aHubURL) {
 
 	{
 		Lock l(cs);
-		clients.push_front(c);
+		clients.insert(make_pair(const_cast<string*>(&c->getHubUrl()), c));
 	}
 
 	c->addListener(this);
@@ -67,15 +67,10 @@ void ClientManager::putClient(Client* aClient) {
 
 	{
 		Lock l(cs);
-		clients.remove(aClient);
+		clients.erase(const_cast<string*>(&aClient->getHubUrl()));
 	}
 	aClient->shutdown();
 	delete aClient;
-}
-
-size_t ClientManager::getUserCount() const {
-	Lock l(cs);
-	return onlineUsers.size();
 }
 
 StringList ClientManager::getHubs(const CID& cid) const {
@@ -132,25 +127,11 @@ string ClientManager::getConnection(const CID& cid) const {
 	return STRING(OFFLINE);
 }
 
-int64_t ClientManager::getAvailable() const {
-	Lock l(cs);
-	int64_t bytes = 0;
-	for(OnlineIterC i = onlineUsers.begin(); i != onlineUsers.end(); ++i) {
-		bytes += i->second->getIdentity().getBytesShared();
-	}
-
-	return bytes;
-}
-
 bool ClientManager::isConnected(const string& aUrl) const {
 	Lock l(cs);
 
-	for(Client::List::const_iterator i = clients.begin(); i != clients.end(); ++i) {
-		if((*i)->getHubUrl() == aUrl) {
-			return true;
-		}
-	}
-	return false;
+	Client::Iter i = clients.find(const_cast<string*>(&aUrl));
+	return i != clients.end();
 }
 
 string ClientManager::findHub(const string& ipPort) const {
@@ -167,8 +148,8 @@ string ClientManager::findHub(const string& ipPort) const {
 	}
 
 	string url;
-	for(Client::List::const_iterator i = clients.begin(); i != clients.end(); ++i) {
-		const Client* c = *i;
+	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
+		const Client* c = i->second;
 		if(c->getIp() == ip) {
 			// If exact match is found, return it
 			if(c->getPort() == port)
@@ -185,10 +166,9 @@ string ClientManager::findHub(const string& ipPort) const {
 const string& ClientManager::findHubEncoding(const string& aUrl) const {
 	Lock l(cs);
 
-	for(Client::List::const_iterator i = clients.begin(); i != clients.end(); ++i) {
-		if((*i)->getHubUrl() == aUrl) {
-			return *((*i)->getEncoding());
-		}
+	Client::Iter i = clients.find(const_cast<string*>(&aUrl));
+	if(i != clients.end()) {
+		return *(i->second->getEncoding());
 	}
 	return Text::systemCharset;
 }
@@ -197,10 +177,13 @@ UserPtr ClientManager::findLegacyUser(const string& aNick) const throw() {
 	Lock l(cs);
 	dcassert(aNick.size() > 0);
 
-	for(OnlineMap::const_iterator i = onlineUsers.begin(); i != onlineUsers.end(); ++i) {
-		const OnlineUser* ou = i->second;
-		if(ou->getUser()->isSet(User::NMDC) && stricmp(ou->getIdentity().getNick(), aNick) == 0)
-			return ou->getUser();
+	// this be slower now, but it's not called so often
+	for(NickMap::const_iterator i = nicks.begin(); i != nicks.end(); ++i) {
+		if(stricmp(i->second, aNick) == 0) {
+			UserMap::const_iterator u = users.find(i->first);
+			if(u != users.end() && u->second->getCID() == i->first)
+				return u->second;
+		}
 	}
 	return UserPtr();
 }
@@ -243,6 +226,7 @@ UserPtr ClientManager::findUser(const CID& cid) const throw() {
 	return 0;
 }
 
+// deprecated
 bool ClientManager::isOp(const UserPtr& user, const string& aHubUrl) const {
 	Lock l(cs);
 	OnlinePairC p = onlineUsers.equal_range(user->getCID());
@@ -256,11 +240,9 @@ bool ClientManager::isOp(const UserPtr& user, const string& aHubUrl) const {
 
 bool ClientManager::isStealth(const string& aHubUrl) const {
 	Lock l(cs);
-	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-		const Client* c = *i;
-		if(c->getHubUrl() == aHubUrl) {
-			return c->getStealth();
-		}
+	Client::Iter i = clients.find(const_cast<string*>(&aHubUrl));
+	if(i != clients.end()) {
+		return i->second->getStealth();
 	}
 	return false;
 }
@@ -280,7 +262,7 @@ void ClientManager::putOnline(OnlineUser* ou) throw() {
 		Lock l(cs);
 		onlineUsers.insert(make_pair(ou->getUser()->getCID(), ou));
 	}
-
+	
 	if(!ou->getUser()->isOnline()) {
 		ou->getUser()->setFlag(User::ONLINE);
 		fire(ClientManagerListener::UserConnected(), ou->getUser());
@@ -359,8 +341,9 @@ void ClientManager::send(AdcCommand& cmd, const CID& cid) {
 void ClientManager::infoUpdated() {
 	Lock l(cs);
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-		if((*i)->isConnected()) {
-			(*i)->info(false);
+		Client* c = i->second;
+		if(c->isConnected()) {
+			c->info(false);
 		}
 	}
 }
@@ -463,21 +446,13 @@ void ClientManager::on(AdcSearch, const Client*, const AdcCommand& adc, const CI
 	SearchManager::getInstance()->respond(adc, from);
 }
 
-const string& ClientManager::getHubUrl(const UserPtr& aUser) const {
-	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(aUser->getCID());
-	if(i != onlineUsers.end()) {
-		return i->second->getClient().getHubUrl();
-	}
-	return Util::emptyString;
-}
-
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
 	Lock l(cs);
 
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-		if((*i)->isConnected()) {
-			(*i)->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
+		Client* c = i->second;
+		if(c->isConnected()) {
+			c->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
 		}
 	}
 	
@@ -492,7 +467,7 @@ uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, in
 	uint64_t estimateSearchSpan = 0;
 	
 	for(StringIter it = who.begin(); it != who.end(); ++it) {
-		string& client = *it;
+		const string& client = *it;
 		
 		if(client.empty())
 		{
@@ -503,12 +478,10 @@ uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, in
 		}
 		else
 		{
-			for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
-				Client* c = *j;
-				if(c->isConnected() && c->getHubUrl() == client) {
-					uint64_t ret = c->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
-					estimateSearchSpan = max(estimateSearchSpan, ret);
-				}
+			Client::Iter i = clients.find(const_cast<string*>(&client));
+			if(i != clients.end() && i->second->isConnected()) {
+				uint64_t ret = i->second->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
+				estimateSearchSpan = max(estimateSearchSpan, ret);			
 			}
 		}
 	}
@@ -530,7 +503,7 @@ void ClientManager::on(TimerManagerListener::Minute, uint64_t /*aTick*/) throw()
 	}
 
 	for(Client::Iter j = clients.begin(); j != clients.end(); ++j) {
-		(*j)->info(false);
+		j->second->info(false);
 	}
 }
 
@@ -579,6 +552,15 @@ void ClientManager::updateNick(const UserPtr& user, const string& nick) throw() 
 	}
 }
 
+string ClientManager::getMyNick(const string& hubUrl) const {
+	Lock l(cs);
+	Client::Iter i = clients.find(const_cast<string*>(&hubUrl));
+	if(i != clients.end()) {
+		return i->second->getMyIdentity().getNick();
+	}
+	return Util::emptyString;
+}
+	
 void ClientManager::on(Connected, const Client* c) throw() {
 	fire(ClientManagerListener::ClientConnected(), c);
 }
@@ -791,8 +773,39 @@ void ClientManager::cancelSearch(void* aOwner) {
 	Lock l(cs);
 
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
-		(*i)->cancelSearch(aOwner);
+		i->second->cancelSearch(aOwner);
 	}
+}
+
+void ClientManager::setPkLock(const UserPtr& p, const string& aPk, const string& aLock) {
+	Lock l(cs);
+	OnlineIterC i = onlineUsers.find(p->getCID());
+	if(i == onlineUsers.end()) return;
+	
+	i->second->getIdentity().set("PK", aPk);
+	i->second->getIdentity().set("LO", aLock);
+}
+
+void ClientManager::setSupports(const UserPtr& p, const string& aSupports) {
+	Lock l(cs);
+	OnlineIterC i = onlineUsers.find(p->getCID());
+	if(i == onlineUsers.end()) return;
+	
+	i->second->getIdentity().set("SU", aSupports);
+}
+
+void ClientManager::setGenerator(const UserPtr& p, const string& aGenerator) {
+	Lock l(cs);
+	OnlineIterC i = onlineUsers.find(p->getCID());
+	if(i == onlineUsers.end()) return;
+	i->second->getIdentity().set("GE", aGenerator);
+}
+
+void ClientManager::setUnknownCommand(const UserPtr& p, const string& aUnknownCommand) {
+	Lock l(cs);
+	OnlineIterC i = onlineUsers.find(p->getCID());
+	if(i == onlineUsers.end()) return;
+	i->second->getIdentity().set("UC", aUnknownCommand);
 }
 
 } // namespace dcpp

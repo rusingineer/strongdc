@@ -51,6 +51,7 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	ctrlClient.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
 		WS_VSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_READONLY, WS_EX_CLIENTEDGE, IDC_CLIENT);
 	
+	ctrlClientContainer.SubclassWindow(ctrlClient.m_hWnd);
 	ctrlClient.Subclass();
 	ctrlClient.LimitText(0);
 	ctrlClient.SetFont(WinUtil::font);
@@ -183,71 +184,92 @@ LRESULT PrivateFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& 
 		}
 		return 0;
 	}
+	
 	switch(wParam) {
-	case VK_RETURN:
-		if( (GetKeyState(VK_SHIFT) & 0x8000) || 
-			(GetKeyState(VK_CONTROL) & 0x8000) || 
-			(GetKeyState(VK_MENU) & 0x8000) ) {
-			bHandled = FALSE;
-		} else {
-			if(uMsg == WM_KEYDOWN) {
-				onEnter();
+		case VK_TAB:
+		{
+			if(GetFocus() == ctrlMessage.m_hWnd)
+			{
+				ctrlClient.SetFocus();
 			}
-		}
-		break;
-	case VK_UP:
-		if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
-			//scroll up in chat command history
-			//currently beyond the last command?
-			if (curCommandPosition > 0) {
-				//check whether current command needs to be saved
-				if (curCommandPosition == prevCommands.size()) {
-					currentCommand.resize(ctrlMessage.GetWindowTextLength());
-					ctrlMessage.GetWindowText(&currentCommand[0], ctrlMessage.GetWindowTextLength() + 1);
-				}
-				//replace current chat buffer with current command
-				ctrlMessage.SetWindowText(prevCommands[--curCommandPosition].c_str());
+			else
+			{
+				ctrlMessage.SetFocus();
 			}
-		} else {
-			bHandled = FALSE;
-		}
-		break;
-	case VK_DOWN:
-		if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
-			//scroll down in chat command history
-			//currently beyond the last command?
-			if (curCommandPosition + 1 < prevCommands.size()) {
-				//replace current chat buffer with current command
-				ctrlMessage.SetWindowText(prevCommands[++curCommandPosition].c_str());
-			} else if (curCommandPosition + 1 == prevCommands.size()) {
-				//revert to last saved, unfinished command
-				ctrlMessage.SetWindowText(currentCommand.c_str());
-				++curCommandPosition;
-			}
-		} else {
-			bHandled = FALSE;
-		}
-		break;
-	case VK_HOME:
-		if (!prevCommands.empty() && (GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
-			curCommandPosition = 0;
-			currentCommand.resize(ctrlMessage.GetWindowTextLength());
-			ctrlMessage.GetWindowText(&currentCommand[0], ctrlMessage.GetWindowTextLength() + 1);
-			ctrlMessage.SetWindowText(prevCommands[curCommandPosition].c_str());
-		} else {
-			bHandled = FALSE;
-		}
-		break;
-	case VK_END:
-		if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
-			curCommandPosition = prevCommands.size();
-			ctrlMessage.SetWindowText(currentCommand.c_str());
-		} else {
-			bHandled = FALSE;
-		}
-		break;
-	default:
+		}	
+	}
+	
+	// don't handle these keys unless the user is entering a message
+	if (GetFocus() != ctrlMessage.m_hWnd) {
 		bHandled = FALSE;
+		return 0;
+	}	
+	
+	switch(wParam) {
+		case VK_RETURN:
+			if( (GetKeyState(VK_SHIFT) & 0x8000) || 
+				(GetKeyState(VK_CONTROL) & 0x8000) || 
+				(GetKeyState(VK_MENU) & 0x8000) ) {
+				bHandled = FALSE;
+			} else {
+				if(uMsg == WM_KEYDOWN) {
+					onEnter();
+				}
+			}
+			break;
+		case VK_UP:
+			if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
+				//scroll up in chat command history
+				//currently beyond the last command?
+				if (curCommandPosition > 0) {
+					//check whether current command needs to be saved
+					if (curCommandPosition == prevCommands.size()) {
+						currentCommand.resize(ctrlMessage.GetWindowTextLength());
+						ctrlMessage.GetWindowText(&currentCommand[0], ctrlMessage.GetWindowTextLength() + 1);
+					}
+					//replace current chat buffer with current command
+					ctrlMessage.SetWindowText(prevCommands[--curCommandPosition].c_str());
+				}
+			} else {
+				bHandled = FALSE;
+			}
+			break;
+		case VK_DOWN:
+			if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
+				//scroll down in chat command history
+				//currently beyond the last command?
+				if (curCommandPosition + 1 < prevCommands.size()) {
+					//replace current chat buffer with current command
+					ctrlMessage.SetWindowText(prevCommands[++curCommandPosition].c_str());
+				} else if (curCommandPosition + 1 == prevCommands.size()) {
+					//revert to last saved, unfinished command
+					ctrlMessage.SetWindowText(currentCommand.c_str());
+					++curCommandPosition;
+				}
+			} else {
+				bHandled = FALSE;
+			}
+			break;
+		case VK_HOME:
+			if (!prevCommands.empty() && (GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
+				curCommandPosition = 0;
+				currentCommand.resize(ctrlMessage.GetWindowTextLength());
+				ctrlMessage.GetWindowText(&currentCommand[0], ctrlMessage.GetWindowTextLength() + 1);
+				ctrlMessage.SetWindowText(prevCommands[curCommandPosition].c_str());
+			} else {
+				bHandled = FALSE;
+			}
+			break;
+		case VK_END:
+			if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) {
+				curCommandPosition = prevCommands.size();
+				ctrlMessage.SetWindowText(currentCommand.c_str());
+			} else {
+				bHandled = FALSE;
+			}
+			break;
+		default:
+			bHandled = FALSE;
 	}
 	return 0;
 }
@@ -446,7 +468,8 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 }
 
 LRESULT PrivateFrame::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	ClientManager::getInstance()->reportUser(replyTo->getUser());
+	// TODO: does this need locking?
+	replyTo->getClient().cheatMessage("*** Info on " + replyTo->getIdentity().getNick() + " ***" + "\r\n" + replyTo->getIdentity().getReport() + "\r\n");
 	return 0;
 }
 

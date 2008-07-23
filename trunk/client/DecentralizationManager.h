@@ -24,6 +24,7 @@
 #include "Singleton.h"
 
 #include "AdcCommand.h"
+#include "ClientManager.h"
 #include "SearchQueue.h"
 #include "ResourceManager.h"
 #include "TimerManager.h"
@@ -32,13 +33,19 @@
 namespace dcpp
 {
 
-#define DPORT SETTING(TLS_PORT)
+#define MCAST_IP					"234.5.6.7"											// IP address for multicasting
+#define DPORT						SETTING(TLS_PORT)									// UDP port for listening to
 
-#define ADC_PACKET_HEADER 'U'
-#define ADC_PACKET_FOOTER 0x0a
-#define ADC_PACKED_PACKET_HEADER 0xc1
+#define ADC_PACKET_HEADER			'U'													// byte which every uncompressed packet must begin with
+#define ADC_PACKET_FOOTER			0x0a												// byte which every uncompressed packet must end with
+#define ADC_PACKED_PACKET_HEADER	0xc1												// compressed packet detection byte
 
-#define NODE_FILE "nodes.dat"
+#define NODE_FILE					"nodes.dat"											// local file with saved known nodes
+#define NODE_ITEM_SIZE				sizeof(CID) + sizeof(uint32_t) + sizeof(uint16_t)	// size of one item in nodelist
+
+#define MAX_SEARCH_NODES			3													// maximum perfect nodes to send search request to
+#define MAX_SEARCH_DISTANCE			50	// CHECK: is this number ok?					// maximum distance for forwarding search request
+#define NODE_EXPIRATION				3600	// 1 hour									// time when node can be marked as offline
 
 class DecentralizationManager : public Singleton<DecentralizationManager>, private Thread, 
 	private CommandHandler<DecentralizationManager>, private TimerManagerListener
@@ -85,14 +92,52 @@ private:
 	friend class Singleton<DecentralizationManager>;
 	friend class CommandHandler<DecentralizationManager>;
 	
+	struct Packet
+	{
+		/** Public constructor */
+		Packet(const string& ip_, uint16_t port_, const uint8_t* data_, size_t length_) : 
+			ip(ip_), port(port_), data(data_), length(length_)
+		{
+		}
+		
+		/** IP where send this packet to */
+		string ip;
+		
+		/** To which port this packet should be sent */
+		uint16_t port;
+		
+		/** Data to sent */
+		const uint8_t* data;
+		
+		/** Data's length */
+		size_t length;
+	};
+	
+	struct Node
+	{
+		/** Public constructor */
+		Node(uint64_t exp_, const OnlineUserPtr& ou_) : expires(exp_), onlineUser(ou_)
+		{
+		}
+		
+		/** Time when node should be removed */
+		uint64_t expires;
+		
+		/** All information about node */
+		OnlineUserPtr onlineUser;
+	};
+	
 	/** Map CID to OnlineUser */
-	typedef unordered_map<CID, OnlineUser*> CIDMap;
+	typedef unordered_map<CID, Node> CIDMap;
 	typedef CIDMap::const_iterator CIDIter;
 	
 	/** Stores all online nodes */
 	CIDMap nodes;
 	
 	/** Locks access to "nodes" */
+	// TODO: 
+	// Use Fast critical section, because we don't need locking so often.
+	// Almost all shared access is done within one thread.
 	mutable CriticalSection cs;
 	
 	/** Queue for sending search requests */
@@ -107,6 +152,9 @@ private:
 	/** UDP socket */
 	std::auto_ptr<Socket> socket;
 	
+	/** Queue for sending packets through UDP socket */
+	std::deque<Packet*> sendQueue;
+	
 	/** Size of data available through this network */
 	int64_t availableBytes;
 	
@@ -114,16 +162,20 @@ private:
 	int run();
 	
 	/** Finds online node by its CID */
-	OnlineUserPtr findNode(const CID& cid) const;
+	Node* findNode(const CID& cid, bool updateExpiration = true);
 	
 	/** Creates online node if it doesn't exist else returns existing one */
-	OnlineUserPtr getNode(const CID& cid);
+	Node& getNode(const CID& cid);
 	
 	/** Get my IP address */
 	string getLocalIp() const;
 	
 	/** Sends command to node */
-	void send(AdcCommand& c, const OnlineUserPtr& ou);
+	void send(AdcCommand& c, const OnlineUserPtr& ou, const CID& cid = ClientManager::getInstance()->getMyCID())
+	{ send(c, ou->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou->getIdentity().getUdpPort())), cid); }
+	
+	/** Sends command to IP and port */
+	void send(AdcCommand& c, const string& ip, uint16_t port, const CID& cid = ClientManager::getInstance()->getMyCID());
 	
 	/** Loads existing nodes from disk */
 	void loadNodes();
@@ -131,12 +183,14 @@ private:
 	/** Save all online nodes to disk */
 	void saveNodes();
 	
+	/** Selects the best nodes for sending search request */
+	void findPerfectNodes(std::vector<OnlineUserPtr>& v, const CID& originCID = CID()) const;
+	
 	/** Sends search request to all connected nodes */
 	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	
 	/** All commands supported by this network */
 	void handle(AdcCommand::INF, AdcCommand& c) throw(); // node is going online
-	void handle(AdcCommand::QUI, AdcCommand& c) throw(); // node is going offline
 	void handle(AdcCommand::SCH, AdcCommand& c) throw(); // incoming search request
 	void handle(AdcCommand::RES, AdcCommand& c) throw(); // incoming search result
 	void handle(AdcCommand::PSR, AdcCommand& c) throw(); // incoming partial search result
@@ -146,7 +200,8 @@ private:
 	template<typename T> void handle(T, AdcCommand&) { }
 	
 	// TimerManagerListener
-	void on(TimerManagerListener::Second, uint64_t aTick) throw();	
+	void on(TimerManagerListener::Second, uint64_t aTick) throw();
+	void on(TimerManagerListener::Minute, uint64_t aTick) throw();	
 };
 
 } // namespace dcpp

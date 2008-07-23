@@ -270,13 +270,19 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 	size_t lSearchFrom = 0;
 	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
 		size_t linkStart = sMsgLower.find(Links[i], lSearchFrom);
+		bool isMagnet = _tcscmp(Links[i], _T("magnet:?")) == 0;
 		while(linkStart != tstring::npos) {
 			size_t linkEnd = linkStart + _tcslen(Links[i]);
 			
 			try {
 				boost::match_results<tstring::const_iterator> result;
 				// TODO: complete regexp for URLs
-				boost::wregex reg(_T("^([@\\w-]+(\\.)*)+(:[\\d]+)?(/[-/?%&=\\w\\.\\+\\*]*)*"));
+				boost::wregex reg;
+				if(isMagnet) // magnet links have totally indeferent structure than classic URL
+					reg = _T("^(\\w)+=[:\\w]+(&(\\w)+=[-/?%&=~\\w\\.\\+\\*]*)*");
+				else
+					reg = _T("^([@\\w-]+(\\.)*)+(:[\\d]+)?(/[-/?%&=~\\w\\.\\+\\*]*)*");
+					
 				if(boost::regex_search(sMsgLower.c_str() + linkEnd, result, reg)) {
 					dcassert(!result.empty());
 					
@@ -859,7 +865,7 @@ LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 LRESULT ChatCtrl::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
-		ClientManager::getInstance()->reportUser(ou->getUser());
+		client->cheatMessage("*** Info on " + ou->getIdentity().getNick() + " ***" + "\r\n" + ou->getIdentity().getReport() + "\r\n");
 
 	return 0;
 }

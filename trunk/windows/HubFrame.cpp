@@ -2187,6 +2187,27 @@ LRESULT HubFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	return 0;
 }
 
+LRESULT HubFrame::onKeyDownUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
+	NMLVKEYDOWN* l = (NMLVKEYDOWN*)pnmh;
+	if(l->wVKey == VK_TAB) {
+		onTab();
+	} else if(WinUtil::isCtrl()) {
+		int i = -1;
+		switch(l->wVKey) {
+			case 'M':
+				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
+					PrivateFrame::openWindow(ctrlUsers.getItemData(i));
+				}				
+				break;
+			case 'K':
+				//while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
+				//}					
+				break;
+		}
+	}
+	return 0;
+}
+	
 /**
  * @file
  * $Id$

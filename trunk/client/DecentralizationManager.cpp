@@ -36,6 +36,8 @@
 #include "version.h"
 
 #include "../zlib/zlib.h"
+#include <mswsock.h>
+#include <ws2tcpip.h>
 
 namespace dcpp
 {
@@ -43,6 +45,8 @@ namespace dcpp
 const string ADCS_FEATURE("ADC0");
 const string TCP4_FEATURE("TCP4");
 const string UDP4_FEATURE("UDP4");
+
+const uint32_t POLL_TIMEOUT = 250;
 
 DecentralizationManager::DecentralizationManager(void) : stop(false), port(0), availableBytes(0)
 {
@@ -57,18 +61,30 @@ void DecentralizationManager::listen() throw(SocketException)
 {
 	disconnect();
 	
-	if(!BOOLSETTING(ENABLE_DECENTRALIZED_NETWORK))
+	if(!BOOLSETTING(ENABLE_DECENTRALIZED_NETWORK) || SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_PASSIVE)
 		return;
 	
 	try
 	{
 		socket.reset(new Socket);
 		socket->create(Socket::TYPE_UDP);
-		socket->setBlocking(true);
 		
 		// TODO: make specific port for this network
 		port = socket->bind(static_cast<uint16_t>(DPORT), SETTING(BIND_ADDRESS));
 		
+		// multicasting will probably work only in local network, but it could be
+		// the first try for bootstrapping.	
+		struct ip_mreq mreq;
+				
+		// join multicast group
+		mreq.imr_multiaddr.s_addr = inet_addr(MCAST_IP);
+		mreq.imr_interface.s_addr = INADDR_ANY;
+		setsockopt(socket->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq));
+
+		// set multicast time to live
+		int iOptVal = 64;
+		setsockopt(socket->sock, IPPROTO_IP,  IP_MULTICAST_TTL, (char FAR *)&iOptVal, sizeof (int));
+						
 		start();
 	}
 	catch(...)
@@ -83,10 +99,10 @@ void DecentralizationManager::disconnect() throw()
 	if(socket.get())
 	{
 		stop = true;
-		socket->disconnect();
 #ifdef _WIN32
 		join();
 #endif
+		socket->disconnect();
 		socket.reset();
 
 		port = 0;		
@@ -105,9 +121,12 @@ int DecentralizationManager::run()
 	searchQueue.interval = SETTING(MINIMUM_SEARCH_INTERVAL) * 1000 + 2000;
 	
 	boost::scoped_array<uint8_t> buf(new uint8_t[BUFSIZE]);
-	int len;
 
 	TimerManager::getInstance()->addListener(this);
+	
+	// fix receiving when sending fails
+	DWORD value = FALSE;
+	ioctlsocket(socket->sock, SIO_UDP_CONNRESET, &value);
 	
 	loadNodes();
 	
@@ -116,74 +135,109 @@ int DecentralizationManager::run()
 	{
 		try
 		{
-			while((len = socket->read(&buf[0], BUFSIZE, remoteAddr)) > 0)
+			Packet* p = NULL;
 			{
-				uLongf destLen = BUFSIZE; // what size should be reserved?
-				uint8_t* destBuf;
-				
-				if(buf[0] == ADC_PACKED_PACKET_HEADER) // is this compressed packet?
+				Lock l(cs);
+				if(!sendQueue.empty())
 				{
-					destBuf = new uint8_t[destLen];
+					// take the first packet in queue
+					p = sendQueue.front();
+					sendQueue.pop_front();
+				}
+			}
+			
+			if(p != NULL)
+			{
+				// TODO: introduce some delay for sending packets not to flood UDP socket
+				try
+				{
+					socket->writeTo(p->ip, p->port, p->data, p->length);
+				}
+				catch(SocketException& e)
+				{
+					dcdebug("DecentralizationManager::run Write error: %s\n", e.getError());
+				}
+				
+				delete[] p->data;
+				delete p;
+			}
+			
+			// check for incoming data
+			if(socket->wait(POLL_TIMEOUT, Socket::WAIT_READ) == Socket::WAIT_READ)
+			{
+				// TODO: check flooding
+				int len = socket->read(&buf[0], BUFSIZE, remoteAddr);
+				
+				if(len > 1)
+				{
+					uLongf destLen = BUFSIZE; // what size should be reserved?
+					uint8_t* destBuf;
 					
-					// decompress incoming packet
-					int result = uncompress(destBuf, &destLen, &buf[0] + 1, len - 1);
-					if(result != Z_OK)
+					if(buf[0] == ADC_PACKED_PACKET_HEADER) // is this compressed packet?
 					{
-						// decompression error!!!
-						delete[] destBuf;
-						continue;
+						destBuf = new uint8_t[destLen];
+						
+						// decompress incoming packet
+						int result = uncompress(destBuf, &destLen, &buf[0] + 1, len - 1);
+						if(result != Z_OK)
+						{
+							// decompression error!!!
+							delete[] destBuf;
+							continue;
+						}
 					}
-				}
-				else
-				{
-					destBuf = &buf[0];
-					destLen = len;
-				}
-				
-				string s((char*)destBuf, destLen);
-				if(s[0] == ADC_PACKET_HEADER && s[s.length() - 1] == ADC_PACKET_FOOTER)	// is it valid ADC command?
-				{
-					// TODO: forward remote IP address
-					dispatch(s.substr(0, s.length()-1));
+					else
+					{
+						destBuf = &buf[0];
+						destLen = len;
+					}
 					
-					// TODO: send ack that packet received successfully
+					// process decompressed packet
+					string s((char*)destBuf, destLen);
+					if(s[0] == ADC_PACKET_HEADER && s[s.length() - 1] == ADC_PACKET_FOOTER)	// is it valid ADC command?
+					{
+						// TODO: forward remote IP address
+						dispatch(s.substr(0, s.length()-1));
+						
+						// TODO: send ack that packet received successfully
+					}
 				}
 			}
 		}
 		catch(const SocketException& e)
 		{
 			dcdebug("DecentralizationManager::run Error: %s\n", e.getError().c_str());
-		}
 			
-		bool failed = false;
-		while(!stop)
-		{
-			try
+			bool failed = false;
+			while(!stop)
 			{
-				socket->disconnect();
-				socket->create(Socket::TYPE_UDP);
-				socket->setBlocking(true);
-				socket->bind(port, SETTING(BIND_ADDRESS));
-				if(failed)
+				try
 				{
-					LogManager::getInstance()->message("Decentralization network enabled again"); // TODO: translate
-					failed = false;
+					socket->disconnect();
+					socket->create(Socket::TYPE_UDP);
+					socket->bind(port, SETTING(BIND_ADDRESS));
+					if(failed)
+					{
+						LogManager::getInstance()->message("Decentralization network enabled again"); // TODO: translate
+						failed = false;
+					}
+					break;
 				}
-			}
-			catch(const SocketException& e)
-			{
-				dcdebug("DecentralizationManager::run Stopped listening: %s\n", e.getError().c_str());
-
-				if(!failed)
+				catch(const SocketException& e)
 				{
-					LogManager::getInstance()->message("Decentralization network disabled: " + e.getError()); // TODO: translate
-					failed = true;
-				}
+					dcdebug("DecentralizationManager::run Stopped listening: %s\n", e.getError().c_str());
 
-				// Spin for 60 seconds
-				for(int i = 0; i < 60 && !stop; ++i)
-				{
-					Thread::sleep(1000);
+					if(!failed)
+					{
+						LogManager::getInstance()->message("Decentralization network disabled: " + e.getError()); // TODO: translate
+						failed = true;
+					}
+
+					// Spin for 60 seconds
+					for(int i = 0; i < 60 && !stop; ++i)
+					{
+						Thread::sleep(1000);
+					}
 				}
 			}
 		}		
@@ -227,7 +281,7 @@ void DecentralizationManager::loadNodes()
 			sprintf(ipstr, "%ld.%ld.%ld.%ld", (ipnum >> 24) & 0xFF, (ipnum >> 16) & 0xFF, (ipnum >>  8) & 0xFF, ipnum & 0xFF);
 			dcdebug("Loading node %s, IP = %s, port = %d\n", cid.toBase32().c_str(), ipstr, udpPort);
 				
-			OnlineUserPtr newNode = getNode(cid);
+			OnlineUserPtr newNode = getNode(cid).onlineUser;
 			newNode->getIdentity().setIp(ipstr);				
 			newNode->getIdentity().setUdpPort(Util::toString(udpPort));
 				
@@ -253,7 +307,7 @@ void DecentralizationManager::saveNodes()
 			// save existing node list
 			for(CIDIter i = nodes.begin(); i != nodes.end(); i++)
 			{
-				OnlineUser* u = i->second;
+				const OnlineUserPtr& u = i->second.onlineUser;
 				
 				// don't include myself and node we are sending to in node list
 				if(u->getUser() == ClientManager::getInstance()->getMe())
@@ -270,10 +324,6 @@ void DecentralizationManager::saveNodes()
 				file.write(&udpPort, sizeof(uint16_t));
 				
 				dcdebug("Saving node %s\n", u->getUser()->getCID().toBase32().c_str());
-				
-				// notify node that we're going offline
-				AdcCommand cmd(AdcCommand::CMD_QUI, AdcCommand::TYPE_UDP);
-				send(cmd, u);
 			}
 		}
 	}
@@ -292,72 +342,88 @@ bool DecentralizationManager::needsBootstrap() const
 	return true;
 }
 
-OnlineUserPtr DecentralizationManager::findNode(const CID& cid) const
+DecentralizationManager::Node* DecentralizationManager::findNode(const CID& cid, bool updateExpiration)
 {
+	dcdebug("MyCID: %s\n", ClientManager::getInstance()->getMyCID().toBase32().c_str());
 	Lock l(cs);
-	CIDMap::const_iterator i = nodes.find(cid);
-	return i == nodes.end() ? NULL : i->second;
+	CIDMap::iterator i = nodes.find(cid);
+	
+	if(i != nodes.end())
+	{
+		if(updateExpiration)
+		{
+			// user is active, update expiration
+			i->second.expires = GET_TICK() + NODE_EXPIRATION;
+		}
+		
+		return &i->second;
+	}
+	
+	return NULL;
 }
 
-OnlineUserPtr DecentralizationManager::getNode(const CID& cid)
+DecentralizationManager::Node& DecentralizationManager::getNode(const CID& cid)
 {
-	OnlineUserPtr ou = findNode(cid);
+	Node* node = findNode(cid);
 	
-	if(ou == NULL)
+	if(node == NULL)
 	{
 		// firstly connected node
 		UserPtr p = ClientManager::getInstance()->getUser(cid);
 
 		{
 			Lock l(cs);
-			ou = nodes.insert(make_pair(cid, new OnlineUser(p, *reinterpret_cast<Client*>(this), 0))).first->second;
+			node = &nodes.insert(make_pair(cid, Node(GET_TICK() + NODE_EXPIRATION, new OnlineUser(p, *reinterpret_cast<Client*>(this), 0)))).first->second;
 		}
 
-		ou->getIdentity().setStatus(Util::toString(Identity::DSN));
-		ClientManager::getInstance()->putOnline(ou.get());		
+		node->onlineUser->getIdentity().setStatus(Util::toString(Identity::DSN));
+		ClientManager::getInstance()->putOnline(node->onlineUser.get());		
 	}
 	
-	return ou;
+	return *node;
 }
 
-void DecentralizationManager::send(AdcCommand& cmd, const OnlineUserPtr& ou)
+void DecentralizationManager::send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& cid)
 {
-	dcassert(ou->getIdentity().isUdpActive() && cmd.getType() == AdcCommand::TYPE_UDP);
+	if(!(cid == ClientManager::getInstance()->getMyCID()))
+	{
+		// when forwarding we must include original IP and port
+		// TODO: check that it's not already present
+		Node* node = findNode(cid);
+		dcassert(node != NULL);
+		
+		cmd.addParam("I4", node->onlineUser->getIdentity().getIp());
+		cmd.addParam("U4", node->onlineUser->getIdentity().getUdpPort());
+	}
 	
-	try
+	string command = cmd.toString(cid);
+	
+	// compress data to have at least some kind of "encryption"
+	uLongf destSize = compressBound(command.length()) + 1;
+	
+	uint8_t* srcBuf = (uint8_t*)command.data();
+	uint8_t* destBuf = new uint8_t[destSize];
+	
+	// packets are small, so compressed them using fast method
+	int result = compress2(destBuf + 1, &destSize, srcBuf, command.length(), Z_BEST_SPEED);
+	if(result == Z_OK && destSize <= command.length())
 	{
-		Socket udp;
-		string command = cmd.toString(ClientManager::getInstance()->getMyCID());
+		destBuf[0] = ADC_PACKED_PACKET_HEADER;
+		destSize += 1;
 		
-		// compress data to have at least some kind of "encryption"
-		uLongf destSize = compressBound(command.length()) + 1;
-		
-		uint8_t* srcBuf = (uint8_t*)command.data();
-		boost::scoped_array<uint8_t> destBuf(new uint8_t[destSize]);
-		
-		// packets are small, so compressed them using fast method
-		int result = compress2(&destBuf[0] + 1, &destSize, srcBuf, command.length(), Z_BEST_SPEED);
-		if(result == Z_OK)
-		{
-			destBuf[0] = ADC_PACKED_PACKET_HEADER;
-			destSize += 1;
-			
-			dcdebug("Packet compressed successfuly, original size = %d bytes, new size %d bytes\n", command.length() + 1, destSize);
-		}
-		else
-		{
-			// compression failed, send uncompressed packet
-			destBuf.reset(srcBuf);
-			destSize = command.length();		
-		}
-		
-		// TODO: add packet queue and send it through global socket in run() method
-		udp.writeTo(ou->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou->getIdentity().getUdpPort())), &destBuf[0], destSize);		
+		dcdebug("Packet compressed successfuly, original size = %d bytes, new size %d bytes\n", command.length() + 1, destSize);
 	}
-	catch(const SocketException& e)
+	else
 	{
-		dcdebug("Socket exception sending ADC UDP command: %s\n", e.getError().c_str());
+		// compression failed, send uncompressed packet
+
+		destSize = command.length();
+		memcpy(destBuf, srcBuf, destSize);
+				
 	}
+	
+	Lock l(cs);
+	sendQueue.push_back(new Packet(ip, port, destBuf, destSize)); 
 }
 
 void DecentralizationManager::info(const OnlineUserPtr& ou, bool sendNodeList, bool response)
@@ -385,7 +451,8 @@ void DecentralizationManager::info(const OnlineUserPtr& ou, bool sendNodeList, b
 	}	
 	
 	string su;
-	if(CryptoManager::getInstance()->TLSOk()) {
+	if(CryptoManager::getInstance()->TLSOk())
+	{
 		su += ADCS_FEATURE + ",";
 	}
 
@@ -398,7 +465,7 @@ void DecentralizationManager::info(const OnlineUserPtr& ou, bool sendNodeList, b
 		if(nodes.size() > 0)
 		{
 			// node list contains CID, IP and UDP port
-			size_t len = nodes.size() * (sizeof(CID) + sizeof(uint32_t) + sizeof(uint16_t));
+			size_t len = nodes.size() * NODE_ITEM_SIZE;
 			
 			uint8_t* buf = new uint8_t[len];
 			uint8_t* tmp = buf;
@@ -410,7 +477,7 @@ void DecentralizationManager::info(const OnlineUserPtr& ou, bool sendNodeList, b
 				
 			for(CIDIter i = nodes.begin(); i != nodes.end(); i++)
 			{
-				OnlineUser* u = i->second;
+				const OnlineUserPtr& u = i->second.onlineUser;
 				
 				// don't include myself and node we are sending to in node list
 				if(u->getUser() == ClientManager::getInstance()->getMe() || u->getUser() == ou->getUser())
@@ -466,6 +533,40 @@ uint64_t DecentralizationManager::search(int aSizeMode, int64_t aSize, int aFile
 
 }
 
+// TODO: completely refine this method
+void DecentralizationManager::findPerfectNodes(std::vector<OnlineUserPtr>& v, const CID& originCID) const
+{
+	Lock l(cs);
+
+	std::vector<OnlineUserPtr> tmp;
+	
+	// select some perfect nodes
+	for(CIDIter i = nodes.begin(); i != nodes.end(); i++)
+	{
+		const OnlineUserPtr& ou = i->second.onlineUser;
+		
+		// don't sent anything to myself
+		if(ou->getUser() == ClientManager::getInstance()->getMe())
+			continue;
+			
+		// don't sent anything to originator of the request
+		if(ou->getUser()->getCID() == originCID)
+			continue;
+		
+		tmp.push_back(ou);
+	}
+	
+	if(tmp.size() > MAX_SEARCH_NODES)
+	{
+		// select random nodes
+		std::random_sample_n(tmp.begin(), tmp.end(), v.begin(), MAX_SEARCH_NODES);
+	}
+	else
+	{
+		v.swap(tmp);
+	}
+}
+
 void DecentralizationManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken)
 {
 	AdcCommand cmd(AdcCommand::CMD_SCH, AdcCommand::TYPE_UDP);
@@ -497,15 +598,15 @@ void DecentralizationManager::search(int aSizeMode, int64_t aSize, int aFileType
 
 	if(!aToken.empty())
 		cmd.addParam("TO", aToken);
+		
+	cmd.addParam("DI", Util::toString(MAX_SEARCH_DISTANCE));
 
-	Lock l(cs);
-	// send this command to all online nodes
-	for(CIDIter i = nodes.begin(); i != nodes.end(); i++)
+	vector<OnlineUserPtr> perfectNodes;
+	findPerfectNodes(perfectNodes);
+	
+	for(vector<OnlineUserPtr>::const_iterator i = perfectNodes.begin(); i != perfectNodes.end(); i++)
 	{
-		if(i->second->getUser() == ClientManager::getInstance()->getMe())
-			continue;
-			
-		send(cmd, i->second);
+		send(cmd, *i);
 	}
 }
 
@@ -551,7 +652,9 @@ void DecentralizationManager::handle(AdcCommand::INF, AdcCommand& c) throw()
 	if(cid.size() != 39)
 		return;
 		
-	OnlineUserPtr ou = getNode(CID(cid));	
+	Node& node = getNode(CID(cid));
+	const OnlineUserPtr& ou = node.onlineUser;
+	
 	string nodeList;
 	uint8_t response = 0;
 	
@@ -583,7 +686,8 @@ void DecentralizationManager::handle(AdcCommand::INF, AdcCommand& c) throw()
 		}
 	}
 
-	if(ou->getIdentity().supports(ADCS_FEATURE)) {
+	if(ou->getIdentity().supports(ADCS_FEATURE))
+	{
 		ou->getUser()->setFlag(User::TLS);
 	}
 	
@@ -592,11 +696,11 @@ void DecentralizationManager::handle(AdcCommand::INF, AdcCommand& c) throw()
 		info(ou, response == 2);
 	}
 	
-	if(!nodeList.empty() && (nodeList.size() % (sizeof(CID) + sizeof(uint32_t) + sizeof(uint16_t)) == 0))
+	if(!nodeList.empty() && (nodeList.size() % NODE_ITEM_SIZE == 0))
 	{
 		dcdebug("nodeList size = %d\n", nodeList.size());
 		
-		for(size_t i = 0; i < nodeList.size(); i += sizeof(CID) + sizeof(uint32_t) + sizeof(uint16_t))
+		for(size_t i = 0; i < nodeList.size(); i += NODE_ITEM_SIZE)
 		{
 			CID cid;
 			uint32_t ipnum;
@@ -610,43 +714,22 @@ void DecentralizationManager::handle(AdcCommand::INF, AdcCommand& c) throw()
 			if(cid == ClientManager::getInstance()->getMyCID())
 				continue;
 				
-			OnlineUserPtr u = findNode(cid);
-			if(u == NULL)
+			Node* node = findNode(cid, false);
+			if(node == NULL)
 			{
 				char ipstr[16];
 				sprintf(ipstr, "%ld.%ld.%ld.%ld", (ipnum >> 24) & 0xFF, (ipnum >> 16) & 0xFF, (ipnum >>  8) & 0xFF, ipnum & 0xFF);
 				dcdebug("Found new node %s, IP = %s, port = %d\n", cid.toBase32().c_str(), ipstr, udpPort);
 				
-				OnlineUserPtr newNode = getNode(cid);
-				newNode->getIdentity().setIp(ipstr);				
-				newNode->getIdentity().setUdpPort(Util::toString(udpPort));
+				Node& newNode = getNode(cid);
+				newNode.onlineUser->getIdentity().setIp(ipstr);				
+				newNode.onlineUser->getIdentity().setUdpPort(Util::toString(udpPort));
 				
 				// notify new node that we exist
-				info(newNode, false);
+				info(newNode.onlineUser, false);
 			}
 		}
 	}
-}
-
-void DecentralizationManager::handle(AdcCommand::QUI, AdcCommand& c) throw()
-{
-	if(c.getParameters().empty())
-		return;
-		
-	OnlineUserPtr ou = NULL;
-	
-	{
-		Lock l(cs);
-		CIDMap::iterator i = nodes.find(CID(c.getParam(0)));
-		if(i == nodes.end())
-			return;
-		ou = i->second;
-		nodes.erase(i);
-		
-		availableBytes -= ou->getIdentity().getBytesShared();
-	}	
-	
-	ClientManager::getInstance()->putOffline(ou.get(), true);
 }
 
 void DecentralizationManager::handle(AdcCommand::SCH, AdcCommand& c) throw()
@@ -656,11 +739,50 @@ void DecentralizationManager::handle(AdcCommand::SCH, AdcCommand& c) throw()
 	
 	CID cid = CID(c.getParam(0));
 	
-	OnlineUserPtr ou = findNode(cid);
-	if(ou == NULL) return;
+	Node* node = findNode(cid);
+	if(node == NULL)
+	{
+		string ip, udpport;
+		if(c.getParam("I4", 0, ip) && c.getParam("U4", 0, udpport))
+		{
+			// fine, it's forwarded packet
+			node = &getNode(cid);
+			node->onlineUser->getIdentity().setIp(ip);
+			node->onlineUser->getIdentity().setUdpPort(udpport);
+			
+			// TODO: should we require node's info now?
+		}
+		else
+		{
+			return;
+		}
+	}
 	
 	c.getParameters().erase(c.getParameters().begin());
 	SearchManager::getInstance()->respond(c, cid);
+	
+	string dist;
+	if(c.getParam("DI", 0, dist) && Util::toInt(dist) > 0)
+	{
+		// fine, this search request can be forwarded to next perfect node
+		for(StringIter i = c.getParameters().begin(); i != c.getParameters().end(); ++i)
+		{
+			if(AdcCommand::toCode((*i).c_str()) == AdcCommand::toCode("DI"))
+			{
+				c.getParameters().erase(i);
+				break;
+			}
+		}		
+		c.addParam("DI", Util::toString(Util::toInt(dist) - 1)); // lower the distance
+		
+		vector<OnlineUserPtr> perfectNodes;
+		findPerfectNodes(perfectNodes, cid);
+		
+		for(vector<OnlineUserPtr>::const_iterator i = perfectNodes.begin(); i != perfectNodes.end(); i++)
+		{
+			send(c, *i, cid);
+		}		
+	}
 }
 
 void DecentralizationManager::handle(AdcCommand::RES, AdcCommand& c) throw()
@@ -668,10 +790,10 @@ void DecentralizationManager::handle(AdcCommand::RES, AdcCommand& c) throw()
 	if(c.getParameters().empty())
 		return;
 		
-	OnlineUserPtr ou = findNode(CID(c.getParam(0)));
-	if(ou == NULL) return;
-		
-	SearchManager::getInstance()->onRES(c, ou->getUser());
+	Node* node = findNode(CID(c.getParam(0)));
+	if(node == NULL) return;
+	
+	SearchManager::getInstance()->onRES(c, node->onlineUser->getUser());
 }
 
 void DecentralizationManager::handle(AdcCommand::PSR, AdcCommand& c) throw()
@@ -679,10 +801,10 @@ void DecentralizationManager::handle(AdcCommand::PSR, AdcCommand& c) throw()
 	if(c.getParameters().empty())
 		return;
 		
-	OnlineUserPtr ou = findNode(CID(c.getParam(0)));
-	if(ou == NULL) return;
-		
-	SearchManager::getInstance()->onPSR(c, ou->getUser());		
+	Node* node = findNode(CID(c.getParam(0)));
+	if(node == NULL) return;
+	
+	SearchManager::getInstance()->onPSR(c, node->onlineUser->getUser());		
 }
 
 void DecentralizationManager::handle(AdcCommand::MSG, AdcCommand& c) throw()
@@ -690,10 +812,10 @@ void DecentralizationManager::handle(AdcCommand::MSG, AdcCommand& c) throw()
 	if(c.getParameters().empty())
 		return;
 		
-	OnlineUserPtr from = findNode(CID(c.getParam(0)));
+	Node* from = findNode(CID(c.getParam(0)));
 	if(from == NULL)
 		return;
-	
+		
 	// TODO fire(ClientListener::PrivateMessage(), this, *from, to, replyTo, c.getParam(1), c.hasFlag("ME", 1));
 }
 
@@ -706,6 +828,36 @@ void DecentralizationManager::on(TimerManagerListener::Second, uint64_t aTick) t
 	if(searchQueue.pop(s))
 	{
 		search(s.sizeType, s.size, s.fileType , s.query, s.token);
+	}
+}
+
+void DecentralizationManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
+{
+	vector<OnlineUserPtr> expiredNodes;
+	
+	{ // check node expiration
+		Lock l(cs);
+		for(CIDIter i = nodes.begin(); i != nodes.end(); i++)
+		{
+			if(i->second.expires >= aTick)
+				expiredNodes.push_back(i->second.onlineUser);
+		}
+	}
+	
+	// now remove expired nodes
+	for(vector<OnlineUserPtr>::const_iterator i = expiredNodes.begin(); i != expiredNodes.end(); i++)
+	{
+		const OnlineUserPtr& ou = *i;
+	
+		{
+			Lock l(cs);
+			dcassert(nodes.find(ou->getUser()->getCID()) != nodes.end());
+			nodes.erase(nodes.find(ou->getUser()->getCID()));
+			
+			availableBytes -= ou->getIdentity().getBytesShared();
+		}	
+	
+		ClientManager::getInstance()->putOffline(ou.get(), true);
 	}
 }
 

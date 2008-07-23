@@ -70,9 +70,9 @@ public:
 private:
 	friend class ClientManager;
 	enum SupportFlags {
-		SUPPORTS_USERCOMMAND = 0x01,
-		SUPPORTS_NOGETINFO = 0x02,
-		SUPPORTS_USERIP2 = 0x04
+		SUPPORTS_USERCOMMAND	= 0x01,
+		SUPPORTS_NOGETINFO		= 0x02,
+		SUPPORTS_USERIP2		= 0x04
 	};	
 
 	mutable CriticalSection cs;

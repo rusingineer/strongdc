@@ -606,6 +606,10 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 				if(BOOLSETTING(COMPRESS_TRANSFERS))
 					feat.push_back("GetZBlock");
+					
+				if(CryptoManager::getInstance()->TLSOk() && !getStealth())
+					feat.push_back("TLS");
+					
 				supports(feat);
 			}
 
@@ -816,7 +820,7 @@ void NmdcHub::connectToMe(const OnlineUser& aUser) {
 	ConnectionManager::getInstance()->nmdcExpect(nick, getMyNick(), getHubUrl());
 	ConnectionManager::iConnToMeCount++;
 	
-	bool secure = CryptoManager::getInstance()->TLSOk() && aUser.getUser()->isSet(User::TLS);
+	bool secure = CryptoManager::getInstance()->TLSOk() && aUser.getUser()->isSet(User::TLS) && !getStealth();
 	uint16_t port = secure ? ConnectionManager::getInstance()->getSecurePort() : ConnectionManager::getInstance()->getPort();
 	send("$ConnectToMe " + nick + " " + getLocalIp() + ":" + Util::toString(port) + (secure ? "S" : "") + "|");
 }

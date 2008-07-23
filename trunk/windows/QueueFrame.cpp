@@ -225,6 +225,8 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 						tmp += TSTRING(SOURCE_TOO_OLD);						
 					} else if(j->isSet(QueueItem::Source::FLAG_NO_NEED_PARTS)) {
 						tmp += TSTRING(NO_NEEDED_PART);
+					} else if(j->isSet(QueueItem::Source::FLAG_UNTRUSTED)) {
+						tmp += TSTRING(CERTIFICATE_NOT_TRUSTED);
 					}
 					tmp += _T(')');
 				}
@@ -811,6 +813,8 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 							nick += _T(" (") + TSTRING(SOURCE_TOO_OLD) + _T(")");
 						} else if(i->isSet(QueueItem::Source::FLAG_SLOW_SOURCE)) {
 							nick += _T(" (") + TSTRING(SLOW_USER) + _T(")");
+						} else if(i->isSet(QueueItem::Source::FLAG_UNTRUSTED)) {
+							nick += _T(" (") + TSTRING(CERTIFICATE_NOT_TRUSTED) + _T(")");
 						}
 						mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 						mi.fType = MFT_STRING;

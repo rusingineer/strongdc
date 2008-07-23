@@ -166,7 +166,8 @@ public:
 private:
 	PrivateFrame(const OnlineUserPtr& replyTo_) : replyTo(replyTo_), 
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
-		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) { }
+		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP),
+		ctrlClientContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) { }
 	
 	~PrivateFrame() { }
 
