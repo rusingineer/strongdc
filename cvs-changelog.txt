@@ -1,3 +1,16 @@
+** svn412
+	changed default URL to client profiles
+	fixed graphics on 16-bit color depth
+	tab key switching works in PM
+	some DC++ BZR merge
+	fixed too many "Requesting" messages
+	ctrl+m userlist's shortcut to send PM
+	fixed losing focus in settings' tree
+	fixes for URL parsing in chat
+	advertising NMDC TLS support
+	removed mess which stayed there from czdc bugs
+	continued work on decentralized network
+
 ** svn411
 	used magnet icon from ApexDC++
 	fast speed optimization for regex library

@@ -152,7 +152,7 @@ void ConnectionManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 				} 
 				
 				if(	cqi->getUser()->isSet(User::PASSIVE) &&
-					!ClientManager::getInstance()->isActive(ClientManager::getInstance()->getHubUrl(cqi->getUser()))) {
+					!ClientManager::getInstance()->isActive(Util::emptyString)) { // TODO: get hub url
 					passiveUsers.push_back(cqi->getUser());
 					removed.push_back(cqi);
 					continue;
@@ -172,7 +172,7 @@ void ConnectionManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 
 					if(cqi->getState() == ConnectionQueueItem::WAITING) {
 						if(startDown) {
-							cqi->setState(ConnectionQueueItem::CONNECTING);
+							cqi->setState(ConnectionQueueItem::CONNECTING);							
 							ClientManager::getInstance()->connect(cqi->getUser(), cqi->getToken());
 							fire(ConnectionManagerListener::StatusChanged(), cqi);
 							attempts++;
@@ -251,6 +251,7 @@ int ConnectionManager::Server::run() throw() {
 					LogManager::getInstance()->message("Connectivity restored"); // TODO: translate
 					failed = false;
 				}
+				break;
 			} catch(const SocketException& e) {
 				dcdebug("ConnectionManager::Server::run Stopped listening: %s\n", e.getError().c_str());
 
@@ -452,7 +453,7 @@ void ConnectionManager::on(AdcCommand::STA, UserConnection*, const AdcCommand& /
 void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aSource) throw() {
 	if(aSource->isSecure() && !aSource->isTrusted() && !BOOLSETTING(ALLOW_UNTRUSTED_CLIENTS)) {
 		putConnection(aSource);
-		LogManager::getInstance()->message(STRING(CERTIFICATE_NOT_TRUSTED));
+		QueueManager::getInstance()->removeSource(aSource->getUser(), QueueItem::Source::FLAG_UNTRUSTED);
 		return;
 	}
 
@@ -551,7 +552,6 @@ void ConnectionManager::on(UserConnectionListener::CLock, UserConnection* aSourc
 		// Alright, we have an extended protocol, set a user flag for this user and refresh his info...
 		if( (aPk.find("DCPLUSPLUS") != string::npos) && aSource->getUser() && !aSource->getUser()->isSet(User::DCPLUSPLUS)) {
 			aSource->getUser()->setFlag(User::DCPLUSPLUS);
-			ClientManager::getInstance()->updateUser(aSource->getUser());
 		}
 		StringList defFeatures = features;
 		if(BOOLSETTING(COMPRESS_TRANSFERS)) {

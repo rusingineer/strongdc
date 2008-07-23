@@ -650,7 +650,7 @@ bool QueueManager::addSource(QueueItem* qi, UserPtr aUser, Flags::MaskType addBa
 
 	qi->addSource(aUser);
 
-	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(ClientManager::getInstance()->getHubUrl(aUser))) {
+	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(Util::emptyString)) { // TODO: get hub url
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
 	} else {

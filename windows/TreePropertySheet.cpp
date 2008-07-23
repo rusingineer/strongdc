@@ -189,6 +189,8 @@ LRESULT TreePropertySheet::onSelChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /* b
 		if(HwndToIndex(GetActivePage()) != page)
 			SetActivePage(page);
 	}
+	
+	ctrlTree.SetFocus();
 	return 0;
 }	
 

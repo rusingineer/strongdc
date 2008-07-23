@@ -117,6 +117,7 @@ int SearchManager::run() {
 					LogManager::getInstance()->message("Search enabled again"); // TODO: translate
 					failed = false;
 				}
+				break;
 			} catch(const SocketException& e) {
 				dcdebug("SearchManager::run Stopped listening: %s\n", e.getError().c_str());
 
@@ -376,6 +377,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 		}
 	}
 
+	string url;
 	if(!from || from == ClientManager::getInstance()->getMe()) {
 		// for NMDC support
 		
@@ -383,7 +385,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 			return;
 		}
 		
-		string url = ClientManager::getInstance()->findHub(hubIpPort);
+		url = ClientManager::getInstance()->findHub(hubIpPort);
 		from = ClientManager::getInstance()->findUser(nick, url);
 		if(!from) {
 			// Could happen if hub has multiple URLs / IPs
@@ -403,7 +405,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 	}
 
 	PartsInfo outPartialInfo;
-	QueueItem::PartialSource ps(from->isNMDC() ? ClientManager::getInstance()->getMyNMDCNick(from) : Util::emptyString, hubIpPort, remoteIp, udpPort);
+	QueueItem::PartialSource ps(from->isNMDC() ? ClientManager::getInstance()->getMyNick(url) : Util::emptyString, hubIpPort, remoteIp, udpPort);
 	ps.setPartialInfo(partialInfo);
 
 	QueueManager::getInstance()->handlePartialResult(from, TTHValue(tth), ps, outPartialInfo);
@@ -413,7 +415,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 			AdcCommand cmd = SearchManager::getInstance()->toPSR(false, ps.getMyNick(), hubIpPort, tth, outPartialInfo);
 			ClientManager::getInstance()->send(cmd, from->getCID());
 		} catch(...) {
-			dcdebug("Partial search caught error\n");		
+			dcdebug("Partial search caught error\n");
 		}
 	}
 

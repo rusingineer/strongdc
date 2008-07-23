@@ -189,6 +189,7 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 		updateCounts(false);
 	} else {
 		if(u->getIdentity().isSet("D4")) {
+			u->getIdentity().setUdpPort(u->getIdentity().get("D4"));
 			DecentralizationManager::getInstance()->info(u, true);
 		}
 	}

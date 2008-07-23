@@ -42,8 +42,6 @@ public:
 	Client* getClient(const string& aHubURL);
 	void putClient(Client* aClient);
 
-	size_t getUserCount() const;
-	int64_t getAvailable() const;
 	StringList getHubs(const CID& cid) const;
 	StringList getHubNames(const CID& cid) const;
 	StringList getNicks(const CID& cid) const;
@@ -70,7 +68,8 @@ public:
 	OnlineUserPtr findOnlineUser(const CID& cid) const throw();
 	
 	void updateNick(const UserPtr& user, const string& nick) throw();
-
+	string getMyNick(const string& hubUrl) const;
+	
 	void setIPUser(const UserPtr& user, const string& IP, uint16_t udpPort = 0) {
 		if(IP.empty())
 			return;
@@ -84,71 +83,6 @@ public:
 		}
 	}	
 	
-	string getMyNMDCNick(const UserPtr& p) const {
-		Lock l(cs);
-		OnlineIterC i = onlineUsers.find(p->getCID());
-		if(i != onlineUsers.end()) {
-			return i->second->getClient().getMyNick();
-		}
-		return Util::emptyString;
-	}
-
-	void reportUser(const UserPtr& p) {
-		string nick; string report;
-		Client* c;
-		{
-			Lock l(cs);
-			OnlineIterC i = onlineUsers.find(p->getCID());
-			if(i == onlineUsers.end()) return;
-
-			nick = i->second->getIdentity().getNick();
-			report = i->second->getIdentity().getReport();
-			c = &i->second->getClient();
-		}
-		c->cheatMessage("*** Info on " + nick + " ***" + "\r\n" + report + "\r\n");
-	}
-
-	void updateUser(const UserPtr& p) {
-		OnlineUser* ou;
-		{
-			Lock l(cs);
-			OnlineIterC i = onlineUsers.find(p->getCID());
-			if(i == onlineUsers.end()) return;
-
-			ou = i->second;
-		}
-		ou->getClient().updated(ou);
-	}
-
-	void setPkLock(const UserPtr& p, const string& aPk, const string& aLock) {
-		Lock l(cs);
-		OnlineIterC i = onlineUsers.find(p->getCID());
-		if(i == onlineUsers.end()) return;
-		i->second->getIdentity().set("PK", aPk);
-		i->second->getIdentity().set("LO", aLock);
-	}
-
-	void setSupports(const UserPtr& p, const string& aSupports) {
-		Lock l(cs);
-		OnlineIterC i = onlineUsers.find(p->getCID());
-		if(i == onlineUsers.end()) return;
-		i->second->getIdentity().set("SU", aSupports);
-	}
-
-	void setGenerator(const UserPtr& p, const string& aGenerator) {
-		Lock l(cs);
-		OnlineIterC i = onlineUsers.find(p->getCID());
-		if(i == onlineUsers.end()) return;
-		i->second->getIdentity().set("GE", aGenerator);
-	}
-
-	void setUnknownCommand(const UserPtr& p, const string& aUnknownCommand) {
-		Lock l(cs);
-		OnlineIterC i = onlineUsers.find(p->getCID());
-		if(i == onlineUsers.end()) return;
-		i->second->getIdentity().set("UC", aUnknownCommand);
-	}
-
 	bool isOp(const UserPtr& aUser, const string& aHubUrl) const;
 	bool isStealth(const string& aHubUrl) const;
 
@@ -172,8 +106,6 @@ public:
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }
 
-	const string& getHubUrl(const UserPtr& aUser) const;
-
 	const Client::List& getClients() const { return clients; }
 
 	CID getMyCID();
@@ -185,6 +117,14 @@ public:
 	void connectionTimeout(const UserPtr& p);
 	void checkCheating(const UserPtr& p, DirectoryListing* dl);
 	void setCheating(const UserPtr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
+	
+	// NMDC functions only!!!
+	void setPkLock(const UserPtr& p, const string& aPk, const string& aLock);
+	void setSupports(const UserPtr& p, const string& aSupports);
+	
+	void setGenerator(const UserPtr& p, const string& aGenerator);
+	void setUnknownCommand(const UserPtr& p, const string& aUnknownCommand);
+
 
 private:
 
@@ -198,12 +138,12 @@ private:
 	typedef OnlineMap::const_iterator OnlineIterC;
 	typedef pair<OnlineIter, OnlineIter> OnlinePair;
 	typedef pair<OnlineIterC, OnlineIterC> OnlinePairC;
-
+	
 	Client::List clients;
 	mutable CriticalSection cs;
 	
 	UserMap users;
-	OnlineMap onlineUsers;
+	OnlineMap onlineUsers;	
 	NickMap nicks;
 
 	UserPtr me;

@@ -66,7 +66,18 @@ HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
 	BITMAP bm = { 0 };
 	GetObject(m_EmotionBmp, sizeof(bm), &bm);
 
-	HBITMAP DirectBitmap = CreateBitmap(bm.bmWidth, bm.bmHeight, 1, 32, NULL);
+	BITMAPINFO bmi;
+	ZeroMemory(&bmi, sizeof(BITMAPINFO));
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = bm.bmWidth;
+	bmi.bmiHeader.biHeight = bm.bmHeight;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = bm.bmBitsPixel;
+	bmi.bmiHeader.biCompression = BI_RGB;
+	bmi.bmiHeader.biSizeImage = bm.bmWidth * bm.bmHeight * (bm.bmBitsPixel / 8);
+	
+	VOID *pvBits;
+	HBITMAP DirectBitmap = CreateDIBSection(memDC, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
 
 	SelectObject(memDC, m_EmotionBmp);
 	SelectObject(DirectDC, DirectBitmap);

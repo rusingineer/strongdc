@@ -223,7 +223,7 @@ static const toolbarButton ToolbarButtons[] = {
 	{IDC_NOTEPAD, 16, true, ResourceManager::MENU_NOTEPAD},
 	{IDC_AWAY, 17, true, ResourceManager::AWAY},
 	{IDC_SHUTDOWN, 18, true, ResourceManager::SHUTDOWN},
-	{IDC_LIMITER, 19, true, ResourceManager::SETCZDC_ENABLE_LIMITING},
+	{IDC_LIMITER, 19, true, ResourceManager::SETSTRONGDC_ENABLE_LIMITING},
 	{IDC_UPDATE, 20, false, ResourceManager::UPDATE_CHECK},
 	{IDC_DISABLE_SOUNDS, 21, true, ResourceManager::DISABLE_SOUNDS}
 };

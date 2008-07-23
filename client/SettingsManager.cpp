@@ -307,7 +307,7 @@ SettingsManager::SettingsManager()
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);
 	setDefault(DEBUG_COMMANDS, false);
-	setDefault(UPDATE_URL, "http://dcaml.sourceforge.net/files/");	
+	setDefault(UPDATE_URL, "http://dcaml.svn.sourceforge.net/svnroot/dcaml/");	
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
 	setDefault(SEARCH_PASSIVE, false);

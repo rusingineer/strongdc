@@ -340,8 +340,8 @@ string WebServerManager::getSearch() {
 	const Client::List& clients = clientMgr->getClients();
 	sClients.clear();
 	
-	for(Client::List::const_iterator it = clients.begin(); it != clients.end(); ++it) {
-		Client* client = *it;
+	for(Client::Iter it = clients.begin(); it != clients.end(); ++it) {
+		Client* client = it->second;
 		if (!client->isConnected())
 			continue;
 		

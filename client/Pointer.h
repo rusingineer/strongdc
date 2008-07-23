@@ -39,6 +39,7 @@ public:
 			delete this;
 		}
 	}
+
 	bool unique() const throw() {
 		return (ref == 1);
 	}

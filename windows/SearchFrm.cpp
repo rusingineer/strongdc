@@ -1317,10 +1317,10 @@ void SearchFrame::initHubs() {
 
 	const Client::List& clients = clientMgr->getClients();
 
-	Client::List::const_iterator it;
-	Client::List::const_iterator endIt = clients.end();
+	Client::Iter it;
+	Client::Iter endIt = clients.end();
 	for(it = clients.begin(); it != endIt; ++it) {
-		Client* client = *it;
+		Client* client = it->second;
 		if (!client->isConnected())
 			continue;
 

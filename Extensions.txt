@@ -30,6 +30,18 @@ determinism of the protocol.
 
 *** Client-Client communication ***
 
+Feature: TLS Encryption
+Since: StrongDC++ 2.2
+
+Purpose: To encrypt client-client communication in NMDC protocol.
+
+Usage: Client advertises the support as a flag 0x10 in $MyInfo.
+When client supports this, it means we can send our TLS port in
+$ConnectToMe where we append 'S' char after it. This indicates
+that connection will be established using TLS socket.
+
+--------------------------------------------------------------------
+
 Feature: Supports
 Since: 0.17
 
