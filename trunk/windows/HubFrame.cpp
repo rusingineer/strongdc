@@ -2199,10 +2199,7 @@ LRESULT HubFrame::onKeyDownUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*
 					PrivateFrame::openWindow(ctrlUsers.getItemData(i));
 				}				
 				break;
-			case 'K':
-				//while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				//}					
-				break;
+			// TODO: add others
 		}
 	}
 	return 0;

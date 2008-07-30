@@ -27,7 +27,7 @@
 #include "ShareManager.h"
 #include "CryptoManager.h"
 #include "ConnectionManager.h"
-#include "DecentralizationManager.h"
+
 
 #include "Socket.h"
 #include "UserCommand.h"
@@ -39,7 +39,7 @@
 namespace dcpp {
 
 NmdcHub::NmdcHub(const string& aHubURL) : Client(aHubURL, '|', false), supportFlags(0),
-	lastBytesShared(0), lastUpdate(0)
+	lastBytesShared(0), lastUpdate(0), userCount(0)
 {
 }
 
@@ -62,11 +62,13 @@ void NmdcHub::connect(const OnlineUser& aUser, const string&) {
 
 void NmdcHub::refreshUserList(bool refreshOnly) {
 	if(refreshOnly) {
-		Lock l(cs);
-
 		OnlineUserList v;
-		for(NickIter i = users.begin(); i != users.end(); ++i) {
-			v.push_back(i->second);
+		ClientManager::OnlineMap users;
+		ClientManager::getInstance()->getOnlineUsers(users);
+
+		for(ClientManager::OnlineMap::const_iterator i = users.begin(); i != users.end(); ++i) {
+			if(&i->second->getClient() == this)
+				v.push_back(i->second);
 		}
 		fire(ClientListener::UsersUpdated(), this, v);
 	} else {
@@ -76,14 +78,11 @@ void NmdcHub::refreshUserList(bool refreshOnly) {
 }
 
 OnlineUser& NmdcHub::getUser(const string& aNick) {
-	OnlineUser* u = NULL;
-	{
-		Lock l(cs);
-
-		NickIter i = users.find(aNick);
-		if(i != users.end())
-			return *i->second;
-	}
+	OnlineUserPtr u = ClientManager::getInstance()->findOnlineUser(
+		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMyCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
+		
+	if(u != NULL)
+		return *u;
 
 	UserPtr p;
 	if(aNick == getCurrentNick()) {
@@ -92,16 +91,14 @@ OnlineUser& NmdcHub::getUser(const string& aNick) {
 		p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
 	}
 
-	{
-		Lock l(cs);
-		u = users.insert(make_pair(aNick, new OnlineUser(p, *this, 0))).first->second;
-		u->getIdentity().setNick(aNick);
-		if(u->getUser() == getMyIdentity().getUser()) {
-			setMyIdentity(u->getIdentity());
-		}
+	userCount++;
+	u = new OnlineUser(p, *this, 0);
+	u->getIdentity().setNick(aNick);
+	if(u->getUser() == getMyIdentity().getUser()) {
+		setMyIdentity(u->getIdentity());
 	}
 	
-	ClientManager::getInstance()->putOnline(u);
+	ClientManager::getInstance()->putOnline(u.get());
 	return *u;
 }
 
@@ -114,39 +111,32 @@ void NmdcHub::supports(const StringList& feat) {
 }
 
 OnlineUserPtr NmdcHub::findUser(const string& aNick) const {
-	Lock l(cs);
-	NickIter i = users.find(aNick);
-	return i == users.end() ? NULL : i->second;
+	return ClientManager::getInstance()->findOnlineUser(
+		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMyCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
 }
 
 void NmdcHub::putUser(const string& aNick) {
-	OnlineUser* ou = NULL;
-	{
-		Lock l(cs);
-		NickIter i = users.find(aNick);
-		if(i == users.end())
-			return;
-		ou = i->second;
-		users.erase(i);
+	OnlineUserPtr ou = ClientManager::getInstance()->findOnlineUser(
+		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMyCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
+	if(ou == NULL)
+		return;
 
-		availableBytes -= ou->getIdentity().getBytesShared();
-	}
-	ClientManager::getInstance()->putOffline(ou);
+	userCount--;
+	availableBytes -= ou->getIdentity().getBytesShared();
+
+	ClientManager::getInstance()->putOffline(ou.get());
 	ou->dec();
 }
 
 void NmdcHub::clearUsers() {
-	NickMap u2;
-	
-	{
-		Lock l(cs);
-		u2.swap(users);
-		availableBytes = 0;
-	}
+	ClientManager::OnlineMap users;
+	ClientManager::getInstance()->getOnlineUsers(users);
 
-	for(NickIter i = u2.begin(); i != u2.end(); ++i) {
-		ClientManager::getInstance()->putOffline(i->second);
-		i->second->dec();
+	for(ClientManager::OnlineMap::const_iterator i = users.begin(); i != users.end(); ++i) {
+		if(&i->second->getClient() == this) {
+			ClientManager::getInstance()->putOffline(i->second);
+			i->second->dec();
+		}
 	}
 }
 
@@ -603,9 +593,6 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				feat.push_back("UserIP2");
 				feat.push_back("TTHSearch");
 				feat.push_back("ZPipe0");
-
-				if(BOOLSETTING(COMPRESS_TRANSFERS))
-					feat.push_back("GetZBlock");
 					
 				if(CryptoManager::getInstance()->TLSOk() && !getStealth())
 					feat.push_back("TLS");
@@ -880,9 +867,6 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		if (CryptoManager::getInstance()->TLSOk()) {
 			StatusMode |= Identity::TLS;
 		}
-		if (DecentralizationManager::getInstance()->needsBootstrap()) {
-			StatusMode |= Identity::DSN;
-		}
 	}
 
 	if (BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
@@ -916,19 +900,13 @@ void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& 
 	while((i = tmp.find(' ')) != string::npos) {
 		tmp[i] = '$';
 	}
-	size_t BUF_SIZE;
 	string tmp2;
 	if(isActive() && !BOOLSETTING(SEARCH_PASSIVE)) {
-		string x = getLocalIp();
-		BUF_SIZE = x.length() + aString.length() + 64;
-		tmp2.resize(BUF_SIZE);
-		tmp2.resize(snprintf(&tmp2[0], tmp2.size(), "$Search %s:%d %c?%c?%I64d?%d?%s|", x.c_str(), (int)SearchManager::getInstance()->getPort(), c1, c2, aSize, aFileType+1, tmp.c_str()));
+		tmp2 = getLocalIp() + ':' + Util::toString(SearchManager::getInstance()->getPort());
 	} else {
-		BUF_SIZE = getMyNick().length() + aString.length() + 64;
-		tmp2.resize(BUF_SIZE);
-		tmp2.resize(snprintf(&tmp2[0], tmp2.size(), "$Search Hub:%s %c?%c?%I64d?%d?%s|", fromUtf8(getMyNick()).c_str(), c1, c2, aSize, aFileType+1, tmp.c_str()));
+		tmp2 = "Hub:" + fromUtf8(getMyNick());
 	}
-	send(tmp2);
+	send("$Search " + tmp2 + ' ' + c1 + '?' + c2 + '?' + Util::toString(aSize) + '?' + Util::toString(aFileType+1) + '?' + tmp + '|');
 }
 
 string NmdcHub::validateMessage(string tmp, bool reverse) {
@@ -984,7 +962,6 @@ void NmdcHub::privateMessage(const OnlineUserPtr& aUser, const string& aMessage,
 
 	send("$To: " + fromUtf8(aUser->getIdentity().getNick()) + " From: " + fromUtf8(getMyNick()) + " $" + fromUtf8(escape("<" + getMyNick() + "> " + (thirdPerson ? "/me " + aMessage : aMessage))) + "|");
 	// Emulate a returning message...
-	Lock l(cs);
 	OnlineUserPtr ou = findUser(getMyNick());
 	if(ou) {
 		fire(ClientListener::PrivateMessage(), this, *ou, aUser, ou, aMessage, thirdPerson);

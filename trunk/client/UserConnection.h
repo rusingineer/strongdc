@@ -41,7 +41,6 @@ class UserConnection : public Speaker<UserConnectionListener>,
 public:
 	friend class ConnectionManager;
 	
-	static const string FEATURE_GET_ZBLOCK;
 	static const string FEATURE_MINISLOTS;
 	static const string FEATURE_XML_BZLIST;
 	static const string FEATURE_ADCGET;

@@ -31,7 +31,6 @@
 #include "CryptoManager.h"
 #include "ResourceManager.h"
 #include "LogManager.h"
-#include "DecentralizationManager.h"
 
 namespace dcpp {
 
@@ -187,11 +186,6 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 		setAutoReconnect(true);
 		setMyIdentity(u->getIdentity());
 		updateCounts(false);
-	} else {
-		if(u->getIdentity().isSet("D4")) {
-			u->getIdentity().setUdpPort(u->getIdentity().get("D4"));
-			DecentralizationManager::getInstance()->info(u, true);
-		}
 	}
 
 	if(u->getIdentity().isHub()) {
@@ -741,10 +735,6 @@ void AdcHub::info(bool /*alwaysSend*/) {
 		addParam(lastInfoMap, c, "DS", Util::emptyString);
 	}
 
-	if (DecentralizationManager::getInstance()->needsBootstrap()) {
-		addParam(lastInfoMap, c, "D4", Util::toString(SETTING(TLS_PORT)));
-	}
-	
 	string su;
 	if(CryptoManager::getInstance()->TLSOk()) {
 		su += ADCS_FEATURE + ",";

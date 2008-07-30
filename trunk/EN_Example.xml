@@ -104,7 +104,6 @@
 		<String Name="CreatingHash">Hashing</String>
 		<String Name="CurrentVersion">Current version</String>
 		<String Name="DataRetrieved">Data retrieved</String>
-		<String Name="DecentralizedNetwork">Decentralized network</String>
 		<String Name="DecompressionError">Error during decompression</String>
 		<String Name="Default">Default</String>
 		<String Name="Description">Description</String>
@@ -139,10 +138,9 @@
 		<String Name="DownloadingHubList">Downloading public hub list...</String>
 		<String Name="DownloadingList">Downloading list...</String>
 		<String Name="DuplicateSource">Duplicate source</String>
-		<String Name="Eb">EB</String>
+		<String Name="Eb">EiB</String>
 		<String Name="EditAccel">&amp;Edit</String>
 		<String Name="Email">E-Mail</String>
-		<String Name="EnableDecentralizedNetwork">Enable decentralized network</String>
 		<String Name="EnableMultiSource">Enable segmented downloads</String>
 		<String Name="EnterNick">Please enter a nickname in the settings dialog!</String>
 		<String Name="EnterPassword">Please enter a password</String>
@@ -204,7 +202,7 @@
 		<String Name="Folder">Folder</String>
 		<String Name="Forbidden">Forbidden</String>
 		<String Name="ForceAttempt">Force attempt</String>
-		<String Name="Gb">GB</String>
+		<String Name="Gb">GiB</String>
 		<String Name="GenerateCertificates">Generate certificates</String>
 		<String Name="GetFileList">Get file list</String>
 		<String Name="GetUserResponses">Get user response</String>
@@ -270,8 +268,8 @@
 		<String Name="JoinShowingOff">Join/part showing off</String>
 		<String Name="JoinShowingOn">Join/part showing on</String>
 		<String Name="Joins">Joins: </String>
-		<String Name="Kb">kB</String>
-		<String Name="Kbps">kB/s</String>
+		<String Name="Kb">KiB</String>
+		<String Name="Kbps">KiB/s</String>
 		<String Name="KickUser">Kick user(s)</String>
 		<String Name="KickUserFile">Kick user(s) with filename</String>
 		<String Name="LargerTargetFileExists">A file of equal or larger size already exists at the target location</String>
@@ -313,9 +311,9 @@
 		<String Name="MaxUsers">Max Users</String>
 		<String Name="Maxhubs">Max hubs</String>
 		<String Name="Maxusers">Max users</String>
-		<String Name="Mb">MB</String>
+		<String Name="Mb">MiB</String>
 		<String Name="Mbitsps">MBits/s</String>
-		<String Name="Mbps">MB/s</String>
+		<String Name="Mbps">MiB/s</String>
 		<String Name="MenuAbout">About StrongDC++</String>
 		<String Name="MenuAdlSearch">ADL Search</String>
 		<String Name="MenuArrange">Arrange icons</String>
@@ -426,7 +424,7 @@
 		<String Name="Pause">Pause</String>
 		<String Name="PauseSearch">Pause Search</String>
 		<String Name="Paused">Paused</String>
-		<String Name="Pb">PB</String>
+		<String Name="Pb">PiB</String>
 		<String Name="Picture">Picture</String>
 		<String Name="Play">Play</String>
 		<String Name="PopupDownloadFailed">Show popup on download failed</String>
@@ -618,7 +616,7 @@
 		<String Name="SettingsDownloadLimits">Limits</String>
 		<String Name="SettingsDownloads">Downloads</String>
 		<String Name="SettingsDownloadsMax">Maximum simultaneous downloads (0 = infinite)</String>
-		<String Name="SettingsDownloadsSpeedPause">No new downloads if speed exceeds (kB/s, 0 = disable)</String>
+		<String Name="SettingsDownloadsSpeedPause">No new downloads if speed exceeds (KiB/s, 0 = disable)</String>
 		<String Name="SettingsExpandQueue">Automatically expand folders in Queue</String>
 		<String Name="SettingsExtensions">Extensions</String>
 		<String Name="SettingsExternalIp">External / WAN IP</String>
@@ -796,7 +794,7 @@
 		<String Name="Tag">Tag</String>
 		<String Name="TargetRemoved">Target removed</String>
 		<String Name="TargetFilenameTooLong">Target filename too long</String>
-		<String Name="Tb">TB</String>
+		<String Name="Tb">TiB</String>
 		<String Name="TcpPortBusy">Unable to open TCP/TLS port. File transfers will not work correctly until you change settings or turn off any application that might be using the TCP/TLS port</String>
 		<String Name="TextFakepercent">Percent fake share accepted</String>
 		<String Name="TextManual">Manual settings of number of segments</String>
@@ -858,6 +856,7 @@ Default: %H:%M:%S</String>
 		<String Name="UpnpFailedToCreateMappings">Failed to create port mappings. Please set up your NAT yourself.</String>
 		<String Name="UpnpFailedToGetExternalIp">Failed to get external IP via  UPnP. Please set it yourself.</String>
 		<String Name="UpnpFailedToRemoveMappings">Failed to remove port mappings</String>
+		<String Name="UseKademlia">Use hub independent search engine (Kademlia)</String>
 		<String Name="User">User</String>
 		<String Name="UserCmdCommand">Command</String>
 		<String Name="UserCmdContext">Context</String>

@@ -393,10 +393,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\client\DecentralizationManager.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\client\DetectionManager.cpp"
 				>
 			</File>
@@ -675,10 +671,6 @@
 			</File>
 			<File
 				RelativePath=".\client\DebugManager.h"
-				>
-			</File>
-			<File
-				RelativePath=".\client\DecentralizationManager.h"
 				>
 			</File>
 			<File

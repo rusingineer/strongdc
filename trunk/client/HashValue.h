@@ -28,11 +28,6 @@ template<class Hasher>
 struct HashValue : FastAlloc<HashValue<Hasher> >{
 	static const size_t BITS = Hasher::BITS;
 	static const size_t BYTES = Hasher::BYTES;
-
-	struct PtrHash {
-		size_t operator()(const HashValue* rhs) const { return *(size_t*)rhs; }
-		bool operator()(const HashValue* lhs, const HashValue* rhs) const { return (*lhs) == (*rhs); }
-	};
 	
 	HashValue() { }
 	explicit HashValue(uint8_t* aData) { memcpy(data, aData, BYTES); }
@@ -56,6 +51,19 @@ template<typename T>
 struct hash<dcpp::HashValue<T> > {
 	size_t operator()(const dcpp::HashValue<T>& rhs) const { return *(size_t*)rhs.data; }
 };
+
+template<typename T>
+struct hash<dcpp::HashValue<T>* > {
+	size_t operator()(const dcpp::HashValue<T>* rhs) const { return *(size_t*)rhs; }
+};
+
+template<typename T>
+struct equal_to<dcpp::HashValue<T>*> {
+	bool operator()(const dcpp::HashValue<T>* lhs, const dcpp::HashValue<T>* rhs) const {
+		return (*lhs) == (*rhs);
+	}
+};
+
 //}
 }
 

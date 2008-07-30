@@ -204,7 +204,7 @@ private:
 
 	// ClientManagerListener
 	void on(ClientManagerListener::UserUpdated, const OnlineUser& aUser) throw() {
-		if(aUser.getUser() == replyTo->getUser()) {
+		if(aUser.getUser() == replyTo->getUser() && aUser.getClient().getHubUrl() == hubURL) {
 			if(isoffline) {
 				FrameMap::iterator i = frames.find(replyTo);
 				dcassert(i != frames.end());
@@ -213,9 +213,7 @@ private:
 				replyTo = const_cast<OnlineUser*>(&aUser);	
 				frames[replyTo] = this;
 			
-				if(!(aUser.getIdentity().getStatus() & Identity::DSN)) {
-					ctrlClient.setClient(const_cast<Client*>(&aUser.getClient()));
-				}
+				ctrlClient.setClient(const_cast<Client*>(&aUser.getClient()));
 			}
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 		}

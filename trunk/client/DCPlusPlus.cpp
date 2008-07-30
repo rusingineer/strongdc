@@ -40,8 +40,7 @@
 #include "DetectionManager.h"
 #include "WebServerManager.h"
 #include "../windows/PopupManager.h"
-#include "DecentralizationManager.h"
-
+#include "../kademlia/KademliaManager.h"
 /*
 #ifdef _STLP_DEBUG
 void __stl_debug_terminate() {
@@ -108,11 +107,11 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 		(*f)(p, TSTRING(DOWNLOAD_QUEUE));
 	QueueManager::getInstance()->loadQueue();
 	
-	DecentralizationManager::newInstance();
+	kademlia::KademliaManager::newInstance();
 }
 
 void shutdown() {
-	DecentralizationManager::deleteInstance();
+	kademlia::KademliaManager::deleteInstance();
 	
 	TimerManager::getInstance()->shutdown();
 	HashManager::getInstance()->shutdown();

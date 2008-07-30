@@ -59,7 +59,8 @@
 #include "../client/LogManager.h"
 #include "../client/WebServerManager.h"
 #include "../client/Thread.h"
-#include "../client/DecentralizationManager.h"
+
+#include "../kademlia/KademliaManager.h"
 
 
 MainFrame* MainFrame::anyMF = NULL;
@@ -466,7 +467,7 @@ void MainFrame::updateQuickSearches() {
 void MainFrame::startSocket() {
 	SearchManager::getInstance()->disconnect();
 	ConnectionManager::getInstance()->disconnect();
-	DecentralizationManager::getInstance()->disconnect();
+	kademlia::KademliaManager::getInstance()->disconnect();
 
 //	if(ClientManager::getInstance()->isActive()) {
 		try {
@@ -480,7 +481,7 @@ void MainFrame::startSocket() {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}
 		try {
-			DecentralizationManager::getInstance()->listen();
+			kademlia::KademliaManager::getInstance()->listen();
 		} catch(const Exception&) {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}		
@@ -511,10 +512,10 @@ void MainFrame::startUPnP() {
 			ok &= UPnP_UDP->open();
 		}
 
-		if(BOOLSETTING(ENABLE_DECENTRALIZED_NETWORK)) {
-			port = DecentralizationManager::getInstance()->getPort();
+		if(BOOLSETTING(USE_KADEMLIA)) {
+			port = kademlia::KademliaManager::getInstance()->getPort();
 			if(port != 0) {
-				UPnP_DSN.reset(new UPnP( Util::getLocalIp(), "UDP", APPNAME " Decentralized Network Port (" + Util::toString(port) + " UDP)", port));
+				UPnP_DSN.reset(new UPnP( Util::getLocalIp(), "UDP", APPNAME " Kademlia Port (" + Util::toString(port) + " UDP)", port));
 				if (!UPnP_DSN->open())
 				{
 					LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
@@ -691,7 +692,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 					ctrlStatus.SetIcon(9, NULL);
 					isShutdownStatus = false;
 				}
-				ctrlStatus.SetText(9, str[8].c_str());
+				ctrlStatus.SetText(9, _T(""));
 			}
 		}
 	} else if(wParam == AUTO_CONNECT) {
@@ -1418,7 +1419,6 @@ void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		str->push_back(_T("U: ") + Util::formatBytesW(Socket::getTotalUp()));
 		str->push_back(_T("D: [") + Util::toStringW(DownloadManager::getInstance()->getDownloadCount()) + _T("][") + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? (tstring)_T("N") : Util::toStringW((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + _T("k")) + _T("] ") + Util::formatBytesW(downdiff*1000I64/diff) + _T("/s"));
 		str->push_back(_T("U: [") + Util::toStringW(UploadManager::getInstance()->getUploadCount()) + _T("][") + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? (tstring)_T("N") : Util::toStringW((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + _T("k")) + _T("] ") + Util::formatBytesW(updiff*1000I64/diff) + _T("/s"));
-		str->push_back(Util::formatBytesW(DecentralizationManager::getInstance()->getAvailableBytes()));
 		PostMessage(WM_SPEAKER, STATS, (LPARAM)str);
 
 		SettingsManager::getInstance()->set(SettingsManager::TOTAL_UPLOAD, SETTING(TOTAL_UPLOAD) + updiff);
