@@ -35,7 +35,6 @@
 #include "../client/FavoriteManager.h"
 #include "../client/QueueManager.h"
 #include "../client/StringTokenizer.h"
-#include "../client/DecentralizationManager.h"
 
 PrivateFrame::FrameMap PrivateFrame::frames;
 tstring pSelectedLine = Util::emptyStringT;
@@ -95,9 +94,7 @@ void PrivateFrame::gotMessage(const Identity& from, const OnlineUserPtr& to, con
 		p = new PrivateFrame(user);
 		frames[user] = p;
 		
-		if(!(user->getIdentity().getStatus() & Identity::DSN)) {
-			p->ctrlClient.setClient(&user->getClient());
-		}
+		p->ctrlClient.setClient(&user->getClient());
 		p->addLine(from, aMessage);
 
 		if(Util::getAway()) {
@@ -142,10 +139,7 @@ void PrivateFrame::openWindow(const OnlineUserPtr& replyTo, const tstring& msg) 
 		p = new PrivateFrame(replyTo);
 		frames[replyTo] = p;
 		p->CreateEx(WinUtil::mdiClient);
-		
-		if(!(replyTo->getIdentity().getStatus() & Identity::DSN)) {
-			p->ctrlClient.setClient(&replyTo->getClient());
-		}
+		p->ctrlClient.setClient(&replyTo->getClient());
 	} else {
 		p = i->second;
 		if(::IsIconic(p->m_hWnd))
@@ -361,12 +355,8 @@ void PrivateFrame::onEnter()
 }
 
 void PrivateFrame::sendMessage(const tstring& msg, bool thirdPerson) {
-	if(replyTo->getIdentity().getStatus() & Identity::DSN) {
-		DecentralizationManager::getInstance()->privateMessage(replyTo, Text::fromT(msg), thirdPerson);
-	} else {
-		// TODO: does it need locking?
-		replyTo->getClient().privateMessage(replyTo, Text::fromT(msg), thirdPerson);
-	}
+	// TODO: does it need locking?
+	replyTo->getClient().privateMessage(replyTo, Text::fromT(msg), thirdPerson);
 }
 
 LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -571,13 +561,9 @@ void PrivateFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 
 void PrivateFrame::updateTitle() {
 	if(replyTo->getUser()->isOnline()) {
-		if(replyTo->getIdentity().getStatus() & Identity::DSN) {
-			hubName = Text::toT(DecentralizationManager::getInstance()->getName());
-		} else {
-			hubName = Text::toT(replyTo->getClient().getHubName());
-			hubURL = replyTo->getClient().getHubUrl();
-		}
-			
+		hubName = Text::toT(replyTo->getClient().getHubName());
+		hubURL = replyTo->getClient().getHubUrl();
+		
 		unsetIconState();
 		setTabColor(RGB(0, 255,	255));
 		if(isoffline) {

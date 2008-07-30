@@ -39,6 +39,8 @@ class ClientManager : public Speaker<ClientManagerListener>,
 	private TimerManagerListener
 {
 public:
+	typedef unordered_multimap<CID*, OnlineUser*> OnlineMap;
+	
 	Client* getClient(const string& aHubURL);
 	void putClient(Client* aClient);
 
@@ -65,7 +67,9 @@ public:
 	UserPtr findUser(const string& aNick, const string& aHubUrl) const throw() { return findUser(makeCid(aNick, aHubUrl)); }
 	UserPtr findUser(const CID& cid) const throw();
 	UserPtr findLegacyUser(const string& aNick) const throw();
-	OnlineUserPtr findOnlineUser(const CID& cid) const throw();
+	
+	OnlineUserPtr findOnlineUser(const CID& cid, const Client* client = NULL) const throw();
+	void getOnlineUsers(OnlineMap& tmp) const { Lock l(cs); tmp = onlineUsers; }
 	
 	void updateNick(const UserPtr& user, const string& nick) throw();
 	string getMyNick(const string& hubUrl) const;
@@ -75,12 +79,27 @@ public:
 			return;
 			
 		Lock l(cs);
-		OnlinePairC p = onlineUsers.equal_range(user->getCID());
+		OnlinePairC p = onlineUsers.equal_range(const_cast<CID*>(&user->getCID()));
 		for (OnlineIterC i = p.first; i != p.second; i++) {
 			i->second->getIdentity().setIp(IP);
 			if(udpPort > 0)
 				i->second->getIdentity().setUdpPort(Util::toString(udpPort));
 		}
+	}
+	
+	void reportUser(const UserPtr& p) {
+		string nick; string report;
+		Client* c;
+		{
+			Lock l(cs);
+			OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
+			if(i == onlineUsers.end()) return;
+
+			nick = i->second->getIdentity().getNick();
+			report = i->second->getIdentity().getReport();
+			c = &i->second->getClient();
+		}
+		c->cheatMessage("*** Info on " + nick + " ***" + "\r\n" + report + "\r\n");
 	}	
 	
 	bool isOp(const UserPtr& aUser, const string& aHubUrl) const;
@@ -128,12 +147,11 @@ public:
 
 private:
 
-	typedef unordered_map<CID, UserPtr> UserMap;
+	typedef unordered_map<CID*, UserPtr> UserMap;
 	typedef UserMap::iterator UserIter;
 
-	typedef unordered_map<CID, std::string> NickMap;
+	typedef unordered_map<CID*, std::string> NickMap;
 
-	typedef unordered_multimap<CID, OnlineUser*> OnlineMap;
 	typedef OnlineMap::iterator OnlineIter;
 	typedef OnlineMap::const_iterator OnlineIterC;
 	typedef pair<OnlineIter, OnlineIter> OnlinePair;

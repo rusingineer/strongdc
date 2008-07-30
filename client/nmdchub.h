@@ -50,7 +50,7 @@ public:
 	void password(const string& aPass) { send("$MyPass " + fromUtf8(aPass) + "|"); }
 	void info(bool force) { myInfo(force); }
 
-	size_t getUserCount() const { Lock l(cs); return users.size(); }
+	size_t getUserCount() const { return userCount; }
 	
 	string escape(string const& str) const { return validateMessage(str, false); }
 	static string unescape(const string& str) { return validateMessage(str, true); }
@@ -61,9 +61,12 @@ public:
 	void refreshUserList(bool);
 
 	void getUserList(OnlineUserList& list) const {
-		Lock l(cs);
-		for(NickIter i = users.begin(); i != users.end(); i++) {
-			list.push_back(i->second);
+		ClientManager::OnlineMap users;
+		ClientManager::getInstance()->getOnlineUsers(users);
+
+		for(ClientManager::OnlineMap::const_iterator i = users.begin(); i != users.end(); ++i) {
+			if(&i->second->getClient() == this)
+				list.push_back(i->second);
 		}
 	}
 	
@@ -75,16 +78,10 @@ private:
 		SUPPORTS_USERIP2		= 0x04
 	};	
 
-	mutable CriticalSection cs;
-
-	typedef unordered_map<string, OnlineUser*, noCaseStringHash, noCaseStringEq> NickMap;
-	typedef NickMap::const_iterator NickIter;
-
-	NickMap users;
-
 	string lastMyInfo;
 	uint64_t lastUpdate;	
 	int64_t lastBytesShared;
+	size_t userCount;
 	int supportFlags;
 
 	typedef list<pair<string, uint64_t> > FloodMap;

@@ -36,7 +36,7 @@ static const std::string CORAL_SUFFIX = ".nyud.net";
  * @return A string with the content, or empty if download failed
  */
 void HttpConnection::downloadFile(const string& aUrl) {
-	dcassert(Util::findSubString(aUrl, "http://") == 0);
+	dcassert(Util::findSubString(aUrl, "http://") == 0 || Util::findSubString(aUrl, "https://") == 0);
 	currentUrl = aUrl;
 	// Trim spaces
 	while(currentUrl[0] == ' ')
@@ -55,12 +55,13 @@ void HttpConnection::downloadFile(const string& aUrl) {
 		fire(HttpConnectionListener::TypeNormal(), this);
 	}
 
+	bool isSecure = false;
 	if(SETTING(HTTP_PROXY).empty()) {
-		Util::decodeUrl(currentUrl, server, port, file);
+		Util::decodeUrl(currentUrl, server, port, file, isSecure);
 		if(file.empty())
 			file = "/";
 	} else {
-		Util::decodeUrl(SETTING(HTTP_PROXY), server, port, file);
+		Util::decodeUrl(SETTING(HTTP_PROXY), server, port, file, isSecure);
 		file = currentUrl;
 	}
 
@@ -81,7 +82,7 @@ void HttpConnection::downloadFile(const string& aUrl) {
 	}
 	socket->addListener(this);
 	try {
-		socket->connect(server, port, false, false, false);
+		socket->connect(server, port, isSecure, true, false);
 	} catch(const Exception& e) {
 		fire(HttpConnectionListener::Failed(), this, e.getError() + " (" + currentUrl + ")");
 	} catch(...) { }

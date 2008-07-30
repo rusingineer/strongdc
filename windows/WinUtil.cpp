@@ -235,7 +235,7 @@ void UserInfoBase::getUserResponses() {
 
 void UserInfoBase::doReport() {
 	if(getUser()) {
-		// TODO ClientManager::getInstance()->reportUser(getUser());
+		ClientManager::getInstance()->reportUser(getUser());
 	}
 }
 

@@ -30,7 +30,6 @@
 
 namespace dcpp {
 
-const string UserConnection::FEATURE_GET_ZBLOCK = "GetZBlock";
 const string UserConnection::FEATURE_MINISLOTS = "MiniSlots";
 const string UserConnection::FEATURE_XML_BZLIST = "XmlBZList";
 const string UserConnection::FEATURE_ADCGET = "ADCGet";

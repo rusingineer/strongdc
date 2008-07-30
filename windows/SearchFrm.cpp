@@ -30,7 +30,6 @@
 #include "../client/ClientManager.h"
 #include "../client/TimerManager.h"
 #include "../client/SearchManager.h"
-#include "../client/DecentralizationManager.h"
 
 TStringList SearchFrame::lastSearches;
 
@@ -1305,12 +1304,6 @@ void SearchFrame::initHubs() {
 	ctrlHubs.insertItem(new HubInfo(Util::emptyStringT, TSTRING(ONLY_WHERE_OP), false), 0);
 	ctrlHubs.SetCheckState(0, false);
 	
-	if(BOOLSETTING(ENABLE_DECENTRALIZED_NETWORK) && DecentralizationManager::getInstance()->getAvailableBytes() > 0)
-	{
-		ctrlHubs.insertItem(new HubInfo(Util::emptyStringT, Text::toT(DecentralizationManager::getInstance()->getName()), false), 0);
-		ctrlHubs.SetCheckState(1, true);
-	}
-
 	ClientManager* clientMgr = ClientManager::getInstance();
 	clientMgr->lock();
 	clientMgr->addListener(this);

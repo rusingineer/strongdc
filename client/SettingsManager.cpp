@@ -50,7 +50,7 @@ const string SettingsManager::settingTags[] =
 	"KickMsgRecent11", "KickMsgRecent12", "KickMsgRecent13", "KickMsgRecent14", "KickMsgRecent15", 
 	"KickMsgRecent16", "KickMsgRecent17", "KickMsgRecent18", "KickMsgRecent19", "KickMsgRecent20",
 	"Toolbar", "ToolbarImage", "ToolbarHot", "UserListImage", "UploadQueueFrameOrder", "UploadQueueFrameWidths",
-	"UpdateURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline", "SoundTypingNotify",
+	"ProfilesURL", "SoundTTH", "SoundException", "SoundHubConnected", "SoundHubDisconnected", "SoundFavUserOnline", "SoundTypingNotify",
 	"WebServerLogFormat", "WebServerUser", "WebServerPass", "LogFileMainChat", 
 	"LogFilePrivateChat", "LogFileStatus", "LogFileUpload", "LogFileDownload", "LogFileSystem", "LogFormatSystem", 
 	"LogFormatStatus", "LogFileWebServer", "DirectoryListingFrameOrder", "DirectoryListingFrameWidths", 
@@ -125,7 +125,7 @@ const string SettingsManager::settingTags[] =
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
-	"UcSubMenu", "AutoSlots", "Coral", "EnableDecentralizedNetwork",
+	"UcSubMenu", "AutoSlots", "Coral", "UseKademlia",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -307,7 +307,7 @@ SettingsManager::SettingsManager()
 	setDefault(SEGMENTS_MANUAL, false);
 	setDefault(HUB_SLOTS, 1);
 	setDefault(DEBUG_COMMANDS, false);
-	setDefault(UPDATE_URL, "http://dcaml.svn.sourceforge.net/svnroot/dcaml/");	
+	setDefault(PROFILES_URL, "https://dcaml.svn.sourceforge.net/svnroot/dcaml/");	
 	setDefault(EXTRA_SLOTS, 3);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
 	setDefault(SEARCH_PASSIVE, false);
@@ -436,7 +436,7 @@ SettingsManager::SettingsManager()
 	setDefault(SHOW_QUICK_SEARCH, true);	
 	setDefault(UC_SUBMENU, true);
 // TODO:	setDefault(TOOLBAR_SIZE, 800);
-	setDefault(ENABLE_DECENTRALIZED_NETWORK, true);
+	setDefault(USE_KADEMLIA, true);
 
 	setDefault(DROP_MULTISOURCE_ONLY, true);
 	setDefault(DISCONNECT_SPEED, 5);

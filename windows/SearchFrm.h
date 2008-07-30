@@ -264,7 +264,7 @@ private:
 	class SearchInfo;
 	
 public:	
-	typedef TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS, TTHValue, TTHValue::PtrHash, TTHValue::PtrHash> SearchInfoList;
+	typedef TypedTreeListViewCtrl<SearchInfo, IDC_RESULTS, TTHValue, hash<TTHValue*>, equal_to<TTHValue*>> SearchInfoList;
 	SearchInfoList& getUserList() { return ctrlResults; }
 
 private:

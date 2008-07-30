@@ -105,6 +105,8 @@ public:
 	// Extensions
 	C(CMD, 'C','M','D');
 	C(PSR, 'P','S','R');
+	C(REQ, 'R','E','Q');
+	C(PUB, 'P','U','B');
 #undef C
 
 	static const uint32_t HUB_SID = 0xffffffff;		// No client will have this sid
@@ -150,6 +152,7 @@ public:
 	uint32_t getTo() const { return to; }
 	AdcCommand& setTo(const uint32_t sid) { to = sid; return *this; }
 	uint32_t getFrom() const { return from; }
+	void setFrom(const uint32_t sid) { from = sid; }
 
 	static uint32_t toSID(const string& aSID) { return *reinterpret_cast<const uint32_t*>(aSID.data()); }
 	static string fromSID(const uint32_t aSID) { return string(reinterpret_cast<const char*>(&aSID), sizeof(aSID)); }
@@ -176,36 +179,42 @@ public:
 	void dispatch(const string& aLine, bool nmdc = false) {
 		try {
 			AdcCommand c(aLine, nmdc);
-
-#define C(n) case AdcCommand::CMD_##n: ((T*)this)->handle(AdcCommand::n(), c); break;
-			switch(c.getCommand()) {
-				C(SUP);
-				C(STA);
-				C(INF);
-				C(MSG);
-				C(SCH);
-				C(RES);
-				C(CTM);
-				C(RCM);
-				C(GPA);
-				C(PAS);
-				C(QUI);
-				C(GET);
-				C(GFI);
-				C(SND);
-				C(SID);
-				C(CMD);
-				C(PSR);
-			default: 
-				dcdebug("Unknown ADC command: %.50s\n", aLine.c_str());
-				break;
-#undef C
-
-			}
+			dispatch(c);
 		} catch(const ParseException&) {
 			dcdebug("Invalid ADC command: %.50s\n", aLine.c_str());
 			return;
 		}
+	}
+
+	void dispatch(AdcCommand& c) {	
+#define C(n) case AdcCommand::CMD_##n: ((T*)this)->handle(AdcCommand::n(), c); break;
+		switch(c.getCommand()) {
+			C(SUP);
+			C(STA);
+			C(INF);
+			C(MSG);
+			C(SCH);
+			C(RES);
+			C(CTM);
+			C(RCM);
+			C(GPA);
+			C(PAS);
+			C(QUI);
+			C(GET);
+			C(GFI);
+			C(SND);
+			C(SID);
+			C(CMD);
+			C(PSR);
+			C(REQ);
+			C(PUB);
+		default: 
+			//dcdebug("Unknown ADC command: %.50s\n", aLine.c_str());
+			break;
+#undef C
+
+		}
+
 	}
 };
 

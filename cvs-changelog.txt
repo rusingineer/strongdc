@@ -1,3 +1,12 @@
+** svn413
+	some memory optimization
+	added support for secured HTTP connections
+	nodelist is saved as XML file
+	rewritten a lot of parts of decentralized network (it doesn't match the draft now :-D)
+	decentralized network renamed to Kademlia, because it is very similar to it
+	finally removed all GetZBlock advertising
+	changed binary prefixes to match standard IEC 60027-2
+
 ** svn412
 	changed default URL to client profiles
 	fixed graphics on 16-bit color depth

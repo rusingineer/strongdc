@@ -1034,12 +1034,14 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 			pair<PfsIter, PfsIter> range = pfsQueue.equal_range(aDownload->getUser()->getCID());
 			PfsIter i = find_if(range.first, range.second, CompareSecondFirst<CID, string, bool>(aDownload->getPath()));
 			if(i != range.second) {
-				if(i->second.second == false) {
-					fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
-				} else {
-					fname = aDownload->getPFS();
-					up = aDownload->getUser();
-					flag = QueueItem::FLAG_DIRECTORY_DOWNLOAD | QueueItem::FLAG_TEXT;
+				if(!aDownload->getPFS().empty()) {
+					if(i->second.second == false) {
+						fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
+					} else {
+						fname = aDownload->getPFS();
+						up = aDownload->getUser();
+						flag = QueueItem::FLAG_DIRECTORY_DOWNLOAD | QueueItem::FLAG_TEXT;
+					}
 				}
 				pfsQueue.erase(i);
 			}

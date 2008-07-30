@@ -59,7 +59,6 @@ public:
 
 private:
 	friend class CryptoManager;
-	friend class DecentralizationManager;
 	
 	SSLSocket(SSL_CTX* context) throw(SocketException);
 	SSLSocket(const SSLSocket&);

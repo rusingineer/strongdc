@@ -29,7 +29,6 @@
 #include "QueueManager.h"
 #include "StringTokenizer.h"
 #include "FinishedManager.h"
-#include "DecentralizationManager.h"
 
 namespace dcpp {
 
@@ -94,13 +93,13 @@ void SearchManager::disconnect() throw() {
 int SearchManager::run() {
 	boost::scoped_array<uint8_t> buf(new uint8_t[BUFSIZE]);
 	int len;
-	string remoteAddr;
+	sockaddr_in remoteAddr = { 0 };
 
 	queue.start();
 	while(!stop) {
 		try {
 			while( (len = socket->read(&buf[0], BUFSIZE, remoteAddr)) > 0) {
-				onData(&buf[0], len, remoteAddr);
+				onData(&buf[0], len, inet_ntoa(remoteAddr.sin_addr));
 			}
 		} catch(const SocketException& e) {
 			dcdebug("SearchManager::run Error: %s\n", e.getError().c_str());
@@ -286,11 +285,6 @@ int SearchManager::UdpQueue::run() {
 			
 			SearchManager::getInstance()->onPSR(c, user, remoteIp);
 		
-		} if(x.compare(1, 4, "INF ") == 0 && x[x.length() - 1] == 0x0a) {
-			// Decentralized network can bootstrap here
-			AdcCommand c(x.substr(0, x.length()-1));
-			DecentralizationManager::getInstance()->onINF(c);
-			
 		} /*else if(x.compare(1, 4, "SCH ") == 0 && x[x.length() - 1] == 0x0a) {
 			try {
 				respond(AdcCommand(x.substr(0, x.length()-1)));
