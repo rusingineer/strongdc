@@ -533,6 +533,7 @@
 		<String Name="SetstrongdcNoteDownload">* If upload limit is set, download limit is max 7 x upload limit !!!</String>
 		<String Name="SetstrongdcNoteSmallUp">* Small Uploads Slots =&gt; Slots for filelist and Small Files.</String>
 		<String Name="SetstrongdcNoteUpload">* Minimal upload limit is set to 5×slots + 4 !!!</String>
+		<String Name="SetstrongdcPartialSlots">Extra slots for uploading partially downloaded files</String>
 		<String Name="SetstrongdcPassiveSearch">Always use passive mode for Search (Use only if you know what this doing !!!)</String>
 		<String Name="SetstrongdcPmLines">Lines from log on new PM</String>
 		<String Name="SetstrongdcPreview">Preview</String>

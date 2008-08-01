@@ -80,7 +80,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO /SAFESEH:NO"
-				AdditionalDependencies="libeay32d.lib ssleay32d.lib unicows.lib SHFolder.lib ws2_32.lib winmm.lib powrprof.lib msimg32.lib"
+				AdditionalDependencies="unicows.lib SHFolder.lib ws2_32.lib winmm.lib powrprof.lib msimg32.lib"
 				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)openssl/lib&quot;"
@@ -225,7 +225,7 @@
 			UseOfATL="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
-			WholeProgramOptimization="1"
+			WholeProgramOptimization="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -342,7 +342,7 @@
 			UseOfATL="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
-			WholeProgramOptimization="1"
+			WholeProgramOptimization="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"

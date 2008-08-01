@@ -52,8 +52,12 @@ public:
 	bool checkCertificate() throw();
 
 	bool TLSOk() const throw();
-	
+
+#ifndef YASSL_VERSION	
 	static void __cdecl locking_function(int mode, int n, const char *file, int line);
+#endif
+
+
 private:
 
 	friend class Singleton<CryptoManager>;
@@ -73,7 +77,9 @@ private:
 	const string lock;
 	const string pk;
 	
+#ifndef YASSL_VERSION
 	static CriticalSection* cs;
+#endif
 
 	string keySubst(const uint8_t* aKey, size_t len, size_t n);
 	bool isExtra(uint8_t b) const {

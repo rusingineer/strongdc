@@ -33,6 +33,10 @@
 #include "FastAlloc.h"
 #include "MerkleTree.h"
 
+namespace kademlia {
+	class IndexManager;
+}
+
 namespace dcpp {
 
 STANDARD_EXCEPTION(ShareException);
@@ -106,6 +110,8 @@ public:
 		return tthIndex.find(tth) != tthIndex.end();
 	}
 
+	void publish();
+	
 	GETSET(size_t, hits, Hits);
 	GETSET(string, bzXmlFile, BZXmlFile);
 	GETSET(int64_t, sharedSize, SharedSize);
@@ -268,6 +274,8 @@ private:
 	/** Map real name to virtual name - multiple real names may be mapped to a single virtual one */
 	StringMap shares;
 
+	friend class ::kademlia::IndexManager;
+	
 	typedef unordered_map<TTHValue, Directory::File::Set::const_iterator> HashFileMap;
 	typedef HashFileMap::const_iterator HashFileIter;
 

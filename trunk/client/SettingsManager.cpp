@@ -74,7 +74,7 @@ const string SettingsManager::settingTags[] =
 	"HubUserCommands", "AutoSearchAutoMatch", "DownloadBarColor", "UploadBarColor", "LogSystem",
 	"LogFilelistTransfers", "ShowStatusbar", "BandwidthSettingMode", "ShowToolbar", "ShowTransferview", 
 	"SearchPassiveAlways", "SetMinislotSize", "ShutdownInterval", "DontAnnounceNewVersions", 
-	"CzertHiddenSettingA", "CzertHiddenSettingB", "ExtraSlots", 
+	"CzertHiddenSettingA", "CzertHiddenSettingB", "ExtraSlots", "ExtraPartialSlots",
 	"TextGeneralBackColor", "TextGeneralForeColor", "TextGeneralBold", "TextGeneralItalic", 
 	"TextMyOwnBackColor", "TextMyOwnForeColor", "TextMyOwnBold", "TextMyOwnItalic", 
 	"TextPrivateBackColor", "TextPrivateForeColor", "TextPrivateBold", "TextPrivateItalic", 
@@ -309,6 +309,7 @@ SettingsManager::SettingsManager()
 	setDefault(DEBUG_COMMANDS, false);
 	setDefault(PROFILES_URL, "https://dcaml.svn.sourceforge.net/svnroot/dcaml/");	
 	setDefault(EXTRA_SLOTS, 3);
+	setDefault(EXTRA_PARTIAL_SLOTS, 1);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
 	setDefault(SEARCH_PASSIVE, false);
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_NORMAL, 0);

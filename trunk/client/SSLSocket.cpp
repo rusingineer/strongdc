@@ -25,6 +25,10 @@
 
 #include <openssl/err.h>
 
+#ifdef YASSL_VERSION
+# include <yassl_int.hpp>
+#endif
+
 namespace dcpp {
 
 SSLSocket::SSLSocket(SSL_CTX* context) throw(SocketException) : ctx(context), ssl(0) {
@@ -168,12 +172,14 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 }
 
 int SSLSocket::wait(uint64_t millis, int waitFor) throw(SocketException) {
+#ifndef YASSL_VERSION
 	if(ssl && (waitFor & Socket::WAIT_READ)) {
 		/** @todo Take writing into account as well if reading is possible? */
 		char c;
 		if(SSL_peek(ssl, &c, 1) > 0)
 			return WAIT_READ;
 	}
+#endif
 	return Socket::wait(millis, waitFor);
 }
 
@@ -201,6 +207,7 @@ std::string SSLSocket::getCipherName() const throw() {
 }
 
 std::string SSLSocket::getDigest() const throw() {
+#ifndef YASSL_VERSION
 	if(!ssl)
 		return Util::emptyString;
 	X509* x509 = SSL_get_peer_certificate(ssl);
@@ -208,6 +215,9 @@ std::string SSLSocket::getDigest() const throw() {
 		return Util::emptyString;
 	
 	return ssl::X509_digest(x509, EVP_sha1());
+#else
+	return Util::emptyString;
+#endif
 }
 
 void SSLSocket::shutdown() throw() {

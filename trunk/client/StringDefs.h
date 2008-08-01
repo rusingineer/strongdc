@@ -532,6 +532,7 @@ enum Strings { // @DontAdd
 	SETSTRONGDC_NOTE_DOWNLOAD, // "* If upload limit is set, download limit is max 7 x upload limit !!!"
 	SETSTRONGDC_NOTE_SMALL_UP, // "* Small Uploads Slots => Slots for filelist and Small Files."
 	SETSTRONGDC_NOTE_UPLOAD, // "* Minimal upload limit is set to 5×slots + 4 !!!"
+	SETSTRONGDC_PARTIAL_SLOTS, // "Extra slots for uploading partially downloaded files"
 	SETSTRONGDC_PASSIVE_SEARCH, // "Always use passive mode for Search (Use only if you know what this doing !!!)"
 	SETSTRONGDC_PM_LINES, // "Lines from log on new PM"
 	SETSTRONGDC_PREVIEW, // "Preview"

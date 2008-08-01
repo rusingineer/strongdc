@@ -33,9 +33,11 @@
 #include <File.h>
 #include <LogManager.h>
 #include <SettingsManager.h>
+#include <ShareManager.h>
 #include <SimpleXML.h>
 #include <Socket.h>
 #include <TimerManager.h>
+#include <Util.h>
 
 #include "../zlib/zlib.h"
 #include <mswsock.h>
@@ -46,7 +48,8 @@ namespace kademlia
 const uint32_t POLL_TIMEOUT = 250;
 
 KademliaManager::KademliaManager(void) : stop(false), port(0), nextSelfLookup(GET_TICK() + 15*1000),
-	nextSearchJumpStart(GET_TICK())
+	nextSearchJumpStart(GET_TICK()), nextFirewallCheck(GET_TICK() + FIREWALL_CHECK_TIMER), 
+	lastPacket(0), ip("0.0.0.0")
 #ifdef _DEBUG
 	, sentBytes(0), receivedBytes(0)
 #endif
@@ -83,14 +86,13 @@ void KademliaManager::listen() throw(SocketException)
 		socket.reset(new Socket);
 		socket->create(Socket::TYPE_UDP);
 		
-		// TODO: make specific port for this network
-		port = socket->bind(static_cast<uint16_t>(DPORT), SETTING(BIND_ADDRESS));
+		port = socket->bind(KAD_PORT, SETTING(BIND_ADDRESS));
 	
 		bool bootstrap = false;
 		
 		try
 		{
-			File file(Util::getConfigPath() + KADEMLIA_FILE, File::READ, File::OPEN);
+			dcpp::File file(Util::getConfigPath() + KADEMLIA_FILE, dcpp::File::READ, dcpp::File::OPEN);
 			bootstrap =	file.getSize() < 10000 || file.getLastModified() < GET_TICK() - 7 * 24 * 3600;
 		}
 		catch(FileException&)
@@ -100,7 +102,13 @@ void KademliaManager::listen() throw(SocketException)
 		
 		if(bootstrap)
 		{
-			// TODO: something about bootstrapping
+			dcdebug("MyCID: %s\n", ClientManager::getInstance()->getMyCID().toBase32().c_str());
+			// TODO: make URL settable
+			// TODO: add supported features
+			string url = "http://strongdc.sourceforge.net/bootstrap/?cid=" + ClientManager::getInstance()->getMyCID().toBase32() +
+				"&udp=" + Util::toString(port);
+			
+			httpConnection.downloadFile(url);
 		}
 		else
 		{							
@@ -135,14 +143,14 @@ void KademliaManager::loadData()
 	try
 	{
 		SimpleXML xml;
-		xml.fromXML(File(Util::getConfigPath() + KADEMLIA_FILE, File::READ, File::OPEN).read());
+		xml.fromXML(dcpp::File(Util::getConfigPath() + KADEMLIA_FILE, dcpp::File::READ, dcpp::File::OPEN).read());
 		
 		xml.stepIn();
 		routingTable->loadNodes(xml);
 		IndexManager::getInstance()->loadIndexes(xml);
 		xml.stepOut();
 	}
-	catch(SimpleXMLException& e)
+	catch(Exception& e)
 	{
 		dcdebug("%s\n", e.getError().c_str());
 	}
@@ -161,14 +169,14 @@ void KademliaManager::saveData()
 	
 	try
 	{
-		File file(Util::getConfigPath() + KADEMLIA_FILE + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
+		dcpp::File file(Util::getConfigPath() + KADEMLIA_FILE + ".tmp", dcpp::File::WRITE, dcpp::File::CREATE | dcpp::File::TRUNCATE);
 		BufferedOutputStream<false> bos(&file);
 		bos.write(SimpleXML::utf8Header);
 		xml.toXML(&bos);
 		bos.flush();
 		file.close();
-		File::deleteFile(Util::getConfigPath() + KADEMLIA_FILE);
-		File::renameFile(Util::getConfigPath() + KADEMLIA_FILE + ".tmp", Util::getConfigPath() + KADEMLIA_FILE);
+		dcpp::File::deleteFile(Util::getConfigPath() + KADEMLIA_FILE);
+		dcpp::File::renameFile(Util::getConfigPath() + KADEMLIA_FILE + ".tmp", Util::getConfigPath() + KADEMLIA_FILE);
 	}
 	catch(const FileException&)
 	{
@@ -189,6 +197,7 @@ int KademliaManager::run()
 	loadData();
 	
 	TimerManager::getInstance()->addListener(this);
+	ShareManager::getInstance()->publish();	// TODO: we should republish files every REPUBLISH_TIME
 	
 	uint64_t timer = GET_TICK();
 	uint64_t delay = 100;
@@ -265,14 +274,14 @@ int KademliaManager::run()
 					string s((char*)destBuf, destLen);
 					if(s[0] == ADC_PACKET_HEADER && s[s.length() - 1] == ADC_PACKET_FOOTER)	// is it valid ADC command?
 					{
-						// TODO: firewall check
 						AdcCommand cmd(s.substr(0, s.length() - 1));
 						
 						// hack:	because ADC UDP command don't have "to" and "from" set, we can abuse it
 						//			to set IP and port
 						cmd.setFrom(ntohl(remoteAddr.sin_addr.s_addr));
 						cmd.setTo(ntohs(remoteAddr.sin_port));
-
+						
+						lastPacket = GET_TICK();
 						dispatch(cmd);
 
 						// TODO: send ack that packet received successfully
@@ -339,7 +348,7 @@ void KademliaManager::send(const AdcCommand& cmd, const string& ip, uint16_t por
 	uint8_t* destBuf = new uint8_t[destSize];
 	
 	// packets are small, so compress them using fast method
-	int result = compress2(destBuf + 1, &destSize, srcBuf, command.length(), Z_BEST_SPEED);
+	int result = compress2(destBuf + 1, &destSize, srcBuf, command.length(), SETTING(MAX_COMPRESSION));
 	if(result == Z_OK && destSize <= command.length())
 	{
 		destBuf[0] = ADC_PACKED_PACKET_HEADER;
@@ -358,6 +367,98 @@ void KademliaManager::send(const AdcCommand& cmd, const string& ip, uint16_t por
 	sendQueue.push_back(new Packet(ip, port, destBuf, destSize)); 
 }
 
+void KademliaManager::info(const string& ip, uint16_t port, bool request, bool firewallCheck)
+{
+	AdcCommand cmd(AdcCommand::CMD_INF, AdcCommand::TYPE_UDP);
+	cmd.addParam("VE", Util::toString(KADEMLIA_VERSION));
+	cmd.addParam("NI", SETTING(NICK));
+	cmd.addParam("I4", firewallCheck ? "0.0.0.0" : this->ip);
+	cmd.addParam("U4", Util::toString(this->port));
+	cmd.addParam("RE", request ? "1" : "0");
+	
+	// TODO: add more info?
+	if(firewallCheck)
+	{
+		Lock l(cs);
+		uint64_t now = GET_TIME();
+		requestedFirewalledChecks[ip] = now;
+		
+		std::tr1::unordered_map<string, uint64_t>::iterator i = requestedFirewalledChecks.begin();
+		while(i != requestedFirewalledChecks.end())
+		{
+			if(now - i->second > NODE_RESPONSE_TIMEOUT)
+				requestedFirewalledChecks.erase(i++);
+			else
+				++i;
+		}
+	}
+	
+	send(cmd, ip, port);
+}
+
+void KademliaManager::handle(AdcCommand::INF, AdcCommand& cmd) throw()
+{
+	if(cmd.getParameters().empty())
+		return;
+	
+	string cid = cmd.getParam(0);
+	if(cid.size() != 39)
+		return;
+	
+	in_addr addr; addr.s_addr = cmd.getFrom();
+	string senderIp = inet_ntoa(addr);
+	uint16_t senderPort = static_cast<uint16_t>(cmd.getTo());
+
+	string ip;	
+	if(!cmd.getParam("I4", 0, ip))
+	{
+		send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_GENERIC, "IP unknown", AdcCommand::TYPE_UDP), senderIp, senderPort);
+		return; // no IP supplied
+	}
+	
+	// TODO: should we check port too?
+	if(Util::isPrivateIp(ip) || ip != senderIp)
+	{
+		if(ip == "0.0.0.0")
+		{
+			// send correct public IP to the node
+			send(AdcCommand(AdcCommand::SEV_SUCCESS, AdcCommand::ERROR_GENERIC, senderIp, AdcCommand::TYPE_UDP).addParam("FC", "UINF"), senderIp, senderPort);
+		}
+		else
+		{
+			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_BAD_IP, "Your client supplied invalid IP: " + ip, AdcCommand::TYPE_UDP), senderIp, senderPort);
+			return; // invalid ip supplied
+		}
+	}
+	
+	OnlineUserPtr ou = routingTable->add(CID(cid));
+	ou->getIdentity().setIp(senderIp);
+	ou->getIdentity().setUdpPort(Util::toString(senderPort));
+	
+	for(StringIterC i = cmd.getParameters().begin(); i != cmd.getParameters().end(); ++i) {
+		if(i->length() < 2)
+			continue;
+
+		if(i->substr(0, 2) != "RE") {
+			ou->getIdentity().set(i->c_str(), i->substr(2));
+		}
+	}
+	
+	// ignore stated values
+	ou->getIdentity().setIp(senderIp);
+	ou->getIdentity().setUdpPort(Util::toString(senderPort));
+
+	string request;
+	if(cmd.getParam("RE", 0, request) && request[0] == '1')
+	{
+		info(senderIp, senderPort, false, recheckIP < MAX_RECHECK_IP);
+	}
+	else
+	{
+		// TODO: set node alive
+	}
+}
+
 void KademliaManager::handle(AdcCommand::REQ, AdcCommand& cmd) throw()
 {
 	if(cmd.getParameters().empty())
@@ -370,6 +471,12 @@ void KademliaManager::handle(AdcCommand::REQ, AdcCommand& cmd) throw()
 	in_addr addr; addr.s_addr = cmd.getFrom();
 	string senderIp = inet_ntoa(addr);
 	uint16_t senderPort = static_cast<uint16_t>(cmd.getTo());
+	
+	if(recheckIP < MAX_RECHECK_IP)
+	{
+		// send my info
+		info(senderIp, senderPort, true, true);
+	}
 	
 	string token;
 	if(!cmd.getParam("TO", 0, token))
@@ -405,7 +512,6 @@ void KademliaManager::handle(AdcCommand::REQ, AdcCommand& cmd) throw()
 			xml.addTag("Node");
 			xml.addChildAttrib("CID", ou->getUser()->getCID().toBase32());
 			xml.addChildAttrib("IP", ou->getIdentity().getIp());
-			xml.addChildAttrib("TCP", ou->getIdentity().get("T4"));
 			xml.addChildAttrib("UDP", ou->getIdentity().getUdpPort());			
 		}
 		
@@ -452,14 +558,9 @@ void KademliaManager::handle(AdcCommand::PUB, AdcCommand& cmd) throw()
 	if(!cmd.getParam("SI", 0, tth))
 		return;	// no file size?
 		
-	string tcpPort;
-	if(!cmd.getParam("T4", 0, tcpPort))
-		return;	// where to connect?
-		
 	Identity identity(ClientManager::getInstance()->getUser(CID(cid)), 0);
 	identity.setIp(senderIp);
 	identity.setUdpPort(Util::toString(senderPort));
-	identity.set("T4", tcpPort);	
 	identity.set("SS", size);
 					
 	IndexManager::getInstance()->addIndex(TTHValue(tth), identity);
@@ -469,7 +570,50 @@ void KademliaManager::handle(AdcCommand::PUB, AdcCommand& cmd) throw()
 
 void KademliaManager::handle(AdcCommand::RES, AdcCommand& c) throw()
 {
+	if(c.getParameters().empty())
+		return;
+		
+	in_addr addr; addr.s_addr = c.getFrom();
+	string senderIp = inet_ntoa(addr);
+	uint16_t senderPort = static_cast<uint16_t>(c.getTo());
+	
+	if(recheckIP < MAX_RECHECK_IP) // TODO: do this only when RES is response to REQ
+	{
+		// send my info
+		info(senderIp, senderPort, true, true);
+	}
+	
 	SearchManager::getInstance()->processSearchResponse(c);
+}
+
+void KademliaManager::handle(AdcCommand::STA, AdcCommand& c) throw()
+{
+	if(c.getParameters().size() < 2)
+		return;
+		
+	in_addr addr; addr.s_addr = c.getFrom();
+	string senderIp = inet_ntoa(addr);		
+	
+	string fc;
+	c.getParam("FC", 0, fc);
+	
+	if(fc == "UINF")
+	{
+		// check that we have really requested firewalled check from this IP
+		Lock l(cs);
+		if(requestedFirewalledChecks.count(senderIp) > 0)
+		{
+			// ip updated, we could use this to update Direct Connect IP aswell
+			ip = c.getParam(1);
+			requestedFirewalledChecks.erase(senderIp);
+			recheckIP++;
+		} // TODO: else IP spoofing
+	}
+	else
+	{
+		// we should disconnect from network when severity is fatal, but it could be possible exploit
+		LogManager::getInstance()->message("Kademlia error (" + senderIp + "): " + c.getParam(1)); // TODO: translate
+	}
 }
 
 void KademliaManager::on(HttpConnectionListener::Data, HttpConnection*, const uint8_t* buf, size_t len) throw()
@@ -483,12 +627,70 @@ void KademliaManager::on(HttpConnectionListener::Complete, HttpConnection*, stri
 	{
 		try
 		{
-			// TODO: don't rewrite original file but replace Nodes part only
-			File file(Util::getConfigPath() + KADEMLIA_FILE, File::WRITE, File::CREATE | File::TRUNCATE);
-			file.write(nodesXML);
+			uLongf destLen = BUFSIZE;
+			boost::scoped_array<uint8_t> destBuf(new uint8_t[destLen]);
+			
+			// decompress incoming packet
+			int result = uncompress(&destBuf[0], &destLen, (Bytef*)nodesXML.data(), nodesXML.length());
+			if(result != Z_OK)
+			{
+				// decompression error!!!
+				throw Exception("Decompress error.");
+			}
+			
+			// now copy remote xml to local one
+			dcpp::File file(Util::getConfigPath() + KADEMLIA_FILE, dcpp::File::READ, dcpp::File::CREATE | dcpp::File::OPEN);
+			
+			SimpleXML localXml, remoteXml;
+			
+			string fileContent = file.read();
+			if(fileContent.empty())
+			{
+				localXml.addTag("Kademlia");
+			}
+			else
+			{
+				localXml.fromXML(fileContent);
+			}
+			
+			remoteXml.fromXML(string((char*)&destBuf[0], destLen));
+			
+			localXml.stepIn();
+			remoteXml.stepIn();
+			
+			if(!localXml.findChild("Nodes"))
+			{
+				localXml.addTag("Nodes");
+			}
+			
+			localXml.stepIn();
+				
+			while(remoteXml.findChild("Node"))
+			{
+				localXml.addTag("Node");
+				localXml.addChildAttrib("CID", remoteXml.getChildAttrib("CID"));
+				localXml.addChildAttrib("IP", remoteXml.getChildAttrib("IP"));
+				localXml.addChildAttrib("UDP", remoteXml.getChildAttrib("UDP"));					
+			}
+
+			localXml.stepOut();
+			localXml.stepOut();
+			remoteXml.stepOut();
+			file.close();
+			
+			// write merged file
+			dcpp::File f(Util::getConfigPath() + KADEMLIA_FILE + ".tmp", dcpp::File::WRITE, dcpp::File::CREATE | dcpp::File::TRUNCATE);	
+			BufferedOutputStream<false> bos(&f);
+			bos.write(SimpleXML::utf8Header);
+			localXml.toXML(&bos);
+			bos.flush();
+			f.close();
+			dcpp::File::deleteFile(Util::getConfigPath() + KADEMLIA_FILE);
+			dcpp::File::renameFile(Util::getConfigPath() + KADEMLIA_FILE + ".tmp", Util::getConfigPath() + KADEMLIA_FILE);			
 		}
-		catch(FileException&)
+		catch(Exception& e)
 		{
+			dcdebug("Kademlia bootstrap error: %s\n", e.getError().c_str());
 		}
 	}
 	
@@ -497,16 +699,27 @@ void KademliaManager::on(HttpConnectionListener::Complete, HttpConnection*, stri
 
 void KademliaManager::on(HttpConnectionListener::Failed, HttpConnection*, const string& aLine) throw()
 {
-	dcdebug("Bootstrapping failed: %s\n", aLine);
+	dcdebug("Bootstrapping failed: %s\n", aLine.c_str());
 	start();
 }
 	
 void KademliaManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 {
+	if(aTick - lastPacket < CONNECTED_TIMEOUT)
+	{
+		// publish next file in queue
+		IndexManager::getInstance()->publishNextFile();
+	}
+	
 	if(aTick >= nextSelfLookup) // search for self
 	{
 		SearchManager::getInstance()->findNode(ClientManager::getInstance()->getMyCID());
 		nextSelfLookup = aTick + SELF_LOOKUP_TIMER;
+	}
+	if(aTick >= nextFirewallCheck) // check if we are behind firewall
+	{
+		recheckIP = 0;
+		nextFirewallCheck = aTick + FIREWALL_CHECK_TIMER;
 	}
 	if(aTick >= nextSearchJumpStart) // send next search request
 	{

@@ -86,7 +86,8 @@ public:
 	/** Searches for a file in the network */
 	void findFile(const string& tth);
 	
-	void publishFile(const string& tth, int64_t size);
+	/** Publishes given file in the network */
+	void publishFile(const TTHValue& tth, int64_t size);
 		
 	/** Process incoming search request */
 	void processSearchRequest(const AdcCommand& cmd);

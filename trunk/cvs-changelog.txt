@@ -1,3 +1,18 @@
+** svn414
+	kademlia bootstraps from external website
+	finished kademlia files publishing
+	added some kademlia IP checks
+	added sending and parsing INF command
+	added "McAfee VirusScan Winsock Helper" to libraries causing a crash
+	open link calls only ShellExecute without getting real protocol handler
+	added possibility to compile with yaSSL instead of OpenSSL (but it's not recommended)
+	hopefully fixed possible invalid hub user count
+	search history is sorted and doesn't show duplicites
+	kademlia UDP compression level respects settings
+	kademlia uses UDP port 5170
+	TCP port isn't advertised via kademlia anymore
+	begun work on extra slots for partial share
+
 ** svn413
 	some memory optimization
 	added support for secured HTTP connections

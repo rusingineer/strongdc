@@ -32,6 +32,7 @@
 #include <SimpleXML.h>
 #include <Speaker.h>
 #include <Streams.h>
+#include <Util.h>
 
 namespace kademlia
 {
@@ -90,6 +91,8 @@ void Search::processResponse(const CID& cid, NodeList& results)
 					// add to tried nodes
 					triedNodes[distance] = *i;
 					
+					// TODO: set dead node timeout
+					
 					// send search request
 					sendRequest((*i)->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt((*i)->getIdentity().getUdpPort())));
 				}
@@ -101,7 +104,7 @@ void Search::processResponse(const CID& cid, NodeList& results)
 			}
 		}
 		
-		if(type != TYPE_NODE && returnedCloser && KadUtils::toBinaryString(fromDistance->data()).substr(0, 5) == "00000")
+		if(type != TYPE_NODE && !returnedCloser && KadUtils::toBinaryString(fromDistance->data()).substr(0, 5) == "00000")
 		{
 			// if the node is the closest one, ask him for file sources/publishing file
 			AdcCommand cmd(0, AdcCommand::TYPE_UDP);
@@ -113,7 +116,6 @@ void Search::processResponse(const CID& cid, NodeList& results)
 				case TYPE_STOREFILE:
 					cmd = AdcCommand(AdcCommand::CMD_PUB, AdcCommand::TYPE_UDP);
 					cmd.addParam("SI", Util::toString(fileSize));
-					cmd.addParam("T4", Util::toString(CryptoManager::getInstance()->TLSOk() ? SETTING(TLS_PORT) : SETTING(TCP_PORT)));
 					break;
 			}
 			cmd.addParam("TR", term);
@@ -183,11 +185,11 @@ void SearchManager::findFile(const string& tth)
 	search(*s);
 }
 
-void SearchManager::publishFile(const string& tth, int64_t size)
+void SearchManager::publishFile(const TTHValue& tth, int64_t size)
 {
 	Search* s = new Search();
 	s->type = Search::TYPE_STOREFILE;
-	s->term = tth;
+	s->term = tth.toBase32();
 	s->fileSize = size;
 	
 	search(*s);
@@ -266,7 +268,6 @@ void SearchManager::processSearchRequest(const AdcCommand& cmd)
 			xml.addTag("Node");
 			xml.addChildAttrib("CID", id.getUser()->getCID().toBase32());
 			xml.addChildAttrib("IP", id.getIp());
-			xml.addChildAttrib("TCP", id.get("T4"));
 			xml.addChildAttrib("UDP", id.getUdpPort());
 			xml.addChildAttrib("size", id.get("SS"));
 		}
@@ -287,9 +288,6 @@ void SearchManager::processSearchRequest(const AdcCommand& cmd)
 
 void SearchManager::processSearchResponse(const AdcCommand& cmd)
 {
-	if(cmd.getParameters().empty())
-		return;
-	
 	string cid = cmd.getParam(0);
 	if(cid.size() != 39)
 		return;
@@ -332,11 +330,15 @@ void SearchManager::processSearchResponse(const AdcCommand& cmd)
 				return;
 				
 			const string& ip		= xml.getChildAttrib("IP");
-			const string& tcpPort	= xml.getChildAttrib("TCP");
 			const string& udpPort	= xml.getChildAttrib("UDP");
 
-			// TODO: add to routing table only nodes with valid ip
-			OnlineUserPtr ou = KademliaManager::getInstance()->getRoutingTable().add(cid, ip, tcpPort, udpPort);
+			if(Util::isPrivateIp(ip)) continue;
+
+			OnlineUserPtr ou = KademliaManager::getInstance()->getRoutingTable().add(cid);
+			ou->getIdentity().setIp(ip);
+			ou->getIdentity().setUdpPort(udpPort);
+			// TODO: nick
+			
 			if(sources)
 			{
 				// TODO: handle partial sources
@@ -373,44 +375,37 @@ void SearchManager::processSearches()
 	{
 		Search* s = it->second;
 		
+		// TODO: check maximum responses to search request
+		uint64_t timeout = 2 * 60 * 1000; // default timeout = 2 minutes
 		switch(s->type)
 		{
 			case Search::TYPE_FILE:
-				if(s->startTime + SEARCHFILE_LIFETIME < GET_TICK())
-				{
-					// search time out, stop it
-					delete s;
-					
-					SearchMap::iterator tmp = it;
-					it++;
-					searches.erase(tmp);
-				}
-				else
-				{
-					// it's time to process this search
-					s->process();
-					it++;
-				}
+				timeout = SEARCHFILE_LIFETIME;
 				break;
 			case Search::TYPE_NODE:
-				if(s->startTime + SEARCHNODE_LIFETIME < GET_TICK())
-				{
-					// search time out, stop it
-					delete s;
-					
-					SearchMap::iterator tmp = it;
-					it++;
-					searches.erase(tmp);
-				}
-				else
-				{
-					// it's time to process this search
-					s->process();
-					it++;
-				}
+				timeout = SEARCHNODE_LIFETIME;
 				break;
-				
+			case Search::TYPE_STOREFILE:
+				timeout = SEARCHSTOREFILE_LIFETIME;
+				break;
 		}
+		
+		// remove long search, process active search
+		if(s->startTime + timeout < GET_TICK())
+		{
+			// search time out, stop it
+			delete s;
+			
+			SearchMap::iterator tmp = it;
+			it++;
+			searches.erase(tmp);
+		}
+		else
+		{
+			// it's time to process this search
+			s->process();
+			it++;
+		}		
 	}
 }
 
