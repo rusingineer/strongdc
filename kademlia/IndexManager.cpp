@@ -21,11 +21,14 @@
 
 #include "IndexManager.h"
 #include "KademliaManager.h"
+#include "SearchManager.h"
+
+#include <ShareManager.h>
 
 namespace kademlia
 {
 
-IndexManager::IndexManager(void)
+IndexManager::IndexManager(void) : lastPublishTime(0)
 {
 }
 
@@ -62,6 +65,56 @@ bool IndexManager::findResult(const TTHValue& tth, SourceList& sources) const
 	return false;
 }
 
+void IndexManager::publishNextFile()
+{
+	// TODO: publish only 1 file at time
+	File f;
+	{
+		Lock l(cs);
+		
+		if(publishQueue.empty())
+			return;
+			
+		f = publishQueue.front(); // get the first file in queue
+		publishQueue.pop_front(); // and remove it from queue
+	}
+	SearchManager::getInstance()->publishFile(f.tth, f.size);
+}
+
+void IndexManager::createPublishQueue(ShareManager::HashFileMap& tthIndex)
+{
+#ifdef _DEBUG
+	dcdebug("File list size: %d\n", tthIndex.size());
+	uint64_t startTime = GET_TICK();
+#endif
+	
+	// copy to map to sort by size
+	std::map<int64_t, const TTHValue*> sizeMap;
+	for(ShareManager::HashFileIter i = tthIndex.begin(); i != tthIndex.end(); i++)
+	{
+		if(i->second->getSize() > MIN_PUBLISH_FILESIZE)
+			sizeMap[i->second->getSize()] = &i->first;
+	}
+	
+	Lock l(cs);
+	
+	// select the first MAX_PUBLISHED_FILES largest files
+	size_t count = 0;
+	for(std::map<int64_t, const TTHValue*>::reverse_iterator i = sizeMap.rbegin(); i != sizeMap.rend() && count < MAX_PUBLISHED_FILES; i++, count++)
+	{	
+		publishQueue.push_back(File(*i->second, i->first));
+	}
+	
+	// shuffle
+	random_shuffle(publishQueue.begin(), publishQueue.end());
+	lastPublishTime = GET_TICK();
+	
+#ifdef _DEBUG	
+	startTime = GET_TICK() - startTime;	
+	dcdebug("Create publishing queue took %I64d ms, stored %d files\n", startTime, publishQueue.size());
+#endif
+}
+
 void IndexManager::loadIndexes(SimpleXML& xml)
 {
 	if(xml.findChild("Indexes"))
@@ -78,7 +131,6 @@ void IndexManager::loadIndexes(SimpleXML& xml)
 				
 				Identity identity(ClientManager::getInstance()->getUser(cid), 0);
 				identity.setIp(xml.getChildAttrib("IP"));
-				identity.set("T4", xml.getChildAttrib("TCP"));
 				identity.setUdpPort(xml.getChildAttrib("UDP"));
 				identity.set("SS", xml.getChildAttrib("size"));
 				
@@ -110,7 +162,6 @@ void IndexManager::saveIndexes(SimpleXML& xml)
 			xml.addTag("Source");
 			xml.addChildAttrib("CID", id.getUser()->getCID().toBase32());
 			xml.addChildAttrib("IP", id.getIp());
-			xml.addChildAttrib("TCP", id.get("T4"));
 			xml.addChildAttrib("UDP", id.getUdpPort());
 			xml.addChildAttrib("size", id.get("SS"));		
 		}

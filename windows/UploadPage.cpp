@@ -34,6 +34,7 @@ PropPage::TextItem UploadPage::texts[] = {
 	{ IDC_STRONGDC_SMALL_SIZE, ResourceManager::SETSTRONGDC_SMALL_FILES },
 	{ IDC_STRONGDC_NOTE_SMALL, ResourceManager::SETSTRONGDC_NOTE_SMALL_UP },
 	{ IDC_SETTINGS_AUTO_SLOTS, ResourceManager::SETTINGS_AUTO_SLOTS	},	
+	{ IDC_SETTINGS_PARTIAL_SLOTS, ResourceManager::SETSTRONGDC_PARTIAL_SLOTS },		
 	{ IDC_STATICb, ResourceManager::EXTRA_HUB_SLOTS },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY },
 };
@@ -43,7 +44,8 @@ PropPage::Item UploadPage::items[] = {
 	{ IDC_EXTRA_SLOTS, SettingsManager::EXTRA_SLOTS, PropPage::T_INT },
 	{ IDC_SMALL_FILE_SIZE, SettingsManager::SET_MINISLOT_SIZE, PropPage::T_INT },
 	{ IDC_EXTRA_SLOTS2, SettingsManager::HUB_SLOTS, PropPage::T_INT },
-	{ IDC_AUTO_SLOTS, SettingsManager::AUTO_SLOTS, PropPage::T_INT  },	
+	{ IDC_AUTO_SLOTS, SettingsManager::AUTO_SLOTS, PropPage::T_INT  },
+	{ IDC_PARTIAL_SLOTS, SettingsManager::EXTRA_PARTIAL_SLOTS, PropPage::T_INT  },
 	{ 0, 0, PropPage::T_END }
 };
 
@@ -65,12 +67,15 @@ LRESULT UploadPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	updown.SetRange32(64, 30000);
 	updown.Detach();
 	updown.Attach(GetDlgItem(IDC_EXTRASPIN));
-	updown.SetRange(0,10);
+	updown.SetRange(0, 10);
 	updown.Detach();
 	updown.Attach(GetDlgItem(IDC_AUTO_SLOTS_SPIN));
-	updown.SetRange(0,100);
+	updown.SetRange(0, 100);
 	updown.Detach();
-		
+	updown.Attach(GetDlgItem(IDC_PARTIAL_SLOTS_SPIN));
+	updown.SetRange(0, 10);
+	updown.Detach();
+			
 	return TRUE;
 }
 

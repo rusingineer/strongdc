@@ -124,6 +124,7 @@ public:
 	size_t throttleGetSlice();
 	inline size_t throttleCycleTime() const { return mThrottleEnable ? mCycleTime : 0; }
 	
+	GETSET(uint8_t, extraPartial, ExtraPartial);
 	GETSET(uint8_t, extra, Extra);
 	GETSET(uint64_t, lastGrant, LastGrant);
 

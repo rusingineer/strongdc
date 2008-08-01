@@ -39,6 +39,8 @@
 #include "HashBloom.h"
 #include "SearchResult.h"
 
+#include "../kademlia/IndexManager.h"
+
 #ifndef _WIN32
 #include <sys/types.h>
 #include <dirent.h>
@@ -115,6 +117,11 @@ string ShareManager::Directory::getRealPath(const std::string& path) const throw
 	}
 }
 
+void ShareManager::publish() {
+	Lock l(cs);
+	kademlia::IndexManager::getInstance()->createPublishQueue(tthIndex);
+}
+	
 string ShareManager::findRealRoot(const string& virtualRoot, const string& virtualPath) const throw(ShareException) {
 	for(StringMap::const_iterator i = shares.begin(); i != shares.end(); ++i) {
 		if(stricmp(i->second, virtualRoot) == 0) {

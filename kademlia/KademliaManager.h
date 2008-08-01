@@ -37,9 +37,9 @@
 namespace kademlia
 {
 	// TODO: move this to somewhere
-	typedef std::vector<OnlineUserPtr> NodeList;
-	typedef std::map<CID, OnlineUserPtr> NodeMap;
-	typedef std::deque<Identity> SourceList;
+	typedef std::vector<dcpp::OnlineUserPtr> NodeList;
+	typedef std::map<dcpp::CID,dcpp:: OnlineUserPtr> NodeMap;
+	typedef std::deque<dcpp::Identity> SourceList;
 }
 
 #include "RoutingTable.h"
@@ -100,7 +100,10 @@ private:
 		/** Data's length */
 		size_t length;
 	};
-
+	
+	/** Map of IP we have requested a firewalled check from */
+	std::tr1::unordered_map<string, uint64_t> requestedFirewalledChecks;
+	
 	/** Locks access to sending queue */
 	// TODO: 
 	// Use Fast critical section, because we don't need locking so often.
@@ -115,6 +118,12 @@ private:
 	
 	/** Port for communicating in this network */
 	uint16_t port;
+	
+	/** My own IP address */
+	string ip;
+	
+	/** Indicates whether to send INF to check own IP */
+	uint8_t recheckIP;
 	
 	/** UDP socket */
 	std::auto_ptr<Socket> socket;
@@ -131,12 +140,11 @@ private:
 	/** Downloaded node list */
 	string nodesXML;
 	
-	/** The IP of last received packet */
-	string lastIP;
-	
-	/** next timer operations */
+	/** timer operations */
 	uint64_t nextSelfLookup;
 	uint64_t nextSearchJumpStart;
+	uint64_t nextFirewallCheck;
+	uint64_t lastPacket;
 	
 #ifdef _DEBUG
 	// debug constants to optimize bandwidth
@@ -144,6 +152,9 @@ private:
 	size_t receivedBytes;
 #endif
 
+	/** Sends my info to ip and port */
+	void info(const string& ip, uint16_t port, bool request, bool firewallCheck);
+	
 	/** Thread for receiving UDP packets */
 	int run();
 	
@@ -153,10 +164,12 @@ private:
 	/** Saves network information to XML file */
 	void saveData();
 	
+	void handle(AdcCommand::INF, AdcCommand& c) throw();	// incoming node details
 	void handle(AdcCommand::REQ, AdcCommand& c) throw();	// incoming kademlia request
 	void handle(AdcCommand::SCH, AdcCommand& c) throw();	// incoming search request
 	void handle(AdcCommand::PUB, AdcCommand& c) throw();	// incoming publish request	
 	void handle(AdcCommand::RES, AdcCommand& c) throw();	// incoming search/kademlia response
+	void handle(AdcCommand::STA, AdcCommand& c) throw();	// error received
 	
 	/** Unsupported command */
 	template<typename T> void handle(T, AdcCommand&) { }

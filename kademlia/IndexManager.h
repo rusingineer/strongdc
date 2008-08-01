@@ -18,12 +18,26 @@
 
 #pragma once
 
-#include "../client/Singleton.h"
-
 #include "KademliaManager.h"
+
+#include "../client/ShareManager.h"
+#include "../client/Singleton.h"
 
 namespace kademlia
 {
+
+struct File
+{
+	File() { };
+	File(const TTHValue& _tth, int64_t _size) :
+		tth(_tth), size(_size) { }
+		
+	/** File hash */
+	TTHValue tth;
+	
+	/** File size in bytes */
+	int64_t size;
+};
 
 class IndexManager :
 	public Singleton<IndexManager>
@@ -38,17 +52,33 @@ public:
 	/** Finds TTH in known indexes and returns it */
 	bool findResult(const TTHValue& tth, SourceList& sources) const;
 	
+	/** Try to publish next file in queue */
+	void publishNextFile();
+	
+	/** Create publish queue from local file list */
+	void createPublishQueue(ShareManager::HashFileMap& tthIndex);
+	
 	/** Loads existing indexes from disk */
 	void loadIndexes(SimpleXML& xml);
 	
 	/** Save all indexes to disk */
-	void saveIndexes(SimpleXML& xml);	
+	void saveIndexes(SimpleXML& xml);
+	
+	/** Returns the time when our filelist has been published for the last time */
+	uint64_t getLastPublishTime() const { return lastPublishTime; }	
 	
 private:
 
 	/** Contains known hashes in the network and their sources */
 	typedef std::tr1::unordered_map<TTHValue, SourceList> TTHMap;
 	TTHMap tthList;
+	
+	/** Queue of files prepared for publishing */
+	typedef std::deque<File> FileQueue;
+	FileQueue publishQueue;
+	
+	/** Time when our files have been published for the last time */
+	uint64_t lastPublishTime;
 	
 	/** Synchronizes access to tthList */
 	mutable CriticalSection cs;

@@ -20,6 +20,7 @@
 
 #include "../client/ClientManager.h"
 #include "../client/CriticalSection.h"
+#include "../client/Forward.h"
 #include "../client/SimpleXML.h"
 #include "../client/User.h"
 
@@ -34,11 +35,11 @@ public:
 	RoutingTable(void);
 	~RoutingTable(void);
 	
-	/** Returns pointer to node */
-	OnlineUserPtr findNode(const CID& cid);
+	///** Returns pointer to node */
+	//OnlineUserPtr findNode(const CID& cid);
 	
 	/** Returns up  "maximum" number of nodes closest to "cid" */
-	void getClosestTo(const CID& cid, size_t maximum, NodeMap& results);
+	size_t getClosestTo(const CID& cid, size_t maximum, NodeMap& results) const;
 	
 	/** Loads existing nodes from disk */
 	void loadNodes(SimpleXML& xml);
@@ -47,20 +48,30 @@ public:
 	void saveNodes(SimpleXML& xml);
 	
 	/** Adds new online node to routing table */
-	OnlineUserPtr add(const CID& cid, const string& ip, const string& tcpPort, const string& udpPort);
+	OnlineUserPtr add(const CID& cid);
+	
+	/** Returns all online nodes */
+	void getAllNodes(NodeList& list) const;
 	
 private:
-
-/************* temporaty solution ***************/
 	/** Map CID to OnlineUser */
 	typedef std::tr1::unordered_map<CID*, OnlineUserPtr> CIDMap;
 	typedef CIDMap::const_iterator CIDIter;
-	
-	/** Stores all online nodes */
-	CIDMap nodes;
+
+	/** Nodes in this zone (if it is a leaf) */
+	CIDMap* nodes;
 	
 	/** Synchronizes access to nodes */
-	CriticalSection cs;
+	mutable CriticalSection cs; // TODO: could this be static?
+	
+	/** Right and left branches */
+	RoutingTable* subZones[2];
+	
+	/** Zone index as a distance from center zone at this level */
+	CID zoneIndex;
+	
+	/** Zone level - max is 192 (sizeof(CID)) */
+	uint8_t level;
 };
 
 } // namespace kademlia

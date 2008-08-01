@@ -23,7 +23,7 @@
 #define DCVERSIONSTRING "0.707"
 #define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
 
-#define SVNVERSION "svn413"
+#define SVNVERSION "svn414"
 
 /* Update the .rc file as well... */
 

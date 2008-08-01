@@ -1274,9 +1274,6 @@ void WinUtil::unRegisterMagnetHandler() {
 }
 
 void WinUtil::openLink(const tstring& url) {
-	CRegKey key;
-	TCHAR regbuf[MAX_PATH];
-	ULONG len = MAX_PATH;
 	if(_strnicmp(Text::fromT(url).c_str(), "magnet:?", 8) == 0) {
 		parseMagnetUri(url);
 		return;
@@ -1284,60 +1281,6 @@ void WinUtil::openLink(const tstring& url) {
 	if(_strnicmp(Text::fromT(url).c_str(), "dchub://", 8) == 0) {
 		parseDchubUrl(url);
 		return;
-	}
-	tstring x;
-
-	tstring::size_type i = url.find(_T("://"));
-	if(i != string::npos) {
-		x = url.substr(0, i);
-	} else {
-		x = _T("http");
-	}
-	x += _T("\\shell\\open\\command");
-	if(key.Open(HKEY_CLASSES_ROOT, x.c_str(), KEY_READ) == ERROR_SUCCESS) {
-		if(key.QueryStringValue(NULL, regbuf, &len) == ERROR_SUCCESS) {
-			/*
-			 * Various values (for http handlers):
-			 *  C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -url "%1"
-			 *  "C:\Program Files\Internet Explorer\iexplore.exe" -nohome
-			 *  "C:\Apps\Opera7\opera.exe"
-			 *  C:\PROGRAMY\MOZILLA\MOZILLA.EXE -url "%1"
-			 *  C:\PROGRA~1\NETSCAPE\NETSCAPE\NETSCP.EXE -url "%1"
-			 */
-			tstring cmd(regbuf); // otherwise you consistently get two trailing nulls
-			
-			if(cmd.length() > 1) {
-				string::size_type start,end;
-				if(cmd[0] == '"') {
-					start = 1;
-					end = cmd.find('"', 1);
-				} else {
-					start = 0;
-					end = cmd.find(' ', 1);
-				}
-				if(end == string::npos)
-					end = cmd.length();
-
-				tstring cmdLine(cmd);
-				cmd = cmd.substr(start, end-start);
-				size_t arg_pos;
-				if((arg_pos = cmdLine.find(_T("%1"))) != string::npos) {
-					cmdLine.replace(arg_pos, 2, url);
-				} else {
-					cmdLine.append(_T(" \"") + url + _T('\"'));
-				}
-
-				STARTUPINFO si = { sizeof(si), 0 };
-				PROCESS_INFORMATION pi = { 0 };
-				boost::scoped_array<TCHAR> buf(new TCHAR[cmdLine.length() + 1]);
-				_tcscpy(&buf[0], cmdLine.c_str());
-				if(::CreateProcess(cmd.c_str(), &buf[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-					::CloseHandle(pi.hThread);
-					::CloseHandle(pi.hProcess);
-					return;
-				}
-			}
-		}
 	}
 
 	::ShellExecute(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOWNORMAL);

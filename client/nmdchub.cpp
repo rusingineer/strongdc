@@ -138,6 +138,8 @@ void NmdcHub::clearUsers() {
 			i->second->dec();
 		}
 	}
+	
+	userCount = 0;
 }
 
 void NmdcHub::updateFromTag(Identity& id, const string& tag) {
@@ -242,13 +244,13 @@ void NmdcHub::onLine(const string& aLine) throw() {
 	string::size_type x;
 	
 	if( (x = aLine.find(' ')) == string::npos) {
-		cmd = aLine;
+		cmd = aLine.substr(1);
 	} else {
-		cmd = aLine.substr(0, x);
+		cmd = aLine.substr(1, x - 1);
 		param = toUtf8(aLine.substr(x+1));
 	}
 
-	if(cmd == "$Search") {
+	if(cmd == "Search") {
 		if(state != STATE_NORMAL) {
 			return;
 		}
@@ -347,7 +349,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 			fire(ClientListener::NmdcSearch(), this, seeker, a, Util::toInt64(size), type, terms, bPassive);
 		}
-	} else if(cmd == "$MyINFO") {
+	} else if(cmd == "MyINFO") {
 		string::size_type i, j;
 		i = 5;
 		j = param.find(' ', i);
@@ -433,7 +435,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 		
 		fire(ClientListener::UserUpdated(), this, &u);
-	} else if(cmd == "$Quit") {
+	} else if(cmd == "Quit") {
 		if(!param.empty()) {
 			const string& nick = param;
 			OnlineUserPtr u = findUser(nick);
@@ -444,7 +446,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 			putUser(nick);
 		}
-	} else if(cmd == "$ConnectToMe") {
+	} else if(cmd == "ConnectToMe") {
 		if(state != STATE_NORMAL) {
 			return;
 		}
@@ -477,7 +479,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			
 		// For simplicity, we make the assumption that users on a hub have the same character encoding
 		ConnectionManager::getInstance()->nmdcConnect(server, static_cast<uint16_t>(Util::toInt(port)), getMyNick(), getHubUrl(), getEncoding(), getStealth(), secure);
-	} else if(cmd == "$RevConnectToMe") {
+	} else if(cmd == "RevConnectToMe") {
 		if(state != STATE_NORMAL) {
 			return;
 		}
@@ -503,9 +505,9 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				return;
 			}
 		}
-	} else if(cmd == "$SR") {
+	} else if(cmd == "SR") {
 		SearchManager::getInstance()->onSearchResult(aLine);
-	} else if(cmd == "$HubName") {
+	} else if(cmd == "HubName") {
 		// If " - " found, the first part goes to hub name, rest to description
 		// If no " - " found, first word goes to hub name, rest to description
 
@@ -524,7 +526,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			getHubIdentity().setDescription(unescape(param.substr(i+3)));
 		}
 		fire(ClientListener::HubUpdated(), this);
-	} else if(cmd == "$Supports") {
+	} else if(cmd == "Supports") {
 		StringTokenizer<string> st(param, ' ');
 		StringList& sl = st.getTokens();
 		for(StringIter i = sl.begin(); i != sl.end(); ++i) {
@@ -536,7 +538,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				supportFlags |= SUPPORTS_USERIP2;
 			}
 		}
-	} else if(cmd == "$UserCommand") {
+	} else if(cmd == "UserCommand") {
 		string::size_type i = 0;
 		string::size_type j = param.find(' ');
 		if(j == string::npos)
@@ -561,7 +563,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			string command = unescape(param.substr(i, param.length() - i));
 			fire(ClientListener::HubUserCommand(), this, type, ctx, name, command);
 		}
-	} else if(cmd == "$Lock") {
+	} else if(cmd == "Lock") {
 		if(state != STATE_PROTOCOL || aLine.size() < 6) {
 			return;
 		}
@@ -604,7 +606,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			OnlineUser& ou = getUser(getCurrentNick());
 			validateNick(ou.getIdentity().getNick());
 		}
-	} else if(cmd == "$Hello") {
+	} else if(cmd == "Hello") {
 		if(!param.empty()) {
 			OnlineUser& u = getUser(param);
 
@@ -627,15 +629,15 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 			fire(ClientListener::UserUpdated(), this, &u);
 		}
-	} else if(cmd == "$ForceMove") {
+	} else if(cmd == "ForceMove") {
 		disconnect(false);
 		fire(ClientListener::Redirect(), this, param);
-	} else if(cmd == "$HubIsFull") {
+	} else if(cmd == "HubIsFull") {
 		fire(ClientListener::HubFull(), this);
-	} else if(cmd == "$ValidateDenide") {		// Mind the spelling...
+	} else if(cmd == "ValidateDenide") {		// Mind the spelling...
 		disconnect(false);
 		fire(ClientListener::NickTaken(), this);
-	} else if(cmd == "$UserIP") {
+	} else if(cmd == "UserIP") {
 		if(!param.empty()) {
 			OnlineUserList v;
 			StringTokenizer<string> t(param, "$$");
@@ -661,7 +663,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 			fire(ClientListener::UsersUpdated(), this, v);
 		}
-	} else if(cmd == "$NickList") {
+	} else if(cmd == "NickList") {
 		if(!param.empty()) {
 			OnlineUserList v;
 			StringTokenizer<string> t(param, "$$");
@@ -691,7 +693,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 			fire(ClientListener::UsersUpdated(), this, v);
 		}
-	} else if(cmd == "$OpList") {
+	} else if(cmd == "OpList") {
 		if(!param.empty()) {
 			OnlineUserList v;
 			StringTokenizer<string> t(param, "$$");
@@ -714,7 +716,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			// updated when they log in (they'll be counted as registered first...)
 			myInfo(false);
 		}
-	} else if(cmd == "$To:") {
+	} else if(cmd == "To:") {
 		string::size_type i = param.find("From:");
 		if(i == string::npos)
 			return;
@@ -773,19 +775,18 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 		OnlineUser& to = getUser(getMyNick());
 		fire(ClientListener::PrivateMessage(), this, *from, &to, replyTo, unescape(msg), thirdPerson);
-	} else if(cmd == "$GetPass") {
+	} else if(cmd == "GetPass") {
 		OnlineUser& ou = getUser(getMyNick());
 		ou.getIdentity().set("RG", "1");
 		setMyIdentity(ou.getIdentity());
 		fire(ClientListener::GetPassword(), this);
-	} else if(cmd == "$BadPass") {
+	} else if(cmd == "BadPass") {
 		setPassword(Util::emptyString);
-	} else if(cmd == "$ZOn") {
+	} else if(cmd == "ZOn") {
 		sock->setMode(BufferedSocket::MODE_ZPIPE);
-	} else if(cmd == "$HubTopic") {
+	} else if(cmd == "HubTopic") {
 		fire(ClientListener::HubTopic(), this, param);
 	} else {
-		dcassert(cmd[0] == '$');
 		dcdebug("NmdcHub::onLine Unknown command %s\n", aLine.c_str());
 	} 
 }

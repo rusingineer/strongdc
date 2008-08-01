@@ -455,7 +455,7 @@ LRESULT MainFrame::onQuickSearchEditChange(WORD /*wNotifyCode*/, WORD /*wID*/, H
 void MainFrame::updateQuickSearches() {
 	QuickSearchBox.ResetContent();
 	
-	for(TStringList::const_iterator i = SearchFrame::getLastSearches().begin(); i != SearchFrame::getLastSearches().end(); ++i) {
+	for(std::set<tstring>::const_iterator i = SearchFrame::getLastSearches().begin(); i != SearchFrame::getLastSearches().end(); ++i) {
 		QuickSearchBox.InsertString(0, i->c_str());
 	}	
 	
