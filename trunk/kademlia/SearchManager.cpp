@@ -91,7 +91,8 @@ void Search::processResponse(const CID& cid, NodeList& results)
 					// add to tried nodes
 					triedNodes[distance] = *i;
 					
-					// TODO: set dead node timeout
+					// set possibly dead node timeout
+					(*i)->getIdentity().set("EX", Util::toString(GET_TICK() + NODE_RESPONSE_TIMEOUT));
 					
 					// send search request
 					sendRequest((*i)->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt((*i)->getIdentity().getUdpPort())));
@@ -159,7 +160,8 @@ void Search::process()
 	triedNodes[possibleNodes.begin()->first] = ou;
 	possibleNodes.erase(possibleNodes.begin());
 	
-	// TODO: set dead node timeout
+	// set possibly dead node timeout
+	ou->getIdentity().set("EX", Util::toString(GET_TICK() + NODE_RESPONSE_TIMEOUT));
 	
 	// search
 	sendRequest(ou->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou->getIdentity().getUdpPort())));
@@ -222,7 +224,9 @@ void SearchManager::search(Search& s)
 		s.triedNodes[it->first] = ou;
 		s.possibleNodes.erase(it);
 		
-		// TODO: set dead node timeout
+		// set possibly dead node timeout
+		ou->getIdentity().set("EX", Util::toString(GET_TICK() + NODE_RESPONSE_TIMEOUT));
+		
 		s.sendRequest(ou->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou->getIdentity().getUdpPort())));
 	}
 }
@@ -395,16 +399,13 @@ void SearchManager::processSearches()
 		{
 			// search time out, stop it
 			delete s;
-			
-			SearchMap::iterator tmp = it;
-			it++;
-			searches.erase(tmp);
+			searches.erase(it++);
 		}
 		else
 		{
 			// it's time to process this search
 			s->process();
-			it++;
+			++it;
 		}		
 	}
 }

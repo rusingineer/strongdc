@@ -29,6 +29,7 @@
 
 // external includes
 #include <ClientManager.h>
+#include <ConnectionManager.h>
 #include <CryptoManager.h>
 #include <File.h>
 #include <LogManager.h>
@@ -48,8 +49,8 @@ namespace kademlia
 const uint32_t POLL_TIMEOUT = 250;
 
 KademliaManager::KademliaManager(void) : stop(false), port(0), nextSelfLookup(GET_TICK() + 15*1000),
-	nextSearchJumpStart(GET_TICK()), nextFirewallCheck(GET_TICK() + FIREWALL_CHECK_TIMER), 
-	lastPacket(0), ip("0.0.0.0")
+	nextSearchJumpStart(GET_TICK()), nextInfAllow(GET_TICK() + INF_SENT_TIMER),
+	lastPacket(0), sentINFs(0)
 #ifdef _DEBUG
 	, sentBytes(0), receivedBytes(0)
 #endif
@@ -223,7 +224,6 @@ int KademliaManager::run()
 			
 			if(p != NULL)
 			{
-				// TODO: introduce some delay for sending packets not to flood UDP socket
 				try
 				{
 					dcdrun(sentBytes += p->length);
@@ -278,7 +278,7 @@ int KademliaManager::run()
 						
 						// hack:	because ADC UDP command don't have "to" and "from" set, we can abuse it
 						//			to set IP and port
-						cmd.setFrom(ntohl(remoteAddr.sin_addr.s_addr));
+						cmd.setFrom(remoteAddr.sin_addr.s_addr);
 						cmd.setTo(ntohs(remoteAddr.sin_port));
 						
 						lastPacket = GET_TICK();
@@ -347,7 +347,6 @@ void KademliaManager::send(const AdcCommand& cmd, const string& ip, uint16_t por
 	uint8_t* srcBuf = (uint8_t*)command.data();
 	uint8_t* destBuf = new uint8_t[destSize];
 	
-	// packets are small, so compress them using fast method
 	int result = compress2(destBuf + 1, &destSize, srcBuf, command.length(), SETTING(MAX_COMPRESSION));
 	if(result == Z_OK && destSize <= command.length())
 	{
@@ -367,32 +366,44 @@ void KademliaManager::send(const AdcCommand& cmd, const string& ip, uint16_t por
 	sendQueue.push_back(new Packet(ip, port, destBuf, destSize)); 
 }
 
-void KademliaManager::info(const string& ip, uint16_t port, bool request, bool firewallCheck)
+void KademliaManager::connect(const OnlineUserPtr& ou, const string& token)
+{
+	bool secure = CryptoManager::getInstance()->TLSOk() && ou->getUser()->isSet(User::TLS);
+	uint16_t port = secure ? ConnectionManager::getInstance()->getSecurePort() : ConnectionManager::getInstance()->getPort();
+	
+	AdcCommand cmd(AdcCommand::CMD_CTM, AdcCommand::TYPE_UDP);
+	cmd.addParam(secure ? SECURE_CLIENT_PROTOCOL_TEST : CLIENT_PROTOCOL);
+	cmd.addParam(Util::toString(port));
+	cmd.addParam(token);
+	
+	send(cmd, ou->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou->getIdentity().getUdpPort())));
+}
+
+void KademliaManager::info(const string& ip, uint16_t port, bool request)
 {
 	AdcCommand cmd(AdcCommand::CMD_INF, AdcCommand::TYPE_UDP);
 	cmd.addParam("VE", Util::toString(KADEMLIA_VERSION));
 	cmd.addParam("NI", SETTING(NICK));
-	cmd.addParam("I4", firewallCheck ? "0.0.0.0" : this->ip);
 	cmd.addParam("U4", Util::toString(this->port));
 	cmd.addParam("RE", request ? "1" : "0");
 	
-	// TODO: add more info?
-	if(firewallCheck)
+	string su;
+	if(CryptoManager::getInstance()->TLSOk())
 	{
-		Lock l(cs);
-		uint64_t now = GET_TIME();
-		requestedFirewalledChecks[ip] = now;
-		
-		std::tr1::unordered_map<string, uint64_t>::iterator i = requestedFirewalledChecks.begin();
-		while(i != requestedFirewalledChecks.end())
-		{
-			if(now - i->second > NODE_RESPONSE_TIMEOUT)
-				requestedFirewalledChecks.erase(i++);
-			else
-				++i;
-		}
+		su += ADCS_FEATURE ",";
+	}
+
+	if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
+	{
+		su += TCP4_FEATURE ",";
+		su += UDP4_FEATURE ",";
 	}
 	
+	if(!su.empty()) {
+		su.erase(su.size() - 1);
+	}
+	cmd.addParam("SU", su);
+		
 	send(cmd, ip, port);
 }
 
@@ -405,57 +416,48 @@ void KademliaManager::handle(AdcCommand::INF, AdcCommand& cmd) throw()
 	if(cid.size() != 39)
 		return;
 	
+	if(CID(cid) == ClientManager::getInstance()->getMyCID())
+		return;
+		
 	in_addr addr; addr.s_addr = cmd.getFrom();
 	string senderIp = inet_ntoa(addr);
 	uint16_t senderPort = static_cast<uint16_t>(cmd.getTo());
 
-	string ip;	
-	if(!cmd.getParam("I4", 0, ip))
+	if(Util::isPrivateIp(senderIp))
 	{
-		send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_GENERIC, "IP unknown", AdcCommand::TYPE_UDP), senderIp, senderPort);
-		return; // no IP supplied
-	}
-	
-	// TODO: should we check port too?
-	if(Util::isPrivateIp(ip) || ip != senderIp)
-	{
-		if(ip == "0.0.0.0")
-		{
-			// send correct public IP to the node
-			send(AdcCommand(AdcCommand::SEV_SUCCESS, AdcCommand::ERROR_GENERIC, senderIp, AdcCommand::TYPE_UDP).addParam("FC", "UINF"), senderIp, senderPort);
-		}
-		else
-		{
-			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_BAD_IP, "Your client supplied invalid IP: " + ip, AdcCommand::TYPE_UDP), senderIp, senderPort);
-			return; // invalid ip supplied
-		}
+		send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_BAD_IP, "Your client supplied local IP: " + senderIp, AdcCommand::TYPE_UDP), senderIp, senderPort);
+		return; // local ip supplied
 	}
 	
 	OnlineUserPtr ou = routingTable->add(CID(cid));
-	ou->getIdentity().setIp(senderIp);
-	ou->getIdentity().setUdpPort(Util::toString(senderPort));
-	
-	for(StringIterC i = cmd.getParameters().begin(); i != cmd.getParameters().end(); ++i) {
-		if(i->length() < 2)
-			continue;
+	if(ou)
+	{
+		ou->getIdentity().setIp(senderIp);
+		ou->getIdentity().setUdpPort(Util::toString(senderPort));
+		
+		for(StringIterC i = cmd.getParameters().begin(); i != cmd.getParameters().end(); ++i) {
+			if(i->length() < 2)
+				continue;
 
-		if(i->substr(0, 2) != "RE") {
-			ou->getIdentity().set(i->c_str(), i->substr(2));
+			if(i->substr(0, 2) != "RE") {
+				ou->getIdentity().set(i->c_str(), i->substr(2));
+			}
+		}
+		
+		// ignore stated values
+		ou->getIdentity().setIp(senderIp);
+		ou->getIdentity().setUdpPort(Util::toString(senderPort));
+
+		if(ou->getIdentity().supports(ADCS_FEATURE))
+		{
+			ou->getUser()->setFlag(User::TLS);
 		}
 	}
 	
-	// ignore stated values
-	ou->getIdentity().setIp(senderIp);
-	ou->getIdentity().setUdpPort(Util::toString(senderPort));
-
 	string request;
 	if(cmd.getParam("RE", 0, request) && request[0] == '1')
 	{
-		info(senderIp, senderPort, false, recheckIP < MAX_RECHECK_IP);
-	}
-	else
-	{
-		// TODO: set node alive
+		info(senderIp, senderPort, false);
 	}
 }
 
@@ -472,10 +474,10 @@ void KademliaManager::handle(AdcCommand::REQ, AdcCommand& cmd) throw()
 	string senderIp = inet_ntoa(addr);
 	uint16_t senderPort = static_cast<uint16_t>(cmd.getTo());
 	
-	if(recheckIP < MAX_RECHECK_IP)
+	if(sentINFs++ < MAX_INF_PER_TIME)
 	{
 		// send my info
-		info(senderIp, senderPort, true, true);
+		info(senderIp, senderPort, true);
 	}
 	
 	string token;
@@ -559,6 +561,7 @@ void KademliaManager::handle(AdcCommand::PUB, AdcCommand& cmd) throw()
 		return;	// no file size?
 		
 	Identity identity(ClientManager::getInstance()->getUser(CID(cid)), 0);
+	identity.getUser()->setFlag(User::KADEMLIA);
 	identity.setIp(senderIp);
 	identity.setUdpPort(Util::toString(senderPort));
 	identity.set("SS", size);
@@ -573,14 +576,14 @@ void KademliaManager::handle(AdcCommand::RES, AdcCommand& c) throw()
 	if(c.getParameters().empty())
 		return;
 		
-	in_addr addr; addr.s_addr = c.getFrom();
-	string senderIp = inet_ntoa(addr);
-	uint16_t senderPort = static_cast<uint16_t>(c.getTo());
-	
-	if(recheckIP < MAX_RECHECK_IP) // TODO: do this only when RES is response to REQ
+	if(sentINFs++ < MAX_INF_PER_TIME) // TODO: do this only when RES is response to REQ
 	{
+		in_addr addr; addr.s_addr = c.getFrom();
+		string senderIp = inet_ntoa(addr);
+		uint16_t senderPort = static_cast<uint16_t>(c.getTo());
+		
 		// send my info
-		info(senderIp, senderPort, true, true);
+		info(senderIp, senderPort, true);
 	}
 	
 	SearchManager::getInstance()->processSearchResponse(c);
@@ -594,26 +597,55 @@ void KademliaManager::handle(AdcCommand::STA, AdcCommand& c) throw()
 	in_addr addr; addr.s_addr = c.getFrom();
 	string senderIp = inet_ntoa(addr);		
 	
-	string fc;
-	c.getParam("FC", 0, fc);
-	
-	if(fc == "UINF")
-	{
-		// check that we have really requested firewalled check from this IP
-		Lock l(cs);
-		if(requestedFirewalledChecks.count(senderIp) > 0)
-		{
-			// ip updated, we could use this to update Direct Connect IP aswell
-			ip = c.getParam(1);
-			requestedFirewalledChecks.erase(senderIp);
-			recheckIP++;
-		} // TODO: else IP spoofing
+	// we should disconnect from network when severity is fatal, but it could be possible exploit
+	LogManager::getInstance()->message("Kademlia error (" + senderIp + "): " + c.getParam(1)); // TODO: translate
+}
+
+void KademliaManager::handle(AdcCommand::CTM, AdcCommand& c) throw()
+{
+	if(c.getParameters().size() < 4)
+		return;
+		
+	string cid = c.getParam(0);
+	if(cid.size() != 39)
+		return;		
+
+	in_addr addr; addr.s_addr = c.getFrom();
+	string senderIp = inet_ntoa(addr);
+	uint16_t senderPort = static_cast<uint16_t>(c.getTo());
+
+	OnlineUserPtr u = routingTable->add(CID(cid));
+	if(!u)
+		return;
+		
+	u->getIdentity().setIp(senderIp);
+	u->getIdentity().setUdpPort(Util::toString(senderPort));
+		
+	const string& protocol = c.getParam(1);
+	const string& port = c.getParam(2);
+	const string& token = c.getParam(3);
+
+	bool secure = false;
+	if(protocol == CLIENT_PROTOCOL) {
+		// Nothing special
+	} else if(protocol == SECURE_CLIENT_PROTOCOL_TEST && CryptoManager::getInstance()->TLSOk()) {
+		secure = true;
+	} else {
+		AdcCommand cmd(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_UNSUPPORTED, "Protocol unknown", AdcCommand::TYPE_UDP);
+		cmd.setTo(c.getFrom());
+		cmd.addParam("PR", protocol);
+		cmd.addParam("TO", token);
+
+		send(cmd, senderIp, senderPort);
+		return;
 	}
-	else
-	{
-		// we should disconnect from network when severity is fatal, but it could be possible exploit
-		LogManager::getInstance()->message("Kademlia error (" + senderIp + "): " + c.getParam(1)); // TODO: translate
+
+	if(!u->getIdentity().isTcpActive()) {
+		send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_GENERIC, "IP unknown", AdcCommand::TYPE_UDP), senderIp, senderPort);
+		return;
 	}
+
+	ConnectionManager::getInstance()->adcConnect(*u, static_cast<uint16_t>(Util::toInt(port)), token, secure);
 }
 
 void KademliaManager::on(HttpConnectionListener::Data, HttpConnection*, const uint8_t* buf, size_t len) throw()
@@ -716,10 +748,10 @@ void KademliaManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 		SearchManager::getInstance()->findNode(ClientManager::getInstance()->getMyCID());
 		nextSelfLookup = aTick + SELF_LOOKUP_TIMER;
 	}
-	if(aTick >= nextFirewallCheck) // check if we are behind firewall
+	if(aTick >= nextInfAllow) // allow to sent own INF to new nodes
 	{
-		recheckIP = 0;
-		nextFirewallCheck = aTick + FIREWALL_CHECK_TIMER;
+		sentINFs = 0;
+		nextInfAllow = aTick + INF_SENT_TIMER;
 	}
 	if(aTick >= nextSearchJumpStart) // send next search request
 	{

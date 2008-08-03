@@ -29,17 +29,20 @@
 namespace kademlia
 {
 
-class RoutingTable
+class RoutingTable :
+	private TimerManagerListener
 {
 public:
 	RoutingTable(void);
+	RoutingTable(uint8_t _level);
+	
 	~RoutingTable(void);
-	
-	///** Returns pointer to node */
-	//OnlineUserPtr findNode(const CID& cid);
-	
+
 	/** Returns up  "maximum" number of nodes closest to "cid" */
 	size_t getClosestTo(const CID& cid, size_t maximum, NodeMap& results) const;
+	
+	/** Returns pointer to a node with given CID */
+	OnlineUserPtr findNode(const CID& cid) const;
 	
 	/** Loads existing nodes from disk */
 	void loadNodes(SimpleXML& xml);
@@ -72,6 +75,9 @@ private:
 	
 	/** Zone level - max is 192 (sizeof(CID)) */
 	uint8_t level;
+	
+	/** TimerManagerListener */
+	void on(TimerManagerListener::Minute, uint64_t aTick) throw();
 };
 
 } // namespace kademlia
