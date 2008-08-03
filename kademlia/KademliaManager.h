@@ -62,7 +62,10 @@ public:
 	
 	/** Starts listening to UDP socket */
 	void listen() throw(SocketException);
-		
+	
+	/** Sends Connect To Me request to online node */
+	void connect(const OnlineUserPtr& ou, const string& token);
+	
 	/** Searches for a file in the network */
 	uint64_t search(const TTHValue& tth);
 	
@@ -101,9 +104,6 @@ private:
 		size_t length;
 	};
 	
-	/** Map of IP we have requested a firewalled check from */
-	std::tr1::unordered_map<string, uint64_t> requestedFirewalledChecks;
-	
 	/** Locks access to sending queue */
 	// TODO: 
 	// Use Fast critical section, because we don't need locking so often.
@@ -119,11 +119,8 @@ private:
 	/** Port for communicating in this network */
 	uint16_t port;
 	
-	/** My own IP address */
-	string ip;
-	
-	/** Indicates whether to send INF to check own IP */
-	uint8_t recheckIP;
+/** Indicates whether we can send own INF */
+	uint8_t sentINFs;
 	
 	/** UDP socket */
 	std::auto_ptr<Socket> socket;
@@ -143,7 +140,7 @@ private:
 	/** timer operations */
 	uint64_t nextSelfLookup;
 	uint64_t nextSearchJumpStart;
-	uint64_t nextFirewallCheck;
+	uint64_t nextInfAllow;
 	uint64_t lastPacket;
 	
 #ifdef _DEBUG
@@ -153,7 +150,7 @@ private:
 #endif
 
 	/** Sends my info to ip and port */
-	void info(const string& ip, uint16_t port, bool request, bool firewallCheck);
+	void info(const string& ip, uint16_t port, bool request);
 	
 	/** Thread for receiving UDP packets */
 	int run();
@@ -170,6 +167,7 @@ private:
 	void handle(AdcCommand::PUB, AdcCommand& c) throw();	// incoming publish request	
 	void handle(AdcCommand::RES, AdcCommand& c) throw();	// incoming search/kademlia response
 	void handle(AdcCommand::STA, AdcCommand& c) throw();	// error received
+	void handle(AdcCommand::CTM, AdcCommand& c) throw();	// incoming connect to me request
 	
 	/** Unsupported command */
 	template<typename T> void handle(T, AdcCommand&) { }

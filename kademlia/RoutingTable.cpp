@@ -26,6 +26,7 @@
 #include <CID.h>
 #include <ClientManager.h>
 #include <SimpleXML.h>
+#include <User.h>
 
 namespace kademlia
 {
@@ -38,17 +39,30 @@ RoutingTable::RoutingTable(void) : level(0)
 	
 	uint8_t zero[CID::SIZE] = { 0 };
 	zoneIndex = CID(zero);
+	
+	TimerManager::getInstance()->addListener(this);
+}
+
+RoutingTable::RoutingTable(uint8_t _level) : level(_level)
+{
+	subZones[0] = NULL;
+	subZones[1] = NULL;
+	nodes = new CIDMap;
+	
+	TimerManager::getInstance()->addListener(this);
 }
 
 RoutingTable::~RoutingTable(void)
 {
+	TimerManager::getInstance()->removeListener(this);
+	delete nodes;
 }
 
 OnlineUserPtr RoutingTable::add(const CID& cid)
 {
 	// don't store myself in routing table
 	if(cid == ClientManager::getInstance()->getMyCID())
-		return NULL; // really NULL???
+		return NULL;
 		
 	CID distance = KadUtils::getDistance(cid, ClientManager::getInstance()->getMyCID());
 	
@@ -59,39 +73,51 @@ OnlineUserPtr RoutingTable::add(const CID& cid)
 	}
 	else
 	{
-		// TODO: split and merge subzones
 		CIDMap::const_iterator i = nodes->find(const_cast<CID*>(&cid));
 		if(i != nodes->end())
+		{
+			i->second->getUser()->setFlag(User::KADEMLIA);
+			i->second->getIdentity().set("EX", Util::toString(GET_TICK() + NODE_EXPIRATION));
 			return i->second;
+		}
 
-		// TODO: add only when not full
 		// firstly connected node
-		UserPtr p = ClientManager::getInstance()->getUser(cid);
-		OnlineUserPtr ou = nodes->insert(make_pair(const_cast<CID*>(&p->getCID()), new OnlineUser(p, *reinterpret_cast<Client*>(NULL), 0))).first->second;
-		ClientManager::getInstance()->putOnline(ou.get());
-
-		return ou;		
+		if(nodes->size() < BUCKET_SIZE)
+		{
+			UserPtr p = ClientManager::getInstance()->getUser(cid);
+			p->setFlag(User::KADEMLIA);
+			
+			OnlineUserPtr ou = nodes->insert(make_pair(const_cast<CID*>(&p->getCID()), new OnlineUser(p, *reinterpret_cast<Client*>(NULL), 0))).first->second;
+			ClientManager::getInstance()->putOnline(ou.get());
+			
+			return ou;
+		}
+		else if(level < sizeof(CID) - 1)	// can the leaf be split?
+		{
+			TimerManager::getInstance()->removeListener(this);
+			
+			subZones[0] = new RoutingTable(level + 1);
+			subZones[1] = new RoutingTable(level + 1);
+			
+			// add current nodes to new subzones
+			for(CIDMap::const_iterator i = nodes->begin(); i != nodes->end(); i++)
+			{
+				CID dist = KadUtils::getDistance(*i->first, ClientManager::getInstance()->getMyCID());
+				subZones[KadUtils::getBit(dist.data(), level)]->nodes->insert(make_pair(i->first, i->second));
+			}
+			
+			delete nodes;
+			nodes = NULL;
+			
+			return subZones[KadUtils::getBit(distance.data(), level)]->add(cid);
+		}
+		else
+		{
+			return NULL;
+		}		
 	}
 }
 	
-//OnlineUserPtr RoutingTable::findNode(const CID& cid)
-//{
-//	Lock l(cs);
-//	if(nodes != NULL)
-//	{
-//		CIDMap::iterator i = nodes.find(const_cast<CID*>(&cid));
-//		if(i != nodes.end())
-//			return i->second;
-//	
-//		return NULL;
-//	}
-//	else
-//	{
-//		// TODO: should there really be bit from cid???
-//		return subZones[KadUtils::getBit(cid.data(), level)]->findNode(cid);
-//	}
-//}
-
 size_t RoutingTable::getClosestTo(const CID& cid, size_t maximum, NodeMap& results) const
 {
 	Lock l(cs);
@@ -118,6 +144,27 @@ size_t RoutingTable::getClosestTo(const CID& cid, size_t maximum, NodeMap& resul
 			found += subZones[1 - closer]->getClosestTo(cid, maximum - found, results);
 
 		return found;	
+	}
+}
+
+OnlineUserPtr RoutingTable::findNode(const CID& cid) const
+{
+	CID distance = KadUtils::getDistance(cid, ClientManager::getInstance()->getMyCID());
+	
+	Lock l(cs);
+	if(nodes == NULL)
+	{
+		return subZones[KadUtils::getBit(distance.data(), level)]->findNode(cid);
+	}
+	else
+	{
+		CIDMap::const_iterator i = nodes->find(const_cast<CID*>(&cid));
+		if(i != nodes->end())
+		{
+			return i->second;
+		}
+		
+		return NULL;
 	}
 }
 
@@ -151,10 +198,13 @@ void RoutingTable::loadNodes(SimpleXML& xml)
 			const string& ip		= xml.getChildAttrib("IP");
 			const string& udpPort	= xml.getChildAttrib("UDP");
 
+			// TODO:	these nodes shouldn't be added to routing table, because they are
+			//			possibly dead. Instead, we should send them bootstrap request to
+			//			detect if they are online and to complete bootstrapping process
+			//			much faster.
 			OnlineUserPtr ou = add(cid);
 			ou->getIdentity().setIp(ip);
 			ou->getIdentity().setUdpPort(udpPort);
-			// TODO: nick			
 		}
 		xml.stepOut();
 	}
@@ -168,16 +218,42 @@ void RoutingTable::saveNodes(SimpleXML& xml)
 	NodeList list;
 	getAllNodes(list);
 
+	// TODO: save only 200 nodes which are suitable to bootstrap from next time
 	for(NodeList::const_iterator i = list.begin(); i != list.end(); i++)
 	{
 		xml.addTag("Node");
 		xml.addChildAttrib("CID", (*i)->getUser()->getCID().toBase32());
 		xml.addChildAttrib("IP", (*i)->getIdentity().getIp());
 		xml.addChildAttrib("UDP", (*i)->getIdentity().getUdpPort());
-		// TODO: save features supported by node
 	}
 	
 	xml.stepOut();
+}
+
+void RoutingTable::on(TimerManagerListener::Minute, uint64_t aTick) throw()
+{
+	// TODO: ping possibly dead contacts first
+	Lock l(cs);
+	
+	CIDMap::const_iterator i = nodes->begin();
+	while(i != nodes->end())
+	{
+		OnlineUserPtr ou = i->second;
+		uint64_t expires = static_cast<uint64_t>(Util::toInt64(ou->getIdentity().get("EX")));
+		if(expires > 0 && expires <= aTick)
+		{
+			// contact is dead, remove it
+			nodes->erase(i++);
+			ClientManager::getInstance()->putOffline(ou.get());
+		}
+		else
+		{
+			++i;
+		}
+		
+		if(expires == 0)	// expiration unknown, update it
+			ou->getIdentity().set("EX", Util::toString(aTick));
+	}	
 }
 
 }

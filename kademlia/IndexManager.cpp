@@ -130,6 +130,7 @@ void IndexManager::loadIndexes(SimpleXML& xml)
 				const CID cid = CID(xml.getChildAttrib("CID"));
 				
 				Identity identity(ClientManager::getInstance()->getUser(cid), 0);
+				identity.getUser()->setFlag(User::KADEMLIA);
 				identity.setIp(xml.getChildAttrib("IP"));
 				identity.setUdpPort(xml.getChildAttrib("UDP"));
 				identity.set("SS", xml.getChildAttrib("size"));
