@@ -67,7 +67,7 @@ public:
 	void connect(const OnlineUserPtr& ou, const string& token);
 	
 	/** Searches for a file in the network */
-	uint64_t search(const TTHValue& tth);
+	uint64_t search(const string& tth);
 	
 	/** Returns port used to listening to UDP socket */
 	uint16_t getPort() const { return port;	}

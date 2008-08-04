@@ -50,7 +50,22 @@ void Search::sendRequest(const string& ip, uint16_t port)
 	AdcCommand cmd(AdcCommand::CMD_REQ, AdcCommand::TYPE_UDP);
 	cmd.addParam("TR", term);
 	cmd.addParam("TO", token);
-	cmd.addParam("MN", type == Search::TYPE_FILE ? "2" : "12");	
+	
+	size_t returnedNodes = 0;
+	switch(type)
+	{
+		case TYPE_FILE:
+			returnedNodes = 2;
+			break;
+		case TYPE_NODE:
+			returnedNodes = 12;
+			break;
+		case TYPE_STOREFILE:
+			returnedNodes = 4;
+			break;
+	}
+	
+	cmd.addParam("MN", Util::toString(returnedNodes));
 		
 	KademliaManager::getInstance()->send(cmd, ip, port);
 }
@@ -105,7 +120,7 @@ void Search::processResponse(const CID& cid, NodeList& results)
 			}
 		}
 		
-		if(type != TYPE_NODE && !returnedCloser && KadUtils::toBinaryString(fromDistance->data()).substr(0, 5) == "00000")
+		if(type != TYPE_NODE && !returnedCloser && KadUtils::get32BitChunk(fromDistance->data()) > SEARCH_TOLERANCE)
 		{
 			// if the node is the closest one, ask him for file sources/publishing file
 			AdcCommand cmd(0, AdcCommand::TYPE_UDP);
@@ -374,6 +389,7 @@ void SearchManager::processSearchResponse(const AdcCommand& cmd)
 void SearchManager::processSearches()
 {
 	Lock l(cs);
+	bool publishing = false;
 	SearchMap::iterator it = searches.begin();
 	while(it != searches.end())
 	{
@@ -391,6 +407,7 @@ void SearchManager::processSearches()
 				break;
 			case Search::TYPE_STOREFILE:
 				timeout = SEARCHSTOREFILE_LIFETIME;
+				publishing = true;
 				break;
 		}
 		
@@ -408,6 +425,8 @@ void SearchManager::processSearches()
 			++it;
 		}		
 	}
+	
+	IndexManager::getInstance()->setPublishing(publishing);
 }
 
 } // namespace kademlia

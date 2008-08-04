@@ -48,16 +48,12 @@ bool KadUtils::getBit(const uint8_t* src, uint8_t bit)
 	return ((src[bytes] >> shift) & 1) == 1;
 }
 
-std::string KadUtils::toBinaryString(const uint8_t* src)
+uint32_t KadUtils::get32BitChunk(const uint8_t* src)
 {
-	std::string s;
-	for (uint8_t i = 0; i < 192; i++)
-	{
-		bool b = getBit(src, i);
-		s += b ? "1" : "0";
-	}
+	dcdebug("Variant a) %d\n", (src[0] << 24) | (src[1] << 16) | (src[2] << 8) | (src[3]));
+	dcdebug("Variant b) %d\n", (src[3] << 24) | (src[2] << 16) | (src[1] << 8) | (src[0]));
 	
-	return s;
+	return (src[0] << 24) | (src[1] << 16) | (src[2] << 8) | (src[3]);
 }
 
 } // namespace kademlia

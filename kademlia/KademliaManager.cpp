@@ -432,9 +432,6 @@ void KademliaManager::handle(AdcCommand::INF, AdcCommand& cmd) throw()
 	OnlineUserPtr ou = routingTable->add(CID(cid));
 	if(ou)
 	{
-		ou->getIdentity().setIp(senderIp);
-		ou->getIdentity().setUdpPort(Util::toString(senderPort));
-		
 		for(StringIterC i = cmd.getParameters().begin(); i != cmd.getParameters().end(); ++i) {
 			if(i->length() < 2)
 				continue;
@@ -447,7 +444,9 @@ void KademliaManager::handle(AdcCommand::INF, AdcCommand& cmd) throw()
 		// ignore stated values
 		ou->getIdentity().setIp(senderIp);
 		ou->getIdentity().setUdpPort(Util::toString(senderPort));
-
+		ou->getIdentity().set("EX", Util::toString(GET_TICK() + NODE_EXPIRATION));
+		
+		
 		if(ou->getIdentity().supports(ADCS_FEATURE))
 		{
 			ou->getUser()->setFlag(User::TLS);
@@ -553,7 +552,7 @@ void KademliaManager::handle(AdcCommand::PUB, AdcCommand& cmd) throw()
 		return;	// nothing to search?
 		
 	TTHValue distance = KadUtils::getDistance(ClientManager::getInstance()->getMyCID(), TTHValue(tth));
-	if(KadUtils::toBinaryString(distance.data).substr(0, 5) != "00000")
+	if(KadUtils::get32BitChunk(distance.data) > SEARCH_TOLERANCE)
 		return; // we are too far from this file
 		
 	string size;
@@ -770,10 +769,10 @@ void KademliaManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 {
 }
 
-uint64_t KademliaManager::search(const TTHValue& tth)
+uint64_t KademliaManager::search(const string& tth)
 {
 	dcpp::Search s;
-	s.query    = tth.toBase32();
+	s.query    = tth;
 	s.token    = "auto";
 	s.owners.insert(NULL);
 
