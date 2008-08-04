@@ -639,7 +639,6 @@
 #define IDC_AUTO_SLOTS_SPIN             3025
 #define IDC_SETTINGS_PARTIAL_SLOTS      3026
 #define IDC_PARTIAL_SLOTS               3027
-#define IDC_AUTO_SLOTS_SPIN2            3028
 #define IDC_PARTIAL_SLOTS_SPIN          3028
 #define IDC_PAUSE                       3140
 #define IDC_DOWNLOAD_TARGET             5000
@@ -801,6 +800,7 @@
 #define IDC_GET_USER_RESPONSES          32789
 #define IDC_REPORT                      32790
 #define IDC_COPY                        32791
+#define ID_ACCELERATOR32796             32796
 #define ID_WINDOW_MINIMIZE_ALL          57654
 #define ID_WINDOW_RESTORE_ALL           57655
 #define IDC_CHATCOLORS                  65535
@@ -811,7 +811,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        307
-#define _APS_NEXT_COMMAND_VALUE         32795
+#define _APS_NEXT_COMMAND_VALUE         32797
 #define _APS_NEXT_CONTROL_VALUE         1316
 #define _APS_NEXT_SYMED_VALUE           134
 #endif

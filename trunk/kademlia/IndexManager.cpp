@@ -28,7 +28,8 @@
 namespace kademlia
 {
 
-IndexManager::IndexManager(void) : lastPublishTime(0)
+IndexManager::IndexManager(void) :
+	lastPublishTime(0), publishing(false)
 {
 }
 
@@ -67,7 +68,10 @@ bool IndexManager::findResult(const TTHValue& tth, SourceList& sources) const
 
 void IndexManager::publishNextFile()
 {
-	// TODO: publish only 1 file at time
+	// publish only 1 file at time
+	if(publishing)
+		return;
+		
 	File f;
 	{
 		Lock l(cs);
@@ -77,6 +81,8 @@ void IndexManager::publishNextFile()
 			
 		f = publishQueue.front(); // get the first file in queue
 		publishQueue.pop_front(); // and remove it from queue
+		
+		publishing = true;
 	}
 	SearchManager::getInstance()->publishFile(f.tth, f.size);
 }

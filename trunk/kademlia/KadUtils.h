@@ -41,7 +41,7 @@ public:
 	static bool KadUtils::getBit(const uint8_t* src, uint8_t bit);
 	
 	/** Convert CID/TTH to binary string */
-	static std::string KadUtils::toBinaryString(const uint8_t* src);
+	static uint32_t KadUtils::get32BitChunk(const uint8_t* src);
 	
 private:
 	KadUtils(void) { }

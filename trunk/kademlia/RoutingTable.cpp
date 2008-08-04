@@ -56,6 +56,12 @@ RoutingTable::~RoutingTable(void)
 {
 	TimerManager::getInstance()->removeListener(this);
 	delete nodes;
+	
+	if(subZones[0])
+		delete subZones[0];
+		
+	if(subZones[1])
+		delete subZones[1];
 }
 
 OnlineUserPtr RoutingTable::add(const CID& cid)
@@ -232,7 +238,7 @@ void RoutingTable::saveNodes(SimpleXML& xml)
 
 void RoutingTable::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 {
-	// TODO: ping possibly dead contacts first
+	// TODO: ping possibly dead nodes first
 	Lock l(cs);
 	
 	CIDMap::const_iterator i = nodes->begin();
@@ -242,7 +248,7 @@ void RoutingTable::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 		uint64_t expires = static_cast<uint64_t>(Util::toInt64(ou->getIdentity().get("EX")));
 		if(expires > 0 && expires <= aTick)
 		{
-			// contact is dead, remove it
+			// node is dead, remove it
 			nodes->erase(i++);
 			ClientManager::getInstance()->putOffline(ou.get());
 		}

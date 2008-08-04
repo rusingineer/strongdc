@@ -22,7 +22,7 @@ namespace kademlia
 {
 
 #define KADEMLIA_VERSION			0.1								// this number should be changed only when there's some bigger change which can influence whole network
-#define KAD_PORT					SETTING(TLS_PORT)//5170							// UDP port for listening to (TODO: this could make be settable)
+#define KAD_PORT					5171							// UDP port for listening to (TODO: this could make be settable)
 
 #define ADC_PACKET_HEADER			'U'								// byte which every uncompressed packet must begin with
 #define ADC_PACKET_FOOTER			0x0a							// byte which every uncompressed packet must end with
@@ -42,6 +42,7 @@ namespace kademlia
 #define SEARCHNODE_LIFETIME			2*60*1000	// 2 minutes		// how long to try searching for node
 #define SEARCHFILE_LIFETIME			3*60*1000	// 3 minutes		// how long to try searching for file
 #define SEARCHSTOREFILE_LIFETIME	2*60*1000	// 2 minutes		// how long to try publishing a file
+#define SEARCH_TOLERANCE			16777216						// minimum distance for the closest nodes
 
 #define MAX_FILESOURCES				50								// max sources which can be saved to one TTH index
 #define MAX_PUBLISHED_FILES			200								// max local files to publish

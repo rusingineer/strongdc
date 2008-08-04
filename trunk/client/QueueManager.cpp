@@ -39,6 +39,8 @@
 #include "version.h"
 #include "SearchResult.h"
 
+#include "../kademlia/KademliaManager.h"
+
 #include <limits>
 
 #ifdef ff
@@ -480,6 +482,7 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 
 	if(!searchString.empty()) {
 		SearchManager::getInstance()->search(searchString, 0, SearchManager::TYPE_TTH, SearchManager::SIZE_DONTCARE, "auto");
+		kademlia::KademliaManager::getInstance()->search(searchString);
 	}
 }
 

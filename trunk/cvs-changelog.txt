@@ -1,3 +1,9 @@
+** svn416
+	improved kademlia search tolerance
+	kademlia autosearches for TTH
+	added hotkeys for open download folder (Ctrl+Z) and open own filelist (Ctrl+O)
+	kademlia uses UDP port 5171
+
 ** svn415
 	IP isn't advertised via kademlia anymore
 	kademlia file transfers

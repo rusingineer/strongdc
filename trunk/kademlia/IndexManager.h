@@ -65,7 +65,10 @@ public:
 	void saveIndexes(SimpleXML& xml);
 	
 	/** Returns the time when our filelist has been published for the last time */
-	uint64_t getLastPublishTime() const { return lastPublishTime; }	
+	uint64_t getLastPublishTime() const { return lastPublishTime; }
+	
+	/** Sets whether file publishing is active */
+	void setPublishing(bool _pub) { publishing = _pub; }
 	
 private:
 
@@ -79,6 +82,9 @@ private:
 	
 	/** Time when our files have been published for the last time */
 	uint64_t lastPublishTime;
+	
+	/** Publishing is currently in the process */
+	bool publishing;
 	
 	/** Synchronizes access to tthList */
 	mutable CriticalSection cs;
