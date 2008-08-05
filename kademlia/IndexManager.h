@@ -40,7 +40,7 @@ struct File
 };
 
 class IndexManager :
-	public Singleton<IndexManager>
+	public Singleton<IndexManager>, private TimerManagerListener 
 {
 public:
 	IndexManager(void);
@@ -88,6 +88,9 @@ private:
 	
 	/** Synchronizes access to tthList */
 	mutable CriticalSection cs;
+	
+	// TimerManagerListener
+	void on(TimerManagerListener::Minute, uint64_t aTick) throw();
 };
 
 } // namespace kademlia

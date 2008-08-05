@@ -1,3 +1,9 @@
+** svn417
+	duplicite publish requests are ignored
+	no coralize for kademlia bootstrap URL
+	added kademlia reponse to successful publish request
+	republishing every 24 hours
+
 ** svn416
 	improved kademlia search tolerance
 	kademlia autosearches for TTH

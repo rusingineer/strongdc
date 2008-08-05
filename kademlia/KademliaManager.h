@@ -78,6 +78,9 @@ public:
 	/** Sends command to ip and port */
 	void send(const AdcCommand& cmd, const string& ip, uint16_t port);
 	
+	/** Is Kademlia connected? */
+	bool isConnected() const;
+	
 private:
 	/** classes that can access to my private members */
 	friend class Singleton<KademliaManager>;

@@ -288,7 +288,7 @@ void SearchManager::processSearchRequest(const AdcCommand& cmd)
 			xml.addChildAttrib("CID", id.getUser()->getCID().toBase32());
 			xml.addChildAttrib("IP", id.getIp());
 			xml.addChildAttrib("UDP", id.getUdpPort());
-			xml.addChildAttrib("size", id.get("SS"));
+			xml.addChildAttrib("size", id.get("SI"));
 		}
 		
 		xml.stepOut();
@@ -311,7 +311,9 @@ void SearchManager::processSearchResponse(const AdcCommand& cmd)
 	if(cid.size() != 39)
 		return;
 
-	// TODO: set node alive
+	OnlineUserPtr ou = KademliaManager::getInstance()->getRoutingTable().findNode(CID(cid));
+	if(ou)
+		ou->getIdentity().set("EX", Util::toString(GET_TICK() + NODE_EXPIRATION));
 		
 	string token;
 	if(!cmd.getParam("TO", 0, token))
