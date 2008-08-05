@@ -56,7 +56,10 @@ public:
 			BufferedSocket::putSocket(socket);
 		}
 	}
-
+	
+	enum CoralizeStates {CST_DEFAULT, CST_CONNECTED, CST_NOCORALIZE};
+	void setCoralizeState(CoralizeStates _cor) { coralizeState = _cor; }
+	
 private:
 
 	HttpConnection(const HttpConnection&);
@@ -70,7 +73,6 @@ private:
 	int64_t size;
 	bool moved302;
 
-	enum CoralizeStates {CST_DEFAULT, CST_CONNECTED, CST_NOCORALIZE};
 	CoralizeStates coralizeState;
 
 	BufferedSocket* socket;

@@ -43,8 +43,14 @@ void IndexManager::addIndex(const TTHValue& tth, const Identity& source)
 	TTHMap::iterator i = tthList.find(tth);
 	if(i != tthList.end())
 	{
-		// TODO: no user duplicites, just update
+		// no user duplicites
 		SourceList& sources = i->second;
+		for(SourceList::const_iterator s = sources.begin(); s != sources.end(); s++)
+		{
+			if(source.getUser() == (*s).getUser())
+				return;	// TODO: increase lifetime
+		}
+		
 		sources.push_back(source);
 		
 		if(sources.size() > MAX_FILESOURCES)
@@ -139,7 +145,7 @@ void IndexManager::loadIndexes(SimpleXML& xml)
 				identity.getUser()->setFlag(User::KADEMLIA);
 				identity.setIp(xml.getChildAttrib("IP"));
 				identity.setUdpPort(xml.getChildAttrib("UDP"));
-				identity.set("SS", xml.getChildAttrib("size"));
+				identity.set("SI", xml.getChildAttrib("size"));
 				
 				addIndex(tth, identity);
 			}
@@ -170,12 +176,26 @@ void IndexManager::saveIndexes(SimpleXML& xml)
 			xml.addChildAttrib("CID", id.getUser()->getCID().toBase32());
 			xml.addChildAttrib("IP", id.getIp());
 			xml.addChildAttrib("UDP", id.getUdpPort());
-			xml.addChildAttrib("size", id.get("SS"));		
+			xml.addChildAttrib("size", id.get("SI"));		
 		}
 		xml.stepOut();
 	}
 	
 	xml.stepOut();
+}
+
+void IndexManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
+{
+	if(KademliaManager::getInstance()->isConnected() && aTick - lastPublishTime > REPUBLISH_TIME)
+	{
+		{
+			Lock l(cs);
+			if(!publishQueue.empty())
+				return;	// don't republish if previous publishing hasn't been finished yet
+		}
+			
+		ShareManager::getInstance()->publish();
+	}
 }
 
 } // namespace kademlia

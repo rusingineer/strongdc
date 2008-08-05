@@ -109,6 +109,7 @@ void KademliaManager::listen() throw(SocketException)
 			string url = "http://strongdc.sourceforge.net/bootstrap/?cid=" + ClientManager::getInstance()->getMyCID().toBase32() +
 				"&udp=" + Util::toString(port);
 			
+			httpConnection.setCoralizeState(HttpConnection::CST_NOCORALIZE);
 			httpConnection.downloadFile(url);
 		}
 		else
@@ -137,6 +138,11 @@ void KademliaManager::disconnect() throw()
 		port = 0;		
 		stop = false;	
 	}
+}
+
+bool KademliaManager::isConnected() const
+{
+	return GET_TICK() - lastPacket < CONNECTED_TIMEOUT;
 }
 
 void KademliaManager::loadData()
@@ -198,7 +204,6 @@ int KademliaManager::run()
 	loadData();
 	
 	TimerManager::getInstance()->addListener(this);
-	ShareManager::getInstance()->publish();	// TODO: we should republish files every REPUBLISH_TIME
 	
 	uint64_t timer = GET_TICK();
 	uint64_t delay = 100;
@@ -563,11 +568,12 @@ void KademliaManager::handle(AdcCommand::PUB, AdcCommand& cmd) throw()
 	identity.getUser()->setFlag(User::KADEMLIA);
 	identity.setIp(senderIp);
 	identity.setUdpPort(Util::toString(senderPort));
-	identity.set("SS", size);
+	identity.set("SI", size);
 					
 	IndexManager::getInstance()->addIndex(TTHValue(tth), identity);
 	
-	// TODO: send response?
+	// send response
+	send(AdcCommand(AdcCommand::SEV_SUCCESS, AdcCommand::ERROR_GENERIC, "File published: " + tth, AdcCommand::TYPE_UDP), senderIp, senderPort);
 }
 
 void KademliaManager::handle(AdcCommand::RES, AdcCommand& c) throw()
@@ -575,7 +581,7 @@ void KademliaManager::handle(AdcCommand::RES, AdcCommand& c) throw()
 	if(c.getParameters().empty())
 		return;
 		
-	if(sentINFs++ < MAX_INF_PER_TIME) // TODO: do this only when RES is response to REQ
+	if(c.hasFlag("NX", 0) && sentINFs++ < MAX_INF_PER_TIME)
 	{
 		in_addr addr; addr.s_addr = c.getFrom();
 		string senderIp = inet_ntoa(addr);
@@ -597,7 +603,8 @@ void KademliaManager::handle(AdcCommand::STA, AdcCommand& c) throw()
 	string senderIp = inet_ntoa(addr);		
 	
 	// we should disconnect from network when severity is fatal, but it could be possible exploit
-	LogManager::getInstance()->message("Kademlia error (" + senderIp + "): " + c.getParam(1)); // TODO: translate
+	if(c.getParam(0) != "000")
+		LogManager::getInstance()->message("Kademlia error (" + senderIp + "): " + c.getParam(1)); // TODO: translate
 }
 
 void KademliaManager::handle(AdcCommand::CTM, AdcCommand& c) throw()
@@ -736,7 +743,7 @@ void KademliaManager::on(HttpConnectionListener::Failed, HttpConnection*, const 
 	
 void KademliaManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 {
-	if(aTick - lastPacket < CONNECTED_TIMEOUT)
+	if(isConnected())
 	{
 		// publish next file in queue
 		IndexManager::getInstance()->publishNextFile();
