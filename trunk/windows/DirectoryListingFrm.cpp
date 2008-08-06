@@ -1160,24 +1160,22 @@ LRESULT DirectoryListingFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 		const ItemInfo* ii = (ItemInfo*)ctrlList.getItemData(i);
 		tstring sCopy;
 		
-		if(ii->type != ItemInfo::FILE)
-			continue;
-
 		switch (wID) {
 			case IDC_COPY_NICK:
 				sCopy = WinUtil::getNicks(dl->getUser());
 				break;
 			case IDC_COPY_FILENAME:
-				sCopy = Util::getFileName(Text::toT(ii->file->getName()));
+				sCopy = ii->getText(COLUMN_FILENAME);
 				break;
 			case IDC_COPY_SIZE:
-				sCopy = Util::formatBytesW(ii->file->getSize());
+				sCopy = ii->getText(COLUMN_SIZE);
 				break;
 			case IDC_COPY_LINK:
-				sCopy = WinUtil::getMagnet(ii->file->getTTH(), ii->file->getName(), ii->file->getSize());
+				if(ii->type == ItemInfo::FILE)
+					sCopy = WinUtil::getMagnet(ii->file->getTTH(), ii->file->getName(), ii->file->getSize());
 				break;
 			case IDC_COPY_TTH:
-				sCopy = Text::toT(ii->file->getTTH().toBase32());
+				sCopy = ii->getText(COLUMN_TTH);
 				break;
 			default:
 				dcdebug("DIRECTORYLISTINGFRAME DON'T GO HERE\n");

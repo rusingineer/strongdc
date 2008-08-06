@@ -33,7 +33,6 @@ TODO:
 * bootstrap from bootstrapping nodes
 * save only 200 good nodes on exit
 * ping (INF) possibly dead nodes before removing
-* don't make duplicite searches
 * handle partial file sharing
 * save nicks???
 * stop searches when maximum responses reached

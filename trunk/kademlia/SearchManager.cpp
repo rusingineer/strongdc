@@ -184,8 +184,6 @@ void Search::process()
 
 void SearchManager::findNode(const CID& cid)
 {
-	// TODO: check that we are not already searching for this node
-	
 	Search* s = new Search();
 	s->type = Search::TYPE_NODE;
 	s->term = cid.toBase32();
@@ -214,14 +212,20 @@ void SearchManager::publishFile(const TTHValue& tth, int64_t size)
 
 void SearchManager::search(Search& s)
 {
-	s.token = Util::toString(Util::rand());
-	s.startTime = GET_TICK();
-	
-	// store this search
 	{
 		Lock l(cs);
+		if(searches.find(s.token) != searches.end())
+		{
+			// already searching for this
+			delete &s;
+			return;
+		}
+		// store this search
 		searches[s.token] = &s;
 	}
+	
+	s.token = Util::toString(Util::rand());
+	s.startTime = GET_TICK();	
 	
 	KademliaManager::getInstance()->getRoutingTable().getClosestTo(CID(s.term), 50, s.possibleNodes);
 	

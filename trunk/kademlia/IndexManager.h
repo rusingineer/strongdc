@@ -63,10 +63,7 @@ public:
 	
 	/** Save all indexes to disk */
 	void saveIndexes(SimpleXML& xml);
-	
-	/** Returns the time when our filelist has been published for the last time */
-	uint64_t getLastPublishTime() const { return lastPublishTime; }
-	
+		
 	/** Sets whether file publishing is active */
 	void setPublishing(bool _pub) { publishing = _pub; }
 	
@@ -80,8 +77,8 @@ private:
 	typedef std::deque<File> FileQueue;
 	FileQueue publishQueue;
 	
-	/** Time when our files have been published for the last time */
-	uint64_t lastPublishTime;
+	/** Time when our files will be republished */
+	uint64_t nextPublishTime;
 	
 	/** Publishing is currently in the process */
 	bool publishing;
