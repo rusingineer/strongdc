@@ -24,17 +24,20 @@
 #include "SearchManager.h"
 
 #include <ShareManager.h>
+#include <TimerManager.h>
 
 namespace kademlia
 {
 
 IndexManager::IndexManager(void) :
-	lastPublishTime(0), publishing(false)
+	nextPublishTime(GET_TICK()), publishing(false)
 {
+	TimerManager::getInstance()->addListener(this);
 }
 
 IndexManager::~IndexManager(void)
 {
+	TimerManager::getInstance()->removeListener(this);
 }
 
 void IndexManager::addIndex(const TTHValue& tth, const Identity& source)
@@ -119,7 +122,7 @@ void IndexManager::createPublishQueue(ShareManager::HashFileMap& tthIndex)
 	
 	// shuffle
 	random_shuffle(publishQueue.begin(), publishQueue.end());
-	lastPublishTime = GET_TICK();
+	nextPublishTime = GET_TICK() + REPUBLISH_TIME;
 	
 #ifdef _DEBUG	
 	startTime = GET_TICK() - startTime;	
@@ -186,7 +189,7 @@ void IndexManager::saveIndexes(SimpleXML& xml)
 
 void IndexManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 {
-	if(KademliaManager::getInstance()->isConnected() && aTick - lastPublishTime > REPUBLISH_TIME)
+	if(KademliaManager::getInstance()->isConnected() && aTick >= nextPublishTime)
 	{
 		{
 			Lock l(cs);

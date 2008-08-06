@@ -1,3 +1,8 @@
+** svn418
+	fixed kademlia file publishing
+	ignoring duplicite kademlia searches
+	fixed copying folders info in filelists
+
 ** svn417
 	duplicite publish requests are ignored
 	no coralize for kademlia bootstrap URL
