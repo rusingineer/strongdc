@@ -38,7 +38,7 @@ namespace kademlia
 {
 	// TODO: move this to somewhere
 	typedef std::vector<dcpp::OnlineUserPtr> NodeList;
-	typedef std::map<dcpp::CID,dcpp:: OnlineUserPtr> NodeMap;
+	typedef std::map<dcpp::CID, dcpp::OnlineUserPtr> NodeMap;
 	typedef std::deque<dcpp::Identity> SourceList;
 }
 
@@ -80,6 +80,8 @@ public:
 	
 	/** Is Kademlia connected? */
 	bool isConnected() const;
+	
+	map<dcpp::CID, dcpp::Identity> bootstrapMap;
 	
 private:
 	/** classes that can access to my private members */
@@ -153,7 +155,7 @@ private:
 #endif
 
 	/** Sends my info to ip and port */
-	void info(const string& ip, uint16_t port, bool request);
+	void info(const string& ip, uint16_t port, bool request, bool bootstrap = false);
 	
 	/** Thread for receiving UDP packets */
 	int run();

@@ -27,33 +27,28 @@
 
 namespace dcpp {
 
-Download::Download(UserConnection& conn, const string& pfsDir) throw() : Transfer(conn, pfsDir, TTHValue()),
-	file(0), treeValid(false), lastTick(GET_TICK())
-{
-	conn.setDownload(this);
-	setType(TYPE_PARTIAL_LIST);
-}
-
-Download::Download(UserConnection& conn, QueueItem& qi) throw() : Transfer(conn, qi.getTarget(), qi.getTTH()),
+Download::Download(UserConnection& conn, QueueItem& qi, const string& path) throw() : Transfer(conn, path, qi.getTTH()),
 	tempTarget(qi.getTempTarget()), file(0), lastTick(GET_TICK()), treeValid(false)
 {
 	conn.setDownload(this);
 	
 	QueueItem::SourceConstIter source = qi.getSource(getUser());
 
-	if(qi.isSet(QueueItem::FLAG_USER_LIST)) {
+	if(qi.isSet(QueueItem::FLAG_PARTIAL_LIST)) {
+		setType(TYPE_PARTIAL_LIST);
+	} else if(qi.isSet(QueueItem::FLAG_USER_LIST)) {
 		setType(TYPE_FULL_LIST);
 	} else if(qi.isSet(QueueItem::FLAG_TESTSUR)) {
 		setType(TYPE_TESTSUR);
-	} else if(source->isSet(QueueItem::Source::FLAG_PARTIAL)) {
-		setFlag(FLAG_PARTIAL);
 	}
 
 	if(qi.isSet(QueueItem::FLAG_CHECK_FILE_LIST))
 		setFlag(FLAG_CHECK_FILE_LIST);
 	if(qi.isSet(QueueItem::FLAG_TESTSUR))
 		setFlag(FLAG_TESTSUR);		
-
+	if(source->isSet(QueueItem::Source::FLAG_PARTIAL))
+		setFlag(FLAG_PARTIAL);
+	
 	if(getType() == TYPE_FILE && qi.getSize() != -1) {
 		if(HashManager::getInstance()->getTree(getTTH(), getTigerTree())) {
 			setTreeValid(true);

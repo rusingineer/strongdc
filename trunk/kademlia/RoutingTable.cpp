@@ -189,6 +189,33 @@ void RoutingTable::getAllNodes(NodeList& list) const
 	}
 }
 
+void RoutingTable::getBootstrapNodes(uint8_t maximum, NodeList& results, int depth, bool erase) const
+{
+	Lock l(cs);
+	if(nodes != NULL)
+	{
+		if(erase)
+			results.clear();
+			
+		for(CIDMap::const_iterator i = nodes->begin(); i != nodes->end(); i++)
+		{
+			if(results.size() == maximum)
+				break;
+						
+			results.push_back(i->second);
+		}
+	}
+	else if(depth <= 0)
+	{
+		subZones[rand() & 1]->getBootstrapNodes(maximum, results, erase);
+	}
+	else
+	{
+		subZones[0]->getBootstrapNodes(maximum, results, depth - 1, erase);
+		subZones[1]->getBootstrapNodes(maximum, results, depth - 1, false);
+	}
+}
+
 void RoutingTable::loadNodes(SimpleXML& xml)
 {
 	if(xml.findChild("Nodes"))
@@ -204,13 +231,34 @@ void RoutingTable::loadNodes(SimpleXML& xml)
 			const string& ip		= xml.getChildAttrib("IP");
 			const string& udpPort	= xml.getChildAttrib("UDP");
 
-			// TODO:	these nodes shouldn't be added to routing table, because they are
-			//			possibly dead. Instead, we should send them bootstrap request to
-			//			detect if they are online and to complete bootstrapping process
-			//			much faster.
-			OnlineUserPtr ou = add(cid);
-			ou->getIdentity().setIp(ip);
-			ou->getIdentity().setUdpPort(udpPort);
+			// these nodes shouldn't be added to routing table, because they are
+			// possibly dead. Instead, we should send them bootstrap request to
+			// detect if they are online and to complete bootstrapping process
+			// much faster.
+			CID distance = KadUtils::getDistance(cid, ClientManager::getInstance()->getMyCID());
+			
+			map<dcpp::CID, dcpp::Identity>& bootstrapMap = KademliaManager::getInstance()->bootstrapMap;
+			map<dcpp::CID, dcpp::Identity>::iterator lastElement;
+			
+			if(!bootstrapMap.empty())
+			{
+				lastElement = bootstrapMap.end();
+				lastElement--;				
+			}
+			
+			if(bootstrapMap.size() < 50 || distance < lastElement->first)
+			{
+				Identity i(ClientManager::getInstance()->getUser(cid), 0);
+				i.setIp(ip);
+				i.setUdpPort(udpPort);
+
+				bootstrapMap[distance] = i;
+				
+				if(bootstrapMap.size() > 50)
+				{
+					bootstrapMap.erase(lastElement);
+				}
+			}
 		}
 		xml.stepOut();
 	}
@@ -222,9 +270,8 @@ void RoutingTable::saveNodes(SimpleXML& xml)
 	xml.stepIn();
 	
 	NodeList list;
-	getAllNodes(list);
+	getBootstrapNodes(200, list, BOOTSTRAP_DEPTH);
 
-	// TODO: save only 200 nodes which are suitable to bootstrap from next time
 	for(NodeList::const_iterator i = list.begin(); i != list.end(); i++)
 	{
 		xml.addTag("Node");

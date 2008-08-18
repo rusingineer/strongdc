@@ -1,7 +1,8 @@
 Info INF - node details
 - NI = user's nick
 - U4 = UDP port (to avoid UDP abuse, client should use UDP in datagram)
-- RE = if 1 node will send us his INF too
+- RE = 1=requires node INF response, 2=bootstrap request
+- NX = nodes in XML format in response to bootstrap request
 - other ADC flags (SS, SL etc.) are allowed to but they are not used now
 
 Request REQ - requests for node list closest to target
@@ -30,8 +31,6 @@ TODO:
 * make settings for bootstrap URL
 * make lifetime for published files
 * anti-flooding system
-* bootstrap from bootstrapping nodes
-* save only 200 good nodes on exit
 * ping (INF) possibly dead nodes before removing
 * handle partial file sharing
 * save nicks???

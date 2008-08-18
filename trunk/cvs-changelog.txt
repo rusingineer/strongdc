@@ -1,3 +1,10 @@
+** svn419
+	boostrapping from bootstrap nodes
+	saving only 200 good nodes at exit
+	don't bold queue tab when filelist/testsur is finished
+	alternate sources are added to queue even if autosearch is disabled
+	kademlia uses port 5172
+
 ** svn418
 	fixed kademlia file publishing
 	ignoring duplicite kademlia searches

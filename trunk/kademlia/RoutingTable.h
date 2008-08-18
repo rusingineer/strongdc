@@ -56,6 +56,9 @@ public:
 	/** Returns all online nodes */
 	void getAllNodes(NodeList& list) const;
 	
+	/** Returns nodes suitable to bootstrap from */
+	void getBootstrapNodes(uint8_t maximum, NodeList& results, int depth, bool erase = true) const;
+	
 private:
 	/** Map CID to OnlineUser */
 	typedef std::tr1::unordered_map<CID*, OnlineUserPtr> CIDMap;

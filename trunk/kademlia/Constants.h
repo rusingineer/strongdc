@@ -22,7 +22,7 @@ namespace kademlia
 {
 
 #define KADEMLIA_VERSION			0.1								// this number should be changed only when there's some bigger change which can influence whole network
-#define KAD_PORT					5171							// UDP port for listening to (TODO: this could make be settable)
+#define KAD_PORT					5172							// UDP port for listening to (TODO: this could make be settable)
 
 #define ADC_PACKET_HEADER			'U'								// byte which every uncompressed packet must begin with
 #define ADC_PACKET_FOOTER			0x0a							// byte which every uncompressed packet must end with
@@ -50,6 +50,7 @@ namespace kademlia
 #define REPUBLISH_TIME				24*60*60*1000	// 24 hours		// when our filelist should be republished
 
 #define BUCKET_SIZE					10								// maximum allowed nodes stored in one bucket
+#define BOOTSTRAP_DEPTH				5								// maximum depth to select non-random bootstrap nodes
 
 #define CLIENT_PROTOCOL				"ADC/1.0"						// protocol used for file transfers
 #define SECURE_CLIENT_PROTOCOL_TEST	"ADCS/0.10"						// protocol used for secure file transfers
