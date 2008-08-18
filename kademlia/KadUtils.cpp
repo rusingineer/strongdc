@@ -43,7 +43,7 @@ bool KadUtils::getBit(const uint8_t* src, uint8_t bit)
 	if (bit > 191)
 		return 0;
 
-    int bytes = bit / 8; 
+    int bytes = bit / 8;
 	int shift = 7 - (bit % 8);
 	return ((src[bytes] >> shift) & 1) == 1;
 }

@@ -657,7 +657,7 @@ void SearchFrame::SearchInfo::getList() {
 
 void SearchFrame::SearchInfo::browseList() {
 	try {
-		QueueManager::getInstance()->addPfs(sr->getUser(), Text::fromT(getText(COLUMN_PATH)));
+		QueueManager::getInstance()->addList(sr->getUser(), QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_PARTIAL_LIST, Text::fromT(getText(COLUMN_PATH)));
 	} catch(const Exception&) {
 		// Ignore for now...
 	}

@@ -29,8 +29,7 @@ public:
 		FLAG_OVERLAP			= 0x100
 	};
 
-	Download(UserConnection& conn, const string& pfsDir) throw();
-	Download(UserConnection& conn, QueueItem& qi) throw();
+	Download(UserConnection& conn, QueueItem& qi, const string& path) throw();
 
 	void getParams(const UserConnection& aSource, StringMap& params);
 

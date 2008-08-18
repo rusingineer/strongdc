@@ -65,12 +65,12 @@ public:
 		FLAG_CLIENT_VIEW		= 0x08,
 		/** Flag to indicate that file should be viewed as a text file */
 		FLAG_TEXT				= 0x20,
-		/** This file exists on the hard disk and should be prioritised */
-		FLAG_EXISTS				= 0x40,
 		/** Match the queue against this list */
 		FLAG_MATCH_QUEUE		= 0x80,
 		/** The file list downloaded was actually an .xml.bz2 list */
-		FLAG_XML_BZLIST			= 0x200,
+		FLAG_XML_BZLIST			= 0x100,
+		/** Only download a part of the file list */
+		FLAG_PARTIAL_LIST 		= 0x200,
 		/** Test user for slotlocker */
 		FLAG_TESTSUR			= 0x400,
 		/** Test user's file list for fake share */

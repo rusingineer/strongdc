@@ -187,10 +187,10 @@ void KademliaManager::saveData()
 	}
 	catch(const FileException&)
 	{
-	}	
+	}
 }
 
-#define BUFSIZE 32768
+#define BUFSIZE 16384
 /* There should be done some mechanism for sending acks. */
 int KademliaManager::run()
 {
@@ -384,13 +384,51 @@ void KademliaManager::connect(const OnlineUserPtr& ou, const string& token)
 	send(cmd, ou->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou->getIdentity().getUdpPort())));
 }
 
-void KademliaManager::info(const string& ip, uint16_t port, bool request)
+void KademliaManager::info(const string& ip, uint16_t port, bool request, bool bootstrap)
 {
 	AdcCommand cmd(AdcCommand::CMD_INF, AdcCommand::TYPE_UDP);
 	cmd.addParam("VE", Util::toString(KADEMLIA_VERSION));
 	cmd.addParam("NI", SETTING(NICK));
 	cmd.addParam("U4", Util::toString(this->port));
-	cmd.addParam("RE", request ? "1" : "0");
+	if(request || bootstrap)
+	{
+		if(bootstrap && !request)
+		{
+			// this is bootstrap request
+			NodeList results;
+			routingTable->getBootstrapNodes(20, results, BOOTSTRAP_DEPTH);
+
+			if(results.empty())
+				return;
+
+			SimpleXML xml;
+			xml.addTag("Nodes");
+			xml.stepIn();
+			
+			for(NodeList::const_iterator i = results.begin(); i != results.end(); i++)
+			{
+				const OnlineUserPtr& ou = *i;
+				
+				xml.addTag("Node");
+				xml.addChildAttrib("CID", ou->getUser()->getCID().toBase32());
+				xml.addChildAttrib("IP", ou->getIdentity().getIp());
+				xml.addChildAttrib("UDP", ou->getIdentity().getUdpPort());			
+			}
+			
+			xml.stepOut();
+			
+			string nodes;
+			StringOutputStream sos(nodes);
+			sos.write(SimpleXML::utf8Header);
+			xml.toXML(&sos);
+			
+			cmd.addParam("NX", nodes);
+		}
+		else
+		{
+			cmd.addParam("RE", bootstrap ? "2" : "1");
+		}
+	}
 	
 	string su;
 	if(CryptoManager::getInstance()->TLSOk())
@@ -441,7 +479,7 @@ void KademliaManager::handle(AdcCommand::INF, AdcCommand& cmd) throw()
 			if(i->length() < 2)
 				continue;
 
-			if(i->substr(0, 2) != "RE") {
+			if(i->substr(0, 2) != "RE" && i->substr(0, 2) != "NX") {
 				ou->getIdentity().set(i->c_str(), i->substr(2));
 			}
 		}
@@ -458,10 +496,41 @@ void KademliaManager::handle(AdcCommand::INF, AdcCommand& cmd) throw()
 		}
 	}
 	
-	string request;
-	if(cmd.getParam("RE", 0, request) && request[0] == '1')
+	// is node list present?
+	string nodes;
+	if(cmd.getParam("NX", 0, nodes))
 	{
-		info(senderIp, senderPort, false);
+		try {
+			SimpleXML xml;
+			xml.fromXML(nodes);
+			xml.stepIn();
+			while(xml.findChild("Node"))
+			{
+				const CID cid			= CID(xml.getChildAttrib("CID"));
+				
+				if(ClientManager::getInstance()->getMyCID() == cid)
+					return;
+					
+				const string& ip		= xml.getChildAttrib("IP");
+				const string& udpPort	= xml.getChildAttrib("UDP");
+
+				if(Util::isPrivateIp(ip)) continue;
+
+				OnlineUserPtr ou = KademliaManager::getInstance()->getRoutingTable().add(cid);
+				ou->getIdentity().setIp(ip);
+				ou->getIdentity().setUdpPort(udpPort);
+				// TODO: nick
+			}
+			xml.stepOut();
+		}
+		catch(SimpleXMLException&)
+		{ /* node send us damaged node list */ }
+	}
+			
+	string request;
+	if(cmd.getParam("RE", 0, request) && (request[0] == '1' || request[0] == '2'))
+	{
+		info(senderIp, senderPort, false, request[0] == '2');
 	}
 }
 
@@ -666,16 +735,25 @@ void KademliaManager::on(HttpConnectionListener::Complete, HttpConnection*, stri
 		try
 		{
 			uLongf destLen = BUFSIZE;
-			boost::scoped_array<uint8_t> destBuf(new uint8_t[destLen]);
+			boost::scoped_array<uint8_t> destBuf;
 			
 			// decompress incoming packet
-			int result = uncompress(&destBuf[0], &destLen, (Bytef*)nodesXML.data(), nodesXML.length());
+			int result;
+			
+			do
+			{
+				destLen *= 2;
+				destBuf.reset(new uint8_t[destLen]);
+				
+				result = uncompress(&destBuf[0], &destLen, (Bytef*)nodesXML.data(), nodesXML.length());
+			} while (result == Z_BUF_ERROR);
+			
 			if(result != Z_OK)
 			{
 				// decompression error!!!
 				throw Exception("Decompress error.");
 			}
-			
+						
 			// now copy remote xml to local one
 			dcpp::File file(Util::getConfigPath() + KADEMLIA_FILE, dcpp::File::READ, dcpp::File::CREATE | dcpp::File::OPEN);
 			
@@ -747,6 +825,16 @@ void KademliaManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 	{
 		// publish next file in queue
 		IndexManager::getInstance()->publishNextFile();
+	}
+	else if(!bootstrapMap.empty())
+	{
+		// try bootrapping
+		string ip = bootstrapMap.begin()->second.getIp();
+		uint16_t port = static_cast<uint16_t>(Util::toInt(bootstrapMap.begin()->second.getUdpPort()));
+		
+		bootstrapMap.erase(bootstrapMap.begin());
+		
+		info(ip, port, true, true);
 	}
 	
 	if(aTick >= nextSelfLookup) // search for self

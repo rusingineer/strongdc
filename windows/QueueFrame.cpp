@@ -538,7 +538,9 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 				ctrlQueue.deleteItem(ii);
 			}
 			
-			if(!ii->isSet(QueueItem::FLAG_USER_LIST) && !ii->isSet(QueueItem::FLAG_TESTSUR)) {
+			bool userList = ii->isSet(QueueItem::FLAG_USER_LIST) || ii->isSet(QueueItem::FLAG_TESTSUR);
+			
+			if(!userList) {
 				queueSize-=ii->getSize();
 				dcassert(queueSize >= 0);
 			}
@@ -561,7 +563,7 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 			
 			delete ii;
 			updateStatus();
-			if (BOOLSETTING(BOLD_QUEUE)) {
+			if (!userList && BOOLSETTING(BOLD_QUEUE)) {
 				setDirty();
 			}
 			dirty = true;

@@ -252,7 +252,7 @@ void UserInfoBase::browseList() {
 	if(!getUser() || getUser()->getCID().isZero())
 		return;
 	try {
-		QueueManager::getInstance()->addPfs(getUser(), "");
+		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_PARTIAL_LIST);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}

@@ -158,6 +158,7 @@ void HttpConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 		if(aLine.substr(18, aLine.length() - 19) == "x-bzip2")
 			fire(HttpConnectionListener::TypeBZ2(), this);            
 	}
+	dcdebug("%s\n", aLine.c_str());
 }
 
 void HttpConnection::on(BufferedSocketListener::Failed, const string& aLine) throw() {
