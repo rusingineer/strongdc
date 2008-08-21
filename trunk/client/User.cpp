@@ -123,10 +123,14 @@ string Identity::getConnection() const {
 		double us = Util::toDouble(connection);
 		if(us > 0) {
 			char buf[16];
-			snprintf(buf, sizeof(buf), "%.3g", us / 1024 / 1024);
+			if(us < 1024*1024) {
+				snprintf(buf, sizeof(buf), "%.3g", us / 1024 / 1024);
 
-			char *cp;
-			if( (cp=strchr(buf, ',')) != NULL) *cp='.';
+				char *cp;
+				if( (cp=strchr(buf, ',')) != NULL) *cp='.';
+			} else {
+				snprintf(buf, sizeof(buf), "%d", static_cast<int>(us / 1024 / 1024));
+			}
 
 			return buf;
 		} else {

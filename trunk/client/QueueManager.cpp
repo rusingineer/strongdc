@@ -1015,12 +1015,16 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 			if(q) {
 				if(finished) {
 					if(!aDownload->getPFS().empty()) {
-						if(!q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD)) {
-							fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
-						} else {
+						if( (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) && directories.find(aDownload->getUser()) != directories.end()) ||
+							(q->isSet(QueueItem::FLAG_MATCH_QUEUE)) )
+						{
+												
 							fname = aDownload->getPFS();
 							up = aDownload->getUser();
-							flag = QueueItem::FLAG_DIRECTORY_DOWNLOAD | QueueItem::FLAG_TEXT;
+							flag = (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) ? (QueueItem::FLAG_DIRECTORY_DOWNLOAD) : 0)
+								| (q->isSet(QueueItem::FLAG_MATCH_QUEUE) ? QueueItem::FLAG_MATCH_QUEUE : 0) | QueueItem::FLAG_TEXT;
+						} else {
+							fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
 						}
 					}		
 					fire(QueueManagerListener::Removed(), q);
@@ -1054,13 +1058,12 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						fire(QueueManagerListener::StatusUpdated(), q);
 					} else {
 						// Now, let's see if this was a directory download filelist...
-						if( (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) && directories.find(aDownload->getUser()) != directories.end()) ||
-							(q->isSet(QueueItem::FLAG_MATCH_QUEUE)) ) 
+						dcassert(!q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD));
+						if(q->isSet(QueueItem::FLAG_MATCH_QUEUE)) 
 						{
 							fname = q->getListName();
 							up = aDownload->getUser();
-							flag = (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) ? QueueItem::FLAG_DIRECTORY_DOWNLOAD : 0)
-								| (q->isSet(QueueItem::FLAG_MATCH_QUEUE) ? QueueItem::FLAG_MATCH_QUEUE : 0);
+							flag = q->isSet(QueueItem::FLAG_MATCH_QUEUE) ? QueueItem::FLAG_MATCH_QUEUE : 0;
 						} 
 
 						string dir;
@@ -1619,7 +1622,7 @@ void QueueManager::on(SearchManagerListener::SR, const SearchResultPtr& sr) thro
 
 	if(added && BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) && (users < (size_t)SETTING(MAX_AUTO_MATCH_SOURCES))) {
 		try {
-			addList(sr->getUser(), QueueItem::FLAG_MATCH_QUEUE);
+			addList(sr->getUser(), QueueItem::FLAG_PARTIAL_LIST | QueueItem::FLAG_MATCH_QUEUE, Util::getFilePath(sr->getFile()));
 		} catch(const Exception&) {
 			// ...
 		}

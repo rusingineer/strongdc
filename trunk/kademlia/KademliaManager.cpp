@@ -48,7 +48,7 @@ namespace kademlia
 
 const uint32_t POLL_TIMEOUT = 250;
 
-KademliaManager::KademliaManager(void) : stop(false), port(0), nextSelfLookup(GET_TICK() + 15*1000),
+KademliaManager::KademliaManager(void) : stop(false), port(0), nextSelfLookup(GET_TICK() + 3*60*1000),
 	nextSearchJumpStart(GET_TICK()), nextInfAllow(GET_TICK() + INF_SENT_TIMER),
 	lastPacket(0), sentINFs(0)
 #ifdef _DEBUG

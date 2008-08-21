@@ -519,14 +519,7 @@ CID ClientManager::getMyCID() {
 }
 
 void ClientManager::updateNick(const OnlineUser& user) throw() {
-	Lock l(cs);
-	if(nicks.find(const_cast<CID*>(&user.getUser()->getCID())) != nicks.end()) {
-		return;
-	}
-	
-	if(!user.getIdentity().getNick().empty()) {
-		nicks.insert(std::make_pair(const_cast<CID*>(&user.getUser()->getCID()), user.getIdentity().getNick()));
-	}
+	updateNick(user.getUser(), user.getIdentity().getNick());
 }
 
 void ClientManager::updateNick(const UserPtr& user, const string& nick) throw() {
