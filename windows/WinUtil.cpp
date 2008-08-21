@@ -1282,6 +1282,10 @@ void WinUtil::openLink(const tstring& url) {
 		parseDchubUrl(url);
 		return;
 	}
+	if(_strnicmp(Text::fromT(url).c_str(), "adc://", 6) == 0) {
+		parseADChubUrl(url);
+		return;
+	}	
 
 	::ShellExecute(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 }

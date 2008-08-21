@@ -1,3 +1,8 @@
+** svn420
+	queue automatch downloads partial filelists only and is defaulty on (match efficient now!)
+	temporary fix for connection types
+	fixed deadlock
+
 ** svn419
 	boostrapping from bootstrap nodes
 	saving only 200 good nodes at exit

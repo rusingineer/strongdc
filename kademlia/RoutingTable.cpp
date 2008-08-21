@@ -71,57 +71,63 @@ OnlineUserPtr RoutingTable::add(const CID& cid)
 		return NULL;
 		
 	CID distance = KadUtils::getDistance(cid, ClientManager::getInstance()->getMyCID());
-	
-	Lock l(cs);
-	if(nodes == NULL)
+	bool removeListener = false;
+		
 	{
-		return subZones[KadUtils::getBit(distance.data(), level)]->add(cid);
-	}
-	else
-	{
-		CIDMap::const_iterator i = nodes->find(const_cast<CID*>(&cid));
-		if(i != nodes->end())
+		Lock l(cs);
+		if(nodes == NULL)
 		{
-			i->second->getUser()->setFlag(User::KADEMLIA);
-			i->second->getIdentity().set("EX", Util::toString(GET_TICK() + NODE_EXPIRATION));
-			return i->second;
-		}
-
-		// firstly connected node
-		if(nodes->size() < BUCKET_SIZE)
-		{
-			UserPtr p = ClientManager::getInstance()->getUser(cid);
-			p->setFlag(User::KADEMLIA);
-			
-			OnlineUserPtr ou = nodes->insert(make_pair(const_cast<CID*>(&p->getCID()), new OnlineUser(p, *reinterpret_cast<Client*>(NULL), 0))).first->second;
-			ClientManager::getInstance()->putOnline(ou.get());
-			
-			return ou;
-		}
-		else if(level < sizeof(CID) - 1)	// can the leaf be split?
-		{
-			TimerManager::getInstance()->removeListener(this);
-			
-			subZones[0] = new RoutingTable(level + 1);
-			subZones[1] = new RoutingTable(level + 1);
-			
-			// add current nodes to new subzones
-			for(CIDMap::const_iterator i = nodes->begin(); i != nodes->end(); i++)
-			{
-				CID dist = KadUtils::getDistance(*i->first, ClientManager::getInstance()->getMyCID());
-				subZones[KadUtils::getBit(dist.data(), level)]->nodes->insert(make_pair(i->first, i->second));
-			}
-			
-			delete nodes;
-			nodes = NULL;
-			
 			return subZones[KadUtils::getBit(distance.data(), level)]->add(cid);
 		}
 		else
 		{
-			return NULL;
-		}		
+			CIDMap::const_iterator i = nodes->find(const_cast<CID*>(&cid));
+			if(i != nodes->end())
+			{
+				i->second->getUser()->setFlag(User::KADEMLIA);
+				i->second->getIdentity().set("EX", Util::toString(GET_TICK() + NODE_EXPIRATION));
+				return i->second;
+			}
+
+			// firstly connected node
+			if(nodes->size() < BUCKET_SIZE)
+			{
+				UserPtr p = ClientManager::getInstance()->getUser(cid);
+				p->setFlag(User::KADEMLIA);
+				
+				OnlineUserPtr ou = nodes->insert(make_pair(const_cast<CID*>(&p->getCID()), new OnlineUser(p, *reinterpret_cast<Client*>(NULL), 0))).first->second;
+				ClientManager::getInstance()->putOnline(ou.get());
+				
+				return ou;
+			}
+			else if(level < sizeof(CID) - 1)	// can the leaf be split?
+			{
+				removeListener = true;
+				
+				subZones[0] = new RoutingTable(level + 1);
+				subZones[1] = new RoutingTable(level + 1);
+				
+				// add current nodes to new subzones
+				for(CIDMap::const_iterator i = nodes->begin(); i != nodes->end(); i++)
+				{
+					CID dist = KadUtils::getDistance(*i->first, ClientManager::getInstance()->getMyCID());
+					subZones[KadUtils::getBit(dist.data(), level)]->nodes->insert(make_pair(i->first, i->second));
+				}
+				
+				delete nodes;
+				nodes = NULL;
+			}
+			else
+			{
+				return NULL;
+			}		
+		}
 	}
+	
+	if(removeListener)
+		TimerManager::getInstance()->removeListener(this);
+		
+	return subZones[KadUtils::getBit(distance.data(), level)]->add(cid);
 }
 	
 size_t RoutingTable::getClosestTo(const CID& cid, size_t maximum, NodeMap& results) const
