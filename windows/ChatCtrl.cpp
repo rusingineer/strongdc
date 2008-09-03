@@ -267,9 +267,8 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 	SetSelectionCharFormat(isMyMessage ? WinUtil::m_ChatTextMyOwn : cf);
 	
 	// Zvyrazneni vsech URL a nastaveni "klikatelnosti"
-	size_t lSearchFrom = 0;
 	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
-		size_t linkStart = sMsgLower.find(Links[i], lSearchFrom);
+		size_t linkStart = sMsgLower.find(Links[i]);
 		bool isMagnet = _tcscmp(Links[i], _T("magnet:?")) == 0;
 		while(linkStart != tstring::npos) {
 			size_t linkEnd = linkStart + _tcslen(Links[i]);
@@ -298,20 +297,25 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 	}
 
 	// Zvyrazneni vsech vyskytu vlastniho nicku
-	long lMyNickStart = -1, lMyNickEnd = -1;	
+	long lMyNickStart = -1, lMyNickEnd = -1;
+	size_t lSearchFrom = 0;	
 	tstring sNick = sMyNick.c_str();
 	std::transform(sNick.begin(), sNick.end(), sNick.begin(), _totlower);
 
-	while((lMyNickStart = (long)sMsgLower.find(sNick, lSearchFrom)) >= 0) {
+	bool found = false;
+	while((lMyNickStart = (long)sMsgLower.find(sNick, lSearchFrom)) != tstring::npos) {
 		lMyNickEnd = lMyNickStart + (long)sNick.size();
 		SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
 		SetSelectionCharFormat(WinUtil::m_TextStyleMyNick);
 		lSearchFrom = lMyNickEnd;
-
+		found = true;
+	}
+	
+	if(found) {
 		if(	!SETTING(CHATNAMEFILE).empty() && !BOOLSETTING(SOUNDS_DISABLED) &&
 			!sAuthor.empty() && (stricmp(sAuthor.c_str(), sNick) != 0)) {
 				::PlaySound(Text::toT(SETTING(CHATNAMEFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);	 	
-        }
+        }	
 	}
 
 	// Zvyrazneni vsech vyskytu nicku Favorite useru
@@ -323,7 +327,7 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 		sNick = Text::toT(pUser.getNick()).c_str();
 		std::transform(sNick.begin(), sNick.end(), sNick.begin(), _totlower);
 
-		while((lMyNickStart = (long)sMsgLower.find(sNick, lSearchFrom)) >= 0) {
+		while((lMyNickStart = (long)sMsgLower.find(sNick, lSearchFrom)) != tstring::npos) {
 			lMyNickEnd = lMyNickStart + (long)sNick.size();
 			SetSel(lSelBegin + lMyNickStart, lSelBegin + lMyNickEnd);
 			SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);

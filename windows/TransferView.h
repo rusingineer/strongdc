@@ -182,11 +182,9 @@ private:
 		enum Status {
 			STATUS_RUNNING,
 			STATUS_WAITING,
-			// special statuses
-			TREE_DOWNLOAD,
 			STATUS_REQUESTING
 		};
-
+		
 		ItemInfo(const UserPtr& u, bool aDownload);
 
 		bool download;
@@ -200,6 +198,7 @@ private:
 		ItemInfo* parent;
 		UserPtr user;
 		Status status;
+		Transfer::Type type;
 		
 		int64_t pos;
 		int64_t size;
@@ -221,27 +220,7 @@ private:
 
 		double getRatio() const { return (pos > 0) ? (double)actual / (double)pos : 1.0; }
 
-		const tstring getText(uint8_t col) const {
-			switch(col) {
-				case COLUMN_USER: return (hits == -1) ? WinUtil::getNicks(user) : (Util::toStringW(hits) + _T(' ') + TSTRING(USERS));
-				case COLUMN_HUB: return (hits == -1) ? WinUtil::getHubNames(user).first : (Util::toStringW(running) + _T(' ') + TSTRING(NUMBER_OF_SEGMENTS));
-				case COLUMN_STATUS: return statusString;
-				case COLUMN_TIMELEFT: return (status == STATUS_RUNNING) ? Util::formatSeconds(timeLeft) : Util::emptyStringT;
-				case COLUMN_SPEED: return (status == STATUS_RUNNING) ? (Util::formatBytesW(speed) + _T("/s")) : Util::emptyStringT;
-				case COLUMN_FILE: {
-					tstring file = (status == TREE_DOWNLOAD ? _T("TTH: ") : Util::emptyStringT);
-					file += Util::getFileName(target);
-					return file;
-				}
-				case COLUMN_SIZE: return Util::formatBytesW(size); 
-				case COLUMN_PATH: return Util::getFilePath(target);
-				case COLUMN_IP: return ip;
-				case COLUMN_RATIO: return (status == STATUS_RUNNING) ? Util::toStringW(getRatio()) : Util::emptyStringT;
-				case COLUMN_CIPHER: return cipher;
-				default: return Util::emptyStringT;
-			}
-		}
-
+		const tstring getText(uint8_t col) const;
 		static int compareItems(const ItemInfo* a, const ItemInfo* b, uint8_t col);
 
 		uint8_t imageIndex() const { return static_cast<uint8_t>(!download ? IMAGE_UPLOAD : (!parent ? IMAGE_DOWNLOAD : IMAGE_SEGMENT)); }
@@ -275,8 +254,8 @@ private:
 
 		bool operator==(const ItemInfo& ii) const { return download == ii.download && user == ii.user; }
 
-		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), queueItem(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0) { }
-		UpdateInfo(QueueItem* qi, bool isDownload, bool isTransferFailed = false) : updateMask(0), queueItem(qi), user(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0) { qi->inc(); }
+		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), queueItem(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0), type(Transfer::TYPE_LAST) { }
+		UpdateInfo(QueueItem* qi, bool isDownload, bool isTransferFailed = false) : updateMask(0), queueItem(qi), user(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0), type(Transfer::TYPE_LAST) { qi->inc(); }
 
 		~UpdateInfo() { if(queueItem) queueItem->dec(); }
 
@@ -308,7 +287,9 @@ private:
 		void setIP(const tstring& aIP, uint8_t aFlagImage) { IP = aIP; flagImage = aFlagImage, updateMask |= MASK_IP; }
 		tstring IP;
 		void setCipher(const tstring& aCipher) { cipher = aCipher; updateMask |= MASK_CIPHER; }
-		tstring cipher;		
+		tstring cipher;
+		void setType(const Transfer::Type& aType) { type = aType; }
+		Transfer::Type type;	
 
 	private:
 		QueueItem* queueItem;

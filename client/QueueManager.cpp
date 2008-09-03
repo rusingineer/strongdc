@@ -39,8 +39,6 @@
 #include "version.h"
 #include "SearchResult.h"
 
-#include "../kademlia/KademliaManager.h"
-
 #include <limits>
 
 #ifdef ff
@@ -481,7 +479,6 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 
 	if(!searchString.empty()) {
 		SearchManager::getInstance()->search(searchString, 0, SearchManager::TYPE_TTH, SearchManager::SIZE_DONTCARE, "auto");
-		kademlia::KademliaManager::getInstance()->search(searchString);
 	}
 }
 
@@ -1013,28 +1010,23 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 		if(aDownload->getType() == Transfer::TYPE_PARTIAL_LIST) {
 			QueueItem* q = fileQueue.find(getListPath(aDownload->getUser()));
 			if(q) {
-				if(finished) {
-					if(!aDownload->getPFS().empty()) {
-						if( (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) && directories.find(aDownload->getUser()) != directories.end()) ||
-							(q->isSet(QueueItem::FLAG_MATCH_QUEUE)) )
-						{
-												
-							fname = aDownload->getPFS();
-							up = aDownload->getUser();
-							flag = (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) ? (QueueItem::FLAG_DIRECTORY_DOWNLOAD) : 0)
-								| (q->isSet(QueueItem::FLAG_MATCH_QUEUE) ? QueueItem::FLAG_MATCH_QUEUE : 0) | QueueItem::FLAG_TEXT;
-						} else {
-							fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
-						}
-					}		
-					fire(QueueManagerListener::Removed(), q);
+				if(!aDownload->getPFS().empty()) {
+					if( (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) && directories.find(aDownload->getUser()) != directories.end()) ||
+						(q->isSet(QueueItem::FLAG_MATCH_QUEUE)) )
+					{
+											
+						fname = aDownload->getPFS();
+						up = aDownload->getUser();
+						flag = (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) ? (QueueItem::FLAG_DIRECTORY_DOWNLOAD) : 0)
+							| (q->isSet(QueueItem::FLAG_MATCH_QUEUE) ? QueueItem::FLAG_MATCH_QUEUE : 0) | QueueItem::FLAG_TEXT;
+					} else {
+						fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
+					}
+				}		
+				fire(QueueManagerListener::Removed(), q);
 
-					userQueue.remove(q);
-					fileQueue.remove(q);
-				} else {
-					userQueue.removeDownload(q, aDownload->getUser());
-					fire(QueueManagerListener::StatusUpdated(), q);
-				}
+				userQueue.remove(q);
+				fileQueue.remove(q);
 			}
 		} else {
 			QueueItem* q = fileQueue.find(aDownload->getPath());

@@ -64,7 +64,6 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::SHOW_SHELL_MENU, ResourceManager::SETTINGS_SHOW_SHELL_MENU },
 	{ SettingsManager::MAGNET_ASK, ResourceManager::MAGNET_ASK },
 	{ SettingsManager::CORAL, ResourceManager::CORAL },
-	{ SettingsManager::USE_KADEMLIA, ResourceManager::USE_KADEMLIA },
 	{ SettingsManager::FAST_HASH, ResourceManager::FAST_HASH },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };

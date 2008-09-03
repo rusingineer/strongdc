@@ -38,8 +38,6 @@
 #include "QueueManager.h"
 #include "FinishedManager.h"
 
-#include "../kademlia/KademliaManager.h"
-
 namespace dcpp {
 
 Client* ClientManager::getClient(const string& aHubURL) {
@@ -79,10 +77,7 @@ StringList ClientManager::getHubs(const CID& cid) const {
 	StringList lst;
 	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&cid));
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
-		if(&i->second->getClient() == NULL && i->second->getUser()->isSet(User::KADEMLIA))
-			lst.push_back("Kademlia");
-		else
-			lst.push_back(i->second->getClient().getHubUrl());
+		lst.push_back(i->second->getClient().getHubUrl());
 	}
 	return lst;
 }
@@ -92,8 +87,7 @@ StringList ClientManager::getHubNames(const CID& cid) const {
 	StringList lst;
 	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&cid));
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
-		if(&i->second->getClient() != NULL)
-			lst.push_back(i->second->getClient().getHubName());
+		lst.push_back(i->second->getClient().getHubName());
 	}
 	return lst;
 }
@@ -299,10 +293,7 @@ void ClientManager::connect(const UserPtr& p, const string& token) {
 	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
 	if(i != onlineUsers.end()) {
 		OnlineUser* u = i->second;
-		if(u->getUser()->isSet(User::KADEMLIA))
-			kademlia::KademliaManager::getInstance()->connect(u, token);
-		else
-			u->getClient().connect(*u, token);
+		u->getClient().connect(*u, token);
 	}
 }
 
