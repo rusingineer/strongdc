@@ -125,7 +125,7 @@ const string SettingsManager::settingTags[] =
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
-	"UcSubMenu", "AutoSlots", "Coral", "UseKademlia",
+	"UcSubMenu", "AutoSlots", "Coral",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -437,7 +437,6 @@ SettingsManager::SettingsManager()
 	setDefault(SHOW_QUICK_SEARCH, true);	
 	setDefault(UC_SUBMENU, true);
 // TODO:	setDefault(TOOLBAR_SIZE, 800);
-	setDefault(USE_KADEMLIA, true);
 
 	setDefault(DROP_MULTISOURCE_ONLY, true);
 	setDefault(DISCONNECT_SPEED, 5);

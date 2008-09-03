@@ -78,14 +78,15 @@ void NmdcHub::refreshUserList(bool refreshOnly) {
 }
 
 OnlineUser& NmdcHub::getUser(const string& aNick) {
+	bool isMe = aNick == getCurrentNick();
 	OnlineUserPtr u = ClientManager::getInstance()->findOnlineUser(
-		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMyCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
+		isMe ? ClientManager::getInstance()->getMe()->getCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
 		
 	if(u != NULL)
 		return *u;
 
 	UserPtr p;
-	if(aNick == getCurrentNick()) {
+	if(isMe) {
 		p = ClientManager::getInstance()->getMe();
 	} else {
 		p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
@@ -112,12 +113,12 @@ void NmdcHub::supports(const StringList& feat) {
 
 OnlineUserPtr NmdcHub::findUser(const string& aNick) const {
 	return ClientManager::getInstance()->findOnlineUser(
-		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMyCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
+		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMe()->getCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
 }
 
 void NmdcHub::putUser(const string& aNick) {
 	OnlineUserPtr ou = ClientManager::getInstance()->findOnlineUser(
-		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMyCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
+		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMe()->getCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
 	if(ou == NULL)
 		return;
 

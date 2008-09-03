@@ -694,6 +694,9 @@ TransferView::ItemInfo::ItemInfo(const UserPtr& u, bool aDownload) : user(u), do
 	flagImage(0), collapsed(true), parent(NULL), hits(-1), statusString(Util::emptyStringT), running(0) { }
 
 void TransferView::ItemInfo::update(const UpdateInfo& ui) {
+	if(ui.type != Transfer::TYPE_LAST)
+		type = ui.type;
+		
 	if(ui.updateMask & UpdateInfo::MASK_STATUS) {
 		status = ui.status;
 	}
@@ -771,6 +774,15 @@ void TransferView::on(ConnectionManagerListener::Added, const ConnectionQueueIte
 	if(ui->download) {
 		string aTarget; int64_t aSize; int aFlags;
 		if(QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags)) {
+			Transfer::Type type = Transfer::TYPE_FILE;
+			if(aFlags & QueueItem::FLAG_USER_LIST)
+				type = Transfer::TYPE_FULL_LIST;
+			else if(aFlags & QueueItem::FLAG_PARTIAL_LIST)
+				type = Transfer::TYPE_PARTIAL_LIST;
+			else if(aFlags & QueueItem::FLAG_TESTSUR)
+				type = Transfer::TYPE_TESTSUR;
+			
+			ui->setType(type);
 			ui->setTarget(Text::toT(aTarget));
 			ui->setSize(aSize);
 		}
@@ -787,6 +799,15 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, const Connection
 	string aTarget;	int64_t aSize; int aFlags = 0;
 
 	if(QueueManager::getInstance()->getQueueInfo(aCqi->getUser(), aTarget, aSize, aFlags)) {
+		Transfer::Type type = Transfer::TYPE_FILE;
+		if(aFlags & QueueItem::FLAG_USER_LIST)
+			type = Transfer::TYPE_FULL_LIST;
+		else if(aFlags & QueueItem::FLAG_PARTIAL_LIST)
+			type = Transfer::TYPE_PARTIAL_LIST;
+		else if(aFlags & QueueItem::FLAG_TESTSUR)
+			type = Transfer::TYPE_TESTSUR;
+		
+		ui->setType(type);
 		ui->setTarget(Text::toT(aTarget));
 		ui->setSize(aSize);
 	}
@@ -812,24 +833,42 @@ void TransferView::on(ConnectionManagerListener::Failed, const ConnectionQueueIt
 	speak(UPDATE_ITEM, ui);
 }
 
-static tstring getFile(const Transfer* t) {
+static tstring getFile(const Transfer::Type& type, const tstring& fileName) {
 	tstring file;
 
-	if(t->getType() == Transfer::TYPE_TREE) {
-		file = _T("TTH: ") + Text::toT(Util::getFileName(t->getPath()));
-	} else if(t->getType() == Transfer::TYPE_FULL_LIST || t->getType() == Transfer::TYPE_PARTIAL_LIST) {
+	if(type == Transfer::TYPE_TREE) {
+		file = _T("TTH: ") + fileName;
+	} else if(type == Transfer::TYPE_FULL_LIST || type == Transfer::TYPE_PARTIAL_LIST) {
 		file = TSTRING(FILE_LIST);
-	} else if(t->getType() == Transfer::TYPE_TESTSUR) {
+	} else if(type == Transfer::TYPE_TESTSUR) {
 		file = _T("TestSUR");
 	} else {
-		file = Text::toT(Util::getFileName(t->getPath()));
+		file = fileName;
 	}
 	return file;
 }
 
+const tstring TransferView::ItemInfo::getText(uint8_t col) const {
+	switch(col) {
+		case COLUMN_USER: return (hits == -1) ? WinUtil::getNicks(user) : (Util::toStringW(hits) + _T(' ') + TSTRING(USERS));
+		case COLUMN_HUB: return (hits == -1) ? WinUtil::getHubNames(user).first : (Util::toStringW(running) + _T(' ') + TSTRING(NUMBER_OF_SEGMENTS));
+		case COLUMN_STATUS: return statusString;
+		case COLUMN_TIMELEFT: return (status == STATUS_RUNNING) ? Util::formatSeconds(timeLeft) : Util::emptyStringT;
+		case COLUMN_SPEED: return (status == STATUS_RUNNING) ? (Util::formatBytesW(speed) + _T("/s")) : Util::emptyStringT;
+		case COLUMN_FILE: return getFile(type, Util::getFileName(target));
+		case COLUMN_SIZE: return Util::formatBytesW(size); 
+		case COLUMN_PATH: return Util::getFilePath(target);
+		case COLUMN_IP: return ip;
+		case COLUMN_RATIO: return (status == STATUS_RUNNING) ? Util::toStringW(getRatio()) : Util::emptyStringT;
+		case COLUMN_CIPHER: return cipher;
+		default: return Util::emptyStringT;
+	}
+}
+		
 void TransferView::starting(UpdateInfo* ui, const Transfer* t) {
 	ui->setPos(t->getPos());
 	ui->setTarget(Text::toT(t->getPath()));
+	ui->setType(t->getType());
 	const UserConnection& uc = t->getUserConnection();
 	ui->setCipher(Text::toT(uc.getCipherName()));
 	string ip = uc.getRemoteIp();
@@ -849,7 +888,7 @@ void TransferView::on(DownloadManagerListener::Requesting, const Download* d) th
 	ui->setActual(d->getActual());
 	ui->setSize(d->getSize());
 	ui->setStatus(ItemInfo::STATUS_REQUESTING);
-	ui->setStatusString(TSTRING(REQUESTING) + _T(" ") + getFile(d) + _T("..."));
+	ui->setStatusString(TSTRING(REQUESTING) + _T(" ") + getFile(d->getType(), Text::toT(Util::getFileName(d->getPath()))) + _T("..."));
 
 	speak(UPDATE_ITEM, ui);
 }
@@ -857,15 +896,11 @@ void TransferView::on(DownloadManagerListener::Requesting, const Download* d) th
 void TransferView::on(DownloadManagerListener::Starting, const Download* aDownload) {
 	UpdateInfo* ui = new UpdateInfo(aDownload->getUser(), true);
 	
+	ui->setStatus(ItemInfo::STATUS_RUNNING);
 	ui->setStatusString(TSTRING(DOWNLOAD_STARTING));
 	ui->setTarget(Text::toT(aDownload->getPath()));
+	ui->setType(aDownload->getType());
 	
-	if(aDownload->getType() == Transfer::TYPE_TREE) {
-		ui->setStatus(ItemInfo::TREE_DOWNLOAD);
-	} else {
-		ui->setStatus(ItemInfo::STATUS_RUNNING);
-	}
-
 	speak(UPDATE_ITEM, ui);
 }
 
@@ -924,6 +959,7 @@ void TransferView::on(DownloadManagerListener::Failed, const Download* aDownload
 	ui->setPos(0);
 	ui->setSize(aDownload->getSize());
 	ui->setTarget(Text::toT(aDownload->getPath()));
+	ui->setType(aDownload->getType());
 
 	tstring tmpReason = Text::toT(aReason);
 	if(aDownload->isSet(Download::FLAG_SLOWUSER)) {
@@ -961,7 +997,7 @@ void TransferView::on(UploadManagerListener::Starting, const Upload* aUpload) {
 	ui->setStatus(ItemInfo::STATUS_RUNNING);
 	ui->setActual(aUpload->getStartPos() + aUpload->getActual());
 	ui->setSize(aUpload->getType() == Transfer::TYPE_TREE ? aUpload->getSize() : aUpload->getFileSize());
-
+	
 	if(!aUpload->isSet(Upload::FLAG_RESUMED)) {
 		ui->setStatusString(TSTRING(UPLOAD_STARTING));
 	}
@@ -1144,6 +1180,16 @@ void TransferView::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw()
 void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) throw() {
 	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true);
 	ui->setTarget(Text::toT(qi->getTarget()));
+
+	Transfer::Type type = Transfer::TYPE_FILE;
+	if(qi->getFlags() & QueueItem::FLAG_USER_LIST)
+		type = Transfer::TYPE_FULL_LIST;
+	else if(qi->getFlags() & QueueItem::FLAG_PARTIAL_LIST)
+		type = Transfer::TYPE_PARTIAL_LIST;
+	else if(qi->getFlags() & QueueItem::FLAG_TESTSUR)
+		type = Transfer::TYPE_TESTSUR;
+	
+	ui->setType(type);
 
 	if(qi->isRunning() && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
 		double ratio = 0;

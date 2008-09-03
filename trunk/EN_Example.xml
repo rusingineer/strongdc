@@ -857,7 +857,6 @@ Default: %H:%M:%S</String>
 		<String Name="UpnpFailedToCreateMappings">Failed to create port mappings. Please set up your NAT yourself.</String>
 		<String Name="UpnpFailedToGetExternalIp">Failed to get external IP via  UPnP. Please set it yourself.</String>
 		<String Name="UpnpFailedToRemoveMappings">Failed to remove port mappings</String>
-		<String Name="UseKademlia">Use hub independent search engine (Kademlia)</String>
 		<String Name="User">User</String>
 		<String Name="UserCmdCommand">Command</String>
 		<String Name="UserCmdContext">Context</String>

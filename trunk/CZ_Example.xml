@@ -177,7 +177,7 @@
 		<String Name="FavoriteUsers">Oblíbení uživatelé</String>
 		<String Name="FavuserOnline">Oblíbený uživatel se připojil</String>
 		<String Name="File">Soubor</String>
-		<String Name="FileList">seznam souborů</String>		
+		<String Name="FileList">Seznam souborů</String>		
 		<String Name="FileListDiff">Porovnat seznam souborů</String>
 		<String Name="FileListRefreshFailed">Obnovení seznamu souborů selhalo: </String>
 		<String Name="FileListRefreshFinished">Dokončeno obnovení seznamu souborů</String>

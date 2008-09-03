@@ -58,25 +58,25 @@ public:
 		/** Normal download, no flags set */
 		FLAG_NORMAL				= 0x00, 
 		/** This is a user file listing download */
-		FLAG_USER_LIST			= 0x02,
+		FLAG_USER_LIST			= 0x01,
 		/** The file list is downloaded to use for directory download (used with USER_LIST) */
-		FLAG_DIRECTORY_DOWNLOAD = 0x04,
+		FLAG_DIRECTORY_DOWNLOAD = 0x02,
 		/** The file is downloaded to be viewed in the gui */
-		FLAG_CLIENT_VIEW		= 0x08,
+		FLAG_CLIENT_VIEW		= 0x04,
 		/** Flag to indicate that file should be viewed as a text file */
-		FLAG_TEXT				= 0x20,
+		FLAG_TEXT				= 0x08,
 		/** Match the queue against this list */
-		FLAG_MATCH_QUEUE		= 0x80,
+		FLAG_MATCH_QUEUE		= 0x10,
 		/** The file list downloaded was actually an .xml.bz2 list */
-		FLAG_XML_BZLIST			= 0x100,
+		FLAG_XML_BZLIST			= 0x20,
 		/** Only download a part of the file list */
-		FLAG_PARTIAL_LIST 		= 0x200,
+		FLAG_PARTIAL_LIST 		= 0x40,
 		/** Test user for slotlocker */
-		FLAG_TESTSUR			= 0x400,
+		FLAG_TESTSUR			= 0x80,
 		/** Test user's file list for fake share */
-		FLAG_CHECK_FILE_LIST	= 0x800,
+		FLAG_CHECK_FILE_LIST	= 0x100,
 		/** Autodrop slow source is enabled for this file */
-		FLAG_AUTODROP			= 0x1000
+		FLAG_AUTODROP			= 0x200
 	};
 
 	/**

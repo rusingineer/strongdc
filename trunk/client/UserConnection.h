@@ -54,11 +54,6 @@ public:
 
 	static const string FILE_NOT_AVAILABLE;
 	
-	enum Modes {	
-		MODE_COMMAND = BufferedSocket::MODE_LINE,
-		MODE_DATA = BufferedSocket::MODE_DATA
-	};
-
 	enum Flags {
 		FLAG_NMDC					= 0x01,
 		FLAG_OP						= 0x02,
