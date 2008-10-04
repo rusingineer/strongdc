@@ -850,6 +850,14 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) t
 		return 0;
 	}
 
+	// Check that the file we will be downloading to exists
+	if(q->getDownloadedBytes() > 0) {
+		if(!Util::fileExists(q->getTempTarget())) {
+			// Temp target gone?
+			q->resetDownloaded();
+		}
+	}
+	
 	Download* d = new Download(aSource, *q, q->isSet(QueueItem::FLAG_PARTIAL_LIST) ? q->getTempTarget() : q->getTarget());
 	
 	userQueue.addDownload(q, d);	
@@ -929,7 +937,15 @@ void QueueManager::setFile(Download* d) {
 		}
 		
 		string target = d->getDownloadTarget();
-		File::ensureDirectory(target);
+		
+		if(d->getSegment().getStart() > 0) {
+			if(!Util::fileExists(qi->getTempTarget())) {
+				// When trying the download the next time, the resume pos will be reset
+				throw QueueException(STRING(TARGET_REMOVED));
+			}
+		} else {
+			File::ensureDirectory(target);
+		}
 
 		File* f = new File(target, File::WRITE, File::OPEN | File::CREATE | File::SHARED);
 

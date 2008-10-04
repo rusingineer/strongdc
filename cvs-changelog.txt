@@ -1,8 +1,12 @@
+** svn422
+	temp target file is checked for its existence before download resumes
+	updated OpenSSL
+
 ** svn421
 	transfer's file name is now more understandable for filelists/testsur
 	using VS2008 SP1
 	kademlia postponed to the next bigger version (because it needs many changes to work completely)
-	unsuccessful partial filelist request are removed from queue
+	unsuccessful partial filelist requests are removed from queue
 
 ** svn420
 	queue automatch downloads partial filelists only and is defaulty on (match efficient now!)
