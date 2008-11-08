@@ -938,7 +938,7 @@ void QueueManager::setFile(Download* d) {
 		
 		string target = d->getDownloadTarget();
 		
-		if(d->getSegment().getStart() > 0) {
+		if(qi->getDownloadedBytes() > 0) {
 			if(!Util::fileExists(qi->getTempTarget())) {
 				// When trying the download the next time, the resume pos will be reset
 				throw QueueException(STRING(TARGET_REMOVED));

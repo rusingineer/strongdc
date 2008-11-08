@@ -786,7 +786,7 @@ LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
-		PrivateFrame::openWindow(ou);
+		PrivateFrame::openWindow(ou->getUser(), client);
 
 	return 0;
 }

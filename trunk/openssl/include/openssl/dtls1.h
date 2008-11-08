@@ -68,6 +68,7 @@ extern "C" {
 #endif
 
 #define DTLS1_VERSION			0xFEFF
+#define DTLS1_BAD_VER			0x0100
 
 #if 0
 /* this alert description is not specified anywhere... */
@@ -95,11 +96,9 @@ extern "C" {
 
 typedef struct dtls1_bitmap_st
 	{
-	unsigned long map;		/* track 32 packets on 32-bit systems
-					   and 64 - on 64-bit systems */
-	unsigned char max_seq_num[8];	/* max record number seen so far,
-					   64-bit value in big-endian
-					   encoding */
+	PQ_64BIT map;
+	unsigned long length;     /* sizeof the bitmap in bits */
+	PQ_64BIT max_seq_num;  /* max record number seen so far */
 	} DTLS1_BITMAP;
 
 struct hm_header_st
