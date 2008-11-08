@@ -83,10 +83,10 @@ LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	return 1;
 }
 
-void PrivateFrame::gotMessage(const Identity& from, const OnlineUserPtr& to, const OnlineUserPtr& replyTo, const tstring& aMessage) {
+void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo,  Client* client, const tstring& aMessage) {
 	PrivateFrame* p = NULL;
-	bool myPM = replyTo->getUser() == ClientManager::getInstance()->getMe();
-	const OnlineUserPtr& user = myPM ? to : replyTo;
+	bool myPM = replyTo == ClientManager::getInstance()->getMe();
+	const UserPtr& user = myPM ? to : replyTo;
 	
 	FrameIter i = frames.find(user);
 	if(i == frames.end()) {
@@ -94,16 +94,17 @@ void PrivateFrame::gotMessage(const Identity& from, const OnlineUserPtr& to, con
 		p = new PrivateFrame(user);
 		frames[user] = p;
 		
-		p->ctrlClient.setClient(&user->getClient());
+		p->ctrlClient.setClient(client);
 		p->addLine(from, aMessage);
 
 		if(Util::getAway()) {
-			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->getUser()->isSet(User::BOT)))
+			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->isSet(User::BOT)))
 				p->sendMessage(Text::toT(Util::getAwayMessage()));
 		}
 
 		if(BOOLSETTING(POPUP_NEW_PM)) {
-			MainFrame::getMainFrame()->ShowBalloonTip(WinUtil::getNicks(replyTo->getUser()) + _T(" - ") + Text::toT(replyTo->getClient().getHubName()), TSTRING(PRIVATE_MESSAGE));
+			pair<tstring, bool> hubs = WinUtil::getHubNames(replyTo);
+			MainFrame::getMainFrame()->ShowBalloonTip(WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first, TSTRING(PRIVATE_MESSAGE));
 		}
 
 		if((BOOLSETTING(PRIVATE_MESSAGE_BEEP) || BOOLSETTING(PRIVATE_MESSAGE_BEEP_OPEN)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -116,7 +117,8 @@ void PrivateFrame::gotMessage(const Identity& from, const OnlineUserPtr& to, con
 	} else {
 		if(!myPM) {
 			if(BOOLSETTING(POPUP_PM)) {
-				MainFrame::getMainFrame()->ShowBalloonTip(WinUtil::getNicks(replyTo->getUser()) + _T(" - ") + Text::toT(replyTo->getClient().getHubName()), TSTRING(PRIVATE_MESSAGE));
+				pair<tstring, bool> hubs = WinUtil::getHubNames(replyTo);
+				MainFrame::getMainFrame()->ShowBalloonTip(WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first, TSTRING(PRIVATE_MESSAGE));
 			}
 
 			if((BOOLSETTING(PRIVATE_MESSAGE_BEEP)) && (!BOOLSETTING(SOUNDS_DISABLED))) {
@@ -131,7 +133,7 @@ void PrivateFrame::gotMessage(const Identity& from, const OnlineUserPtr& to, con
 	}
 }
 
-void PrivateFrame::openWindow(const OnlineUserPtr& replyTo, const tstring& msg) {
+void PrivateFrame::openWindow(const UserPtr& replyTo, Client* client, const tstring& msg) {
 	PrivateFrame* p = NULL;
 	FrameIter i = frames.find(replyTo);
 	if(i == frames.end()) {
@@ -139,7 +141,10 @@ void PrivateFrame::openWindow(const OnlineUserPtr& replyTo, const tstring& msg) 
 		p = new PrivateFrame(replyTo);
 		frames[replyTo] = p;
 		p->CreateEx(WinUtil::mdiClient);
-		p->ctrlClient.setClient(&replyTo->getClient());
+		
+		if(client)
+			p->ctrlClient.setClient(client);
+
 	} else {
 		p = i->second;
 		if(::IsIconic(p->m_hWnd))
@@ -148,13 +153,6 @@ void PrivateFrame::openWindow(const OnlineUserPtr& replyTo, const tstring& msg) 
 	}
 	if(!msg.empty())
 		p->sendMessage(msg);
-}
-
-void PrivateFrame::openWindow(const UserPtr& user) {
-	OnlineUserPtr ou = ClientManager::getInstance()->findOnlineUser(user->getCID());
-	if(ou) {
-		openWindow(ou);
-	}		
 }
 
 LRESULT PrivateFrame::onChar(UINT uMsg, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -303,12 +301,12 @@ void PrivateFrame::onEnter()
 			} else if((stricmp(s.c_str(), _T("clear")) == 0) || (stricmp(s.c_str(), _T("cls")) == 0)) {
 				ctrlClient.SetWindowText(_T(""));
 			} else if(stricmp(s.c_str(), _T("grant")) == 0) {
-				UploadManager::getInstance()->reserveSlot(replyTo->getUser(), 600);
+				UploadManager::getInstance()->reserveSlot(replyTo, 600);
 				addClientLine(TSTRING(SLOT_GRANTED));
 			} else if(stricmp(s.c_str(), _T("close")) == 0) {
 				PostMessage(WM_CLOSE);
 			} else if((stricmp(s.c_str(), _T("favorite")) == 0) || (stricmp(s.c_str(), _T("fav")) == 0)) {
-				FavoriteManager::getInstance()->addFavoriteUser(replyTo->getUser());
+				FavoriteManager::getInstance()->addFavoriteUser(replyTo);
 				addClientLine(TSTRING(FAVORITE_USER_ADDED));
 			} else if(stricmp(s.c_str(), _T("getlist")) == 0) {
 				BOOL bTmp;
@@ -316,10 +314,10 @@ void PrivateFrame::onEnter()
 			} else if(stricmp(s.c_str(), _T("log")) == 0) {
 				StringMap params;
 
-				params["hubNI"] = Text::fromT(hubName);
-				params["hubURL"] = hubURL;
-				params["userCID"] = replyTo->getUser()->getCID().toBase32(); 
-				params["userNI"] = replyTo->getIdentity().getNick();
+				params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
+				params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
+				params["userCID"] = replyTo->getCID().toBase32(); 
+				params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 				params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 				WinUtil::openFile(Text::toT(Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false))));
 			} else if(stricmp(s.c_str(), _T("stats")) == 0) {
@@ -327,7 +325,7 @@ void PrivateFrame::onEnter()
 			} else if(stricmp(s.c_str(), _T("help")) == 0) {
 				addLine(_T("*** ") + WinUtil::commands + _T(", /getlist, /clear, /grant, /close, /favorite, /winamp"), WinUtil::m_ChatTextSystem);
 			} else {
-				if(replyTo->getUser()->isOnline()) {
+				if(replyTo->isOnline()) {
 					if (BOOLSETTING(SEND_UNKNOWN_COMMANDS)) {
 						sendMessage(tstring(m));
 					} else {
@@ -339,7 +337,7 @@ void PrivateFrame::onEnter()
 				}
 			}
 		} else {
-			if(replyTo->getUser()->isOnline()) {
+			if(replyTo->isOnline()) {
 				if(BOOLSETTING(CZCHARS_DISABLE))
 					s = WinUtil::disableCzChars(s);
 
@@ -355,8 +353,11 @@ void PrivateFrame::onEnter()
 }
 
 void PrivateFrame::sendMessage(const tstring& msg, bool thirdPerson) {
-	// TODO: does it need locking?
-	replyTo->getClient().privateMessage(replyTo, Text::fromT(msg), thirdPerson);
+	OnlineUserPtr ou = ClientManager::getInstance()->findOnlineUser(replyTo->getCID(), ctrlClient.getClient());
+	if(ou != NULL) {
+		ctrlClient.getClient()->privateMessage(ou, Text::fromT(msg), thirdPerson);
+	}
+	//ClientManager::getInstance()->privateMessage(replyTo, Text::fromT(msg), thirdPerson);
 }
 
 LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
@@ -399,10 +400,10 @@ void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMA
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		StringMap params;
 		params["message"] = Text::fromT(aLine);
-		params["hubNI"] = Text::fromT(hubName);
-		params["hubURL"] = hubURL;
-		params["userCID"] = replyTo->getUser()->getCID().toBase32(); 
-		params["userNI"] = replyTo->getIdentity().getNick();
+		params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
+		params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
+		params["userCID"] = replyTo->getCID().toBase32(); 
+		params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 		params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 		LOG(LogManager::PM, params);
 	}
@@ -425,7 +426,7 @@ LRESULT PrivateFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	OMenu tabMenu;
 	tabMenu.CreatePopupMenu();	
 
-	tabMenu.InsertSeparatorFirst(Text::toT(ClientManager::getInstance()->getNicks(replyTo->getUser()->getCID())[0]));
+	tabMenu.InsertSeparatorFirst(Text::toT(ClientManager::getInstance()->getNicks(replyTo->getCID())[0]));
 	if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 		tabMenu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG,  CTSTRING(OPEN_USER_LOG));
 		tabMenu.AppendMenu(MF_SEPARATOR);
@@ -437,7 +438,7 @@ LRESULT PrivateFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM 
 	tabMenu.AppendMenu(MF_POPUP, (UINT)(HMENU)WinUtil::grantMenu, CTSTRING(GRANT_SLOTS_MENU));
 	tabMenu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
 
-	prepareMenu(tabMenu, UserCommand::CONTEXT_CHAT, ClientManager::getInstance()->getHubs(replyTo->getUser()->getCID()));
+	prepareMenu(tabMenu, UserCommand::CONTEXT_CHAT, ClientManager::getInstance()->getHubs(replyTo->getCID()));
 	if(!(tabMenu.GetMenuState(tabMenu.GetMenuItemCount()-1, MF_BYPOSITION) & MF_SEPARATOR)) {	
 		tabMenu.AppendMenu(MF_SEPARATOR);
 	}
@@ -454,18 +455,17 @@ void PrivateFrame::runUserCommand(UserCommand& uc) {
 
 	StringMap ucParams = ucLineParams;
 
-	ClientManager::getInstance()->userCommand(replyTo->getUser(), uc, ucParams, true);
+	ClientManager::getInstance()->userCommand(replyTo, uc, ucParams, true);
 }
 
 LRESULT PrivateFrame::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	// TODO: does this need locking?
-	replyTo->getClient().cheatMessage("*** Info on " + replyTo->getIdentity().getNick() + " ***" + "\r\n" + replyTo->getIdentity().getReport() + "\r\n");
+	ClientManager::getInstance()->reportUser(replyTo);
 	return 0;
 }
 
 LRESULT PrivateFrame::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	try {
-		QueueManager::getInstance()->addTestSUR(replyTo->getUser(), false);
+		QueueManager::getInstance()->addTestSUR(replyTo, false);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
@@ -475,7 +475,7 @@ LRESULT PrivateFrame::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 
 LRESULT PrivateFrame::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	try {
-		QueueManager::getInstance()->addList(replyTo->getUser(), QueueItem::FLAG_CHECK_FILE_LIST);
+		QueueManager::getInstance()->addList(replyTo, QueueItem::FLAG_CHECK_FILE_LIST);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
@@ -485,7 +485,7 @@ LRESULT PrivateFrame::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 
 LRESULT PrivateFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	try {
-		QueueManager::getInstance()->addList(replyTo->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+		QueueManager::getInstance()->addList(replyTo, QueueItem::FLAG_CLIENT_VIEW);
 	} catch(const Exception& e) {
 		addClientLine(Text::toT(e.getError()));
 	}
@@ -494,7 +494,7 @@ LRESULT PrivateFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 
 LRESULT PrivateFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	try {
-		QueueManager::getInstance()->addList(replyTo->getUser(), QueueItem::FLAG_MATCH_QUEUE);
+		QueueManager::getInstance()->addList(replyTo, QueueItem::FLAG_MATCH_QUEUE);
 	} catch(const Exception& e) {
 		addClientLine(Text::toT(e.getError()));
 	}
@@ -512,15 +512,15 @@ LRESULT PrivateFrame::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	}
 	
 	if(time > 0)
-		UploadManager::getInstance()->reserveSlot(replyTo->getUser(), time);
+		UploadManager::getInstance()->reserveSlot(replyTo, time);
 	else
-		UploadManager::getInstance()->unreserveSlot(replyTo->getUser());
+		UploadManager::getInstance()->unreserveSlot(replyTo);
 
 	return 0;
 }
 
 LRESULT PrivateFrame::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	FavoriteManager::getInstance()->addFavoriteUser(replyTo->getUser());
+	FavoriteManager::getInstance()->addFavoriteUser(replyTo);
 	return 0;
 }
 
@@ -560,14 +560,12 @@ void PrivateFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 }
 
 void PrivateFrame::updateTitle() {
-	if(replyTo->getUser()->isOnline()) {
-		hubName = Text::toT(replyTo->getClient().getHubName());
-		hubURL = replyTo->getClient().getHubUrl();
-		
+	pair<tstring, bool> hubs = WinUtil::getHubNames(replyTo);
+	if(hubs.second) {	
 		unsetIconState();
 		setTabColor(RGB(0, 255,	255));
 		if(isoffline) {
-			tstring status = _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + Text::toT(replyTo->getIdentity().getNick()) + _T(" - ") + hubName + _T("] ***");
+			tstring status = _T(" *** ") + TSTRING(USER_WENT_ONLINE) + _T(" [") + WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first + _T("] ***");
 			if(BOOLSETTING(STATUS_IN_CHAT)) {
 				addLine(status, WinUtil::m_ChatTextServer);
 			} else {
@@ -578,7 +576,7 @@ void PrivateFrame::updateTitle() {
 	} else {
 		setIconState();
 		setTabColor(RGB(255, 0, 0));
-		tstring status = _T(" *** ") + TSTRING(USER_WENT_OFFLINE) + _T(" [") + Text::toT(replyTo->getIdentity().getNick()) + _T(" - ") + hubName + _T("] ***");
+		tstring status = _T(" *** ") + TSTRING(USER_WENT_OFFLINE);
 		if(BOOLSETTING(STATUS_IN_CHAT)) {
 			addLine(status, WinUtil::m_ChatTextServer);
 		} else {
@@ -587,7 +585,7 @@ void PrivateFrame::updateTitle() {
 		isoffline = true;
 		ctrlClient.setClient(NULL);
 	}
-	SetWindowText((Text::toT(replyTo->getIdentity().getNick()) + _T(" - ") + (replyTo->getUser()->isOnline() ? hubName : TSTRING(OFFLINE))).c_str());
+	SetWindowText((WinUtil::getNicks(replyTo) + _T(" - ") + hubs.first).c_str());
 }
 
 LRESULT PrivateFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
@@ -636,10 +634,10 @@ void PrivateFrame::readLog() {
 
 	StringMap params;
 	
-	params["hubNI"] = Text::fromT(hubName);
-	params["hubURL"] = hubURL;
-	params["userCID"] = replyTo->getUser()->getCID().toBase32(); 
-	params["userNI"] = replyTo->getIdentity().getNick();
+	params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
+	params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
+	params["userCID"] = replyTo->getCID().toBase32(); 
+	params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 	params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 		
 	string path = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false));
@@ -680,17 +678,17 @@ void PrivateFrame::closeAll(){
 
 void PrivateFrame::closeAllOffline() {
 	for(FrameIter i = frames.begin(); i != frames.end(); ++i) {
-		if(!i->first->getUser()->isOnline())
+		if(!i->first->isOnline())
 			i->second->PostMessage(WM_CLOSE, 0, 0);
 	}
 }
 
 LRESULT PrivateFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {	
 	StringMap params;
-	params["hubNI"] = Text::fromT(hubName);
-	params["hubURL"] = hubURL;
-	params["userCID"] = replyTo->getUser()->getCID().toBase32(); 
-	params["userNI"] = replyTo->getIdentity().getNick();
+	params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(replyTo->getCID()));
+	params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(replyTo->getCID()));
+	params["userCID"] = replyTo->getCID().toBase32(); 
+	params["userNI"] = ClientManager::getInstance()->getNicks(replyTo->getCID())[0];
 	params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 
 	string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false));

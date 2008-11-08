@@ -1,5 +1,5 @@
 /* pkcs12.h */
-/* Written by Dr Stephen N Henson (shenson@bigfoot.com) for the OpenSSL
+/* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
 /* ====================================================================
@@ -107,6 +107,8 @@ ASN1_INTEGER *version;
 PKCS12_MAC_DATA *mac;
 PKCS7 *authsafes;
 } PKCS12;
+
+PREDECLARE_STACK_OF(PKCS12_SAFEBAG)
 
 typedef struct {
 ASN1_OBJECT *type;

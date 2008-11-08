@@ -353,14 +353,14 @@ void HubFrame::onEnter() {
 
 					if(ui) {
 						if(param.size() > j + 1)
-							PrivateFrame::openWindow(ui, param.substr(j+1));
+							PrivateFrame::openWindow(ui->getUser(), client, param.substr(j+1));
 						else
-							PrivateFrame::openWindow(ui);
+							PrivateFrame::openWindow(ui->getUser(), client);
 					}
 				} else if(!param.empty()) {
 					const OnlineUserPtr ui = client->findUser(Text::fromT(param));
 					if(ui) {
-						PrivateFrame::openWindow(ui);
+						PrivateFrame::openWindow(ui->getUser(), client);
 					}
 				}
 			} else if(stricmp(cmd.c_str(), _T("stats")) == 0) {
@@ -500,7 +500,7 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 				break;
 		    }    
 		    case 2:
-				PrivateFrame::openWindow(ctrlUsers.getItemData(item->iItem));
+				ctrlUsers.getItemData(item->iItem)->pm();
 		        break;
 		    case 3:
 		        ctrlUsers.getItemData(item->iItem)->matchQueue();
@@ -689,13 +689,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			tstring nick = Text::toT(pm.from.getNick());
 			if(!pm.from.getUser() || (ignoreList.find(pm.from.getUser()) == ignoreList.end()) ||
 			  (pm.from.isOp() && !client->isOp())) {
-				bool myPM = pm.replyTo->getUser() == ClientManager::getInstance()->getMe();
-				const OnlineUserPtr& user = myPM ? pm.to : pm.replyTo;
+				bool myPM = pm.replyTo == ClientManager::getInstance()->getMe();
+				const UserPtr& user = myPM ? pm.to : pm.replyTo;
 				if(pm.hub) {
 					if(BOOLSETTING(IGNORE_HUB_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), false);
 					} else if(BOOLSETTING(POPUP_HUB_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
@@ -703,13 +703,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					if(BOOLSETTING(IGNORE_BOT_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), WinUtil::m_ChatTextPrivate, false);
 					} else if(BOOLSETTING(POPUP_BOT_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 				} else {
 					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
@@ -978,7 +978,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 			if(ui) {
 				bHandled = true;
 				if (wParam & MK_CONTROL) { // MK_CONTROL = 0x0008
-					PrivateFrame::openWindow(ui);
+					PrivateFrame::openWindow(ui->getUser(), client);
 				} else if (wParam & MK_SHIFT) {
 					try {
 						QueueManager::getInstance()->addList(ui->getUser(), QueueItem::FLAG_CLIENT_VIEW);
@@ -1023,7 +1023,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					     break;
 					}
 					case 2:
-						PrivateFrame::openWindow(ui);
+						ui->pm();
 					    break;
 					case 3:
 					    ui->getList();
@@ -2012,7 +2012,7 @@ LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 LRESULT HubFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		PrivateFrame::openWindow(ctrlUsers.getItemData(i));
+		PrivateFrame::openWindow(ctrlUsers.getItemData(i)->getUser(), client);
 	}
 
 	return 0;
@@ -2196,7 +2196,7 @@ LRESULT HubFrame::onKeyDownUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*
 		switch(l->wVKey) {
 			case 'M':
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					PrivateFrame::openWindow(ctrlUsers.getItemData(i));
+					ctrlUsers.getItemData(i)->pm();
 				}				
 				break;
 			// TODO: add others

@@ -285,11 +285,11 @@ private:
 	struct MessageTask : public StringTask {
 		MessageTask(const Identity& from_, const string& m) : StringTask(m), from(from_) { }
 		MessageTask(const Identity& from_, const OnlineUserPtr& to_, const OnlineUserPtr& replyTo_, const string& m) : StringTask(m),
-			from(from_), to(to_), replyTo(replyTo_), hub(replyTo_->getIdentity().isHub()), bot(replyTo_->getIdentity().isBot()) { }
+			from(from_), to(to_->getUser()), replyTo(replyTo_->getUser()), hub(replyTo_->getIdentity().isHub()), bot(replyTo_->getIdentity().isBot()) { }
 
 		const Identity from;
-		const OnlineUserPtr to;
-		const OnlineUserPtr replyTo;
+		const UserPtr to;
+		const UserPtr replyTo;
 
 		bool hub;
 		bool bot;

@@ -116,7 +116,7 @@ public:
 	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
-	void setClient(Client* pClient) { client = pClient; }
+	//void setClient(Client* pClient) { client = pClient; }
 	void runUserCommand(UserCommand& uc);
 
 	void AdjustTextSize();
@@ -130,6 +130,8 @@ public:
 		// We wanna control the scrolling...
 	}
 
+	GETSET(Client*, client, Client);
+	
 private:
 	bool HitNick(const POINT& p, tstring& sNick, int& iBegin , int& iEnd);
 	bool HitIP(const POINT& p, tstring& sIP, int& iBegin, int& iEnd);
@@ -139,7 +141,7 @@ private:
 	void AppendTextOnly(const tstring& sMyNick, const TCHAR* sMsg, CHARFORMAT2& cf, bool isMyMessage, const tstring& sAuthor);
 	void scrollToEnd();
 
-    Client* client;
+    //Client* client;
 
 	OMenu copyMenu;
 

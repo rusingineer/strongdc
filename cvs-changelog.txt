@@ -1,3 +1,8 @@
+** svn423
+	added TLS support for NMDC hub connections (nmdcs://)
+	changed to stable version of OpenSSL
+	reverted to old stable code of PrivateFrame (but still not much stable)
+
 ** svn422
 	temp target file is checked for its existence before download resumes
 	updated OpenSSL
