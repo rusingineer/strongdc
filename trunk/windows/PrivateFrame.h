@@ -210,8 +210,10 @@ private:
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
 	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
-		if(aUser == replyTo)
+		if(aUser == replyTo) {
+			ctrlClient.setClient(NULL);
 			PostMessage(WM_SPEAKER, USER_UPDATED);
+		}
 	}
 	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };

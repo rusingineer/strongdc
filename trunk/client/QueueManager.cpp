@@ -1080,8 +1080,17 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						}
 
 						if(aDownload->getType() == Transfer::TYPE_FILE) {
+	
+#ifdef _DEBUG
+							File f(q->getTempTarget() + ".log", File::WRITE, File::OPEN | File::CREATE );
+							f.setPos(f.getSize());
+							f.write("Full segment finished " + Util::toString(aDownload->getSegment().getStart()) + " - " + Util::toString(aDownload->getSegment().getEnd()) + ", O:" + 
+									Util::toString(aDownload->getSegment().getOverlapped()) + ", U:" + aDownload->getUser()->getCID().toBase32() + ", F:" + Util::toString(aDownload->getFlags()) + "\n");
+							f.close();
+#endif
+						
 							aDownload->setOverlapped(false);
-							q->addSegment(aDownload->getSegment());
+							q->addSegment(aDownload->getSegment());							
 						}
 						
 						if(aDownload->getType() != Transfer::TYPE_FILE || q->isFinished()) {
@@ -1130,6 +1139,13 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 							downloaded -= downloaded % aDownload->getTigerTree().getBlockSize();
 
 							if(downloaded > 0) {
+#ifdef _DEBUG
+								File f(q->getTempTarget() + ".log", File::WRITE, File::OPEN | File::CREATE );
+								f.setPos(f.getSize());
+								f.write("Part segment finished " + Util::toString(aDownload->getSegment().getStart()) + " - " + Util::toString(aDownload->getSegment().getEnd()) + ", O:" + 
+										Util::toString(aDownload->getSegment().getOverlapped()) + ", U:" + aDownload->getUser()->getCID().toBase32() + ", F:" + Util::toString(aDownload->getFlags()) + "\n");
+								f.close();
+#endif					
 								q->addSegment(Segment(aDownload->getStartPos(), downloaded));
 							}
 						}
