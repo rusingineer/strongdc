@@ -769,7 +769,9 @@ void AdcHub::refreshUserList(bool) {
 
 	OnlineUserList v;
 	for(SIDIter i = users.begin(); i != users.end(); ++i) {
-		v.push_back(i->second);
+		if(i->first != AdcCommand::HUB_SID) {
+			v.push_back(i->second);
+		}
 	}
 	fire(ClientListener::UsersUpdated(), this, v);
 }

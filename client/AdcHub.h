@@ -67,7 +67,9 @@ private:
 	void getUserList(OnlineUserList& list) const {
 		Lock l(cs);
 		for(SIDIter i = users.begin(); i != users.end(); i++) {
-			list.push_back(i->second);
+			if(i->first != AdcCommand::HUB_SID) {
+				list.push_back(i->second);
+			}
 		}
 	}
 

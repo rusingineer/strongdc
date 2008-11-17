@@ -1,3 +1,7 @@
+** svn424
+	[#298137] fixed displaying hub name in ADC userlist
+	improved partial file sharing chunk size
+
 ** svn423
 	added TLS support for NMDC hub connections (nmdcs://)
 	changed to stable version of OpenSSL

@@ -178,7 +178,19 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 						dcassert(b % blockSize == 0);
 						dcassert(e % blockSize == 0 || e == getSize());
 
-						neededParts.push_back(Segment(b, e - b));
+    					bool merged = false;
+    					if(!neededParts.empty())
+    					{
+    						Segment& prev = neededParts.back();
+    						if(b == prev.getEnd() && e > prev.getEnd())
+    						{
+    							 prev.setSize(prev.getSize() + (e - b));
+    							 merged = true;
+							}
+    					}
+		                
+						if(!merged)
+							neededParts.push_back(Segment(b, e - b));
 					}
 				}
 			} else {
@@ -186,7 +198,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 			}
 		}
 		
-		if(curSize > blockSize) {
+		if(!partialSource && curSize > blockSize) {
 			curSize -= blockSize;
 		} else {
 			start = end;
@@ -197,7 +209,11 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 	if(!neededParts.empty()) {
 		// select random chunk for PFS
 		dcdebug("Found partial chunks: %d\n", neededParts.size());
-		return neededParts[Util::rand(0, neededParts.size())];
+		
+		Segment& selected = neededParts[Util::rand(0, neededParts.size())];
+		selected.setSize(std::min(selected.getSize(), targetSize));	// request only wanted size
+		
+		return selected;
 	}
 	
 	if(partialSource == NULL && BOOLSETTING(OVERLAP_CHUNKS) && lastSpeed > 10*1024) {
