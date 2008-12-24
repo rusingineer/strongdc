@@ -138,7 +138,8 @@ public:
 				if(len > 0) {
 					throw Exception("Garbage data after end of stream");
 				}
-				flushed = true;
+				// we shouldn't mark this stream as flushed because it's not true
+				//flushed = true;
 				return written;
 			}
 		}

@@ -736,7 +736,6 @@ enum Strings { // @DontAdd
 	SETTINGS_UPLOADS_SLOTS, // "Upload slots"
 	SETTINGS_URL_HANDLER, // "Install URL handler on startup (to handle dchub:// links)"
 	SETTINGS_USE_CTRL_FOR_LINE_HISTORY, // "Use CTRL for line history"
-	SETTINGS_USE_EXTENSION_DOWNTO, // "Use file extension for Download to in search"
 	SETTINGS_USE_OLD_SHARING_UI, // "Use old sharing user interface"
 	SETTINGS_USE_SYSTEM_ICONS, // "Use system icons when browsing files (slows browsing down a bit)"
 	SETTINGS_USE_TLS, // "Use TLS when remote client supports it"

@@ -42,7 +42,6 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::AUTO_FOLLOW, ResourceManager::SETTINGS_AUTO_FOLLOW },
 	{ SettingsManager::CLEAR_SEARCH, ResourceManager::SETTINGS_CLEAR_SEARCH },
 	{ SettingsManager::MINIMIZE_ON_STARTUP, ResourceManager::SETTINGS_MINIMIZE_ON_STARTUP },
-	{ SettingsManager::USE_EXTENSION_DOWNTO, ResourceManager::SETTINGS_USE_EXTENSION_DOWNTO },
 	{ SettingsManager::REMOVE_FORBIDDEN, ResourceManager::SETSTRONGDC_REMOVE_FORBIDDEN },
 	{ SettingsManager::URL_HANDLER, ResourceManager::SETTINGS_URL_HANDLER },
 	{ SettingsManager::MAGNET_REGISTER, ResourceManager::SETSTRONGDC_MAGNET_URI_HANDLER },

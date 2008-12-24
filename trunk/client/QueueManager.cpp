@@ -925,7 +925,7 @@ void QueueManager::setFile(Download* d) {
 					found = true;
 
 					// disconnect slow chunk
-					(*i)->getUserConnection().disconnect();
+					(*i)->getUserConnection().disconnect(true);
 					break;
 				}
 			}

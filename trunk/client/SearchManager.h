@@ -26,8 +26,6 @@
 #include "Thread.h"
 #include "Client.h"
 #include "Singleton.h"
-#include "FastAlloc.h"
-#include "MerkleTree.h"
 
 #include "SearchManagerListener.h"
 #include "TimerManager.h"
@@ -72,7 +70,7 @@ public:
  	}
 	static string clean(const string& aSearchString);
 	
-	void respond(const AdcCommand& cmd, const CID& cid);
+	void respond(const AdcCommand& cmd, const CID& cid, bool isUdpActive);
 
 	uint16_t getPort() const
 	{

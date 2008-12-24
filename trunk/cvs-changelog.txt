@@ -1,3 +1,9 @@
+** svn425
+	reverted NmdcHub performance stuff due to stability problems
+	fixed invalid state icon in TreeListViewCtrl when using filtering
+	fixed possible file corruption on crash
+	fixed PM crash
+
 ** svn424
 	[#298137] fixed displaying hub name in ADC userlist
 	improved partial file sharing chunk size

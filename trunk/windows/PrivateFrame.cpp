@@ -353,11 +353,7 @@ void PrivateFrame::onEnter()
 }
 
 void PrivateFrame::sendMessage(const tstring& msg, bool thirdPerson) {
-	OnlineUserPtr ou = ClientManager::getInstance()->findOnlineUser(replyTo->getCID(), ctrlClient.getClient());
-	if(ou != NULL) {
-		ctrlClient.getClient()->privateMessage(ou, Text::fromT(msg), thirdPerson);
-	}
-	//ClientManager::getInstance()->privateMessage(replyTo, Text::fromT(msg), thirdPerson);
+	ClientManager::getInstance()->privateMessage(replyTo, Text::fromT(msg), ctrlClient.getClient(), thirdPerson);
 }
 
 LRESULT PrivateFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {

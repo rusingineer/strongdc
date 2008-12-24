@@ -39,7 +39,7 @@
 namespace dcpp {
 
 NmdcHub::NmdcHub(const string& aHubURL, bool secure) : Client(aHubURL, '|', secure), supportFlags(0),
-	lastBytesShared(0), lastUpdate(0), userCount(0)
+	lastBytesShared(0), lastUpdate(0)
 {
 }
 
@@ -62,12 +62,10 @@ void NmdcHub::connect(const OnlineUser& aUser, const string&) {
 
 void NmdcHub::refreshUserList(bool refreshOnly) {
 	if(refreshOnly) {
-		OnlineUserList v;
-		ClientManager::OnlineMap users;
-		ClientManager::getInstance()->getOnlineUsers(users);
+		Lock l(cs);
 
-		for(ClientManager::OnlineMap::const_iterator i = users.begin(); i != users.end(); ++i) {
-			if(&i->second->getClient() == this)
+		OnlineUserList v;
+		for(NickIter i = users.begin(); i != users.end(); ++i) {
 				v.push_back(i->second);
 		}
 		fire(ClientListener::UsersUpdated(), this, v);
@@ -78,28 +76,32 @@ void NmdcHub::refreshUserList(bool refreshOnly) {
 }
 
 OnlineUser& NmdcHub::getUser(const string& aNick) {
-	bool isMe = aNick == getCurrentNick();
-	OnlineUserPtr u = ClientManager::getInstance()->findOnlineUser(
-		isMe ? ClientManager::getInstance()->getMe()->getCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
+	OnlineUser* u = NULL;
+	{
+		Lock l(cs);
 		
-	if(u != NULL)
-		return *u;
+		NickIter i = users.find(aNick);
+		if(i != users.end())
+			return *i->second;
+	}
 
 	UserPtr p;
-	if(isMe) {
+	if(aNick == getCurrentNick()) {
 		p = ClientManager::getInstance()->getMe();
 	} else {
 		p = ClientManager::getInstance()->getUser(aNick, getHubUrl());
 	}
 
-	userCount++;
-	u = new OnlineUser(p, *this, 0);
-	u->getIdentity().setNick(aNick);
-	if(u->getUser() == getMyIdentity().getUser()) {
-		setMyIdentity(u->getIdentity());
+	{
+		Lock l(cs);
+		u = users.insert(make_pair(aNick, new OnlineUser(p, *this, 0))).first->second;
+		u->getIdentity().setNick(aNick);
+		if(u->getUser() == getMyIdentity().getUser()) {
+			setMyIdentity(u->getIdentity());
+		}
 	}
 	
-	ClientManager::getInstance()->putOnline(u.get());
+	ClientManager::getInstance()->putOnline(u);
 	return *u;
 }
 
@@ -112,35 +114,40 @@ void NmdcHub::supports(const StringList& feat) {
 }
 
 OnlineUserPtr NmdcHub::findUser(const string& aNick) const {
-	return ClientManager::getInstance()->findOnlineUser(
-		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMe()->getCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
+	Lock l(cs);
+	NickIter i = users.find(aNick);
+	return i == users.end() ? NULL : i->second;
 }
 
 void NmdcHub::putUser(const string& aNick) {
-	OnlineUserPtr ou = ClientManager::getInstance()->findOnlineUser(
-		(aNick == getCurrentNick()) ? ClientManager::getInstance()->getMe()->getCID() : ClientManager::getInstance()->makeCid(aNick, getHubUrl()), this);
-	if(ou == NULL)
+	OnlineUser* ou = NULL;
+	{
+		Lock l(cs);
+		NickIter i = users.find(aNick);
+		if(i == users.end())
 		return;
+		ou = i->second;
+		users.erase(i);
 
-	userCount--;
 	availableBytes -= ou->getIdentity().getBytesShared();
-
-	ClientManager::getInstance()->putOffline(ou.get());
+	}
+	ClientManager::getInstance()->putOffline(ou);
 	ou->dec();
 }
 
 void NmdcHub::clearUsers() {
-	ClientManager::OnlineMap users;
-	ClientManager::getInstance()->getOnlineUsers(users);
+	NickMap u2;
 
-	for(ClientManager::OnlineMap::const_iterator i = users.begin(); i != users.end(); ++i) {
-		if(&i->second->getClient() == this) {
-			ClientManager::getInstance()->putOffline(i->second);
-			i->second->dec();
-		}
+	{
+		Lock l(cs);
+		u2.swap(users);
+		availableBytes = 0;
 	}
-	
-	userCount = 0;
+
+	for(NickIter i = u2.begin(); i != u2.end(); ++i) {
+		ClientManager::getInstance()->putOffline(i->second);
+		i->second->dec();
+	}
 }
 
 void NmdcHub::updateFromTag(Identity& id, const string& tag) {

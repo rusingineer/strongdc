@@ -774,11 +774,14 @@ public:
 				pos = findItem(parent);
 			}
 
-			if(autoExpand){
-				SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
-				parent->collapsed = false;
-			} else {
-				SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+			if(pos != -1)
+			{
+				if(autoExpand){
+					SetItemState(pos, INDEXTOSTATEIMAGEMASK(2), LVIS_STATEIMAGEMASK);
+					parent->collapsed = false;
+				} else {
+					SetItemState(pos, INDEXTOSTATEIMAGEMASK(1), LVIS_STATEIMAGEMASK);
+				}
 			}
 		} else {
 			parent = pp->parent;
