@@ -39,8 +39,6 @@ class ClientManager : public Speaker<ClientManagerListener>,
 	private TimerManagerListener
 {
 public:
-	typedef unordered_multimap<CID*, OnlineUser*> OnlineMap;
-	
 	Client* getClient(const string& aHubURL);
 	void putClient(Client* aClient);
 
@@ -67,9 +65,6 @@ public:
 	UserPtr findUser(const string& aNick, const string& aHubUrl) const throw() { return findUser(makeCid(aNick, aHubUrl)); }
 	UserPtr findUser(const CID& cid) const throw();
 	UserPtr findLegacyUser(const string& aNick) const throw();
-	
-	OnlineUserPtr findOnlineUser(const CID& cid, const Client* client = NULL) const throw();
-	void getOnlineUsers(OnlineMap& tmp) const { Lock l(cs); tmp = onlineUsers; }
 	
 	void updateNick(const UserPtr& user, const string& nick) throw();
 	string getMyNick(const string& hubUrl) const;
@@ -115,6 +110,7 @@ public:
 	
 	void connect(const UserPtr& p, const string& token);
 	void send(AdcCommand& c, const CID& to);
+	void privateMessage(const UserPtr& p, const string& msg, const Client* client, bool thirdPerson);
 
 	void userCommand(const UserPtr& p, const UserCommand& uc, StringMap& params, bool compatibility);
 	void sendRawCommand(const UserPtr& user, const Client& c, const int aRawCommand);
@@ -152,6 +148,7 @@ private:
 
 	typedef unordered_map<CID*, std::string> NickMap;
 
+	typedef unordered_multimap<CID*, OnlineUser*> OnlineMap;
 	typedef OnlineMap::iterator OnlineIter;
 	typedef OnlineMap::const_iterator OnlineIterC;
 	typedef pair<OnlineIter, OnlineIter> OnlinePair;

@@ -737,7 +737,6 @@
 		<String Name="SettingsUploadsSlots">Upload slots</String>
 		<String Name="SettingsUrlHandler">Install URL handler on startup (to handle dchub:// links)</String>
 		<String Name="SettingsUseCtrlForLineHistory">Use CTRL for line history</String>
-		<String Name="SettingsUseExtensionDownto">Use file extension for Download to in search</String>
 		<String Name="SettingsUseOldSharingUi">Use old sharing user interface</String>
 		<String Name="SettingsUseSystemIcons">Use system icons when browsing files (slows browsing down a bit)</String>
 		<String Name="SettingsUseTls">Use TLS when remote client supports it</String>

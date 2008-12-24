@@ -299,16 +299,18 @@ void ClientManager::connect(const UserPtr& p, const string& token) {
 	}
 }
 
-OnlineUserPtr ClientManager::findOnlineUser(const CID& cid, const Client* client) const throw(){
+void ClientManager::privateMessage(const UserPtr& p, const string& msg, const Client* client, bool thirdPerson) {
 	Lock l(cs);
-	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&cid));
+	
+	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&p->getCID()));
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
 		const OnlineUserPtr& ou = i->second;
 		if(!client || &ou->getClient() == client)
-			return ou;
+		{
+			ou->getClient().privateMessage(ou, msg, thirdPerson);
+			return;
+		}
 	}
-	
-	return NULL;
 }
 
 void ClientManager::send(AdcCommand& cmd, const CID& cid) {
@@ -435,8 +437,22 @@ void ClientManager::sendRawCommand(const UserPtr& user, const Client& c, const i
 	}
 }
 
-void ClientManager::on(AdcSearch, const Client*, const AdcCommand& adc, const CID& from) throw() {
-	SearchManager::getInstance()->respond(adc, from);
+void ClientManager::on(AdcSearch, const Client* c, const AdcCommand& adc, const CID& from) throw() {
+	bool isUdpActive = false;
+	{
+		Lock l(cs);
+		
+		OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&from));
+		for(OnlineIterC i = op.first; i != op.second; ++i) {
+			const OnlineUserPtr& u = i->second;
+			if(&u->getClient() == c)
+			{
+				isUdpActive = u->getIdentity().isUdpActive();
+				break;
+			}
+		}			
+	}
+	SearchManager::getInstance()->respond(adc, from, isUdpActive);
 }
 
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {

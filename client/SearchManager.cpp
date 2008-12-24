@@ -415,7 +415,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 
 }
 
-void SearchManager::respond(const AdcCommand& adc, const CID& from) {
+void SearchManager::respond(const AdcCommand& adc, const CID& from, bool isUdpActive) {
 	// Filter own searches
 	if(from == ClientManager::getInstance()->getMe()->getCID())
 		return;
@@ -425,7 +425,7 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from) {
 		return;
 
 	SearchResultList results;
-	ShareManager::getInstance()->search(results, adc.getParameters(), 10);
+	ShareManager::getInstance()->search(results, adc.getParameters(), isUdpActive ? 10 : 5);
 
 	string token;
 

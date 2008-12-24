@@ -1,3 +1,30 @@
+	-- StrongDC++ 2.22 --
+
+* better URL detection in chat
+* stability fixes - now it's almost perfect :)
+* removed detection of too many same numbers in share size
+* changed default URL to client profiles
+* fixed graphics on 16-bit color depth
+* tab key switching works in PM
+* ctrl+m userlist's shortcut to send PM
+* fixed losing focus in settings' tree
+* advertising NMDC TLS support
+* small memory optimization
+* added support for secured HTTP connections (https://)
+* changed binary prefixes to match standard IEC 60027-2
+* fixed copying folders info in filelists
+* don't bold queue tab when filelist/testsur is finished
+* alternate sources are added to queue even if autosearch is disabled
+* unsuccessful partial filelist requests are removed from queue
+* temp target file is checked for its existence before download resumes
+* added TLS support for NMDC hub connections (nmdcs://)
+* changed to stable version of OpenSSL
+* improved partial file sharing chunk size
+* fixed displaying hub name in ADC userlist
+* fixed invalid state icon in TreeListViewCtrl when using filtering
+* fixed possible file corruption on crash
+
+
 	-- StrongDC++ 2.21 --
 
 * stability fixes
