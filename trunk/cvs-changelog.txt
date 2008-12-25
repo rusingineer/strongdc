@@ -1,3 +1,6 @@
+** svn426
+	finished partial slots settings
+
 ** svn425
 	reverted NmdcHub performance stuff due to stability problems
 	fixed invalid state icon in TreeListViewCtrl when using filtering

@@ -61,16 +61,14 @@ public:
 		FLAG_DOWNLOAD				= 0x08,
 		FLAG_INCOMING				= 0x10,
 		FLAG_ASSOCIATED				= 0x20,
-		FLAG_HASSLOT				= 0x40,
-		FLAG_HASEXTRASLOT			= 0x80,
-		FLAG_SUPPORTS_MINISLOTS		= 0x100,
-		FLAG_SUPPORTS_XML_BZLIST	= 0x200,
-		FLAG_SUPPORTS_ADCGET		= 0x400,
-		FLAG_SUPPORTS_ZLIB_GET		= 0x800,
-		FLAG_SUPPORTS_TTHL			= 0x1000,
-		FLAG_SUPPORTS_TTHF			= 0x2000,
-		FLAG_STEALTH				= 0x4000,
-		FLAG_SECURE					= 0x8000
+		FLAG_SUPPORTS_MINISLOTS		= 0x40,
+		FLAG_SUPPORTS_XML_BZLIST	= 0x80,
+		FLAG_SUPPORTS_ADCGET		= 0x100,
+		FLAG_SUPPORTS_ZLIB_GET		= 0x200,
+		FLAG_SUPPORTS_TTHL			= 0x400,
+		FLAG_SUPPORTS_TTHF			= 0x800,
+		FLAG_STEALTH				= 0x1000,
+		FLAG_SECURE					= 0x2000
 	};
 	
 	enum States {
@@ -97,6 +95,13 @@ public:
 		STATE_RUNNING,		// Transmitting data
 
 	};
+	
+	enum SlotTypes {	
+		NOSLOT		= 0,
+		STDSLOT		= 1,
+		EXTRASLOT	= 2,
+		PARTIALSLOT	= 3
+	};	
 
 	short getNumber() const { return (short)((((size_t)this)>>2) & 0x7fff); }
 
@@ -191,6 +196,7 @@ public:
 	GETSET(States, state, State);
 
 	GETSET(string*, encoding, Encoding);
+	GETSET(uint8_t, slotType, SlotType);
 	
 	BufferedSocket const* getSocket() { return socket; } 
 
@@ -208,7 +214,7 @@ private:
 
 	// We only want ConnectionManager to create this...
 	UserConnection(bool secure_) throw() : encoding(const_cast<string*>(&Text::systemCharset)), state(STATE_UNCONNECTED),
-		lastActivity(0), speed(0), chunkSize(0), socket(0), download(NULL) {
+		lastActivity(0), speed(0), chunkSize(0), socket(0), download(NULL), slotType(NOSLOT) {
 		if(secure_) {
 			setFlag(FLAG_SECURE);
 		}
