@@ -30,8 +30,8 @@ namespace dcpp {
 
 SearchResult::SearchResult(const UserPtr& aUser, Types aType, uint8_t aSlots, uint8_t aFreeSlots, 
 	int64_t aSize, const string& aFile, const string& aHubName, 
-	const string& ip, TTHValue aTTH, const string& aToken) :
-	file(aFile), hubName(aHubName), user(aUser),
+	const string& aHubURL, const string& ip, TTHValue aTTH, const string& aToken) :
+	file(aFile), hubName(aHubName), hubURL(aHubURL), user(aUser),
 	size(aSize), type(aType), slots(aSlots), freeSlots(aFreeSlots), IP(ip),
 	tth(aTTH), token(aToken) { }
 

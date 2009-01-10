@@ -46,15 +46,16 @@ public:
 		ACTIVE						// In one up/downmanager
 	};
 
-	ConnectionQueueItem(const UserPtr& aUser, bool aDownload) : state(WAITING), lastAttempt(0), download(aDownload), token(Util::toString(Util::rand())), user(aUser) { }
+	ConnectionQueueItem(const UserPtr& aUser, bool aDownload, const string& hubHint_) : token(Util::toString(Util::rand())), hubHint(hubHint_), lastAttempt(0), state(WAITING), download(aDownload), user(aUser) { }
 	
 	UserPtr& getUser() { return user; }
 	const UserPtr& getUser() const { return user; }
 	
-	GETSET(State, state, State);
-	GETSET(uint64_t, lastAttempt, LastAttempt);
-	GETSET(bool, download, Download);
 	GETSET(string, token, Token);
+	GETSET(string, hubHint, HubHint);
+	GETSET(uint64_t, lastAttempt, LastAttempt);
+	GETSET(State, state, State);
+	GETSET(bool, download, Download);
 private:
 	ConnectionQueueItem(const ConnectionQueueItem&);
 	ConnectionQueueItem& operator=(const ConnectionQueueItem&);
@@ -105,7 +106,7 @@ public:
 	void nmdcConnect(const string& aServer, uint16_t aPort, const string& aMyNick, const string& hubUrl, string* encoding, bool stealth, bool secure);
 	void adcConnect(const OnlineUser& aUser, uint16_t aPort, const string& aToken, bool secure);
 
-	void getDownloadConnection(const UserPtr& aUser);
+	void getDownloadConnection(const UserPtr& aUser, const string& hubHint);
 	void force(const UserPtr& aUser);
 	
 	void disconnect(const UserPtr& aUser); // disconnect downloads and uploads
@@ -172,7 +173,7 @@ private:
 	void addUploadConnection(UserConnection* uc);
 	void addDownloadConnection(UserConnection* uc);
 
-	ConnectionQueueItem* getCQI(const UserPtr& aUser, bool download);
+	ConnectionQueueItem* getCQI(const UserPtr& aUser, bool download, const string& hubHint);
 	void putCQI(ConnectionQueueItem* cqi);
 
 	void accept(const Socket& sock, bool secure) throw();

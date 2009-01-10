@@ -213,54 +213,54 @@ COLORREF HLS_TRANSFORM (COLORREF rgb, int percent_L, int percent_S) {
 	return HLS2RGB (HLS(h, l, s));
 }
 
-void UserInfoBase::matchQueue() {
+void UserInfoBase::matchQueue(const string& hubHint) {
 	if(getUser()) {
 		try {
-			QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_MATCH_QUEUE);
+			QueueManager::getInstance()->addList(getUser(), hubHint, QueueItem::FLAG_MATCH_QUEUE);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());
 		}
 	}
 }
 
-void UserInfoBase::getUserResponses() {
+void UserInfoBase::getUserResponses(const string& hubHint) {
 	if(getUser()) {
 		try {
-			QueueManager::getInstance()->addTestSUR(getUser(), false);
+			QueueManager::getInstance()->addTestSUR(getUser(), hubHint, false);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}
 	}
 }
 
-void UserInfoBase::doReport() {
+void UserInfoBase::doReport(const string& hubHint) {
 	if(getUser()) {
-		ClientManager::getInstance()->reportUser(getUser());
+		ClientManager::getInstance()->reportUser(getUser(), hubHint);
 	}
 }
 
-void UserInfoBase::getList() {
+void UserInfoBase::getList(const string& hubHint) {
 	if(getUser()) {
 		try {
-			QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList(getUser(), hubHint, QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}
 	}
 }
-void UserInfoBase::browseList() {
+void UserInfoBase::browseList(const string& hubHint) {
 	if(!getUser() || getUser()->getCID().isZero())
 		return;
 	try {
-		QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_PARTIAL_LIST);
+		QueueManager::getInstance()->addList(getUser(), hubHint, QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_PARTIAL_LIST);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
 }
-void UserInfoBase::checkList() {
+void UserInfoBase::checkList(const string& hubHint) {
 	if(getUser()) {
 		try {
-			QueueManager::getInstance()->addList(getUser(), QueueItem::FLAG_CHECK_FILE_LIST);
+			QueueManager::getInstance()->addList(getUser(), hubHint, QueueItem::FLAG_CHECK_FILE_LIST);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}
@@ -271,9 +271,10 @@ void UserInfoBase::addFav() {
 		FavoriteManager::getInstance()->addFavoriteUser(getUser());
 	}
 }
-void UserInfoBase::pm() {
+void UserInfoBase::pm(const string& hubHint) {
 	if(getUser()) {
-		PrivateFrame::openWindow(getUser());
+		// TODO provide client
+		PrivateFrame::openWindow(getUser(), Util::emptyStringT, NULL);
 	}
 }
 void UserInfoBase::connectFav() {
@@ -284,9 +285,9 @@ void UserInfoBase::connectFav() {
 		}
 	}
 }
-void UserInfoBase::grant() {
+void UserInfoBase::grant(const string& hubHint) {
 	if(getUser()) {
-		UploadManager::getInstance()->reserveSlot(getUser(), 600);
+		UploadManager::getInstance()->reserveSlot(getUser(), 600, hubHint);
 	}
 }
 void UserInfoBase::removeAll() {
@@ -294,19 +295,19 @@ void UserInfoBase::removeAll() {
 		QueueManager::getInstance()->removeSource(getUser(), QueueItem::Source::FLAG_REMOVED);
 	}
 }
-void UserInfoBase::grantHour() {
+void UserInfoBase::grantHour(const string& hubHint) {
 	if(getUser()) {
-		UploadManager::getInstance()->reserveSlot(getUser(), 3600);
+		UploadManager::getInstance()->reserveSlot(getUser(), 3600, hubHint);
 	}
 }
-void UserInfoBase::grantDay() {
+void UserInfoBase::grantDay(const string& hubHint) {
 	if(getUser()) {
-		UploadManager::getInstance()->reserveSlot(getUser(), 24*3600);
+		UploadManager::getInstance()->reserveSlot(getUser(), 24*3600, hubHint);
 	}
 }
-void UserInfoBase::grantWeek() {
+void UserInfoBase::grantWeek(const string& hubHint) {
 	if(getUser()) {
-		UploadManager::getInstance()->reserveSlot(getUser(), 7*24*3600);
+		UploadManager::getInstance()->reserveSlot(getUser(), 7*24*3600, hubHint);
 	}
 }
 void UserInfoBase::ungrant() {
@@ -1283,7 +1284,11 @@ void WinUtil::openLink(const tstring& url) {
 		return;
 	}
 	if(_strnicmp(Text::fromT(url).c_str(), "adc://", 6) == 0) {
-		parseADChubUrl(url);
+		parseADChubUrl(url, false);
+		return;
+	}
+	if(_strnicmp(Text::fromT(url).c_str(), "adcs://", 7) == 0) {
+		parseADChubUrl(url, true);
 		return;
 	}	
 
@@ -1294,6 +1299,7 @@ void WinUtil::parseDchubUrl(const tstring& aUrl) {
 	string server, file;
 	uint16_t port = 411;
 	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
+	string url = server + ":" + Util::toString(port);
 	if(!server.empty()) {
 		HubFrame::openWindow(Text::toT(server) + _T(":") + Util::toStringW(port));
 	}
@@ -1304,7 +1310,7 @@ void WinUtil::parseDchubUrl(const tstring& aUrl) {
 			if(!file.empty()) {
 				UserPtr user = ClientManager::getInstance()->findLegacyUser(file);
 				if(user)
-					QueueManager::getInstance()->addList(user, QueueItem::FLAG_CLIENT_VIEW);
+					QueueManager::getInstance()->addList(user, url, QueueItem::FLAG_CLIENT_VIEW);
 			}
 			// @todo else report error
 		} catch(const Exception&) {
@@ -1313,12 +1319,12 @@ void WinUtil::parseDchubUrl(const tstring& aUrl) {
 	}
 }
 
-void WinUtil::parseADChubUrl(const tstring& aUrl) {
+void WinUtil::parseADChubUrl(const tstring& aUrl, bool secure) {
 	string server, file;
 	uint16_t port = 0; //make sure we get a port since adc doesn't have a standard one
 	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
 	if(!server.empty() && port > 0) {
-		HubFrame::openWindow(_T("adc://") + Text::toT(server) + _T(":") + Util::toStringW(port));
+		HubFrame::openWindow((secure ? _T("adcs://") : _T("adc://")) + Text::toT(server) + _T(":") + Util::toStringW(port));
 	}
 }
 
@@ -1377,7 +1383,7 @@ void WinUtil::parseMagnetUri(const tstring& aUrl, bool /*aOverride*/) {
 				switch(SETTING(MAGNET_ACTION)) {
 					case SettingsManager::MAGNET_AUTO_DOWNLOAD:
 						try {
-							QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(fname), fsize, TTHValue(Text::fromT(fhash)), UserPtr());
+							QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(fname), fsize, TTHValue(Text::fromT(fhash)), UserPtr(), Util::emptyString);
 						} catch(const Exception& e) {
 							LogManager::getInstance()->message(e.getError());
 						}
@@ -1438,7 +1444,10 @@ bool WinUtil::parseDBLClick(const tstring& aString, string::size_type start, str
 		parseMagnetUri(aString.substr(start, end-start));
 		return true;
 	} else if(strnicmp(aString.c_str() + start, _T("adc://"), 6) == 0) {
-		parseADChubUrl(aString.substr(start, end-start));
+		parseADChubUrl(aString.substr(start, end-start), false);
+		return true;
+	} else if(strnicmp(aString.c_str() + start, _T("adcs://"), 7) == 0) {
+		parseADChubUrl(aString.substr(start, end-start), true);
 		return true;
 	}
 	return false;

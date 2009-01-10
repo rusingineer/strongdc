@@ -290,7 +290,7 @@ void HubFrame::onEnter() {
 				if( !param.empty() ){
 					OnlineUserPtr ui = client->findUser(Text::fromT(param));
 					if(ui) {
-						ui->getList();
+						ui->getList(client->getHubUrl());
 					}
 				}
 			} else if(stricmp(cmd.c_str(), _T("log")) == 0) {
@@ -353,14 +353,14 @@ void HubFrame::onEnter() {
 
 					if(ui) {
 						if(param.size() > j + 1)
-							PrivateFrame::openWindow(ui->getUser(), client, param.substr(j+1));
+							PrivateFrame::openWindow(ui->getUser(), param.substr(j+1), client);
 						else
-							PrivateFrame::openWindow(ui->getUser(), client);
+							PrivateFrame::openWindow(ui->getUser(), Util::emptyStringT, client);
 					}
 				} else if(!param.empty()) {
 					const OnlineUserPtr ui = client->findUser(Text::fromT(param));
 					if(ui) {
-						PrivateFrame::openWindow(ui->getUser(), client);
+						PrivateFrame::openWindow(ui->getUser(), Util::emptyStringT, client);
 					}
 				}
 			} else if(stricmp(cmd.c_str(), _T("stats")) == 0) {
@@ -475,7 +475,7 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 	if(item->iItem != -1 && (ctrlUsers.getItemData(item->iItem)->getUser() != ClientManager::getInstance()->getMe())) {
 	    switch(SETTING(USERLIST_DBLCLICK)) {
 		    case 0:
-				ctrlUsers.getItemData(item->iItem)->getList();
+				ctrlUsers.getItemData(item->iItem)->getList(client->getHubUrl());
 		        break;
 		    case 1: {
 				tstring sUser = Text::toT(ctrlUsers.getItemData(item->iItem)->getIdentity().getNick());
@@ -500,19 +500,19 @@ LRESULT HubFrame::onDoubleClickUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHand
 				break;
 		    }    
 		    case 2:
-				ctrlUsers.getItemData(item->iItem)->pm();
+				ctrlUsers.getItemData(item->iItem)->pm(client->getHubUrl());
 		        break;
 		    case 3:
-		        ctrlUsers.getItemData(item->iItem)->matchQueue();
+		        ctrlUsers.getItemData(item->iItem)->matchQueue(client->getHubUrl());
 		        break;
 		    case 4:
-		        ctrlUsers.getItemData(item->iItem)->grant();
+		        ctrlUsers.getItemData(item->iItem)->grant(client->getHubUrl());
 		        break;
 		    case 5:
 		        ctrlUsers.getItemData(item->iItem)->addFav();
 		        break;
 			case 6:
-				ctrlUsers.getItemData(item->iItem)->browseList();
+				ctrlUsers.getItemData(item->iItem)->browseList(client->getHubUrl());
 				break;
 		}	
 	}
@@ -598,7 +598,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					if(BOOLSETTING(CHECK_NEW_USERS)) {
 						if(u.onlineUser->getIdentity().isTcpActive(client) || client->isActive()) {
 							try {
-								QueueManager::getInstance()->addTestSUR(u.onlineUser->getUser(), true);
+								QueueManager::getInstance()->addTestSUR(u.onlineUser->getUser(), client->getHubUrl(), true);
 							} catch(const Exception&) {
 							}
 						}
@@ -695,7 +695,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					if(BOOLSETTING(IGNORE_HUB_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), false);
 					} else if(BOOLSETTING(POPUP_HUB_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str), client);
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
@@ -703,13 +703,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					if(BOOLSETTING(IGNORE_BOT_PMS)) {
 						addClientLine(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), WinUtil::m_ChatTextPrivate, false);
 					} else if(BOOLSETTING(POPUP_BOT_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str), client);
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 				} else {
 					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(user)) {
-						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, client, Text::toT(pm.str));
+						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str), client);
 					} else {
 						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
@@ -978,10 +978,10 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 			if(ui) {
 				bHandled = true;
 				if (wParam & MK_CONTROL) { // MK_CONTROL = 0x0008
-					PrivateFrame::openWindow(ui->getUser(), client);
+					PrivateFrame::openWindow(ui->getUser(), Util::emptyStringT, client);
 				} else if (wParam & MK_SHIFT) {
 					try {
-						QueueManager::getInstance()->addList(ui->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+						QueueManager::getInstance()->addList(ui->getUser(), client->getHubUrl(), QueueItem::FLAG_CLIENT_VIEW);
 					} catch(const Exception& e) {
 						addClientLine(Text::toT(e.getError()), WinUtil::m_ChatTextSystem);
 					}
@@ -1023,16 +1023,16 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					     break;
 					}
 					case 2:
-						ui->pm();
+						ui->pm(client->getHubUrl());
 					    break;
 					case 3:
-					    ui->getList();
+					    ui->getList(client->getHubUrl());
 					    break;
 					case 4:
-					    ui->matchQueue();
+					    ui->matchQueue(client->getHubUrl());
 					    break;
 					case 5:
-					    ui->grant();
+					    ui->grant(client->getHubUrl());
 					    break;
 					case 6:
 					    ui->addFav();
@@ -1483,7 +1483,7 @@ LRESULT HubFrame::onEnterUsers(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHand
 	int item = ctrlUsers.GetNextItem(-1, LVNI_FOCUSED);
 	if(item != -1) {
 		try {
-			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->getUser(), QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->getUser(), client->getHubUrl(), QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception& e) {
 			addClientLine(Text::toT(e.getError()));
 		}
@@ -2012,7 +2012,7 @@ LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 LRESULT HubFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		PrivateFrame::openWindow(ctrlUsers.getItemData(i)->getUser(), client);
+		PrivateFrame::openWindow(ctrlUsers.getItemData(i)->getUser(), Util::emptyStringT, client);
 	}
 
 	return 0;
@@ -2196,7 +2196,7 @@ LRESULT HubFrame::onKeyDownUsers(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*
 		switch(l->wVKey) {
 			case 'M':
 				while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-					ctrlUsers.getItemData(i)->pm();
+					ctrlUsers.getItemData(i)->pm(client->getHubUrl());
 				}				
 				break;
 			// TODO: add others

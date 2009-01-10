@@ -482,8 +482,8 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	}
 }
 
-void QueueManager::addList(const UserPtr& aUser, Flags::MaskType aFlags, const string& aInitialDir /* = Util::emptyString */) throw(QueueException, FileException) {
-	add(aInitialDir, -1, TTHValue(), aUser, (Flags::MaskType)(QueueItem::FLAG_USER_LIST | aFlags));
+void QueueManager::addList(const UserPtr& aUser, const string& hubHint, Flags::MaskType aFlags, const string& aInitialDir /* = Util::emptyString */) throw(QueueException, FileException) {
+	add(aInitialDir, -1, TTHValue(), aUser, hubHint, (Flags::MaskType)(QueueItem::FLAG_USER_LIST | aFlags));
 }
 
 string QueueManager::getListPath(const UserPtr& user) {
@@ -492,7 +492,7 @@ string QueueManager::getListPath(const UserPtr& user) {
 	return checkTarget(Util::getListPath() + nick + user->getCID().toBase32(), -1);
 }
 	
-void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& root, const UserPtr& aUser,
+void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& root, const UserPtr& aUser, const string& hubHint,
 					   Flags::MaskType aFlags /* = 0 */, bool addBad /* = true */) throw(QueueException, FileException)
 {
 	bool wantConnection = true;
@@ -564,7 +564,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 	}
 
 	if(wantConnection && aUser->isOnline())
-		ConnectionManager::getInstance()->getDownloadConnection(aUser);
+		ConnectionManager::getInstance()->getDownloadConnection(aUser, hubHint);
 
 	// auto search, prevent DEADLOCK
 	if(newItem && BOOLSETTING(AUTO_SEARCH)){
@@ -573,7 +573,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 	
 }
 
-void QueueManager::readd(const string& target, const UserPtr& aUser) throw(QueueException) {
+void QueueManager::readd(const string& target, const UserPtr& aUser, const string& hubHint) throw(QueueException) {
 	bool wantConnection = false;
 	{
 		Lock l(cs);
@@ -583,7 +583,7 @@ void QueueManager::readd(const string& target, const UserPtr& aUser) throw(Queue
 		}
 	}
 	if(wantConnection && aUser->isOnline())
-		ConnectionManager::getInstance()->getDownloadConnection(aUser);
+		ConnectionManager::getInstance()->getDownloadConnection(aUser, hubHint);
 }
 
 void QueueManager::setDirty() {
@@ -624,7 +624,7 @@ string QueueManager::checkTarget(const string& aTarget, int64_t aSize) throw(Que
 }
 
 /** Add a source to an existing queue item */
-bool QueueManager::addSource(QueueItem* qi, UserPtr aUser, Flags::MaskType addBad) throw(QueueException, FileException) {
+bool QueueManager::addSource(QueueItem* qi, const UserPtr& aUser, Flags::MaskType addBad) throw(QueueException, FileException) {
 	bool wantConnection = (qi->getPriority() != QueueItem::PAUSED) && !userQueue.getRunning(aUser);
 
 	if(qi->isSource(aUser)) {
@@ -652,7 +652,7 @@ bool QueueManager::addSource(QueueItem* qi, UserPtr aUser, Flags::MaskType addBa
 	return wantConnection;
 }
 
-void QueueManager::addDirectory(const string& aDir, const UserPtr& aUser, const string& aTarget, QueueItem::Priority p /* = QueueItem::DEFAULT */) throw() {
+void QueueManager::addDirectory(const string& aDir, const UserPtr& aUser, const string& hubHint, const string& aTarget, QueueItem::Priority p /* = QueueItem::DEFAULT */) throw() {
 	bool needList;
 	{
 		Lock l(cs);
@@ -672,7 +672,7 @@ void QueueManager::addDirectory(const string& aDir, const UserPtr& aUser, const 
 
 	if(needList) {
 		try {
-			addList(aUser, QueueItem::FLAG_DIRECTORY_DOWNLOAD | QueueItem::FLAG_PARTIAL_LIST, aDir);
+			addList(aUser,  hubHint, QueueItem::FLAG_DIRECTORY_DOWNLOAD | QueueItem::FLAG_PARTIAL_LIST, aDir);
 		} catch(const Exception&) {
 			// Ignore, we don't really care...
 		}
@@ -707,7 +707,7 @@ void buildMap(const DirectoryListing::Directory* dir) throw() {
 }
 }
 
-int QueueManager::matchListing(const DirectoryListing& dl) throw() {
+int QueueManager::matchListing(const DirectoryListing& dl, const string& hubHint) throw() {
 	int matches = 0;
 	{
 		Lock l(cs);
@@ -730,7 +730,7 @@ int QueueManager::matchListing(const DirectoryListing& dl) throw() {
 		}
 	}
 	if(matches > 0)
-		ConnectionManager::getInstance()->getDownloadConnection(dl.getUser());
+		ConnectionManager::getInstance()->getDownloadConnection(dl.getUser(), hubHint);
 		return matches;
 }
 
@@ -1178,7 +1178,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 	}
 
 	for(UserList::const_iterator i = getConn.begin(); i != getConn.end(); ++i) {
-		ConnectionManager::getInstance()->getDownloadConnection(*i);
+		// TODO provide hubhint
+		ConnectionManager::getInstance()->getDownloadConnection(*i, Util::emptyString);
 	}
 
 	if(!fname.empty()) {
@@ -1187,7 +1188,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 
 	if(checkList) {
 		try {
-			QueueManager::getInstance()->addList(up, QueueItem::FLAG_CHECK_FILE_LIST);
+			// TODO hubHint
+			QueueManager::getInstance()->addList(up, Util::emptyString, QueueItem::FLAG_CHECK_FILE_LIST);
 		} catch(const Exception&) {}
 	}
 }
@@ -1223,10 +1225,11 @@ void QueueManager::processList(const string& name, UserPtr& user, int flags) {
 		}
 	}
 	if(flags & QueueItem::FLAG_MATCH_QUEUE) {
+		// TODO add hubHint?
 		const size_t BUF_SIZE = STRING(MATCHED_FILES).size() + 16;
 		string tmp;
 		tmp.resize(BUF_SIZE);
-		snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), matchListing(dirList));
+		snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), matchListing(dirList, Util::emptyString));
 		LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(user->getCID())) + ": " + tmp);
 	}
 }
@@ -1384,7 +1387,8 @@ void QueueManager::setPriority(const string& aTarget, QueueItem::Priority p) thr
 			DownloadManager::getInstance()->abortDownload(aTarget);
 	} else {
 		for(UserList::const_iterator i = ul.begin(); i != ul.end(); ++i) {
-			ConnectionManager::getInstance()->getDownloadConnection(*i);
+			// TODO provide hubhint
+			ConnectionManager::getInstance()->getDownloadConnection(*i, Util::emptyString);
 		}
 	}
 }
@@ -1597,7 +1601,8 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 
 			try {
 				if(qm->addSource(cur, user, 0) && user->isOnline())
-					ConnectionManager::getInstance()->getDownloadConnection(user);
+					// TODO save/load hubhint
+					ConnectionManager::getInstance()->getDownloadConnection(user, Util::emptyString);
 			} catch(const Exception&) {
 				return;
 			}
@@ -1646,13 +1651,14 @@ void QueueManager::on(SearchManagerListener::SR, const SearchResultPtr& sr) thro
 
 	if(added && BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) && (users < (size_t)SETTING(MAX_AUTO_MATCH_SOURCES))) {
 		try {
-			addList(sr->getUser(), QueueItem::FLAG_PARTIAL_LIST | QueueItem::FLAG_MATCH_QUEUE, Util::getFilePath(sr->getFile()));
+			addList(sr->getUser(), sr->getHubURL(), QueueItem::FLAG_PARTIAL_LIST | QueueItem::FLAG_MATCH_QUEUE, Util::getFilePath(sr->getFile()));
 		} catch(const Exception&) {
 			// ...
 		}
 	}
-	if(added && sr->getUser()->isOnline() && wantConnection)
-		ConnectionManager::getInstance()->getDownloadConnection(sr->getUser());
+	if(added && sr->getUser()->isOnline() && wantConnection) {
+		ConnectionManager::getInstance()->getDownloadConnection(sr->getUser(), sr->getHubURL());
+	}
 
 }
 
@@ -1672,8 +1678,10 @@ void QueueManager::on(ClientManagerListener::UserConnected, const UserPtr& aUser
 		}
 	}
 
-	if(hasDown)	
-		ConnectionManager::getInstance()->getDownloadConnection(aUser);
+	if(hasDown)	{
+		// TODO provide hubhint		
+		ConnectionManager::getInstance()->getDownloadConnection(aUser, Util::emptyString);
+	}
 }
 
 void QueueManager::on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
@@ -1777,7 +1785,7 @@ bool QueueManager::dropSource(Download* d) {
 	return false;
 }
 
-bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth, const QueueItem::PartialSource& partialSource, PartsInfo& outPartialInfo) {
+bool QueueManager::handlePartialResult(const UserPtr& aUser, const string& hubHint, const TTHValue& tth, const QueueItem::PartialSource& partialSource, PartsInfo& outPartialInfo) {
 	bool wantConnection = false;
 	dcassert(outPartialInfo.empty());
 
@@ -1844,7 +1852,7 @@ bool QueueManager::handlePartialResult(const UserPtr& aUser, const TTHValue& tth
 	
 	// Connect to this user
 	if(wantConnection)
-		ConnectionManager::getInstance()->getDownloadConnection(aUser);
+		ConnectionManager::getInstance()->getDownloadConnection(aUser, hubHint);
 
 	return true;
 }

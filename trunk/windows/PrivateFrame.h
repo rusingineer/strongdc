@@ -41,8 +41,8 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 	private ClientManagerListener, public UCHandler<PrivateFrame>, private SettingsManagerListener
 {
 public:
-	static void gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo,  Client* client, const tstring& aMessage);
-	static void openWindow(const UserPtr& replyTo, Client* client = NULL, const tstring& aMessage = Util::emptyStringT);
+	static void gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo, const tstring& aMessage, Client* c);
+	static void openWindow(const UserPtr& replyTo, const tstring& aMessage = Util::emptyStringT, Client* c = NULL);
 	static bool isOpen(const UserPtr u) { return frames.find(u) != frames.end(); }
 	static void closeAll();
 	static void closeAllOffline();
@@ -163,10 +163,13 @@ public:
 	void sendMessage(const tstring& msg, bool thirdPerson = false);
 
 private:
-	PrivateFrame(const UserPtr& replyTo_) : replyTo(replyTo_), 
+	PrivateFrame(const UserPtr& replyTo_, Client* c) : replyTo(replyTo_),
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
 		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP),
-		ctrlClientContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0) { }
+		ctrlClientContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0)
+	{
+		ctrlClient.setClient(c);
+	}
 	
 	~PrivateFrame() { }
 
@@ -184,6 +187,7 @@ private:
 	HBITMAP hEmoticonBmp;
 
 	UserPtr replyTo;
+	
 	CContainedWindow ctrlMessageContainer;
 	CContainedWindow ctrlClientContainer;
 
@@ -197,6 +201,8 @@ private:
 	TStringList prevCommands;
 	tstring currentCommand;
 	TStringList::size_type curCommandPosition;
+	
+	const string& getHubHint() const { return ctrlClient.getClient() ? ctrlClient.getClient()->getHubUrl() : Util::emptyString; }
 
 	// ClientManagerListener
 	void on(ClientManagerListener::UserUpdated, const OnlineUser& aUser) throw() {

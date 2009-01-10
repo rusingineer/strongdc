@@ -168,12 +168,6 @@ public:
 	void setDownload(Download* d) { dcassert(isSet(FLAG_DOWNLOAD)); download = d; }
 	Upload* getUpload() { dcassert(isSet(FLAG_UPLOAD)); return upload; }
 	void setUpload(Upload* u) { dcassert(isSet(FLAG_UPLOAD)); upload = u; }
-
-	void reconnect() {
-		disconnect();
-		Thread::sleep(100);
-		ClientManager::getInstance()->connect(user, Util::toString(Util::rand()));
-	}
 	
 	void handle(AdcCommand::SUP t, const AdcCommand& c) { fire(t, this, c); }
 	void handle(AdcCommand::INF t, const AdcCommand& c) { fire(t, this, c); }

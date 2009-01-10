@@ -218,8 +218,8 @@ BOOST_LIB_VERSION:    The Boost version, in the form x_y, for Boost version x.y.
 #            define BOOST_LIB_RT_OPT "-sgdp"
 #        elif defined(_DEBUG)
 #             define BOOST_LIB_RT_OPT "-sgdp"
-#            //pragma message("warning: STLPort debug versions are built with /D_STLP_DEBUG=1")
-#            //error "Build options aren't compatible with pre-built libraries"
+#            pragma message("warning: STLPort debug versions are built with /D_STLP_DEBUG=1")
+#            error "Build options aren't compatible with pre-built libraries"
 #        else
 #            define BOOST_LIB_RT_OPT "-sp"
 #        endif

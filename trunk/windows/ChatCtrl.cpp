@@ -38,7 +38,7 @@ tstring ChatCtrl::sSelectedURL = Util::emptyStringT;
 
 static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
 	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
-	_T("adc://"), _T("adcs://") };
+	_T("adc://"), _T("adcs://"), _T("nmdcs://") };
 
 ChatCtrl::ChatCtrl() : ccw(_T("edit"), this), client(NULL) {
 	if(g_pEmotionsSetup == NULL) {
@@ -278,9 +278,9 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 				// TODO: complete regexp for URLs
 				boost::wregex reg;
 				if(isMagnet) // magnet links have totally indeferent structure than classic URL
-					reg =       _T("^(\\w)+=[:\\w]+(&(\\w)+=[-/?%&=~#\\w\\.\\+\\*\\(\\)]*)*");
+					reg =       _T("^(\\w)+=[:\\w]+(&(\\w)+=[-/?%&=~#'\\w\\.\\+\\*\\(\\)]*)*");
 				else
-					reg = _T("^([@\\w-]+(\\.)*)+(:[\\d]+)?(/[-/?%&=~#\\w\\.\\+\\*\\(\\)]*)*");
+					reg = _T("^([@\\w-]+(\\.)*)+(:[\\d]+)?(/[-/?%&=~#'\\w\\.\\+\\*\\(\\)]*)*");
 					
 				if(boost::regex_search(sMsgLower.c_str() + linkEnd, result, reg)) {
 					dcassert(!result.empty());
@@ -786,7 +786,7 @@ LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
-		PrivateFrame::openWindow(ou->getUser(), client);
+		PrivateFrame::openWindow(ou->getUser(), Util::emptyStringT, client);
 
 	return 0;
 }
@@ -794,7 +794,7 @@ LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 LRESULT ChatCtrl::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
-		ou->getList();
+		ou->getList(client->getHubUrl());
 
 	return 0;
 }
@@ -802,7 +802,7 @@ LRESULT ChatCtrl::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 LRESULT ChatCtrl::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
-		ou->matchQueue();
+		ou->matchQueue(client->getHubUrl());
 
 	return 0;
 }
@@ -820,7 +820,7 @@ LRESULT ChatCtrl::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 		}
 		
 		if(time > 0)
-			UploadManager::getInstance()->reserveSlot(ou->getUser(), time);
+			UploadManager::getInstance()->reserveSlot(ou->getUser(), time, client->getHubUrl());
 		else
 			UploadManager::getInstance()->unreserveSlot(ou->getUser());
 	}
@@ -891,7 +891,7 @@ LRESULT ChatCtrl::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		try {
-			QueueManager::getInstance()->addList(ou->getUser(), QueueItem::FLAG_CHECK_FILE_LIST);
+			QueueManager::getInstance()->addList(ou->getUser(), client->getHubUrl(), QueueItem::FLAG_CHECK_FILE_LIST, client->getHubUrl());
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}

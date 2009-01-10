@@ -381,13 +381,13 @@ void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	}
 }
 
-void UploadManager::reserveSlot(const UserPtr& aUser, uint64_t aTime) {
+void UploadManager::reserveSlot(const UserPtr& aUser, uint64_t aTime, const string& hubHint) {
 	{
 		Lock l(cs);
 		reservedSlots[aUser] = GET_TICK() + aTime*1000;
 	}
 	if(aUser->isOnline())
-		ClientManager::getInstance()->connect(aUser, Util::toString(Util::rand()));	
+		ClientManager::getInstance()->connect(aUser, Util::toString(Util::rand()), hubHint);	
 }
 
 void UploadManager::unreserveSlot(const UserPtr& aUser) {
@@ -587,7 +587,9 @@ void UploadManager::notifyQueuedUsers() {
 			clearUserFiles(u);
 			
 			connectingUsers[u] = GET_TICK();
-			ClientManager::getInstance()->connect(u, Util::toString(Util::rand()));
+			
+			// TODO hubHint
+			ClientManager::getInstance()->connect(u, Util::toString(Util::rand()), Util::emptyString);
 
 			freeslots--;
 		}

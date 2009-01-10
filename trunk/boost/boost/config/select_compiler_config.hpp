@@ -2,7 +2,7 @@
 
 //  (C) Copyright John Maddock 2001 - 2003. 
 //  (C) Copyright Martin Wille 2003.
-//  (C) Copyright Guillaume Melquiond 2003. 
+//  (C) Copyright Guillaume Melquiond 2003.
 //
 //  Distributed under the Boost Software License, Version 1.0.
 //  (See accompanying file LICENSE_1_0.txt or copy at
@@ -71,6 +71,10 @@
 #elif defined __ghs
 //  Greenhills C++
 #   define BOOST_COMPILER_CONFIG "boost/config/compiler/greenhills.hpp"
+
+#elif defined __CODEGEARC__
+//  CodeGear - must be checked for before Borland
+#   define BOOST_COMPILER_CONFIG "boost/config/compiler/codegear.hpp"
 
 #elif defined __BORLANDC__
 //  Borland

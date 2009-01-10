@@ -25,17 +25,17 @@ class UserInfoBase {
 public:
 	UserInfoBase() { }
 	
-	void getList();
-	void browseList();
-	void getUserResponses();
-	void checkList();
-	void doReport();
-	void matchQueue();
-	void pm();
-	void grant();
-	void grantHour();
-	void grantDay();
-	void grantWeek();
+	void getList(const string& hubHint);
+	void browseList(const string& hubHint);
+	void getUserResponses(const string& hubHint);
+	void checkList(const string& hubHint);
+	void doReport(const string& hubHint);
+	void matchQueue(const string& hubHint);
+	void pm(const string& hubHint);
+	void grant(const string& hubHint);
+	void grantHour(const string& hubHint);
+	void grantDay(const string& hubHint);
+	void grantWeek(const string& hubHint);
 	void ungrant();
 	void addFav();
 	void removeAll();
