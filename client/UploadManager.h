@@ -105,7 +105,7 @@ public:
 	int getFreeExtraSlots() const { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
 	
 	/** @param aUser Reserve an upload slot for this user and connect. */
-	void reserveSlot(const UserPtr& aUser, uint64_t aTime);
+	void reserveSlot(const UserPtr& aUser, uint64_t aTime, const string& hubHint);
 	void unreserveSlot(const UserPtr& aUser);
 	void clearUserFiles(const UserPtr&);
 	const UploadQueueItem::SlotQueue getWaitingUsers();

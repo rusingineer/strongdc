@@ -250,7 +250,7 @@ int SearchManager::UdpQueue::run() {
 
 
 			SearchResultPtr sr(new SearchResult(user, type, slots, freeSlots, size,
-				file, hubName, remoteIp, TTHValue(tth), Util::emptyString));
+				file, hubName, url, remoteIp, TTHValue(tth), Util::emptyString));
 			SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 			
 		} else if(x.compare(1, 4, "RES ") == 0 && x[x.length() - 1] == 0x0a) {
@@ -337,7 +337,7 @@ void SearchManager::onRES(const AdcCommand& cmd, const UserPtr& from, const stri
 			return;
 		/// @todo Something about the slots
 		SearchResultPtr sr(new SearchResult(from, type, 0, (uint8_t)freeSlots, size,
-			file, hubName, remoteIp, TTHValue(tth), token));
+			file, hubName, hub, remoteIp, TTHValue(tth), token));
 			fire(SearchManagerListener::SR(), sr);
 	}
 }
@@ -371,7 +371,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 		}
 	}
 
-	string url;
+	string url = ClientManager::getInstance()->findHub(hubIpPort);
 	if(!from || from == ClientManager::getInstance()->getMe()) {
 		// for NMDC support
 		
@@ -379,7 +379,6 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 			return;
 		}
 		
-		url = ClientManager::getInstance()->findHub(hubIpPort);
 		from = ClientManager::getInstance()->findUser(nick, url);
 		if(!from) {
 			// Could happen if hub has multiple URLs / IPs
@@ -402,7 +401,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 	QueueItem::PartialSource ps(from->isNMDC() ? ClientManager::getInstance()->getMyNick(url) : Util::emptyString, hubIpPort, remoteIp, udpPort);
 	ps.setPartialInfo(partialInfo);
 
-	QueueManager::getInstance()->handlePartialResult(from, TTHValue(tth), ps, outPartialInfo);
+	QueueManager::getInstance()->handlePartialResult(from, url, TTHValue(tth), ps, outPartialInfo);
 	
 	if((udpPort > 0) && !outPartialInfo.empty()) {
 		try {
@@ -415,7 +414,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 
 }
 
-void SearchManager::respond(const AdcCommand& adc, const CID& from, bool isUdpActive) {
+void SearchManager::respond(const AdcCommand& adc, const CID& from, bool isUdpActive, const string& hubIpPort) {
 	// Filter own searches
 	if(from == ClientManager::getInstance()->getMe()->getCID())
 		return;
@@ -445,7 +444,7 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from, bool isUdpAc
 			}
 		}
 		
-		AdcCommand cmd = toPSR(true, Util::emptyString, Util::emptyString, tth, partialInfo);
+		AdcCommand cmd = toPSR(true, Util::emptyString, hubIpPort, tth, partialInfo);
 		ClientManager::getInstance()->send(cmd, from);
 		return;
 	}
@@ -490,9 +489,7 @@ AdcCommand SearchManager::toPSR(bool wantResponse, const string& myNick, const s
 	if(!myNick.empty())
 		cmd.addParam("NI", Text::utf8ToAcp(myNick));
 		
-	if(!hubIpPort.empty())
-		cmd.addParam("HI", hubIpPort);
-	
+	cmd.addParam("HI", hubIpPort);
 	cmd.addParam("U4", Util::toString(wantResponse && ClientManager::getInstance()->isActive(hubIpPort) ? getPort() : 0));
 	cmd.addParam("TR", tth);
 	cmd.addParam("PC", Util::toString(partialInfo.size() / 2));

@@ -494,21 +494,21 @@ LRESULT TransferView::onDoubleClickTransfers(int /*idCtrl*/, LPNMHDR pnmh, BOOL&
 		if(i->parent != NULL || children.size() <= 1) {
 			switch(SETTING(TRANSFERLIST_DBLCLICK)) {
 				case 0:
-					i->pm();
+					i->pm(Util::emptyString);
 					break;
 				case 1:
-					i->getList();
+					i->getList(Util::emptyString);
 					break;
 				case 2:
-					i->matchQueue();
+					i->matchQueue(Util::emptyString);
 				case 3:
-					i->grant();
+					i->grant(Util::emptyString);
 					break;
 				case 4:
 					i->addFav();
 					break;
 				case 5:
-					i->browseList();
+					i->browseList(Util::emptyString);
 					break;
 			}
 		}

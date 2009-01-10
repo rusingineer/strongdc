@@ -40,7 +40,7 @@ public:
 
 	SearchResult(const UserPtr& aUser, Types aType, uint8_t aSlots, uint8_t aFreeSlots, 
 		int64_t aSize, const string& aFile, const string& aHubName, 
-		const string& ip, TTHValue aTTH, const string& aToken);
+			const string& aHubURL, const string& ip, TTHValue aTTH, const string& aToken);
 
 	string getFileName() const;
 	string toSR(const Client& client) const;
@@ -50,6 +50,7 @@ public:
 	string getSlotString() const { return Util::toString(getFreeSlots()) + '/' + Util::toString(getSlots()); }
 
 	const string& getFile() const { return file; }
+	const string& getHubURL() const { return hubURL; }
 	const string& getHubName() const { return hubName; }
 	int64_t getSize() const { return size; }
 	Types getType() const { return type; }
@@ -72,6 +73,7 @@ private:
 	
 	string file;
 	string hubName;
+	string hubURL;
 	string IP;
 	string token;
 	

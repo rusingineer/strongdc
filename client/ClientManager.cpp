@@ -290,26 +290,39 @@ void ClientManager::putOffline(OnlineUser* ou, bool disconnect) throw() {
 	}
 }
 
-void ClientManager::connect(const UserPtr& p, const string& token) {
+void ClientManager::connect(const UserPtr& p, const string& token, const string& hintUrl) {
 	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-	if(i != onlineUsers.end()) {
-		OnlineUser* u = i->second;
+	OnlineUser* u = findOnlineUser(p->getCID(), hintUrl);
+
+	if(u) {
 		u->getClient().connect(*u, token);
 	}
 }
 
-void ClientManager::privateMessage(const UserPtr& p, const string& msg, const Client* client, bool thirdPerson) {
-	Lock l(cs);
-	
-	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&p->getCID()));
-	for(OnlineIterC i = op.first; i != op.second; ++i) {
-		const OnlineUserPtr& ou = i->second;
-		if(!client || &ou->getClient() == client)
-		{
-			ou->getClient().privateMessage(ou, msg, thirdPerson);
-			return;
+OnlineUser* ClientManager::findOnlineUser(const CID& cid, const string& hintUrl) throw() {
+	OnlinePair p = onlineUsers.equal_range(const_cast<CID*>(&cid));
+	if(p.first == p.second)
+		return 0;
+
+	if(!hintUrl.empty()) {
+		for(OnlineIter i = p.first; i != p.second; ++i) {
+			OnlineUser* u = i->second;
+			if(u->getClient().getAddress() == hintUrl) {
+				return u;
+			}
 		}
+	}
+
+	// TODO maybe disallow non-hint urls, or maybe for some hints (secure?)
+	return p.first->second;
+}
+
+void ClientManager::privateMessage(const UserPtr& p, const string& msg, bool thirdPerson, const string& hintUrl) {
+	Lock l(cs);
+	OnlineUser* u = findOnlineUser(p->getCID(), hintUrl);
+	
+	if(u) {
+		u->getClient().privateMessage(u, msg, thirdPerson);
 	}
 }
 
@@ -452,7 +465,7 @@ void ClientManager::on(AdcSearch, const Client* c, const AdcCommand& adc, const 
 			}
 		}			
 	}
-	SearchManager::getInstance()->respond(adc, from, isUdpActive);
+	SearchManager::getInstance()->respond(adc, from, isUdpActive, c->getIpPort());
 }
 
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {

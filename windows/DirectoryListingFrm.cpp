@@ -328,7 +328,8 @@ void DirectoryListingFrame::changeDir(DirectoryListing::Directory* d, BOOL enabl
 	if(!d->getComplete()) {
 		if(dl->getUser()->isOnline()) {
 			try {
-				QueueManager::getInstance()->addList(dl->getUser(), QueueItem::FLAG_PARTIAL_LIST, dl->getPath(d));
+				// TODO provide hubHint?
+				QueueManager::getInstance()->addList(dl->getUser(), Util::emptyString, QueueItem::FLAG_PARTIAL_LIST, dl->getPath(d));
 				ctrlStatus.SetText(STATUS_TEXT, CTSTRING(DOWNLOADING_LIST));
 			} catch(const QueueException& e) {
 				ctrlStatus.SetText(STATUS_TEXT, Text::toT(e.getError()).c_str());
@@ -542,7 +543,8 @@ LRESULT DirectoryListingFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/,
 }
 
 LRESULT DirectoryListingFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	int x = QueueManager::getInstance()->matchListing(*dl);
+	// TODO provide hubHint?
+	int x = QueueManager::getInstance()->matchListing(*dl, Util::emptyString);
 
 	tstring buf;
 	buf.resize(STRING(MATCHED_FILES).length() + 32);

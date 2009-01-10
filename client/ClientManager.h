@@ -82,7 +82,7 @@ public:
 		}
 	}
 	
-	void reportUser(const UserPtr& p) {
+	void reportUser(const UserPtr& p, const string& hubHint) {
 		string nick; string report;
 		Client* c;
 		{
@@ -108,9 +108,9 @@ public:
 
 	UserPtr& getMe();
 	
-	void connect(const UserPtr& p, const string& token);
+	void connect(const UserPtr& p, const string& token, const string& hintUrl);
 	void send(AdcCommand& c, const CID& to);
-	void privateMessage(const UserPtr& p, const string& msg, const Client* client, bool thirdPerson);
+	void privateMessage(const UserPtr& p, const string& msg, bool thirdPerson, const string& hintUrl);
 
 	void userCommand(const UserPtr& p, const UserCommand& uc, StringMap& params, bool compatibility);
 	void sendRawCommand(const UserPtr& user, const Client& c, const int aRawCommand);
@@ -177,6 +177,8 @@ private:
 
 	void updateNick(const OnlineUser& user) throw();
 		
+	OnlineUser* findOnlineUser(const CID& cid, const string& hintUrl) throw();
+
 	// ClientListener
 	void on(Connected, const Client* c) throw();
 	void on(UserUpdated, const Client*, const OnlineUserPtr& user) throw();

@@ -1,3 +1,10 @@
+** svn427
+	adcs:// links are clickable now
+	fixed apostrophes in chat links
+	begun work on hub-dependent connections and PMs (DC++ BZR)
+	ADC partial search results contain hub's IP:port
+	added complete Boost library
+
 ** svn426
 	finished partial slots settings
 

@@ -117,7 +117,7 @@ public:
 				dl.loadFile(*i);
 				string tmp;
 				tmp.resize(STRING(MATCHED_FILES).size() + 16);
-				tmp.resize(snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl)));
+				tmp.resize(snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl, Util::emptyString)));
 				LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(u->getCID())) + ": " + tmp);
 			} catch(const Exception&) {
 
@@ -726,7 +726,10 @@ void MainFrame::parseCommandLine(const tstring& cmdLine)
 		WinUtil::parseDchubUrl(cmdLine.substr(j));
 		}
 	if( (j = cmdLine.find(_T("adc://"), i)) != string::npos) {
-		WinUtil::parseADChubUrl(cmdLine.substr(j));
+		WinUtil::parseADChubUrl(cmdLine.substr(j), false);
+	}
+	if( (j = cmdLine.find(_T("adcs://"), i)) != string::npos) {
+		WinUtil::parseADChubUrl(cmdLine.substr(j), true);
 	}
 	if( (j = cmdLine.find(_T("magnet:?"), i)) != string::npos) {
 		WinUtil::parseMagnetUri(cmdLine.substr(j));
