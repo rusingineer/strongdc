@@ -310,12 +310,12 @@ void ConnectionManager::accept(const Socket& sock, bool secure) throw() {
 	}
 }
 
-bool ConnectionManager::checkIpFlood(const string& aServer, uint16_t aPort) {
+bool ConnectionManager::checkIpFlood(const string& aServer, uint16_t aPort, const string& userInfo) {
 	Lock l(cs);
 
 	// Temporary fix to avoid spamming
 	if(aPort == 80 || aPort == 2501) {
-		LogManager::getInstance()->message("Someone is trying to use your client to spam " + aServer + ", please urge hub owner to fix this");
+		LogManager::getInstance()->message("Someone (" + userInfo + ") is trying to use your client to spam " + aServer + ", please urge hub owner to fix this");
 		return true;
 	}	
 	
@@ -343,7 +343,7 @@ void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const
 	if(shuttingDown)
 		return;
 		
-	if(checkIpFlood(aServer, aPort))
+	if(checkIpFlood(aServer, aPort, "NMDC Hub: " + hubUrl))
 		return;
 
 	UserConnection* uc = getConnection(true, secure);
@@ -367,7 +367,7 @@ void ConnectionManager::adcConnect(const OnlineUser& aUser, uint16_t aPort, cons
 	if(shuttingDown)
 		return;
 
-	if(checkIpFlood(aUser.getIdentity().getIp(), aPort))
+	if(checkIpFlood(aUser.getIdentity().getIp(), aPort, "ADC Nick: " + aUser.getIdentity().getNick() + ", Hub: " + aUser.getClient().getHubName()))
 		return;
 
 	UserConnection* uc = getConnection(false, secure);

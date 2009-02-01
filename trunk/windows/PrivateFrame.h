@@ -76,6 +76,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
 		COMMAND_ID_HANDLER(IDC_SEND_MESSAGE, onSendMessage)
 		COMMAND_ID_HANDLER(IDC_CLOSE_WINDOW, onCloseWindow)
+		COMMAND_ID_HANDLER(ID_EDIT_CLEAR_ALL, onEditClearAll)
 		COMMAND_ID_HANDLER(IDC_EMOT, onEmoticons)
 		COMMAND_ID_HANDLER(IDC_PUBLIC_MESSAGE, onPublicMessage)
 		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
@@ -100,6 +101,7 @@ public:
 	LRESULT onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/);
 	LRESULT onContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT onClientEnLink(int idCtrl, LPNMHDR pnmh, BOOL& bHandled) { return ctrlClient.onClientEnLink(idCtrl, pnmh, bHandled); }
+	LRESULT onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
   	LRESULT onEmoticons(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& bHandled);

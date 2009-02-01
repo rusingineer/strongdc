@@ -1,3 +1,9 @@
+** svn428
+	fixed missing CID in transfers' log
+	fixed segment size when segmented downloads are disabled
+	added more info to spam log message
+	fixed "clear chat" item in PM's tab context menu
+
 ** svn427
 	adcs:// links are clickable now
 	fixed apostrophes in chat links

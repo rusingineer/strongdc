@@ -178,7 +178,7 @@ private:
 
 	void accept(const Socket& sock, bool secure) throw();
 
-	bool checkIpFlood(const string& aServer, uint16_t aPort);
+	bool checkIpFlood(const string& aServer, uint16_t aPort, const string& userInfo);
 	
 	// UserConnectionListener
 	void on(Connected, UserConnection*) throw();
