@@ -411,6 +411,11 @@ void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMA
 	}
 }
 
+LRESULT PrivateFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ctrlClient.SetWindowText(_T(""));
+	return 0;
+}
+
 LRESULT PrivateFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
 	POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };        // location of mouse click 
 

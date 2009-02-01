@@ -131,15 +131,15 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 		
 		// We want smaller blocks at the end of the transfer, squaring gives a nice curve...
 		targetSize = static_cast<int64_t>(static_cast<double>(wantedSize) * std::max(0.25, (1. - (done * done))));
+		
+		if(targetSize > blockSize) {
+			// Round off to nearest block size
+			targetSize = ((targetSize + (blockSize / 2)) / blockSize) * blockSize;
+		} else {
+			targetSize = blockSize;
+		}		
 	} else {
 		targetSize = getSize() - getDownloadedBytes();
-	}
-		
-	if(targetSize > blockSize) {
-		// Round off to nearest block size
-		targetSize = ((targetSize + (blockSize / 2)) / blockSize) * blockSize;
-	} else {
-		targetSize = blockSize;
 	}
 
 	int64_t start = 0;

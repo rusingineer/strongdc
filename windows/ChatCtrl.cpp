@@ -277,10 +277,10 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 				boost::match_results<tstring::const_iterator> result;
 				// TODO: complete regexp for URLs
 				boost::wregex reg;
-				if(isMagnet) // magnet links have totally indeferent structure than classic URL
-					reg =       _T("^(\\w)+=[:\\w]+(&(\\w)+=[-/?%&=~#'\\w\\.\\+\\*\\(\\)]*)*");
+				if(isMagnet) // magnet links have totally indeferent structure than classic URL // -/?%&=~#'\\w\\.\\+\\*\\(\\)
+					reg =       _T("^(\\w)+=[:\\w]+(&(\\w)+=[\\S]*)*");
 				else
-					reg = _T("^([@\\w-]+(\\.)*)+(:[\\d]+)?(/[-/?%&=~#'\\w\\.\\+\\*\\(\\)]*)*");
+					reg = _T("^([@\\w-]+(\\.)*)+(:[\\d]+)?(/[\\S]*)*");
 					
 				if(boost::regex_search(sMsgLower.c_str() + linkEnd, result, reg)) {
 					dcassert(!result.empty());
@@ -878,7 +878,7 @@ LRESULT ChatCtrl::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		try {
-			QueueManager::getInstance()->addTestSUR(ou->getUser(), false);
+			QueueManager::getInstance()->addTestSUR(ou->getUser(), client->getHubUrl(), false);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}

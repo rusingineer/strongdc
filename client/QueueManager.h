@@ -80,7 +80,7 @@ public:
 		/** Add a user's filelist to the queue. */
 	void addList(const UserPtr& aUser, const string& hubHint, Flags::MaskType aFlags, const string& aInitialDir = Util::emptyString) throw(QueueException, FileException);
 
-	void addTestSUR(UserPtr aUser, const string& hubHint, bool checkList = false) throw(QueueException, FileException) {
+	void addTestSUR(UserPtr aUser, const string& hubHint, bool checkList) throw(QueueException, FileException) {
 		StringList nicks = ClientManager::getInstance()->getNicks(*aUser);
 		string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
 		string target = Util::getConfigPath() + "TestSURs\\TestSUR" + nick + aUser->getCID().toBase32();
