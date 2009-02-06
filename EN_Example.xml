@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Language Name="Example Language" Author="BigMuscle" Version="2.21" Revision="1">
+<Language Name="Example Language" Author="BigMuscle" Version="2.22" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Accepted Disconnects</String>
 		<String Name="AcceptedTimeouts">Accepted Timeouts</String>
@@ -137,6 +137,7 @@
 		<String Name="Downloading">Downloading...</String>
 		<String Name="DownloadingHubList">Downloading public hub list...</String>
 		<String Name="DownloadingList">Downloading list...</String>
+		<String Name="DownloadsRunning">Downloads running, please disconnect them</String>
 		<String Name="DuplicateSource">Duplicate source</String>
 		<String Name="Eb">EiB</String>
 		<String Name="EditAccel">&amp;Edit</String>
@@ -178,6 +179,7 @@
 		<String Name="FavoriteUsers">Favorite Users</String>
 		<String Name="FavuserOnline">Favorite user online</String>
 		<String Name="File">File</String>
+		<String Name="FileAlreadyFinished">File is already finished</String>
 		<String Name="FileList">file list</String>
 		<String Name="FileListDiff">Subtract list</String>
 		<String Name="FileListRefreshFailed">File list refresh failed: </String>
@@ -257,6 +259,7 @@
 		<String Name="IgnoreUser">Ignore User</String>
 		<String Name="IgnoredMessage">Ignored message: </String>
 		<String Name="IncompleteFavHub">Hub address cannot be empty.</String>
+		<String Name="IntegrityCheck">Integrity check: %s (%s)</String>
 		<String Name="InvalidListname">Invalid file list name</String>
 		<String Name="InvalidNumberOfSlots">Invalid number of slots</String>
 		<String Name="InvalidSize">Invalid size</String>
@@ -390,6 +393,7 @@
 		<String Name="NoDownloadsFromSelf">You're trying to download from yourself!</String>
 		<String Name="NoErrors">No errors</String>
 		<String Name="NoFreeBlock">No free block</String>
+		<String Name="NoFullTree">No full tree available</String>
 		<String Name="NoLogForHub">Hub log not exist</String>
 		<String Name="NoLogForUser">User log not exist</String>
 		<String Name="NoMatches">No matches</String>
@@ -476,6 +480,7 @@
 		<String Name="Reason">Reason</String>
 		<String Name="Reboot">Reboot</String>
 		<String Name="RecentHubs">Recent Hubs</String>
+		<String Name="RecheckFile">Recheck integrity</String>
 		<String Name="RedirectAlreadyConnected">Redirect request received to a hub that's already connected</String>
 		<String Name="RedirectUser">Redirect user(s)</String>
 		<String Name="Refresh">&amp;Refresh</String>
@@ -651,6 +656,7 @@
 		<String Name="SettingsLogStatusMessages">Log status messages</String>
 		<String Name="SettingsLogSystemMessages">Log system messages</String>
 		<String Name="SettingsLogUploads">Log uploads</String>
+		<String Name="SettingsLogWebserver">Log webserver</String>
 		<String Name="SettingsLogging">Logging</String>
 		<String Name="SettingsLogs">Logs</String>
 		<String Name="SettingsMaxCompress">Max compression level</String>
@@ -784,6 +790,7 @@
 		<String Name="SpecifySearchString">Specify a search string</String>
 		<String Name="SpecifyServer">Specify a server to connect to</String>
 		<String Name="Speed">Speed</String>
+		<String Name="Started">Started</String>
 		<String Name="Status">Status</String>
 		<String Name="StealthMode">Emulate DC++ in this hub</String>
 		<String Name="StoredPasswordSent">Stored password sent...</String>
@@ -844,6 +851,8 @@ Default: %H:%M:%S</String>
 		<String Name="UnableToOpenFilelist">Unable to open filelist: </String>
 		<String Name="UnableToRename">Unable to rename </String>
 		<String Name="UnableToSendFile">Unable to send file </String>
+		<String Name="UnfinishedFileNotFound">Unfinished file not found</String>
+		<String Name="UnfinishedFileTooSmall">Unfinished file too small</String>
 		<String Name="UnignoreUser">Unignore User</String>
 		<String Name="Unknown">Unknown</String>
 		<String Name="UnknownCommand">Unknown command: </String>

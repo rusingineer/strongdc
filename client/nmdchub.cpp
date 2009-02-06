@@ -406,12 +406,6 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		u.getIdentity().setHub(false);
 		u.getIdentity().setHidden(false);
 
-		if(connection.find_first_not_of("0123456789.,") == string::npos) {
-			double us = Util::toDouble(connection);
-			if(us > 0) {
-				connection = Util::toString((long)(us*1024*1024));
-			}
-		}
 		u.getIdentity().setConnection(connection);
 		u.getIdentity().setStatus(Util::toString(param[j-1]));
 		

@@ -57,7 +57,7 @@ CryptoManager::CryptoManager()
 :	
 	certsLoaded(false), 
 	lock("EXTENDEDPROTOCOLABCABCABCABCABCABC"), 
-	pk("DCPLUSPLUS" DCVERSIONSTRING "ABCABC")
+	pk("DCPLUSPLUS" DCVERSIONSTRING)
 {
 #ifndef YASSL_VERSION
 	cs = new CriticalSection[CRYPTO_num_locks()];

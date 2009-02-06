@@ -315,7 +315,7 @@ bool ConnectionManager::checkIpFlood(const string& aServer, uint16_t aPort, cons
 
 	// Temporary fix to avoid spamming
 	if(aPort == 80 || aPort == 2501) {
-		LogManager::getInstance()->message("Someone (" + userInfo + ") is trying to use your client to spam " + aServer + ", please urge hub owner to fix this");
+		LogManager::getInstance()->message("Someone (" + userInfo + ") is trying to use your client to spam " + aServer + ":" + Util::toString(aPort) + ", please urge hub owner to fix this");
 		return true;
 	}	
 	
@@ -374,6 +374,7 @@ void ConnectionManager::adcConnect(const OnlineUser& aUser, uint16_t aPort, cons
 	uc->setToken(aToken);
 	uc->setEncoding(const_cast<string*>(&Text::utf8));
 	uc->setState(UserConnection::STATE_CONNECT);
+	uc->setHubUrl(aUser.getClient().getHubUrl());
 	if(aUser.getIdentity().isOp()) {
 		uc->setFlag(UserConnection::FLAG_OP);
 	}
@@ -461,13 +462,14 @@ void ConnectionManager::on(UserConnectionListener::Connected, UserConnection* aS
 	dcassert(aSource->getState() == UserConnection::STATE_CONNECT);
 	if(aSource->isSet(UserConnection::FLAG_NMDC)) {
 		aSource->myNick(aSource->getToken());
-		aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk());
+		aSource->lock(CryptoManager::getInstance()->getLock(), CryptoManager::getInstance()->getPk() + "Ref=" + aSource->getHubUrl());
 	} else {
 		StringList defFeatures = adcFeatures;
 		if(BOOLSETTING(COMPRESS_TRANSFERS)) {
 			defFeatures.push_back("AD" + UserConnection::FEATURE_ZLIB_GET);
 		}
 		aSource->sup(defFeatures);
+		aSource->send(AdcCommand(AdcCommand::SEV_SUCCESS, AdcCommand::SUCCESS, Util::emptyString).addParam("RF", aSource->getHubUrl()));
 	}
 	aSource->setState(UserConnection::STATE_SUPNICK);
 }
