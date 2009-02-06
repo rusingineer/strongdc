@@ -248,7 +248,7 @@
 		<String Name="Check0byteShare">Zkontrolovat 0B sdílení</String>
 		<String Name="CheckFilelist">Zkontrolovat filelist</String>
 		<String Name="CheckForbidden">Sdílení zakázaných souborů : %s</String>
-		<String Name="CheckInflated">Filelist byl zvětšen %s krát</String>
+		<String Name="CheckInflated">Seznam souborů byl zvětšen %s krát</String>
 		<String Name="CheckMismatchedShareSize">Velikost podvodného sdílení - </String>
 		<String Name="CheckOnConnect">Kontroluj uživatele po připojení</String>
 		<String Name="CheckShowRealShare">, hlášené sdílení = %[shareshort], opravdové sdílení = %[realshareformat]</String>
@@ -590,7 +590,7 @@
 		<String Name="SettingsColorBadFilelist">Špatný filelist/falešné sdílení</String>
 		<String Name="SettingsColorClientChecked">Klient zkontrolován</String>
 		<String Name="SettingsColorFavorite">Oblíbený</String>
-		<String Name="SettingsColorFilelistChecked">Filelist zkontrolován</String>
+		<String Name="SettingsColorFilelistChecked">Seznam souborů zkontrolován</String>
 		<String Name="SettingsColorFullChecked">Zkontrolován</String>
 		<String Name="SettingsColorIgnored">Ignorovaný</String>
 		<String Name="SettingsColorNormal">Normální text</String>
@@ -640,12 +640,12 @@
 		<String Name="SettingsIgnoreHubPms">Ignorovat soukromé zprávy od hubů</String>
 		<String Name="SettingsIgnoreBotPms">Ignorovat soukromé zprávy od botů</String>
 		<String Name="SettingsIncoming">Nastavení připojení(FAQ/HELP nejste-li si jisti)</String>
-		<String Name="SettingsKeepLists">Nemazat Filelisty při odchodu</String>
+		<String Name="SettingsKeepLists">Nemazat seznamy souborů při odchodu</String>
 		<String Name="SettingsLanguageFile">Soubor s překladem</String>
 		<String Name="SettingsLimit">Limity</String>
 		<String Name="SettingsLogDir">Adresář pro záznamy</String>
 		<String Name="SettingsLogDownloads">Zaznamenávat stažené soubory</String>
-		<String Name="SettingsLogFilelistTransfers">Zaznamenávat filelisty</String>
+		<String Name="SettingsLogFilelistTransfers">Zaznamenávat seznamy souborů</String>
 		<String Name="SettingsLogMainChat">Zaznamenávat Hlavní chat</String>
 		<String Name="SettingsLogPrivateChat">Zaznamenávat Soukromé zprávy</String>
 		<String Name="SettingsLogStatusMessages">Zaznamenávat Stavové zprávy</String>

@@ -36,6 +36,7 @@ public:
 	};
 
 	enum Error {
+		SUCCESS = 0,
 		ERROR_GENERIC = 0,
 		ERROR_HUB_GENERIC = 10,
 		ERROR_HUB_FULL = 11,

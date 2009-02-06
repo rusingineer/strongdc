@@ -117,30 +117,6 @@ bool Identity::supports(const string& name) const {
 	return false;
 }
 
-string Identity::getConnection() const {
-	string connection = get("US");
-	if(connection.find_first_not_of("0123456789.,") == string::npos) {
-		double us = Util::toDouble(connection);
-		if(us > 0) {
-			char buf[16];
-			if(us < 1024*1024) {
-				snprintf(buf, sizeof(buf), "%.3g", us / 1024 / 1024);
-
-				char *cp;
-				if( (cp=strchr(buf, ',')) != NULL) *cp='.';
-			} else {
-				snprintf(buf, sizeof(buf), "%d", static_cast<int>(us / 1024 / 1024));
-			}
-
-			return buf;
-		} else {
-			return connection;
-		}
-	} else {
-		return connection;
-	}
-}
-
 bool Identity::isTcpActive(const Client* c) const {
 	if(c != NULL && user == ClientManager::getInstance()->getMe()) {
 		return c->isActive();

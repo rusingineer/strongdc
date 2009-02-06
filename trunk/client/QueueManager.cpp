@@ -38,6 +38,7 @@
 #include "UserConnection.h"
 #include "version.h"
 #include "SearchResult.h"
+#include "MerkleCheckOutputStream.h"
 
 #include <limits>
 
@@ -362,7 +363,162 @@ int QueueManager::FileMover::run() {
 	}
 }
 
-QueueManager::QueueManager() : lastSave(0), queueFile(Util::getConfigPath() + "Queue.xml"), dirty(true), nextSearch(0) { 
+void QueueManager::Rechecker::add(const string& file) {
+	Lock l(cs);
+	files.push_back(file);
+	if(!active) {
+		active = true;
+		start();
+	}
+}
+
+int QueueManager::Rechecker::run() {
+	while(true) {
+		string file;
+		{
+			Lock l(cs);
+			StringIter i = files.begin();
+			if(i == files.end()) {
+				active = false;
+				return 0;
+			}
+			file = *i;
+			files.erase(i);
+		}
+
+		QueueItem* q;
+		int64_t tempSize;
+		TTHValue tth;
+
+		{
+			Lock l(qm->cs);
+
+			q = qm->fileQueue.find(file);
+			if(!q || q->isSet(QueueItem::FLAG_USER_LIST))
+				continue;
+
+			qm->fire(QueueManagerListener::RecheckStarted(), q);
+			dcdebug("Rechecking %s\n", file.c_str());
+
+			tempSize = File::getSize(q->getTempTarget());
+
+			if(tempSize == -1) {
+				qm->fire(QueueManagerListener::RecheckNoFile(), q);
+				continue;
+			}
+
+			if(tempSize < 64*1024) {
+				qm->fire(QueueManagerListener::RecheckFileTooSmall(), q);
+				continue;
+			}
+
+			if(tempSize != q->getSize()) {
+				File(q->getTempTarget(), File::WRITE, File::OPEN).setSize(q->getSize());
+			}
+
+			if(q->isRunning()) {
+				qm->fire(QueueManagerListener::RecheckDownloadsRunning(), q);
+				continue;
+			}
+
+			tth = q->getTTH();
+		}
+
+		TigerTree tt;
+		bool gotTree = HashManager::getInstance()->getTree(tth, tt);
+
+		string tempTarget;
+
+		{
+			Lock l(qm->cs);
+
+			// get q again in case it has been (re)moved
+			q = qm->fileQueue.find(file);
+			if(!q)
+				continue;
+
+			if(!gotTree) {
+				qm->fire(QueueManagerListener::RecheckNoTree(), q);
+				continue;
+			}
+
+			//Clear segments
+			q->resetDownloaded();
+
+			tempTarget = q->getTempTarget();
+		}
+
+		//Merklecheck
+		int64_t startPos=0;
+		DummyOutputStream dummy;
+		int64_t blockSize = tt.getBlockSize();
+		bool hasBadBlocks = false;
+
+		vector<uint8_t> buf((size_t)min((int64_t)1024*1024, blockSize));
+
+		typedef pair<int64_t, int64_t> SizePair;
+		typedef vector<SizePair> Sizes;
+		Sizes sizes;
+
+		{
+			File inFile(tempTarget, File::READ, File::OPEN);
+
+			while(startPos < tempSize) {
+				try {
+					MerkleCheckOutputStream<TigerTree, false> check(tt, &dummy, startPos);
+
+					inFile.setPos(startPos);
+					int64_t bytesLeft = min((tempSize - startPos),blockSize); //Take care of the last incomplete block
+					int64_t segmentSize = bytesLeft;
+					while(bytesLeft > 0) {
+						size_t n = (size_t)min((int64_t)buf.size(), bytesLeft);
+						size_t nr = inFile.read(&buf[0], n);
+						check.write(&buf[0], nr);
+						bytesLeft -= nr;
+						if(bytesLeft > 0 && nr == 0) {
+							// Huh??
+							throw Exception();
+						}
+					}
+					check.flush();
+
+					sizes.push_back(make_pair(startPos, segmentSize));
+				} catch(const Exception&) {
+					hasBadBlocks = true;
+					dcdebug("Found bad block at " I64_FMT "\n", startPos);
+				}
+				startPos += blockSize;
+			}
+		}
+
+		Lock l(qm->cs);
+
+		// get q again in case it has been (re)moved
+		q = qm->fileQueue.find(file);
+		if(!q)
+			continue;
+
+		//If no bad blocks then the file probably got stuck in the temp folder for some reason
+		if(!hasBadBlocks) {
+			qm->moveStuckFile(q);
+			continue;
+		}
+
+		for(Sizes::const_iterator i = sizes.begin(); i != sizes.end(); ++i)
+			q->addSegment(Segment(i->first, i->second));
+
+		qm->rechecked(q);
+	}
+	return 0;
+}
+
+QueueManager::QueueManager() : 
+	lastSave(0), 
+	queueFile(Util::getConfigPath() + "Queue.xml"), 
+	rechecker(this),
+	dirty(true), 
+	nextSearch(0)
+{ 
 	TimerManager::getInstance()->addListener(this); 
 	SearchManager::getInstance()->addListener(this);
 	ClientManager::getInstance()->addListener(this);
@@ -1010,6 +1166,24 @@ void QueueManager::moveFile(const string& source, const string& target) {
 	}
 }
 
+void QueueManager::moveStuckFile(QueueItem* qi) {
+	moveFile(qi->getTempTarget(), qi->getTarget());
+
+	fire(QueueManagerListener::Removed(), qi);
+
+	userQueue.remove(qi);
+	fileQueue.remove(qi);
+
+	fire(QueueManagerListener::RecheckAlreadyFinished(), qi);
+}
+
+void QueueManager::rechecked(QueueItem* qi) {
+	fire(QueueManagerListener::RecheckDone(), qi);
+	fire(QueueManagerListener::StatusUpdated(), qi);
+
+	setDirty();
+}
+
 void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFinish) throw() {
 	UserList getConn;
 	string fname;
@@ -1080,15 +1254,6 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						}
 
 						if(aDownload->getType() == Transfer::TYPE_FILE) {
-	
-#ifdef _DEBUG
-							File f(q->getTempTarget() + ".log", File::WRITE, File::OPEN | File::CREATE );
-							f.setPos(f.getSize());
-							f.write("Full segment finished " + Util::toString(aDownload->getSegment().getStart()) + " - " + Util::toString(aDownload->getSegment().getEnd()) + ", O:" + 
-									Util::toString(aDownload->getSegment().getOverlapped()) + ", U:" + aDownload->getUser()->getCID().toBase32() + ", F:" + Util::toString(aDownload->getFlags()) + "\n");
-							f.close();
-#endif
-						
 							aDownload->setOverlapped(false);
 							q->addSegment(aDownload->getSegment());							
 						}
@@ -1139,14 +1304,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 							downloaded -= downloaded % aDownload->getTigerTree().getBlockSize();
 
 							if(downloaded > 0) {
-#ifdef _DEBUG
-								File f(q->getTempTarget() + ".log", File::WRITE, File::OPEN | File::CREATE );
-								f.setPos(f.getSize());
-								f.write("Part segment finished " + Util::toString(aDownload->getSegment().getStart()) + " - " + Util::toString(aDownload->getSegment().getEnd()) + ", O:" + 
-										Util::toString(aDownload->getSegment().getOverlapped()) + ", U:" + aDownload->getUser()->getCID().toBase32() + ", F:" + Util::toString(aDownload->getFlags()) + "\n");
-								f.close();
-#endif					
 								q->addSegment(Segment(aDownload->getStartPos(), downloaded));
+								setDirty();
 							}
 						}
 					}
@@ -1232,6 +1391,10 @@ void QueueManager::processList(const string& name, UserPtr& user, int flags) {
 		snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), matchListing(dirList, Util::emptyString));
 		LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(user->getCID())) + ": " + tmp);
 	}
+}
+
+void QueueManager::recheck(const string& aTarget) {
+	rechecker.add(aTarget);
 }
 
 void QueueManager::remove(const string& aTarget) throw() {

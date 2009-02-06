@@ -126,6 +126,7 @@
 #define IDC_REMOVE_ALL                  1010
 #define IDC_ADD                         1011
 #define IDC_REMOVE                      1012
+#define IDC_RECHECK						1013
 #define IDC_TOTAL                       1014
 #define IDC_SLOTS                       1015
 #define IDC_SLOTSPIN                    1016

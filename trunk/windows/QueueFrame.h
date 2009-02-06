@@ -72,6 +72,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_SEARCH_ALTERNATES, onSearchAlternates)
 		COMMAND_ID_HANDLER(IDC_COPY_LINK, onCopyMagnet)
 		COMMAND_ID_HANDLER(IDC_REMOVE, onRemove)
+		COMMAND_ID_HANDLER(IDC_RECHECK, onRecheck);
 		COMMAND_ID_HANDLER(IDC_REMOVE_OFFLINE, onRemoveOffline)
 		COMMAND_ID_HANDLER(IDC_MOVE, onMove)
 		COMMAND_RANGE_HANDLER(IDC_COPY, IDC_COPY + COLUMN_LAST-1, onCopy)
@@ -98,6 +99,7 @@ public:
 	LRESULT onRemoveSources(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onPM(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onReadd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onRecheck(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCopyMagnet(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
@@ -197,7 +199,8 @@ private:
 	enum Tasks {
 		ADD_ITEM,
 		REMOVE_ITEM,
-		UPDATE_ITEM
+		UPDATE_ITEM,
+		UPDATE_STATUS
 	};
 	
 	class QueueItemInfo;
@@ -363,6 +366,16 @@ private:
 	void on(QueueManagerListener::SourcesUpdated, const QueueItem* aQI) throw();
 	void on(QueueManagerListener::StatusUpdated, const QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
 	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	
+	void onRechecked(const QueueItem* qi, const string& message);
+	
+	void on(QueueManagerListener::RecheckStarted, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::RecheckNoFile, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::RecheckFileTooSmall, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::RecheckDownloadsRunning, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::RecheckNoTree, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::RecheckAlreadyFinished, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::RecheckDone, const QueueItem* aQI) throw();
 };
 
 #endif // !defined(QUEUE_FRAME_H)

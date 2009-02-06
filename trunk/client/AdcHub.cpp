@@ -181,6 +181,15 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 		u->getUser()->setFlag(User::TLS);
 	}
 
+	if(!u->getIdentity().get("US").empty()) {
+		char buf[16];
+		snprintf(buf, sizeof(buf), "%.3g", Util::toDouble(u->getIdentity().get("US")) * 8 / 1024 / 1024);
+
+		char *cp;
+		if( (cp=strchr(buf, ',')) != NULL) *cp='.';
+		u->getIdentity().setConnection(buf);
+	}
+
 	if(u->getUser() == getMyIdentity().getUser()) {
 		state = STATE_NORMAL;
 		setAutoReconnect(true);
@@ -722,15 +731,15 @@ void AdcHub::info(bool /*alwaysSend*/) {
 	addParam(lastInfoMap, c, "VE", getStealth() ? ("++ " DCVERSIONSTRING) : ("StrgDC++ " VER));
 	
 	if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-		addParam(lastInfoMap, c, "US", Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024*8));
+		addParam(lastInfoMap, c, "US", Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024));
 	} else {
-		addParam(lastInfoMap, c, "US", Util::toString((long)(Util::toDouble(SETTING(UPLOAD_SPEED))*1024*1024)));
+		addParam(lastInfoMap, c, "US", Util::toString((long)(Util::toDouble(SETTING(UPLOAD_SPEED))*1024*1024/8)));
 	}
 
 	addParam(lastInfoMap, c, "AW", Util::getAway() ? "1" : Util::emptyString);
 	
 	if(SETTING(THROTTLE_ENABLE) && SETTING(MAX_DOWNLOAD_SPEED_LIMIT) != 0) {
-		addParam(lastInfoMap, c, "DS", Util::toString((SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*1024*8)));
+		addParam(lastInfoMap, c, "DS", Util::toString((SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*1024)));
 	} else {
 		addParam(lastInfoMap, c, "DS", Util::emptyString);
 	}

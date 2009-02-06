@@ -197,7 +197,7 @@ LRESULT WaitingUsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
     	}
 		contextMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 		return TRUE;
-	} else if(reinterpret_cast<HWND>(wParam) == ctrlQueued && ctrlQueued.GetSelectedItem() != NULL) {
+	} else if(usingUserMenu && ctrlQueued.GetSelectedItem() != NULL) {
      	if(pt.x == -1 && pt.y == -1) {
     		WinUtil::getContextMenuPos(ctrlQueued, pt);
     	} else {

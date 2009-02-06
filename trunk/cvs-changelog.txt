@@ -1,3 +1,9 @@
+** svn429
+	added "clear chat" to hub's tab context menu
+	fixed webserver log settings
+	ref stuff from DC++ BZR
+	added possibility to recheck unfinished downloads (DC++ BZR)
+
 ** svn428
 	fixed missing CID in transfers' log
 	fixed segment size when segmented downloads are disabled

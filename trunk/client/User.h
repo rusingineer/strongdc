@@ -100,13 +100,11 @@ public:
 	GS(Ip, "I4")
 	GS(UdpPort, "U4")
 	GS(Email, "EM")
+	GS(Connection, "CO")
 
 	void setBytesShared(const string& bs) { set("SS", bs); }
 	int64_t getBytesShared() const { return Util::toInt64(get("SS")); }
 	
-	void setConnection(const string& name) { set("US", name); }
-	string getConnection() const;
-
 	void setStatus(const string& st) { set("ST", st); }
 	StatusFlags getStatus() const { return static_cast<StatusFlags>(Util::toInt(get("ST"))); }
 

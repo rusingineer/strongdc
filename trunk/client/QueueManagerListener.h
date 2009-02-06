@@ -36,6 +36,14 @@ public:
 	typedef X<5> StatusUpdated;
 	typedef X<6> PartialList;
 
+	typedef X<8> RecheckStarted;
+	typedef X<9> RecheckNoFile;
+	typedef X<10> RecheckFileTooSmall;
+	typedef X<11> RecheckDownloadsRunning;
+	typedef X<12> RecheckNoTree;
+	typedef X<13> RecheckAlreadyFinished;
+	typedef X<14> RecheckDone;
+	
 	virtual void on(Added, const QueueItem*) throw() { }
 	virtual void on(Finished, const QueueItem*, const string&, const Download*) throw() { }
 	virtual void on(Removed, const QueueItem*) throw() { }
@@ -43,6 +51,14 @@ public:
 	virtual void on(SourcesUpdated, const QueueItem*) throw() { }
 	virtual void on(StatusUpdated, const QueueItem*) throw() { }
 	virtual void on(PartialList, const UserPtr&, const string&) throw() { }
+	
+	virtual void on(RecheckStarted, const QueueItem*) throw() { }
+	virtual void on(RecheckNoFile, const QueueItem*) throw() { }
+	virtual void on(RecheckFileTooSmall, const QueueItem*) throw() { }
+	virtual void on(RecheckDownloadsRunning, const QueueItem*) throw() { }
+	virtual void on(RecheckNoTree, const QueueItem*) throw() { }
+	virtual void on(RecheckAlreadyFinished, const QueueItem*) throw() { }
+	virtual void on(RecheckDone, const QueueItem*) throw() { }
 };
 
 } // namespace dcpp
