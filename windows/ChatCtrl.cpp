@@ -40,7 +40,7 @@ static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("f
 	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
 	_T("adc://"), _T("adcs://"), _T("nmdcs://") };
 
-ChatCtrl::ChatCtrl() : ccw(_T("edit"), this), client(NULL) {
+ChatCtrl::ChatCtrl() : ccw(_T("edit"), this), client(NULL), m_bPopupMenu(false) {
 	if(g_pEmotionsSetup == NULL) {
 		g_pEmotionsSetup = new CAGEmotionSetup();
 	}
@@ -482,13 +482,13 @@ bool ChatCtrl::HitURL() {
 }
 
 tstring ChatCtrl::LineFromPos(const POINT& p) const {
-	int iCharPos = CharFromPos(p), line = LineFromChar(iCharPos), len = LineLength(iCharPos) + 1;
+	int iCharPos = CharFromPos(p), line = LineFromChar(iCharPos), len = LineLength(iCharPos);
 	if(len < 3) {
 		return Util::emptyStringT;
 	}
 
 	tstring tmp;
-	tmp.resize(len + 1);
+	tmp.resize(len);
 
 	GetLine(line, &tmp[0], len);
 
@@ -527,6 +527,22 @@ LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
 		InvalidateRect(NULL);
 	}
 	return 1;
+}
+
+LRESULT ChatCtrl::onExitMenuLoop(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+	m_bPopupMenu = false;
+	bHandled = FALSE;
+	return 0;
+}
+
+LRESULT ChatCtrl::onSetCursor(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
+    if(m_bPopupMenu)
+    {
+        SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW))) ;
+		return 1;
+    }
+    bHandled = FALSE;
+	return 0;
 }
 
 LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
@@ -654,6 +670,9 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 	menu.AppendMenu(MF_SEPARATOR);
 	menu.AppendMenu(MF_STRING, ID_EDIT_SELECT_ALL, CTSTRING(SELECT_ALL));
 	menu.AppendMenu(MF_STRING, ID_EDIT_CLEAR_ALL, CTSTRING(CLEAR));
+	
+	//flag to indicate pop up menu.
+    m_bPopupMenu = true;
 	menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 
 	return 0;

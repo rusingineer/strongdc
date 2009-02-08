@@ -1,3 +1,11 @@
+** svn430
+	fixed saving queue when adding file without any source
+	hopefully fixed protocol handlers registering on WinVista (admin rights not needed anymore)
+	removed support of external magnet handler (magnet.exe etc.)
+	fixed right click menu in upload queue frame
+	hopefully fixed invalid trailing character when copying whole chat line
+	fixed wrong cursor in chat popup menu
+
 ** svn429
 	added "clear chat" to hub's tab context menu
 	fixed webserver log settings
