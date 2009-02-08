@@ -717,6 +717,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 		}
 
 		wantConnection = aUser && addSource(q, aUser, (Flags::MaskType)(addBad ? QueueItem::Source::FLAG_MASK : 0));
+		setDirty();
 	}
 
 	if(wantConnection && aUser->isOnline())

@@ -1106,7 +1106,7 @@ void WinUtil::copyMagnet(const TTHValue& aHash, const string& aFile, int64_t aSi
 	tstring app = _T("\"") + Text::toT(getAppName()) + _T("\" %1");
 	Buf[0] = 0;
 
-	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, _T("dchub\\Shell\\Open\\Command"), 0, KEY_WRITE | KEY_READ, &hk) == ERROR_SUCCESS) {
+	if(::RegOpenKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\dchub\\Shell\\Open\\Command"), 0, KEY_WRITE | KEY_READ, &hk) == ERROR_SUCCESS) {
 		DWORD bufLen = sizeof(Buf);
 		DWORD type;
 		::RegQueryValueEx(hk, NULL, 0, &type, (LPBYTE)Buf, &bufLen);
@@ -1114,7 +1114,7 @@ void WinUtil::copyMagnet(const TTHValue& aHash, const string& aFile, int64_t aSi
 	}
 
 	if(stricmp(app.c_str(), Buf) != 0) {
-		if (::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("dchub"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
+		if (::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\dchub"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
 			LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_DCHUB));
 			return;
 		}
@@ -1124,11 +1124,11 @@ void WinUtil::copyMagnet(const TTHValue& aHash, const string& aFile, int64_t aSi
 		::RegSetValueEx(hk, _T("URL Protocol"), 0, REG_SZ, (LPBYTE)_T(""), sizeof(TCHAR));
 		::RegCloseKey(hk);
 
-		::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("dchub\\Shell\\Open\\Command"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
+		::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\dchub\\Shell\\Open\\Command"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
 		::RegSetValueEx(hk, _T(""), 0, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length() + 1));
 		::RegCloseKey(hk);
 
-		::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("dchub\\DefaultIcon"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
+		::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\dchub\\DefaultIcon"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
 		app = Text::toT(getAppName());
 		::RegSetValueEx(hk, _T(""), 0, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length() + 1));
 		::RegCloseKey(hk);
@@ -1136,7 +1136,7 @@ void WinUtil::copyMagnet(const TTHValue& aHash, const string& aFile, int64_t aSi
 }
 
  void WinUtil::unRegisterDchubHandler() {
-	SHDeleteKey(HKEY_CLASSES_ROOT, _T("dchub"));
+	SHDeleteKey(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\dchub"));
  }
 
  void WinUtil::registerADChubHandler() {
@@ -1145,7 +1145,7 @@ void WinUtil::copyMagnet(const TTHValue& aHash, const string& aFile, int64_t aSi
 	 tstring app = _T("\"") + Text::toT(getAppName()) + _T("\" %1");
 	 Buf[0] = 0;
 
-	 if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, _T("adc\\Shell\\Open\\Command"), 0, KEY_WRITE | KEY_READ, &hk) == ERROR_SUCCESS) {
+	 if(::RegOpenKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\adc\\Shell\\Open\\Command"), 0, KEY_WRITE | KEY_READ, &hk) == ERROR_SUCCESS) {
 		 DWORD bufLen = sizeof(Buf);
 		 DWORD type;
 		 ::RegQueryValueEx(hk, NULL, 0, &type, (LPBYTE)Buf, &bufLen);
@@ -1153,7 +1153,7 @@ void WinUtil::copyMagnet(const TTHValue& aHash, const string& aFile, int64_t aSi
 	 }
 
 	 if(stricmp(app.c_str(), Buf) != 0) {
-		 if (::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("adc"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
+		 if (::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\adc"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
 			 LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_ADC));
 			 return;
 		 }
@@ -1163,11 +1163,11 @@ void WinUtil::copyMagnet(const TTHValue& aHash, const string& aFile, int64_t aSi
 		 ::RegSetValueEx(hk, _T("URL Protocol"), 0, REG_SZ, (LPBYTE)_T(""), sizeof(TCHAR));
 		 ::RegCloseKey(hk);
 
-		 ::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("adc\\Shell\\Open\\Command"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
+		 ::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\adc\\Shell\\Open\\Command"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
 		 ::RegSetValueEx(hk, _T(""), 0, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length() + 1));
 		 ::RegCloseKey(hk);
 
-		 ::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("adc\\DefaultIcon"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
+		 ::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\adc\\DefaultIcon"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
 		 app = Text::toT(getAppName());
 		 ::RegSetValueEx(hk, _T(""), 0, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length() + 1));
 		 ::RegCloseKey(hk);
@@ -1175,103 +1175,47 @@ void WinUtil::copyMagnet(const TTHValue& aHash, const string& aFile, int64_t aSi
  }
 
  void WinUtil::unRegisterADChubHandler() {
-	SHDeleteKey(HKEY_CLASSES_ROOT, _T("adc"));
+	SHDeleteKey(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\adc"));
  }
 
 void WinUtil::registerMagnetHandler() {
 	HKEY hk;
 	TCHAR buf[512];
-	tstring openCmd, magnetLoc, magnetExe;
+	tstring openCmd;
+	tstring appName = Text::toT(getAppName());
 	buf[0] = 0;
-	bool haveMagnet = true;
 
 	// what command is set up to handle magnets right now?
-	if(::RegOpenKeyEx(HKEY_CLASSES_ROOT, _T("magnet\\shell\\open\\command"), 0, KEY_READ, &hk) == ERROR_SUCCESS) {
+	if(::RegOpenKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\magnet\\shell\\open\\command"), 0, KEY_READ, &hk) == ERROR_SUCCESS) {
 		DWORD bufLen = sizeof(TCHAR) * sizeof(buf);
 		::RegQueryValueEx(hk, NULL, NULL, NULL, (LPBYTE)buf, &bufLen);
 		::RegCloseKey(hk);
 	}
 	openCmd = buf;
 	buf[0] = 0;
-	// read the location of magnet.exe
-	if(::RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet"), NULL, KEY_READ, &hk) == ERROR_SUCCESS) {
-		DWORD bufLen = sizeof(buf) * sizeof(TCHAR);
-		::RegQueryValueEx(hk, _T("Location"), NULL, NULL, (LPBYTE)buf, &bufLen);
-		::RegCloseKey(hk);
-	}
-	magnetLoc = buf;
-	string::size_type i;
-	if (!magnetLoc.empty() && magnetLoc[0]==_T('"') && string::npos != (i = magnetLoc.find(_T('"'), 1))) {
-		magnetExe = magnetLoc.substr(1, i-1);
-	}
-	// check for the existence of magnet.exe
-	if(File::getSize(Text::fromT(magnetExe)) == -1) {
-		magnetExe = Text::toT(Util::getDataPath() + "magnet.exe");
-		if(File::getSize(Text::fromT(magnetExe)) == -1) {
-			// gracefully fall back to registering DC++ to handle magnets
-			magnetExe = Text::toT(getAppName());
-			haveMagnet = false;
-		} else {
-			// set Magnet\Location
-			if (::RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
-				LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_MAGNET));
-				return;
-			}
 
-			::RegSetValueEx(hk, _T("Location"), NULL, REG_SZ, (LPBYTE)magnetExe.c_str(), sizeof(TCHAR) * (magnetExe.length()+1));
-			::RegCloseKey(hk);
-		}
-		magnetLoc = _T('"') + magnetExe + _T('"');
-	}
 	// (re)register the handler if magnet.exe isn't the default, or if DC++ is handling it
-	if(BOOLSETTING(MAGNET_REGISTER) && (strnicmp(openCmd, magnetLoc, magnetLoc.size()) != 0 || !haveMagnet)) {
-		SHDeleteKey(HKEY_CLASSES_ROOT, _T("magnet"));
-		if (::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("magnet"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
+	if(BOOLSETTING(MAGNET_REGISTER) && (strnicmp(openCmd, appName, appName.size()) != 0)) {
+		SHDeleteKey(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\magnet"));
+		if (::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\magnet"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL))  {
 			LogManager::getInstance()->message(STRING(ERROR_CREATING_REGISTRY_KEY_MAGNET));
 			return;
 		}
 		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_SHELL_DESC), sizeof(TCHAR)*(TSTRING(MAGNET_SHELL_DESC).length()+1));
 		::RegSetValueEx(hk, _T("URL Protocol"), NULL, REG_SZ, NULL, NULL);
 		::RegCloseKey(hk);
-		::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("magnet\\DefaultIcon"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
-		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), sizeof(TCHAR)*(magnetLoc.length()+1));
+		::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\magnet\\DefaultIcon"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
+		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)appName.c_str(), sizeof(TCHAR)*(appName.length()+1));
 		::RegCloseKey(hk);
-		magnetLoc += _T(" %1");
-		::RegCreateKeyEx(HKEY_CLASSES_ROOT, _T("magnet\\shell\\open\\command"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
-		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)magnetLoc.c_str(), sizeof(TCHAR)*(magnetLoc.length()+1));
+		appName += _T(" %1");
+		::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\magnet\\shell\\open\\command"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
+		::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)appName.c_str(), sizeof(TCHAR)*(appName.length()+1));
 		::RegCloseKey(hk);
 	}
-	// magnet-handler specific code
-	// clean out the DC++ tree first
-	SHDeleteKey(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\DC++"));
-	// add DC++ to magnet-handler's list of applications
-	::RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\DC++"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
-	::RegSetValueEx(hk, NULL, NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_HANDLER_ROOT), sizeof(TCHAR) * (TSTRING(MAGNET_HANDLER_ROOT).size()+1));
-	::RegSetValueEx(hk, _T("Description"), NULL, REG_SZ, (LPBYTE)CTSTRING(MAGNET_HANDLER_DESC), sizeof(TCHAR) * (STRING(MAGNET_HANDLER_DESC).size()+1));
-	// set ShellExecute
-	tstring app = Text::toT("\"" + getAppName() + "\" %URL");
-	::RegSetValueEx(hk, _T("ShellExecute"), NULL, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR) * (app.length()+1));
-	// set DefaultIcon
-	app = Text::toT('"' + getAppName() + '"');
-	::RegSetValueEx(hk, _T("DefaultIcon"), NULL, REG_SZ, (LPBYTE)app.c_str(), sizeof(TCHAR)*(app.length()+1));
-	::RegCloseKey(hk);
-
-	// These two types contain a tth root, and are in common use.  The other two are variations picked up
-	// from Shareaza's source, which come second hand from Gordon Mohr.  -GargoyleMT
-	// Reference: http://forums.shareaza.com/showthread.php?threadid=23731
-	// Note: the three part hash types require magnethandler >= 1.0.0.3
-	DWORD nothing = 0;
-	::RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Magnet\\Handlers\\DC++\\Type"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hk, NULL);
-	::RegSetValueEx(hk, _T("urn:bitprint"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
-	::RegSetValueEx(hk, _T("urn:tree:tiger"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
-	::RegSetValueEx(hk, _T("urn:tree:tiger/"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
-	::RegSetValueEx(hk, _T("urn:tree:tiger/1024"), NULL, REG_DWORD, (LPBYTE)&nothing, sizeof(nothing));
-	::RegCloseKey(hk);
 }
 
 void WinUtil::unRegisterMagnetHandler() {
-	SHDeleteKey(HKEY_CLASSES_ROOT, _T("magnet"));
-	SHDeleteKey(HKEY_LOCAL_MACHINE, _T("magnet"));
+	SHDeleteKey(HKEY_CURRENT_USER, _T("SOFTWARE\\Classes\\magnet"));
 }
 
 void WinUtil::openLink(const tstring& url) {
