@@ -199,7 +199,7 @@ void QueueManager::UserQueue::add(QueueItem* qi) {
 void QueueManager::UserQueue::add(QueueItem* qi, const UserPtr& aUser) {
 	QueueItem::List& l = userQueue[qi->getPriority()][aUser];
 
-	if(qi->getDownloadedBytes() > 0) {
+	if(qi->getDownloadedBytes() > 0 || qi->isSet(QueueItem::FLAG_TESTSUR)) {
 		l.push_front(qi);
 	} else {
 		l.push_back(qi);
@@ -1346,7 +1346,8 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 		processList(fname, up, flag);
 	}
 
-	if(checkList) {
+	// check filelist only if user is still online (hasn't been banned for testsur)
+	if(up->isOnline() && checkList) {
 		try {
 			// TODO hubHint
 			QueueManager::getInstance()->addList(up, Util::emptyString, QueueItem::FLAG_CHECK_FILE_LIST);
