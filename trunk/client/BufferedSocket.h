@@ -150,16 +150,15 @@ private:
 
 	void threadConnect(const string& aAddr, uint16_t aPort, bool proxy) throw(SocketException);
 	void threadAccept() throw(SocketException);
-	void threadRead() throw(SocketException);
+	void threadRead() throw(Exception);
 	void threadSendFile(InputStream* is) throw(Exception);
-	void threadSendData();
-	void threadDisconnect();
+	void threadSendData() throw(Exception);
 
 	void fail(const string& aError);	
 	static volatile long sockets;
 
-	bool checkEvents();
-	void checkSocket();
+	bool checkEvents() throw(Exception);
+	void checkSocket() throw(Exception);
 
 	void setSocket(std::auto_ptr<Socket> s);
 	void shutdown();

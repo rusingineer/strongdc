@@ -366,7 +366,7 @@ void CryptoManager::decodeBZ2(const uint8_t* is, unsigned int sz, string& os) th
 	bz_stream bs = { 0 };
 
 	if(BZ2_bzDecompressInit(&bs, 0, 0) != BZ_OK)
-		throw(CryptoException(STRING(DECOMPRESSION_ERROR)));
+		throw CryptoException(STRING(DECOMPRESSION_ERROR));
 
 	// We assume that the files aren't compressed more than 2:1...if they are it'll work anyway,
 	// but we'll have to do multiple passes...

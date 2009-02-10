@@ -206,10 +206,10 @@ LRESULT WaitingUsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lP
     		ctrlQueued.ScreenToClient(&pt);
 			HTREEITEM ht = ctrlQueued.HitTest(pt, &a);
 			
-			if(ht == rootItem)
+			if(!ht || ht == rootItem)
 				return FALSE;
 				
-			if(ht != NULL && ht != ctrlQueued.GetSelectedItem())
+			if(ht != ctrlQueued.GetSelectedItem())
 				ctrlQueued.SelectItem(ht);
     
 			ctrlQueued.ClientToScreen(&pt);

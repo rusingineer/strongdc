@@ -1,3 +1,33 @@
+	-- StrongDC++ 2.22 --
+
+* lepší detekce URL v chatu
+* oprava stability - teï už je to skoro perfektní :)
+* odstranìna detekce stejných èíslic ve velikosti sdílení
+* zmìnìna výchozí URL na profily klientù
+* opravena grafika pøi 16-bitové barevné hloubce
+* pøepínání klávesou TAB funguje v oknì se soukromou zprávou
+* zkratka ctrl+m pro poslání soukromé zprávy v seznamu uživatelù
+* opraveno ztrácení aktivity ve stromì v nastavení
+* oznamování podpory TLS v NMDC hubech
+* malá optimalizace pamìti
+* pøidána podpora pro zabezpeèené HTTP pøipojení (https://)
+* zmìnìny binární pøedpony, aby souhlasily se standardem IEC 60027-2
+* pøidány extra sloty pro èásteèné sdílení
+* opraveno kopírování informací o složkách v seznamu souborù
+* záložky se nezvýrazòují pøi dokonèení seznamu souborù/testsuru
+* alternativní zdroje jsou pøidávány i pøi vypnutém automatickém hledání
+* porovnávání fronty nyní stahuje pouze èásteèný seznam souborù
+* neúspìšné èasteèné seznamy souborù jsou odstranìny z fronty
+* doèasný cílový soubor je kontrolován na svou existenci pøed navázáním stahování
+* pøidána podpora TLS pro pøipojení k NMDC hubu (nmdcs://)
+* zmìnìno na stabilní verzi OpenSSL
+* vylepšena velikost segmentu pro èásteèné sdílení
+* opraveno zobrazování názvu ADC hubu v seznamu uživatelù
+* opraveny chybné stavové ikony v seznamech pøi použití filtrování
+* opraveno možné poškození souboru pøi pádu
+* spousta dalších oprav (viz seznam zmìn pro vývojáøe)
+
+
 	-- StrongDC++ 2.21 --
 
 * opravy stability
