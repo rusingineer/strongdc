@@ -1,3 +1,8 @@
+** svn432
+	fixed hubhints
+	fixed Highest priority extra download slots
+	updated OpenSSL
+
 ** svn431
 	try to have maximum priority for testsur
 	filelist is checked only if user hasn't been banned for testsur

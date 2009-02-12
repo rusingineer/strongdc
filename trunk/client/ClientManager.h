@@ -87,12 +87,12 @@ public:
 		Client* c;
 		{
 			Lock l(cs);
-			OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-			if(i == onlineUsers.end()) return;
+			OnlineUser* u = findOnlineUser(p->getCID(), hubHint);
+			if(!u) return;
 
-			nick = i->second->getIdentity().getNick();
-			report = i->second->getIdentity().getReport();
-			c = &i->second->getClient();
+			nick = u->getIdentity().getNick();
+			report = u->getIdentity().getReport();
+			c = &u->getClient();
 		}
 		c->cheatMessage("*** Info on " + nick + " ***" + "\r\n" + report + "\r\n");
 	}	
