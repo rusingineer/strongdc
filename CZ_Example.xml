@@ -137,6 +137,7 @@
 		<String Name="Downloading">Stahuji...</String>
 		<String Name="DownloadingHubList">Stahuji seznam veřejných hubů...</String>
 		<String Name="DownloadingList">Stahuji seznam...</String>
+		<String Name="DownloadsRunning">Stahování běží, prosím odpojte jej</String>
 		<String Name="DuplicateSource">Duplicitní zdroj</String>
 		<String Name="Eb">EiB</String>
 		<String Name="EditAccel">&amp;Upravit</String>
@@ -258,6 +259,7 @@
 		<String Name="IgnoreUser">Ignorovat uživatele</String>
 		<String Name="IgnoredMessage">Ignorovaná zpráva: </String>
 		<String Name="IncompleteFavHub">Adresa hubu nemůže být prázdná.</String>
+		<String Name="IntegrityCheck">Kontrola integrity: %s (%s)</String>
 		<String Name="InvalidListname">Neplatný název seznamu souborů</String>
 		<String Name="InvalidNumberOfSlots">Neplatný počet slotů</String>
 		<String Name="InvalidSize">Neplatná velikost</String>
@@ -391,6 +393,7 @@
 		<String Name="NoDownloadsFromSelf">Snažíte se stahovat od sebe!!</String>
 		<String Name="NoErrors">Žádné chyby</String>
 		<String Name="NoFreeBlock">Nejsou volné bloky</String>
+		<String Name="NoFullTree">Není k dispozici úplný strom</String>
 		<String Name="NoLogForHub">Hub záznam neexistuje</String>
 		<String Name="NoLogForUser">Uživatelský záznam neexistuje</String>
 		<String Name="NoMatches">Nic se neshoduje</String>
@@ -477,6 +480,7 @@
 		<String Name="Reason">Důvod</String>
 		<String Name="Reboot">Restartovat</String>
 		<String Name="RecentHubs">Naposledy navštívené huby</String>
+		<String Name="RecheckFile">Zkontrolovat integritu</String>
 		<String Name="RedirectAlreadyConnected">Požadavek k přesměrování na hub, kde už jste připojeni</String>
 		<String Name="RedirectUser">Přesměrovat uživatele</String>
 		<String Name="Refresh">&amp;Obnovit</String>
@@ -534,6 +538,7 @@
 		<String Name="SetstrongdcNoteDownload">* Je-li limitováno odesílání, je limit stahování max 7x větší.</String>
 		<String Name="SetstrongdcNoteSmallUp">* "Malé sloty" =&gt; Sloty pro seznam souborů a malé soubory.</String>
 		<String Name="SetstrongdcNoteUpload">* Miminální limit odesílání nastaven na 5×sloty + 4 !!!</String>
+		<String Name="SetstrongdcPartialSlots">Extra sloty pro odesílání částečně stažených souborů</String>
 		<String Name="SetstrongdcPassiveSearch">Vždy používat pasivní mód při vyhledávání (zapněte jen víte-li co to dělá!!!)</String>
 		<String Name="SetstrongdcPmLines">Řádků z logu do PM</String>
 		<String Name="SetstrongdcPreview">Náhled</String>
@@ -651,6 +656,7 @@
 		<String Name="SettingsLogStatusMessages">Zaznamenávat Stavové zprávy</String>
 		<String Name="SettingsLogSystemMessages">Zaznamenávat Systémové zprávy</String>
 		<String Name="SettingsLogUploads">Zaznamenávat odeslané soubory</String>
+		<String Name="SettingsLogWebserver">Zaznamenávat události webového serveru</String>
 		<String Name="SettingsLogging">Záznamy</String>
 		<String Name="SettingsLogs">Záznamy</String>
 		<String Name="SettingsMaxCompress">Max kompresní poměr</String>
@@ -737,7 +743,6 @@
 		<String Name="SettingsUploadsSlots">Sloty pro odesílání</String>
 		<String Name="SettingsUrlHandler">Instalovat ochytávač odkazů dchub://</String>
 		<String Name="SettingsUseCtrlForLineHistory">Použít CTRL (+šipka nahoru/dolu) pro historii odeslaného textu</String>
-		<String Name="SettingsUseExtensionDownto">Použít přípony souborů pro funkci "Stáhnout do" v okně hledání</String>
 		<String Name="SettingsUseOldSharingUi">Použít staré prostředí pro sdílení</String>
 		<String Name="SettingsUseSystemIcons">Použít systémové ikonky při prohlížení souborů</String>
 		<String Name="SettingsUseTls">Použít šifrované připojení TLS, pokud to klient podporuje</String>
@@ -785,6 +790,7 @@
 		<String Name="SpecifySearchString">Specifikujte hledaný výraz</String>
 		<String Name="SpecifyServer">Specifikujte server k připojení</String>
 		<String Name="Speed">Rychlost</String>
+		<String Name="Started">Spuštěno</String>
 		<String Name="Status">Stav</String>
 		<String Name="StealthMode">Emulovat DC++ v tomto hubu</String>		
 		<String Name="StoredPasswordSent">Uložené heslo posláno...</String>
@@ -845,6 +851,8 @@ Výchozí: %H:%M:%S</String>
 		<String Name="UnableToOpenFilelist">Nepodařilo se otevřít seznam souborů: </String>
 		<String Name="UnableToRename">Nelze přejmenovat </String>
 		<String Name="UnableToSendFile">Nelze odeslat soubor </String>
+		<String Name="UnfinishedFileNotFound">Nedokončený soubor nenalezen</String>
+		<String Name="UnfinishedFileTooSmall">Nedokončený soubor je příliš malý</String>
 		<String Name="UnignoreUser">Neignorovat uživatele</String>
 		<String Name="Unknown">Neznámý</String>
 		<String Name="UnknownCommand">Neznámý příkaz: </String>
