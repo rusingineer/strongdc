@@ -32,7 +32,7 @@ _T("Chmelic, Cinique, Corvik, Crakter, darwusch, Dreamveawer, FarCry, Fartman, G
 _T("Ice, Jove, King Wenceslas, klirik, Lee, Legolas, Liny, MaynardK, Mlok, Naga, Patrol, popKorn, Pothead, ProLogic, Rm., ")
 _T("Testament, Warrior, WereWiking, xAyiDe, XiND and ToH for very nice betatesting :-) and to all donators who support me: ")
 _T("Kulmegil, Michal Seckar, k3dt, majki, mazeboy, Fino, Architect, Ujep, Jeepo, mlok, redsaq, anton009, Lee, share2all, ")
-_T("Dr. Martin Sereday, Jozef Akantis, Halfspider, Khalid Talbi");
+_T("Dr. Martin Sereday, Jozef Akantis, Halfspider, Khalid Talbi, Shine Developer");
 
 class AboutDlg : public CDialogImpl<AboutDlg>, private HttpConnectionListener
 {
@@ -51,7 +51,7 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(" (c) Copyright 2004-2008 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2008 Jacek Sieka\n\nhttp://strongdc.sf.net"));
+		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(" (c) Copyright 2004-2009 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2009 Jacek Sieka\n\nhttp://strongdc.sf.net"));
 		CEdit ctrlThanks(GetDlgItem(IDC_THANKS));
 		ctrlThanks.FmtLines(TRUE);
 		ctrlThanks.AppendText(thanks, TRUE);

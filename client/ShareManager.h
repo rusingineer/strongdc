@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include "BloomFilter.h"
 #include "FastAlloc.h"
 #include "MerkleTree.h"
+#include "Pointer.h"
 
 namespace dcpp {
 
@@ -112,8 +113,12 @@ public:
 
 private:
 	struct AdcSearch;
-	class Directory : public FastAlloc<Directory> {
+	class Directory : public FastAlloc<Directory>, public intrusive_ptr_base<Directory>, boost::noncopyable {
 	public:
+		typedef boost::intrusive_ptr<Directory> Ptr;
+		typedef unordered_map<string, Ptr, noCaseStringHash, noCaseStringEq> Map;
+		typedef Map::iterator MapIter;
+
 		struct File {
 			struct StringComp {
 				StringComp(const string& s) : a(s) { }
@@ -128,7 +133,7 @@ private:
 			typedef set<File, FileLess> Set;
 
 			File() : size(0), parent(0) { }
-			File(const string& aName, int64_t aSize, Directory* aParent, const TTHValue& aRoot) : 
+			File(const string& aName, int64_t aSize, Directory::Ptr aParent, const TTHValue& aRoot) : 
 			name(aName), tth(aRoot), size(aSize), parent(aParent) { }
 			File(const File& rhs) : 
 			name(rhs.getName()), tth(rhs.getTTH()), size(rhs.getSize()), parent(rhs.getParent()) { }
@@ -151,20 +156,14 @@ private:
 			GETSET(TTHValue, tth, TTH);
 			GETSET(string, name, Name);
 			GETSET(int64_t, size, Size);
-			GETSET(Directory*, parent, Parent);
+			GETSET(Directory::Ptr, parent, Parent);
 		};
-
-		typedef Directory* Ptr;
-		typedef unordered_map<string, Ptr, noCaseStringHash, noCaseStringEq> Map;
-		typedef Map::const_iterator MapIter;
 
 		Map directories;
 		File::Set files;
 		int64_t size;
 
-		Directory(const string& aName, Directory* aParent);
-
-		~Directory();
+		static Ptr create(const string& aName, const Ptr& aParent = Ptr()) { return Ptr(new Directory(aName, aParent)); }
 
 		bool hasType(uint32_t type) const throw() {
 			return ( (type == SearchManager::TYPE_ANY) || (fileTypes & (1 << type)) );
@@ -185,13 +184,15 @@ private:
 
 		File::Set::const_iterator findFile(const string& aFile) const { return find_if(files.begin(), files.end(), Directory::File::StringComp(aFile)); }
 
-		void merge(Directory* source);
+		void merge(const Ptr& source);
 		
 		GETSET(string, name, Name);
-		GETSET(Directory*, parent, Parent);
+		GETSET(Ptr, parent, Parent);
 	private:
-		Directory(const Directory&);
-		Directory& operator=(const Directory&);
+		friend void intrusive_ptr_release(intrusive_ptr_base<Directory>*);
+
+		Directory(const string& aName, const Ptr& aParent);
+		~Directory() { }
 
 		/** Set of flags that say which SearchManager::TYPE_* a directory contains */
 		uint32_t fileTypes;
@@ -262,7 +263,7 @@ private:
 	mutable CriticalSection cs;
 
 	// List of root directory items
-	typedef std::list<Directory*> DirList;
+	typedef std::list<Directory::Ptr> DirList;
 	DirList directories;
 
 	/** Map real name to virtual name - multiple real names may be mapped to a single virtual one */
@@ -277,14 +278,14 @@ private:
 	
 	Directory::File::Set::const_iterator findFile(const string& virtualFile) const throw(ShareException);
 
-	Directory* buildTree(const string& aName, Directory* aParent);
+	Directory::Ptr buildTree(const string& aName, const Directory::Ptr& aParent);
 
 	void rebuildIndices();
 
 	void updateIndices(Directory& aDirectory);
 	void updateIndices(Directory& dir, const Directory::File::Set::iterator& i);
 	
-	Directory* merge(Directory* directory);
+	Directory::Ptr merge(const Directory::Ptr& directory);
 	
 	void generateXmlList();
 	StringList notShared;
@@ -293,7 +294,7 @@ private:
 	
 	string findRealRoot(const string& virtualRoot, const string& virtualLeaf) const throw(ShareException);
 
-	Directory* getDirectory(const string& fname);
+	Directory::Ptr getDirectory(const string& fname);
 
 	int run();
 

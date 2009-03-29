@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,16 +94,48 @@ uint64_t QueueItem::getAverageSpeed() const {
 	return totalSpeed;
 }
 
+namespace {
+
+inline int64_t roundDown(int64_t size, int64_t blockSize) {
+	return ((size + blockSize / 2) / blockSize) * blockSize;
+}
+inline int64_t roundUp(int64_t size, int64_t blockSize) {
+	return ((size + blockSize - 1) / blockSize) * blockSize;
+}
+
+}
+
 Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_t lastSpeed, const PartialSource::Ptr partialSource) const {
 	if(getSize() == -1 || blockSize == 0) {
 		return Segment(0, -1);
 	}
 	
-	if(!BOOLSETTING(MULTI_CHUNK) && !downloads.empty()) {
-		// file is already running and segmented downloads are disabled
-		return Segment(-1, 0);
-	}
+	if(!BOOLSETTING(MULTI_CHUNK)) {
+		if(!downloads.empty()) {
+			return Segment(-1, 0);
+		}
 
+		int64_t start = 0;
+		int64_t end = getSize();
+
+		if(!done.empty()) {
+			const Segment& first = *done.begin();
+
+			if(first.getStart() > 0) {
+				end = roundUp(first.getStart(), blockSize);
+			} else {
+				start = roundDown(first.getEnd(), blockSize);
+
+				if(done.size() > 1) {
+					const Segment& second = *(++done.begin());
+					end = roundUp(second.getStart(), blockSize);
+				}
+			}
+		}
+
+		return Segment(start, std::min(getSize(), end) - start);
+	}
+	
 	if(downloads.size() >= maxSegments ||
 		(BOOLSETTING(DONT_BEGIN_SEGMENT) && (size_t)(SETTING(DONT_BEGIN_SEGMENT_SPEED) * 1024) < getAverageSpeed()))
 	{
@@ -125,22 +157,17 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 
 	/***************************/
 
-	int64_t targetSize;
-	if(BOOLSETTING(MULTI_CHUNK)) {
-		double done = static_cast<double>(getDownloadedBytes()) / getSize();
+	double donePart = static_cast<double>(getDownloadedBytes()) / getSize();
 		
-		// We want smaller blocks at the end of the transfer, squaring gives a nice curve...
-		targetSize = static_cast<int64_t>(static_cast<double>(wantedSize) * std::max(0.25, (1. - (done * done))));
+	// We want smaller blocks at the end of the transfer, squaring gives a nice curve...
+	int64_t targetSize = static_cast<int64_t>(static_cast<double>(wantedSize) * std::max(0.25, (1. - (donePart * donePart))));
 		
-		if(targetSize > blockSize) {
-			// Round off to nearest block size
-			targetSize = ((targetSize + (blockSize / 2)) / blockSize) * blockSize;
-		} else {
-			targetSize = blockSize;
-		}		
+	if(targetSize > blockSize) {
+		// Round off to nearest block size
+	targetSize = roundDown(targetSize, blockSize);
 	} else {
-		targetSize = getSize() - getDownloadedBytes();
-	}
+		targetSize = blockSize;
+	}		
 
 	int64_t start = 0;
 	int64_t curSize = targetSize;

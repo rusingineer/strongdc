@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,15 +31,20 @@
 
 namespace dcpp {
 
-class UploadQueueItem : public FastAlloc<UploadQueueItem>, public intrusive_ptr_base, public UserInfoBase {
-public:
-	UploadQueueItem(UserPtr u, const string& file, int64_t p, int64_t sz, uint64_t itime) :
-		user(u), file(file), pos(p), size(sz), time(itime) { inc(); }
+struct WaitingUser {
+	UserPtr user;
+	string token;
 	
-	~UploadQueueItem() throw() { }
+	operator const UserPtr&() const { return user; }
+};
+
+class UploadQueueItem : public FastAlloc<UploadQueueItem>, public intrusive_ptr_base<UploadQueueItem>, public UserInfoBase {
+public:
+	UploadQueueItem(UserPtr u, const string& _file, int64_t p, int64_t sz, uint64_t itime) :
+		user(u), file(_file), pos(p), size(sz), time(itime) { inc(); }
 	
 	typedef vector<UploadQueueItem*> List;
-	typedef deque<pair<UserPtr, UploadQueueItem::List>> SlotQueue;
+	typedef deque<pair<WaitingUser, UploadQueueItem::List>> SlotQueue;
 
 	static int compareItems(const UploadQueueItem* a, const UploadQueueItem* b, uint8_t col) {
 		switch(col) {
@@ -74,6 +79,7 @@ public:
 	uint64_t getTime() const { return time; }
 
 	GETSET(int64_t, pos, Pos);
+	
 private:
 	string file;
 	int64_t size;
@@ -147,7 +153,7 @@ private:
 	SlotMap connectingUsers;
 	UploadQueueItem::SlotQueue waitingUsers;
 
-	size_t addFailedUpload(const UserPtr& aUser, const string& file, int64_t pos, int64_t size);
+	size_t addFailedUpload(const UserPtr& aUser, const string& token, const string& file, int64_t pos, int64_t size);
 	void notifyQueuedUsers();
 
 	void throttleSetup();

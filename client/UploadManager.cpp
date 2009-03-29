@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -267,7 +267,7 @@ ok:
 				slotType = UserConnection::PARTIALSLOT;
 			} else {
 				delete is;
-				aSource.maxedOut(addFailedUpload(aSource.getUser(), sourceFile, aStartPos, fileSize));
+				aSource.maxedOut(addFailedUpload(aSource.getUser(), aSource.getToken(), sourceFile, aStartPos, fileSize));
 				aSource.disconnect();
 				return false;
 			}
@@ -386,8 +386,21 @@ void UploadManager::reserveSlot(const UserPtr& aUser, uint64_t aTime, const stri
 		Lock l(cs);
 		reservedSlots[aUser] = GET_TICK() + aTime*1000;
 	}
+	
 	if(aUser->isOnline())
-		ClientManager::getInstance()->connect(aUser, Util::toString(Util::rand()), hubHint);	
+	{
+		string token;
+		
+		// find user in uploadqueue to connect with correct token
+		UploadQueueItem::SlotQueue::iterator it = find_if(waitingUsers.begin(), waitingUsers.end(), CompareFirst<UserPtr, UploadQueueItem::List>(aUser));
+		if(it != waitingUsers.end()) {
+			token = it->first.token;
+		} else {
+			token = Util::toString(Util::rand());
+		}
+		
+		ClientManager::getInstance()->connect(aUser, token, hubHint);
+	}
 }
 
 void UploadManager::unreserveSlot(const UserPtr& aUser) {
@@ -508,12 +521,13 @@ void UploadManager::logUpload(const Upload* u) {
 	fire(UploadManagerListener::Complete(), u);
 }
 
-size_t UploadManager::addFailedUpload(const UserPtr& aUser, const string& file, int64_t pos, int64_t size) {
+size_t UploadManager::addFailedUpload(const UserPtr& aUser, const string& token, const string& file, int64_t pos, int64_t size) {
 	uint64_t currentTime = GET_TIME();
 	bool found = false;
 
 	UploadQueueItem::SlotQueue::iterator it = find_if(waitingUsers.begin(), waitingUsers.end(), CompareFirst<UserPtr, UploadQueueItem::List>(aUser));
 	if(it != waitingUsers.end()) {
+		it->first.token = token;
 		for(UploadQueueItem::List::const_iterator i = it->second.begin(); i != it->second.end(); i++) {
 			if((*i)->getFile() == file) {
 				(*i)->setPos(pos);
@@ -528,7 +542,12 @@ size_t UploadManager::addFailedUpload(const UserPtr& aUser, const string& file, 
 		if(it == waitingUsers.end()) {
 			UploadQueueItem::List list;
 			list.push_back(uqi);
-			waitingUsers.push_back(make_pair(aUser, list));
+			
+			WaitingUser wu;
+			wu.token = token;
+			wu.user = aUser;
+			
+			waitingUsers.push_back(make_pair(wu, list));
 			it = waitingUsers.end() - 1;
 		} else {
 			it->second.push_back(uqi);
@@ -583,13 +602,13 @@ void UploadManager::notifyQueuedUsers() {
 		freeslots -= connectingUsers.size();
 		while(freeslots > 0) {
 			// let's keep him in the connectingList until he asks for a file
-			UserPtr u = waitingUsers.front().first;
-			clearUserFiles(u);
+			WaitingUser wu = waitingUsers.front().first;
+			clearUserFiles(wu.user);
 			
-			connectingUsers[u] = GET_TICK();
+			connectingUsers[wu.user] = GET_TICK();
 			
 			// TODO hubHint
-			ClientManager::getInstance()->connect(u, Util::toString(Util::rand()), Util::emptyString);
+			ClientManager::getInstance()->connect(wu.user, wu.token, Util::emptyString);
 
 			freeslots--;
 		}

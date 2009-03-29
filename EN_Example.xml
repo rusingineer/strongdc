@@ -580,7 +580,7 @@
 		<String Name="SettingsAutoPriorityDefault">Use Auto Priority by default</String>
 		<String Name="SettingsAutoRefreshTime">Auto refresh time</String>
 		<String Name="SettingsAutoSearch">Automatically search for alternative TTH source every</String>
-		<String Name="SettingsAutoSearchAutoMatch">Automatically match queue for auto search hits</String>
+		<String Name="SettingsAutoSearchAutoMatch">Automatically match queue for search hits</String>
 		<String Name="SettingsAutoSearchLimit">Max sources for autosearch</String>
 		<String Name="SettingsAutoSlots">Maximum auto opened</String>
 		<String Name="SettingsAvipreview">File Preview</String>

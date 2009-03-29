@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,20 +24,16 @@
 
 namespace dcpp {
 
+template<typename T>
 class intrusive_ptr_base
 {
 public:
 	void inc() throw() {
-		dcassert(ref>=0);
-		Thread::safeInc(ref);
+		intrusive_ptr_add_ref(this);
 	}
 
 	void dec() throw() {
-		dcassert(ref>0);
-		
-		if ( (Thread::safeDec(ref)) == 0 ) {
-			delete this;
-		}
+		intrusive_ptr_release(this);
 	}
 
 	bool unique() const throw() {
@@ -47,16 +43,13 @@ public:
 protected:
 	intrusive_ptr_base() throw() : ref(0) { }
 	
-	virtual ~intrusive_ptr_base() throw() {
-		dcassert(!ref);
-	}
-
 private:
+	friend void intrusive_ptr_add_ref(intrusive_ptr_base* p) { Thread::safeInc(p->ref); }
+	friend void intrusive_ptr_release(intrusive_ptr_base* p) { if(Thread::safeDec(p->ref) == 0) { delete static_cast<T*>(p); } }
+
 	volatile long ref;
 };
 
-inline void intrusive_ptr_add_ref(intrusive_ptr_base* p) { p->inc(); }
-inline void intrusive_ptr_release(intrusive_ptr_base* p) { p->dec(); }
 
 struct DeleteFunction {
 	template<typename T>

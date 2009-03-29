@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1188,9 +1188,12 @@ void QueueManager::rechecked(QueueItem* qi) {
 void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFinish) throw() {
 	UserList getConn;
 	string fname;
-	UserPtr up = aDownload->getUser();
-	int flag = 0;
-	bool checkList = aDownload->isSet(Download::FLAG_CHECK_FILE_LIST) && aDownload->isSet(Download::FLAG_TESTSUR);
+	
+	UserPtr user = aDownload->getUser();
+	string hubUrl = aDownload->getUserConnection().getHubUrl();
+	
+	Flags::MaskType flag = 0;
+	bool downloadList = aDownload->isSet(Download::FLAG_CHECK_FILE_LIST) && aDownload->isSet(Download::FLAG_TESTSUR);
 
 	{
 		Lock l(cs);
@@ -1205,17 +1208,25 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 					if( (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) && directories.find(aDownload->getUser()) != directories.end()) ||
 						(q->isSet(QueueItem::FLAG_MATCH_QUEUE)) )
 					{
+						dcassert(finished);
 											
 						fname = aDownload->getPFS();
-						up = aDownload->getUser();
+						user = aDownload->getUser();
 						flag = (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) ? (QueueItem::FLAG_DIRECTORY_DOWNLOAD) : 0)
 							| (q->isSet(QueueItem::FLAG_MATCH_QUEUE) ? QueueItem::FLAG_MATCH_QUEUE : 0) | QueueItem::FLAG_TEXT;
 					} else {
 						fire(QueueManagerListener::PartialList(), aDownload->getUser(), aDownload->getPFS());
 					}
-				}		
+				} else {
+					// partial filelist probably failed, redownload full list
+					dcassert(!finished);
+					
+					downloadList = true;
+					flag = q->getFlags() & ~QueueItem::FLAG_PARTIAL_LIST;	
+				}
+					
 				fire(QueueManagerListener::Removed(), q);
-
+		
 				userQueue.remove(q);
 				fileQueue.remove(q);
 			}
@@ -1245,7 +1256,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 						if(q->isSet(QueueItem::FLAG_MATCH_QUEUE)) 
 						{
 							fname = q->getListName();
-							up = aDownload->getUser();
+							user = aDownload->getUser();
 							flag = q->isSet(QueueItem::FLAG_MATCH_QUEUE) ? QueueItem::FLAG_MATCH_QUEUE : 0;
 						} 
 
@@ -1343,14 +1354,13 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 	}
 
 	if(!fname.empty()) {
-		processList(fname, up, flag);
+		processList(fname, user, flag);
 	}
 
 	// check filelist only if user is still online (hasn't been banned for testsur)
-	if(up->isOnline() && checkList) {
+	if(user->isOnline() && downloadList) {
 		try {
-			// TODO hubHint
-			QueueManager::getInstance()->addList(up, Util::emptyString, QueueItem::FLAG_CHECK_FILE_LIST);
+			addList(user, hubUrl, flag == 0 ? QueueItem::FLAG_CHECK_FILE_LIST : flag);
 		} catch(const Exception&) {}
 	}
 }

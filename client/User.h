@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 namespace dcpp {
 
 /** A user connected to one or more hubs. */
-class User : public FastAlloc<User>, public intrusive_ptr_base, public Flags
+class User : public FastAlloc<User>, public intrusive_ptr_base<User>, public Flags
 {
 public:
 	/** Each flag is set if it's true in at least one hub */
@@ -158,7 +158,7 @@ private:
 class NmdcHub;
 #include "UserInfoBase.h"
 
-class OnlineUser : public FastAlloc<OnlineUser>, public intrusive_ptr_base, public UserInfoBase {
+class OnlineUser : public FastAlloc<OnlineUser>, public intrusive_ptr_base<OnlineUser>, public UserInfoBase {
 public:
 	enum {
 		COLUMN_FIRST,
@@ -182,7 +182,7 @@ public:
 	};
 
 	OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_);
-	~OnlineUser() { }
+	~OnlineUser() throw() { }
 
 	operator UserPtr&() { return getUser(); }
 	operator const UserPtr&() const { return getUser(); }
