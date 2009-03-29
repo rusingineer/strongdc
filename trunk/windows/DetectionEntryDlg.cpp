@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2008 Crise, crise@mail.berlios.de
+ * Copyright (C) 2006-2009 Crise, crise@mail.berlios.de
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

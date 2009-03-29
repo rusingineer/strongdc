@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2008 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,20 +71,13 @@ ShareManager::~ShareManager() {
 
 	StringList lists = File::findFiles(Util::getConfigPath(), "files?*.xml.bz2");
 	for_each(lists.begin(), lists.end(), File::deleteFile);
-
-	for_each(directories.begin(), directories.end(), DeleteFunction());
 }
 
-ShareManager::Directory::Directory(const string& aName, Directory* aParent) : 
+ShareManager::Directory::Directory(const string& aName, const ShareManager::Directory::Ptr& aParent) :
 	name(aName),
 	parent(aParent),
 	fileTypes(1 << SearchManager::TYPE_DIRECTORY)
 {
-}
-
-ShareManager::Directory::~Directory() {
-	for(MapIter i = directories.begin(); i != directories.end(); ++i)
-		delete i->second;
 }
 
 string ShareManager::Directory::getADCPath() const throw() {
@@ -250,7 +243,8 @@ ShareManager::Directory::File::Set::const_iterator ShareManager::findFile(const 
 	if(dmi == directories.end()) {
 		throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
 	}
-	Directory* d = *dmi;
+
+	Directory::Ptr d = *dmi;
 
 	string::size_type j = i + 1;
 	while( (i = virtualFile.find('/', j)) != string::npos) {
@@ -304,7 +298,7 @@ void ShareManager::load(SimpleXML& aXml) {
 			string vName = validateVirtual(virtualName.empty() ? Util::getLastDir(realPath) : virtualName);
 			shares.insert(std::make_pair(realPath, vName));
 			if(getByVirtual(vName) == directories.end()) {
-				directories.push_back(new Directory(vName, 0));
+				directories.push_back(Directory::create(vName));
 			}
 		}
 		aXml.stepOut();
@@ -338,7 +332,7 @@ struct ShareLoader : public SimpleXMLReader::CallBack {
 						}
 					}
 				} else if(cur) {
-					cur = new ShareManager::Directory(name, cur);
+					cur = ShareManager::Directory::create(name, cur);
 					cur->getParent()->directories[cur->getName()] = cur;
 				}
 			}
@@ -373,7 +367,7 @@ struct ShareLoader : public SimpleXMLReader::CallBack {
 private:
 	ShareManager::DirList& dirs;
 
-	ShareManager::Directory* cur;
+	ShareManager::Directory::Ptr cur;
 	size_t depth;
 };
 
@@ -397,7 +391,7 @@ bool ShareManager::loadCache() throw() {
 		SimpleXMLReader(&loader).fromXML(txt);
 
 		for(DirList::const_iterator i = directories.begin(); i != directories.end(); ++i) {
-			Directory* d = *i;
+			const Directory::Ptr& d = *i;
 			updateIndices(*d);
 		}
 
@@ -469,7 +463,7 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 		removeDirectory(*i);
 	}
 	
-	Directory* dp = buildTree(realPath, 0);
+		Directory::Ptr dp = buildTree(realPath, Directory::Ptr());
 	
 	string vName = validateVirtual(virtualName);
 	dp->setName(vName);
@@ -484,7 +478,7 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 	}
 }
 
-ShareManager::Directory* ShareManager::merge(Directory* directory) {
+ShareManager::Directory::Ptr ShareManager::merge(const Directory::Ptr& directory) {
 	for(DirList::iterator i = directories.begin(); i != directories.end(); ++i) {
 		if(stricmp((*i)->getName(), directory->getName()) == 0) {
 			dcdebug("Merging directory %s\n", directory->getName().c_str());
@@ -499,22 +493,20 @@ ShareManager::Directory* ShareManager::merge(Directory* directory) {
 	return directory;
 }
 
-void ShareManager::Directory::merge(Directory* source) {
+void ShareManager::Directory::merge(const Directory::Ptr& source) {
 	for(MapIter i = source->directories.begin(); i != source->directories.end(); ++i) {
-		Directory* subSource = i->second;
+		Directory::Ptr subSource = i->second;
 		
 		MapIter ti = directories.find(subSource->getName());
 		if(ti == directories.end()) {
 			if(findFile(subSource->getName()) != files.end()) {
 				dcdebug("File named the same as directory");
-				delete subSource;
 			} else {
 				directories.insert(std::make_pair(subSource->getName(), subSource));
 			}
 		} else {
-			Directory* subTarget = ti->second;
+			Directory::Ptr subTarget = ti->second;
 			subTarget->merge(subSource);
-			delete subSource;
 		}
 	}
 
@@ -548,7 +540,6 @@ void ShareManager::removeDirectory(const string& realPath) {
 	std::string vName = i->second;
 	for(DirList::iterator j = directories.begin(); j != directories.end(); ) {
 		if(stricmp((*j)->getName(), vName) == 0) {
-			delete *j;
 			directories.erase(j++);
 		} else {
 			++j;
@@ -560,7 +551,7 @@ void ShareManager::removeDirectory(const string& realPath) {
 	// Readd all directories with the same vName
 	for(i = shares.begin(); i != shares.end(); ++i) {
 		if(stricmp(i->second, vName) == 0) {
-			Directory* dp = buildTree(i->first, 0);
+			Directory::Ptr dp = buildTree(i->first, 0);
 			dp->setName(i->second);
 			merge(dp);
 		}
@@ -758,8 +749,8 @@ private:
 
 };
 
-ShareManager::Directory* ShareManager::buildTree(const string& aName, Directory* aParent) {
-	Directory* dir = new Directory(Util::getLastDir(aName), aParent);
+ShareManager::Directory::Ptr ShareManager::buildTree(const string& aName, const Directory::Ptr& aParent) {
+	Directory::Ptr dir = Directory::create(Util::getLastDir(aName), aParent);
 
 	Directory::File::Set::iterator lastFileIter = dir->files.begin();
 
@@ -865,7 +856,7 @@ void ShareManager::updateIndices(Directory& dir, const Directory::File::Set::ite
 	HashFileIter j = tthIndex.find(f.getTTH());
 	if(j == tthIndex.end()) {
 		dir.size+=f.getSize();
-		sharedSize+=f.getSize();
+		sharedSize += f.getSize();
 	}
 
 	dir.addType(getType(f.getName()));
@@ -928,14 +919,13 @@ int ShareManager::run() {
 
 		DirList newDirs;
 		for(StringPairIter i = dirs.begin(); i != dirs.end(); ++i) {
-			Directory* dp = buildTree(i->second, 0);
+			Directory::Ptr dp = buildTree(i->second, Directory::Ptr());
 			dp->setName(i->first);
 			newDirs.push_back(dp);
 		}
 
 		{
 			Lock l(cs);
-			for_each(directories.begin(), directories.end(), DeleteFunction());
 			directories.clear();
 			
 			for(DirList::iterator i = newDirs.begin(); i != newDirs.end(); ++i) {
@@ -1047,7 +1037,7 @@ MemoryInputStream* ShareManager::generatePartialList(const string& dir, bool rec
 	} else {
 		string::size_type i = 1, j = 1;
 		
-		Directory* root = 0;
+		Directory::Ptr root;
 		
 		bool first = true;
 		while( (i = dir.find('/', j)) != string::npos) {
@@ -1490,10 +1480,10 @@ void ShareManager::search(SearchResultList& results, const StringList& params, S
 	}
 }
 
-ShareManager::Directory* ShareManager::getDirectory(const string& fname) {
+ShareManager::Directory::Ptr ShareManager::getDirectory(const string& fname) {
 	for(StringMapIter mi = shares.begin(); mi != shares.end(); ++mi) {
 		if(strnicmp(fname, mi->first, mi->first.length()) == 0) {
-			Directory* d = NULL;
+			Directory::Ptr d;
 			for(DirList::iterator i = directories.begin(); i != directories.end(); ++i) {
 				if(stricmp((*i)->getName(), mi->second) == 0) {
 					d = *i;
@@ -1501,7 +1491,7 @@ ShareManager::Directory* ShareManager::getDirectory(const string& fname) {
 			}
 			
 			if(!d) {
-				return NULL;
+				return Directory::Ptr();
 			}
 
 			string::size_type i;
@@ -1510,13 +1500,13 @@ ShareManager::Directory* ShareManager::getDirectory(const string& fname) {
 				Directory::MapIter dmi = d->directories.find(fname.substr(j, i-j));
 				j = i + 1;
 				if(dmi == d->directories.end())
-					return NULL;
+					return Directory::Ptr();
 				d = dmi->second;
 			}
 			return d;
 		}
 	}
-	return NULL;
+	return Directory::Ptr();
 }
 
 void ShareManager::on(DownloadManagerListener::Complete, const Download* d, bool) throw() {
@@ -1541,7 +1531,7 @@ void ShareManager::on(DownloadManagerListener::Complete, const Download* d, bool
 
 void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw() {
 	Lock l(cs);
-	Directory* d = getDirectory(fname);
+	Directory::Ptr d = getDirectory(fname);
 	if(d) {
 		Directory::File::Set::const_iterator i = d->findFile(Util::getFileName(fname));
 		if(i != d->files.end()) {

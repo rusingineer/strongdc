@@ -1,3 +1,18 @@
+** svn434
+	fixed upload connection tokens (grant extra slot, upload queue etc.)
+	added cheating string for old clients
+	get full list when partial one is not available
+	fix round-off issue when segmented downloads are disabled (DC++ BZR)
+	fix crash on too many connections (DC++ BZR)
+	fixed slots info in ADC hubs
+	automanage sharemanager memory (DC++ BZR)
+	fixed info update on limiter change from toolbar
+	improved manual searching for something planned for autosearch
+	using OpenSSL with disabled TLS extension
+
+** svn433
+	released 2.22
+
 ** svn432
 	fixed hubhints
 	fixed Highest priority extra download slots

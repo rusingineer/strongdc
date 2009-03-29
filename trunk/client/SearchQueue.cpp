@@ -37,9 +37,17 @@ bool SearchQueue::add(const Search& s)
 	for(deque<Search>::iterator i = searchQueue.begin(); i != searchQueue.end(); i++)
 	{
 		// check dupe
-		if(*i == s){
+		if(*i == s) {
 			void* aOwner = *s.owners.begin();
 			i->owners.insert(aOwner);
+			
+			// if previous search was autosearch and current one isn't, it should be readded before autosearches
+			if(s.token != "auto" && i->token == "auto")
+			{
+				searchQueue.erase(i);
+				break;
+			}
+			
 			return false;
 		}
 	}

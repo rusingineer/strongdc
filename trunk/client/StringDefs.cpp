@@ -576,7 +576,7 @@ std::string dcpp::ResourceManager::strings[] = {
 "Use Auto Priority by default", 
 "Auto refresh time", 
 "Automatically search for alternative TTH source every", 
-"Automatically match queue for auto search hits", 
+"Automatically match queue for search hits", 
 "Max sources for autosearch", 
 "Maximum auto opened", 
 "File Preview", 

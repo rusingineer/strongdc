@@ -1357,6 +1357,7 @@ LRESULT MainFrame::onCloseWindows(WORD , WORD wID, HWND , BOOL& ) {
 
 LRESULT MainFrame::onLimiter(WORD , WORD , HWND, BOOL& ) {
 	SettingsManager::getInstance()->set(SettingsManager::THROTTLE_ENABLE, !BOOLSETTING(THROTTLE_ENABLE));
+	ClientManager::getInstance()->infoUpdated();
 	return 0;
 }
 

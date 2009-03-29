@@ -619,7 +619,7 @@ private:
 	}	
 };
 
-// Copyright (C) 2005-2008 Big Muscle, StrongDC++
+// Copyright (C) 2005-2009 Big Muscle, StrongDC++
 template<class T, int ctrlId, class key, class hashFunc, class equalKey>
 class TypedTreeListViewCtrl : public TypedListViewCtrl<T, ctrlId> 
 {

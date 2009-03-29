@@ -579,7 +579,7 @@ enum Strings { // @DontAdd
 	SETTINGS_AUTO_PRIORITY_DEFAULT, // "Use Auto Priority by default"
 	SETTINGS_AUTO_REFRESH_TIME, // "Auto refresh time"
 	SETTINGS_AUTO_SEARCH, // "Automatically search for alternative TTH source every"
-	SETTINGS_AUTO_SEARCH_AUTO_MATCH, // "Automatically match queue for auto search hits"
+	SETTINGS_AUTO_SEARCH_AUTO_MATCH, // "Automatically match queue for search hits"
 	SETTINGS_AUTO_SEARCH_LIMIT, // "Max sources for autosearch"
 	SETTINGS_AUTO_SLOTS, // "Maximum auto opened"
 	SETTINGS_AVIPREVIEW, // "File Preview"
