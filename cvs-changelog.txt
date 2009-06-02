@@ -1,3 +1,9 @@
+** svn435
+	changed hashing pause to DC++ code
+	hub hint used on more places
+	hopefully fixed extra slot issues
+	upload queue position and TLS connections are enabled in spite of stealth mode
+
 ** svn434
 	fixed upload connection tokens (grant extra slot, upload queue etc.)
 	added cheating string for old clients

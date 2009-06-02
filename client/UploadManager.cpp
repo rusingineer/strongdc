@@ -258,8 +258,8 @@ ok:
 			
 		if(!(hasReserved || isFavorite || getAutoSlot() || hasFreeSlot)) {
 			bool supportsFree = aSource.isSet(UserConnection::FLAG_SUPPORTS_MINISLOTS);
-			bool allowedFree = aSource.isSet(UserConnection::FLAG_OP) || getFreeExtraSlots() > 0;
-			bool partialFree = partial && extraPartial < SETTING(EXTRA_PARTIAL_SLOTS);
+			bool allowedFree = (slotType == UserConnection::EXTRASLOT) || aSource.isSet(UserConnection::FLAG_OP) || getFreeExtraSlots() > 0;
+			bool partialFree = partial && ((slotType == UserConnection::PARTIALSLOT) || (extraPartial < SETTING(EXTRA_PARTIAL_SLOTS)));
 			
 			if(free && supportsFree && allowedFree) {
 				slotType = UserConnection::EXTRASLOT;

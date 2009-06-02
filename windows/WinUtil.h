@@ -138,7 +138,9 @@ public:
 		bool nonFavOnly;
 	};
 
-	void appendUserItems(CMenu& menu) {
+	void appendUserItems(CMenu& menu, const string& _hubHint) {
+		hubHint = _hubHint;
+		
 		UserTraits traits = ((T*)this)->getUserList().forEachSelectedT(UserTraits()); 
 
 		menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));

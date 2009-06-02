@@ -115,7 +115,7 @@ public:
 	void listLen(const string& aLength) { send("$ListLen " + aLength + '|'); }
 	
 	void maxedOut(size_t qPos = 0) {
-		bool sendPos = !isSet(UserConnection::FLAG_STEALTH) && qPos > 0;
+		bool sendPos = qPos > 0;
 
 		if(isSet(FLAG_NMDC)) {
 			send("$MaxedOut" + (sendPos ? (" " + Util::toString(qPos)) : Util::emptyString) + "|");

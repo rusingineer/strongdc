@@ -102,45 +102,34 @@ public:
 		Lock l(cs);
 		store.save();
 	}
-	// KUL - hash progress dialog patch (begin)
-	void pause() {
-		//fire(HashManagerListener::Paused());
-		hasher.pause();
-	}
 
-	void resume() {
-		hasher.resume();
-		//fire(HashManagerListener::Resumed());
-	}
+	struct HashPauser {
+		HashPauser();
+		~HashPauser();
+	};
+	
+	unsigned getPaused() const { return hasher.getPaused(); }
+	void pauseHashing();
+	void resumeHashing();	
 
-	bool isPaused() const { return hasher.isPaused(); }
-	// KUL - hash progress dialog patch (end)
 private:
 	class Hasher : public Thread {
 	public:
-		Hasher() : stop(false), running(false), paused(false), rebuild(false), currentSize(0) { } // KUL - hash progress dialog patch
+		Hasher() : stop(false), running(false), paused(0), rebuild(false), currentSize(0) { }
 
 		void hashFile(const string& fileName, int64_t size);
+
+		void pauseHashing();
+		void resumeHashing();
+		unsigned getPaused() const { return paused; }
 
 		void stopHashing(const string& baseDir);
 		int run();
 		bool fastHash(const string& fname, uint8_t* buf, TigerTree& tth, int64_t size);
 		void getStats(string& curFile, int64_t& bytesLeft, size_t& filesLeft);
-		void shutdown() { stop = true; s.signal(); p.signal(); }
+		void shutdown() { stop = true; s.signal(); }
 		void scheduleRebuild() { rebuild = true; s.signal(); }
 
-		// KUL - hash progress dialog patch (begin)
-		void pause() {
-			paused = true;
-		}
-
-		void resume() {
-			paused = false;
-			p.signal();
-		}
-
-		bool isPaused() const { return paused; }
-		// KUL - hash progress dialog patch (end)
 	private:
 		// Case-sensitive (faster), it is rather unlikely that case changes, and if it does it's harmless.
 		// map because it's sorted (to avoid random hash order that would create quite strange shares while hashing)
@@ -150,11 +139,10 @@ private:
 		WorkMap w;
 		CriticalSection cs;
 		Semaphore s;
-		Semaphore p; // KUL - hash progress dialog patch
 
-		bool paused; // KUL - hash progress dialog patch
 		bool stop;
 		bool running;
+		unsigned paused;
 		bool rebuild;
 		string currentFile;
 		int64_t currentSize;

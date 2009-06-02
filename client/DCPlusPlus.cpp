@@ -114,7 +114,7 @@ void shutdown() {
 
 	BufferedSocket::waitShutdown();
 	
-	QueueManager::getInstance()->saveQueue();
+	QueueManager::getInstance()->saveQueue(true);
 	SettingsManager::getInstance()->save();
 
 	DebugManager::deleteInstance();

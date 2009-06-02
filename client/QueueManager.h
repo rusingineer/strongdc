@@ -140,8 +140,10 @@ public:
 	QueueItem::Priority hasDownload(const UserPtr& aUser) throw();
 	
 	void loadQueue() throw();
-	void saveQueue() throw();
+	void saveQueue(bool force = false) throw();
 
+	void noDeleteFileList(const string& path);
+	
 	bool handlePartialSearch(const TTHValue& tth, PartsInfo& _outPartsInfo);
 	bool handlePartialResult(const UserPtr& aUser, const string& hubHint, const TTHValue& tth, const QueueItem::PartialSource& partialSource, PartsInfo& outPartialInfo);
 	
@@ -314,10 +316,12 @@ private:
 	bool dirty;
 	/** Next search */
 	uint64_t nextSearch;
+	/** File lists not to delete */
+	StringList protectedFileLists;
 	/** Sanity check for the target filename */
 	static string checkTarget(const string& aTarget, int64_t aSize) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
-	bool addSource(QueueItem* qi, const UserPtr& aUser, Flags::MaskType addBad) throw(QueueException, FileException);
+	bool addSource(QueueItem* qi, const UserPtr& aUser, const string& hubHint, Flags::MaskType addBad) throw(QueueException, FileException);
 
 	void processList(const string& name, UserPtr& user, int flags);
 
