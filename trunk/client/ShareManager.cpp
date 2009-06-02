@@ -52,7 +52,7 @@
 namespace dcpp {
 
 ShareManager::ShareManager() : hits(0), xmlListLen(0), bzXmlListLen(0),
-	xmlDirty(true), refreshDirs(false), update(false), initial(true), listN(0), refreshing(0),
+	xmlDirty(true), forceXmlRefresh(false), refreshDirs(false), update(false), initial(true), listN(0), refreshing(0),
 	lastXmlUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0)
 { 
 	SettingsManager::getInstance()->addListener(this);
@@ -69,8 +69,10 @@ ShareManager::~ShareManager() {
 
 	join();
 
-	StringList lists = File::findFiles(Util::getConfigPath(), "files?*.xml.bz2");
-	for_each(lists.begin(), lists.end(), File::deleteFile);
+	if(bzXmlRef.get()) {
+		bzXmlRef.reset();
+		File::deleteFile(getBZXmlFile());
+	}
 }
 
 ShareManager::Directory::Directory(const string& aName, const ShareManager::Directory::Ptr& aParent) :
@@ -279,6 +281,7 @@ bool ShareManager::hasVirtual(const string& virtualName) const throw() {
 void ShareManager::load(SimpleXML& aXml) {
 	Lock l(cs);
 
+	aXml.resetCurrentChild();
 	if(aXml.findChild("Share")) {
 		aXml.stepIn();
 		while(aXml.findChild("Directory")) {
@@ -463,7 +466,9 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 		removeDirectory(*i);
 	}
 	
-		Directory::Ptr dp = buildTree(realPath, Directory::Ptr());
+	HashManager::HashPauser pauser;	
+	
+	Directory::Ptr dp = buildTree(realPath, Directory::Ptr());
 	
 	string vName = validateVirtual(virtualName);
 	dp->setName(vName);
@@ -547,6 +552,8 @@ void ShareManager::removeDirectory(const string& realPath) {
 	}
 
 	shares.erase(i);
+
+	HashManager::HashPauser pauser;
 
 	// Readd all directories with the same vName
 	for(i = shares.begin(); i != shares.end(); ++i) {
@@ -901,11 +908,6 @@ StringPairList ShareManager::getDirectories() const throw() {
 }
 
 int ShareManager::run() {
-	// KUL - hash progress dialog patch
-	// cache the paused state of hashmanager, if it's paused when we start, don't resume it when we're finished.
-	bool pause = HashManager::getInstance()->isPaused();
-	if(!pause)
-		HashManager::getInstance()->pause();
 		
 	StringPairList dirs = getDirectories();
 	// Don't need to refresh if no directories are shared
@@ -913,6 +915,8 @@ int ShareManager::run() {
 		refreshDirs = false;
 
 	if(refreshDirs) {
+		HashManager::HashPauser pauser;
+				
 		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_INITIATED));
 		sharedSize = 0;
 		lastFullUpdate = GET_TICK();
@@ -942,8 +946,6 @@ int ShareManager::run() {
 	if(update) {
 		ClientManager::getInstance()->infoUpdated();
 	}
-	if(!pause) 
-		HashManager::getInstance()->resume(); // KUL - hash progress dialog patch
 	refreshing = 0;
 	return 0;
 }
@@ -962,7 +964,7 @@ void ShareManager::getBloom(ByteVector& v, size_t k, size_t m, size_t h) const {
 
 void ShareManager::generateXmlList() {
 	Lock l(cs);
-	if(xmlDirty && (lastXmlUpdate + 15 * 60 * 1000 < GET_TICK() || lastXmlUpdate < lastFullUpdate)) {
+	if(forceXmlRefresh || (xmlDirty && (lastXmlUpdate + 15 * 60 * 1000 < GET_TICK() || lastXmlUpdate < lastFullUpdate))) {
 		listN++;
 
 		try {
@@ -1014,6 +1016,7 @@ void ShareManager::generateXmlList() {
 		}
 
 		xmlDirty = false;
+		forceXmlRefresh = false;
 		lastXmlUpdate = GET_TICK();
 	}
 }
@@ -1548,6 +1551,7 @@ void ShareManager::on(HashManagerListener::TTHDone, const string& fname, const T
 			updateIndices(*d, it);
 		}
 		setDirty();
+		forceXmlRefresh = true;
 	}
 }
 

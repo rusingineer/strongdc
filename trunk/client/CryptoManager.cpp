@@ -138,6 +138,10 @@ CryptoManager::CryptoManager()
 			}
 		}
 
+		/// @todo remove when hubs accept this
+		SSL_CTX_set_options(clientContext, SSL_OP_NO_TICKET);
+		SSL_CTX_set_options(clientVerContext, SSL_OP_NO_TICKET);
+
 		SSL_CTX_set_verify(serverContext, SSL_VERIFY_NONE, 0);
 		SSL_CTX_set_verify(clientContext, SSL_VERIFY_NONE, 0);
 		SSL_CTX_set_verify(clientVerContext, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, 0);

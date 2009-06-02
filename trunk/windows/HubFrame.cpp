@@ -1943,7 +1943,7 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 
 	if(!isMe) {
 		menu.AppendMenu(MF_STRING, IDC_PUBLIC_MESSAGE, CTSTRING(SEND_PUBLIC_MESSAGE));
-		appendUserItems(menu);
+		appendUserItems(menu, client->getHubUrl());
 		menu.AppendMenu(MF_SEPARATOR);
 
 		if(count == 1) {

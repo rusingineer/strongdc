@@ -535,10 +535,18 @@ QueueManager::~QueueManager() throw() {
 
 	if(!BOOLSETTING(KEEP_LISTS)) {
 		string path = Util::getListPath();
+
+		std::sort(protectedFileLists.begin(), protectedFileLists.end());
+
 		StringList filelists = File::findFiles(path, "*.xml.bz2");
-		std::for_each(filelists.begin(), filelists.end(), &File::deleteFile);
+		std::sort(filelists.begin(), filelists.end());
+		std::for_each(filelists.begin(), std::set_difference(filelists.begin(), filelists.end(),
+			protectedFileLists.begin(), protectedFileLists.end(), filelists.begin()), &File::deleteFile);
+
 		filelists = File::findFiles(path, "*.DcLst");
-		std::for_each(filelists.begin(), filelists.end(), &File::deleteFile);
+		std::sort(filelists.begin(), filelists.end());
+		std::for_each(filelists.begin(), std::set_difference(filelists.begin(), filelists.end(),
+			protectedFileLists.begin(), protectedFileLists.end(), filelists.begin()), &File::deleteFile);
 	}
 }
 
@@ -716,7 +724,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 				return;
 		}
 
-		wantConnection = aUser && addSource(q, aUser, (Flags::MaskType)(addBad ? QueueItem::Source::FLAG_MASK : 0));
+		wantConnection = aUser && addSource(q, aUser, hubHint, (Flags::MaskType)(addBad ? QueueItem::Source::FLAG_MASK : 0));
 		setDirty();
 	}
 
@@ -736,7 +744,7 @@ void QueueManager::readd(const string& target, const UserPtr& aUser, const strin
 		Lock l(cs);
 		QueueItem* q = fileQueue.find(target);
 		if(q && q->isBadSource(aUser)) {
-			wantConnection = addSource(q, aUser, QueueItem::Source::FLAG_MASK);
+			wantConnection = addSource(q, aUser, hubHint, QueueItem::Source::FLAG_MASK);
 		}
 	}
 	if(wantConnection && aUser->isOnline())
@@ -781,7 +789,7 @@ string QueueManager::checkTarget(const string& aTarget, int64_t aSize) throw(Que
 }
 
 /** Add a source to an existing queue item */
-bool QueueManager::addSource(QueueItem* qi, const UserPtr& aUser, Flags::MaskType addBad) throw(QueueException, FileException) {
+bool QueueManager::addSource(QueueItem* qi, const UserPtr& aUser, const string& hubHint, Flags::MaskType addBad) throw(QueueException, FileException) {
 	bool wantConnection = (qi->getPriority() != QueueItem::PAUSED) && !userQueue.getRunning(aUser);
 
 	if(qi->isSource(aUser)) {
@@ -794,7 +802,7 @@ bool QueueManager::addSource(QueueItem* qi, const UserPtr& aUser, Flags::MaskTyp
 
 	qi->addSource(aUser);
 
-	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(Util::emptyString)) { // TODO: get hub url
+	if(aUser->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(hubHint)) {
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
 	} else {
@@ -878,7 +886,7 @@ int QueueManager::matchListing(const DirectoryListing& dl, const string& hubHint
 			TTHMap::iterator j = tthMap.find(qi->getTTH());
 			if(j != tthMap.end() && i->second->getSize() == qi->getSize()) {
 				try {
-					addSource(qi, dl.getUser(), QueueItem::Source::FLAG_FILE_NOT_AVAILABLE);
+					addSource(qi, dl.getUser(), hubHint, QueueItem::Source::FLAG_FILE_NOT_AVAILABLE);
 					matches++;
 				} catch(...) {
 					// Ignore...
@@ -924,7 +932,7 @@ void QueueManager::move(const string& aSource, const string& aTarget) throw() {
 
 			for(QueueItem::SourceConstIter i = qs->getSources().begin(); i != qs->getSources().end(); ++i) {
 				try {
-					addSource(qt, i->getUser(), QueueItem::Source::FLAG_MASK);
+					addSource(qt, i->getUser(), Util::emptyString, QueueItem::Source::FLAG_MASK); // TODO: hubhint
 				} catch(const Exception&) {
 				}
 			}
@@ -1590,8 +1598,8 @@ void QueueManager::setAutoPriority(const string& aTarget, bool ap) throw() {
 	}
 }
 
-void QueueManager::saveQueue() throw() {
-	if(!dirty)
+void QueueManager::saveQueue(bool force) throw() {
+	if(!dirty && !force)
 		return;
 		
 	Lock l(cs);	
@@ -1775,7 +1783,7 @@ void QueueLoader::startTag(const string& name, StringPairList& attribs, bool sim
 			ClientManager::getInstance()->updateNick(user, getAttrib(attribs, sNick, 1));
 
 			try {
-				if(qm->addSource(cur, user, 0) && user->isOnline())
+				if(qm->addSource(cur, user, Util::emptyString, 0) && user->isOnline())
 					// TODO save/load hubhint
 					ConnectionManager::getInstance()->getDownloadConnection(user, Util::emptyString);
 			} catch(const Exception&) {
@@ -1791,6 +1799,12 @@ void QueueLoader::endTag(const string& name, const string&) {
 			cur = NULL;
 		else if(name == "Downloads")
 			inDownloads = false;
+	}
+}
+
+void QueueManager::noDeleteFileList(const string& path) {
+	if(!BOOLSETTING(KEEP_LISTS)) {
+		protectedFileLists.push_back(path);
 	}
 }
 
@@ -1814,7 +1828,7 @@ void QueueManager::on(SearchManagerListener::SR, const SearchResultPtr& sr) thro
 				try {
 					users = qi->countOnlineUsers();
 					if(!BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) || (users >= (size_t)SETTING(MAX_AUTO_MATCH_SOURCES)))
-						wantConnection = addSource(qi, sr->getUser(), 0);
+						wantConnection = addSource(qi, sr->getUser(), sr->getHubURL(), 0);
 					added = true;
 				} catch(const Exception&) {
 					// ...

@@ -464,7 +464,7 @@ void AdcHub::handle(AdcCommand::STA, AdcCommand& c) throw() {
 	if(c.getParameters().size() < 2)
 		return;
 
-	OnlineUser* u = findUser(c.getFrom());
+	OnlineUser* u = c.getFrom() == AdcCommand::HUB_SID ? &getUser(c.getFrom(), CID()) : findUser(c.getFrom());
 	if(!u)
 		return;
 
@@ -548,7 +548,7 @@ void AdcHub::handle(AdcCommand::GET, AdcCommand& c) throw() {
 		size_t n = ShareManager::getInstance()->getSharedFiles();
 		
 		// Ideal size for m is n * k / ln(2), but we allow some slack
-		if(m > (5 * n * k / log(2.)) || m > (size_t)(1 << h)) {
+		if(m > (5 * n * k / log(2.)) || m > static_cast<size_t>(1 << h)) {
 			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_TRANSFER_GENERIC, "Unsupported m"));
 			return;
 		}
@@ -822,6 +822,11 @@ void AdcHub::on(Connected c) throw() {
 
 void AdcHub::on(Line l, const string& aLine) throw() {
 	Client::on(l, aLine);
+
+	if(!Text::validateUtf8(aLine)) {
+		// @todo report to user?
+		return;
+	}
 
 	if(BOOLSETTING(ADC_DEBUG)) {
 		fire(ClientListener::StatusMessage(), this, "<ADC>" + aLine + "</ADC>");

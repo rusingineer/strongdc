@@ -49,7 +49,7 @@ TTHValue HashManager::getTTH(const string& aFileName, int64_t aSize) throw(HashE
 	const TTHValue* tth = store.getTTH(aFileName);
 	if (tth == NULL) {
 		hasher.hashFile(aFileName, aSize);
-		throw HashException(Util::emptyString);		
+		throw HashException();
 	}
 	return *tth;
 }
@@ -464,8 +464,22 @@ void HashManager::HashStore::createDataFile(const string& name) {
 void HashManager::Hasher::hashFile(const string& fileName, int64_t size) {
 	Lock l(cs);
 	if (w.insert(make_pair(fileName, size)).second) {
-		s.signal();
+		if(paused > 0)
+			paused++;
+		else
+			s.signal();
 	}
+}
+
+void HashManager::Hasher::pauseHashing() {
+	Lock l(cs);
+	paused++;
+}
+
+void HashManager::Hasher::resumeHashing() {
+	Lock l(cs);
+	while(--paused > 0)
+		s.signal();
 }
 
 void HashManager::Hasher::stopHashing(const string& baseDir) {
@@ -540,7 +554,7 @@ bool HashManager::Hasher::fastHash(const string& fname, uint8_t* buf, TigerTree&
 
 	over.Offset = hn;
 	size -= hn;
-	for (;;) {
+	while (!stop) {
 		if (size > 0) {
 			// Start a new overlapped read
 			ResetEvent(over.hEvent);
@@ -603,7 +617,7 @@ bool HashManager::Hasher::fastHash(const string& fname, uint8_t* buf, TigerTree&
 #else // !_WIN32
 static const int64_t BUF_SIZE = 0x1000000 - (0x1000000 % getpagesize());
 
-bool HashManager::Hasher::fastHash(const string& filename, uint8_t* , TigerTree& tth, int64_t size, CRC32Filter* xcrc32) {
+bool HashManager::Hasher::fastHash(const string& filename, uint8_t* , TigerTree& tth, int64_t size) {
 	int fd = open(Text::fromUtf8(filename).c_str(), O_RDONLY);
 	if(fd == -1)
 		return false;
@@ -612,9 +626,10 @@ bool HashManager::Hasher::fastHash(const string& filename, uint8_t* , TigerTree&
 	int64_t pos = 0;
 	int64_t size_read = 0;
 	void *buf = 0;
+	bool ok = false;
 
 	uint32_t lastRead = GET_TICK();
-	while(pos <= size) {
+	while(pos <= size && !stop) {
 		if (size_left > 0) {
 			size_read = std::min(size_left, BUF_SIZE);
 			buf = mmap(0, size_read, PROT_READ, MAP_SHARED, fd, pos);
@@ -641,14 +656,14 @@ bool HashManager::Hasher::fastHash(const string& filename, uint8_t* , TigerTree&
 		}
 
 		tth.update(buf, size_read);
-		if(xcrc32)
-			(*xcrc32)(buf, size_read);
+
 		{
 			Lock l(cs);
 			currentSize = max(static_cast<uint64_t>(currentSize - size_read), static_cast<uint64_t>(0));
 		}
 
-		if(size_left <= 0) {
+		if(size_left == 0) {
+			ok = true;
 			break;
 		}
 
@@ -657,7 +672,7 @@ bool HashManager::Hasher::fastHash(const string& filename, uint8_t* , TigerTree&
 		size_left -= size_read;
 	}
 	close(fd);
-	return true;
+	return ok;
 }
 
 #endif // !_WIN32
@@ -673,8 +688,6 @@ int HashManager::Hasher::run() {
 		s.wait();
 		if(stop)
 			break;
-		if(paused) // KUL - hash progress dialog patch
-			p.wait();
 		if(rebuild) {
 			HashManager::getInstance()->doRebuild();
 			rebuild = false;
@@ -781,6 +794,24 @@ int HashManager::Hasher::run() {
 		}
 	}
 	return 0;
+}
+
+HashManager::HashPauser::HashPauser() {
+	HashManager::getInstance()->pauseHashing();
+}
+
+HashManager::HashPauser::~HashPauser() {
+	HashManager::getInstance()->resumeHashing();
+}
+
+void HashManager::pauseHashing() {
+	Lock l(cs);
+	hasher.pauseHashing();
+}
+
+void HashManager::resumeHashing() {
+	Lock l(cs);
+	hasher.resumeHashing();
 }
 
 } // namespace dcpp

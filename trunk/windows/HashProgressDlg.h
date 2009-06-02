@@ -56,7 +56,7 @@ public:
 		// KUL - hash progress dialog patch (begin)
 		SetDlgItemText(IDC_SETTINGS_MAX_HASH_SPEED, CTSTRING(SETTINGS_MAX_HASH_SPEED));
 		SetDlgItemText(IDC_MAX_HASH_SPEED, Text::toT(Util::toString(SETTING(MAX_HASH_SPEED))).c_str());
-		SetDlgItemText(IDC_PAUSE, HashManager::getInstance()->isPaused() ? CTSTRING(RESUME) : CTSTRING(PAUSE));
+		SetDlgItemText(IDC_PAUSE, HashManager::getInstance()->getPaused() ? CTSTRING(RESUME) : CTSTRING(PAUSE));
 		init = true;
 		// KUL - hash progress dialog patch (end)
 
@@ -90,11 +90,11 @@ public:
 	}
 
 	LRESULT onPause(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(HashManager::getInstance()->isPaused()) {
-			HashManager::getInstance()->resume();
+		if(HashManager::getInstance()->getPaused()) {
+			HashManager::getInstance()->resumeHashing();
 			SetDlgItemText(IDC_PAUSE, CTSTRING(PAUSE));
 		} else {
-			HashManager::getInstance()->pause();
+			HashManager::getInstance()->pauseHashing();
 			SetDlgItemText(IDC_PAUSE, CTSTRING(RESUME));
 		}
 		return 0;
@@ -118,7 +118,7 @@ public:
 		size_t files = 0;
 		uint64_t tick = GET_TICK();
 
-		SetDlgItemText(IDC_PAUSE, HashManager::getInstance()->isPaused() ? CTSTRING(RESUME) : CTSTRING(PAUSE)); // KUL - hash progress dialog patch
+		SetDlgItemText(IDC_PAUSE, HashManager::getInstance()->getPaused() ? CTSTRING(RESUME) : CTSTRING(PAUSE)); // KUL - hash progress dialog patch
 
 		HashManager::getInstance()->getStats(file, bytes, files);
 		if(bytes > startBytes)
@@ -132,11 +132,11 @@ public:
 			return;
 		}
 		double diff = static_cast<double>(tick - startTime);
-		if(diff < 1000 || files == 0 || bytes == 0 || HashManager::getInstance()->isPaused()) { // KUL - hash progress dialog patch
+		if(diff < 1000 || files == 0 || bytes == 0 || HashManager::getInstance()->getPaused()) { // KUL - hash progress dialog patch
 			SetDlgItemText(IDC_FILES_PER_HOUR, Text::toT("-.-- " + STRING(FILES_PER_HOUR) + ", " + Util::toString((uint32_t)files) + " " + STRING(FILES_LEFT)).c_str());
 			SetDlgItemText(IDC_HASH_SPEED, (_T("-.-- B/s, ") + Util::formatBytesW(bytes) + _T(" ") + TSTRING(LEFT)).c_str());
 			// KUL - hash progress dialog patch
-			if(!HashManager::getInstance()->isPaused()) {
+			if(!HashManager::getInstance()->getPaused()) {
 				SetDlgItemText(IDC_TIME_LEFT, Text::toT("-:--:-- " + STRING(LEFT)).c_str());
 				progress.SetPos(0);
 			} else
