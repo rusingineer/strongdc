@@ -60,6 +60,8 @@
 #include "../client/WebServerManager.h"
 #include "../client/Thread.h"
 
+#include "../dht/dht.h"
+
 MainFrame* MainFrame::anyMF = NULL;
 bool MainFrame::bShutdown = false;
 uint64_t MainFrame::iCurrentShutdownTime = 0;
@@ -464,6 +466,7 @@ void MainFrame::updateQuickSearches() {
 void MainFrame::startSocket() {
 	SearchManager::getInstance()->disconnect();
 	ConnectionManager::getInstance()->disconnect();
+	DHT::getInstance()->disconnect();
 
 //	if(ClientManager::getInstance()->isActive()) {
 		try {
@@ -476,6 +479,11 @@ void MainFrame::startSocket() {
 		} catch(const Exception&) {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}
+		try {
+			DHT::getInstance()->listen();
+		} catch(const Exception&) {
+			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
+		}		
 //	}
 
 	startUPnP();
@@ -502,7 +510,18 @@ void MainFrame::startUPnP() {
 			UPnP_UDP.reset(new UPnP( Util::getLocalIp(), "UDP", APPNAME " Search Port (" + Util::toString(port) + " UDP)", port));
 			ok &= UPnP_UDP->open();
 		}
-
+		if(BOOLSETTING(USE_DHT)) {
+			port = DHT::getInstance()->getPort();
+			if(port != 0) {
+				UPnP_DHT.reset(new UPnP( Util::getLocalIp(), "UDP", APPNAME " DHT Port (" + Util::toString(port) + " UDP)", port));
+				if (!UPnP_DHT->open())
+				{
+					LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
+					UPnP_DHT.reset();
+				}
+			}
+		}
+	
 		if(ok) {
 			if(!BOOLSETTING(NO_IP_OVERRIDE)) {
 				// now lets configure the external IP (connect to me) address
@@ -545,11 +564,11 @@ void MainFrame::stopUPnP() {
 		}
 		UPnP_UDP.reset();
 	}	
-	if(UPnP_DSN.get()) {
-		if(!UPnP_DSN->close()) {
+	if(UPnP_DHT.get()) {
+		if(!UPnP_DHT->close()) {
 			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS));
 		}
-		UPnP_DSN.reset();
+		UPnP_DHT.reset();
 	}
 }
 

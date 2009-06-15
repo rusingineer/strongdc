@@ -125,7 +125,7 @@ const string SettingsManager::settingTags[] =
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
-	"UcSubMenu", "AutoSlots", "Coral",
+	"UcSubMenu", "AutoSlots", "Coral", "UseDHT",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -541,6 +541,8 @@ SettingsManager::SettingsManager()
 	setDefault(COLOR_RUNNING, RGB(0, 150, 0));
 	setDefault(COLOR_DOWNLOADED, RGB(255, 255, 100));
 	setDefault(COLOR_DONE, RGB(222, 160, 0));
+	
+	setDefault(USE_DHT, true);
 	
 #ifdef _WIN32
 	OSVERSIONINFO ver;

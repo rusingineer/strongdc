@@ -840,6 +840,7 @@ enum Strings { // @DontAdd
 	UPNP_FAILED_TO_CREATE_MAPPINGS, // "Failed to create port mappings. Please set up your NAT yourself."
 	UPNP_FAILED_TO_GET_EXTERNAL_IP, // "Failed to get external IP via  UPnP. Please set it yourself."
 	UPNP_FAILED_TO_REMOVE_MAPPINGS, // "Failed to remove port mappings"
+	USE_DHT, // "Use DHT for searching alternate sources"
 	USER, // "User"
 	USER_CMD_COMMAND, // "Command"
 	USER_CMD_CONTEXT, // "Context"

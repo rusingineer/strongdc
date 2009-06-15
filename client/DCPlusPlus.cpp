@@ -39,7 +39,10 @@
 #include "DebugManager.h"
 #include "DetectionManager.h"
 #include "WebServerManager.h"
+
+#include "../dht/dht.h"
 #include "../windows/PopupManager.h"
+
 /*
 #ifdef _STLP_DEBUG
 void __stl_debug_terminate() {
@@ -95,6 +98,8 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	CryptoManager::getInstance()->loadCertificates();
 	DetectionManager::getInstance()->load();
 	WebServerManager::newInstance();
+	
+	DHT::newInstance();
 
 	if(f != NULL)
 		(*f)(p, TSTRING(HASH_DATABASE));
@@ -117,6 +122,8 @@ void shutdown() {
 	QueueManager::getInstance()->saveQueue(true);
 	SettingsManager::getInstance()->save();
 
+	DHT::deleteInstance();
+	
 	DebugManager::deleteInstance();
 	WebServerManager::deleteInstance();
 	DetectionManager::deleteInstance();	

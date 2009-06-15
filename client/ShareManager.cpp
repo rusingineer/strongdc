@@ -39,6 +39,8 @@
 #include "HashBloom.h"
 #include "SearchResult.h"
 
+#include "../dht/IndexManager.h"
+
 #ifndef _WIN32
 #include <sys/types.h>
 #include <dirent.h>
@@ -50,6 +52,12 @@
 #include <limits>
 
 namespace dcpp {
+
+
+void ShareManager::publish() {
+	Lock l(cs);
+	dht::IndexManager::getInstance()->createPublishQueue(tthIndex);
+}
 
 ShareManager::ShareManager() : hits(0), xmlListLen(0), bzXmlListLen(0),
 	xmlDirty(true), forceXmlRefresh(false), refreshDirs(false), update(false), initial(true), listN(0), refreshing(0),
