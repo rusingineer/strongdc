@@ -22,8 +22,10 @@
 
 #include "../client/stdinc.h"
 #include "../client/ResourceManager.h"
+#include "../dht/stdafx.h"
 
 using namespace dcpp;
+using namespace dht;
 
 #ifdef _WIN32
 

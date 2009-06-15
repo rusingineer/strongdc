@@ -488,7 +488,7 @@ private:
 	std::auto_ptr<UPnP> UPnP_TCP;
 	std::auto_ptr<UPnP> UPnP_TLS;
 	std::auto_ptr<UPnP> UPnP_UDP;
-	std::auto_ptr<UPnP> UPnP_DSN;
+	std::auto_ptr<UPnP> UPnP_DHT;
 };
 
 #endif // !defined(MAIN_FRM_H)

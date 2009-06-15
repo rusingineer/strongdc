@@ -106,6 +106,7 @@ public:
 	// Extensions
 	C(CMD, 'C','M','D');
 	C(PSR, 'P','S','R');
+	C(PUB, 'P','U','B');		
 #undef C
 
 	static const uint32_t HUB_SID = 0xffffffff;		// No client will have this sid

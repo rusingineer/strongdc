@@ -1,0 +1,13 @@
+Search SCH - searches for object in the network
+- TR = requested TTH/CID
+- TO = token
+- TY = search type (1 = file, 3 = node, 4 = request to store file)
+
+Response RES - response to SCH
+- TO = token (it must match the token in SCH)
+- NX = node list in XML format (contains CID, I4, U4 etc.)
+- SI = filesize (when filesize is present, this response contains information about exact file sources)
+
+Publish PUB - requests for file publishing
+- TR = TTH root
+- SI = file size
