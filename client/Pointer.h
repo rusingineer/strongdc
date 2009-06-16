@@ -42,6 +42,7 @@ public:
 	
 protected:
 	intrusive_ptr_base() throw() : ref(0) { }
+	virtual ~intrusive_ptr_base() { }
 	
 private:
 	friend void intrusive_ptr_add_ref(intrusive_ptr_base* p) { Thread::safeInc(p->ref); }

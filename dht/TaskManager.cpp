@@ -28,18 +28,21 @@ namespace dht
 		// bootstrap
 		BootstrapManager::getInstance()->bootstrap();
 		
-		// publish next file
-		IndexManager::getInstance()->publishNextFile();
-	}
-	
-	void TaskManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
-	{
+		if(IndexManager::getInstance()->getPublishing() < MAX_PUBLISHES_AT_TIME)
+		{
+			// publish next file
+			IndexManager::getInstance()->publishNextFile();
+		}
+				
 		if(aTick >= nextSearchTime)
 		{
 			SearchManager::getInstance()->processSearches();
 			nextSearchTime = aTick + SEARCH_PROCESSTIME;
-		}
-		
+		}		
+	}
+	
+	void TaskManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
+	{
 		if(aTick >= nextPublishTime)
 		{
 			// republish all files

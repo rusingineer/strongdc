@@ -338,6 +338,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConnectionManager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\DHT.cpp"
 				>
 			</File>
@@ -409,6 +413,10 @@
 			>
 			<File
 				RelativePath=".\BootstrapManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConnectionManager.h"
 				>
 			</File>
 			<File

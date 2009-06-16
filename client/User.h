@@ -183,7 +183,7 @@ public:
 	};
 
 	OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_);
-	~OnlineUser() throw() { }
+	virtual ~OnlineUser() throw() { }
 
 	operator UserPtr&() { return getUser(); }
 	operator const UserPtr&() const { return getUser(); }

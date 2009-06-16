@@ -119,7 +119,7 @@ namespace dht
 	{
 		if(!nodes.empty() && DHT::getInstance()->getNodesCount() == 0)
 		{
-			//LogManager::getInstance()->message("DHT bootstrapping started");
+			LogManager::getInstance()->message("DHT bootstrapping started");
 			
 			// it's time to bootstrap
 			NodeList bootstrapNodes(SEARCH_ALPHA > nodes.size() ? nodes.size() : SEARCH_ALPHA);

@@ -22,6 +22,8 @@
 #include "KBucket.h"
 #include "Utils.h"
 
+#include "../client/ClientManager.h"
+
 namespace dht
 {
 
@@ -44,6 +46,7 @@ namespace dht
 			{
 				// node is already here, move it to the end
 				Node::Ptr node = *it;
+				node->setExpires(GET_TICK() + NODE_EXPIRATION);
 				
 				nodes.erase(it);
 				nodes.push_back(node);
@@ -52,6 +55,7 @@ namespace dht
 		}
 		
 		Node::Ptr node = new Node(u);
+		node->setExpires(GET_TICK() + NODE_EXPIRATION);
 		
 		if(nodes.size() < K)
 		{
@@ -74,7 +78,7 @@ namespace dht
 		for(NodeList::const_iterator it = nodes.begin(); it != nodes.end(); it++)
 		{
 			CID distance = Utils::getDistance(cid, (*it)->getUser()->getCID());
-			string ip = (*it)->getIp();
+			string ip = (*it)->getIdentity().getIp();
 			if(closest.size() < max)
 			{
 				// just insert
@@ -104,6 +108,9 @@ namespace dht
 			if(expires > 0 && expires <= currentTime)
 			{
 				// node is dead, remove it
+				if((*i)->getUser()->isOnline())
+					ClientManager::getInstance()->putOffline((*i).get());
+					
 				nodes.erase(i++);
 			}
 			else

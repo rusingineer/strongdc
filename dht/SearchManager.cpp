@@ -46,10 +46,10 @@ namespace dht
 		for(size_t i = 0; i < nodesCount; i++)
 		{
 			it = possibleNodes.begin();
-			Node::Ptr id = it->second;
+			Node::Ptr node = it->second;
 			
 			// move to tried and delete from possibles
-			triedNodes[it->first] = id;
+			triedNodes[it->first] = node;
 			possibleNodes.erase(it);
 
 			// send SCH command
@@ -58,8 +58,8 @@ namespace dht
 			cmd.addParam("TY", Util::toString(type));
 			cmd.addParam("TO", token);
 			
-			id->setExpires(GET_TICK() + NODE_RESPONSE_TIMEOUT);
-			DHT::getInstance()->send(cmd, id->getIp(), static_cast<uint16_t>(Util::toInt(id->getUdpPort())));
+			node->setExpires(GET_TICK() + NODE_RESPONSE_TIMEOUT);
+			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
 		}
 		
 		return true;
@@ -129,7 +129,7 @@ namespace dht
 	/*
 	 * Process incoming search request 
 	 */
-	void SearchManager::processSearchRequest(const Node::Ptr& user, const AdcCommand& cmd)
+	void SearchManager::processSearchRequest(const Node::Ptr& node, const AdcCommand& cmd)
 	{
 		string token;
 		if(!cmd.getParam("TO", 0, token))
@@ -146,57 +146,71 @@ namespace dht
 		AdcCommand res(AdcCommand::CMD_RES, AdcCommand::TYPE_UDP);
 		res.addParam("TO", token);
 		
-		Search::NodeMap nodes;
+		SimpleXML xml;
+		xml.addTag("Nodes");
+		xml.stepIn();		
+		
 		switch(Util::toInt(type))
 		{
 			case Search::TYPE_FILE:
-				// TODO: check file hash in our database
-				// if it's there, then select sources else do the same as NODE search
-			
+			{
+				// check file hash in our database
+				// if it's there, then select sources else do the same as node search
+				IndexManager::SourceList sources;
+				if(IndexManager::getInstance()->findResult(TTHValue(term), sources))
+				{
+					// yes, we got sources for this file
+					for(IndexManager::SourceList::const_iterator i = sources.begin(); i != sources.end(); i++)
+					{
+						xml.addTag("Source");
+						xml.addChildAttrib("CID", i->getUser()->getCID().toBase32());
+						xml.addChildAttrib("I4", i->getIp());
+						xml.addChildAttrib("U4", i->getUdpPort());
+						xml.addChildAttrib("SI", i->get("SI"));
+					}
+					break;
+				}
+			}
 			case Search::TYPE_NODE:
 			case Search::TYPE_STOREFILE:
+			{
 				// get nodes closest to requested ID
+				Search::NodeMap nodes;
 				DHT::getInstance()->getClosestNodes(CID(term), nodes, SEARCH_ALPHA);
+				
+				// add nodelist in XML format
+				for(Search::NodeMap::const_iterator i = nodes.begin(); i != nodes.end(); i++)
+				{
+					xml.addTag("Node");
+					xml.addChildAttrib("CID", i->second->getUser()->getCID().toBase32());
+					xml.addChildAttrib("I4", i->second->getIdentity().getIp());
+					xml.addChildAttrib("U4", i->second->getIdentity().getUdpPort());			
+				}
+							
 				break;
-			
+			}
 			default:
 				// invalid search type
 				return;
 		}
 		
-		if(!nodes.empty())
-		{
-			// add nodelist in XML format
-			SimpleXML xml;
-			xml.addTag("Nodes");
-			xml.stepIn();
+		xml.stepOut();
 			
-			for(Search::NodeMap::const_iterator i = nodes.begin(); i != nodes.end(); i++)
-			{
-				xml.addTag("Node");
-				xml.addChildAttrib("CID", i->first.toBase32());
-				xml.addChildAttrib("I4", i->second->getIp());
-				xml.addChildAttrib("U4", i->second->getUdpPort());			
-			}
+		string nodes;
+		StringOutputStream sos(nodes);
+		sos.write(SimpleXML::utf8Header);
+		xml.toXML(&sos);
 			
-			xml.stepOut();
-			
-			string nodes;
-			StringOutputStream sos(nodes);
-			sos.write(SimpleXML::utf8Header);
-			xml.toXML(&sos);
-			
-			res.addParam("NX", nodes);
+		res.addParam("NX", nodes);
 				
-			// send search result
-			DHT::getInstance()->send(res, user->getIp(), static_cast<uint16_t>(Util::toInt(user->getUdpPort())));
-		}
+		// send search result
+		DHT::getInstance()->send(res, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
 	}
 	
 	/*
 	 * Process incoming search result 
 	 */
-	void SearchManager::processSearchResult(const Node::Ptr& user, const AdcCommand& cmd)
+	void SearchManager::processSearchResult(const Node::Ptr& node, const AdcCommand& cmd)
 	{
 		string cid = cmd.getParam(0);
 		if(cid.size() != 39)
@@ -221,13 +235,42 @@ namespace dht
 		Search* s = i->second;
 		
 		// store this node
-		s->respondedNodes.insert(std::make_pair(Utils::getDistance(CID(cid), CID(s->term)), user));
+		s->respondedNodes.insert(std::make_pair(Utils::getDistance(CID(cid), CID(s->term)), node));
 		
 		try
 		{
 			SimpleXML xml;
 			xml.fromXML(nodes);
 			xml.stepIn();
+			
+			if(s->type == Search::TYPE_FILE) // this is response to TYPE_FILE, check sources first
+			{
+				// extract file sources
+				while(xml.findChild("Source"))
+				{
+					const CID cid		= CID(xml.getChildAttrib("CID"));
+					const string& i4	= xml.getChildAttrib("I4");
+					const string& u4	= xml.getChildAttrib("U4");
+					int64_t size		= Util::toInt64(xml.getChildAttrib("SI"));
+
+					// don't bother with invalid sources and private IPs
+					if(	cid.isZero() || i4.empty() || u4.empty() || 
+						ClientManager::getInstance()->getMe()->getCID() == cid || Util::isPrivateIp(i4))
+						continue;
+
+					// create user as offline (only TCP connected users will be online)
+					UserPtr u = ClientManager::getInstance()->getUser(cid);
+					u->setFlag(User::DHT);
+						
+					// contact node that we are online and we want his info
+					DHT::getInstance()->info(i4, static_cast<uint16_t>(Util::toInt(u4)), true);
+						
+					SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, Util::emptyString, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
+					fire(SearchManagerListener::SR(), sr);
+				}
+			}
+			
+			// extract possible nodes
 			while(xml.findChild("Node"))
 			{
 				const CID cid = CID(xml.getChildAttrib("CID"));
@@ -244,35 +287,19 @@ namespace dht
 					
 				const string& i4 = xml.getChildAttrib("I4");
 				const string& u4 = xml.getChildAttrib("U4");
-				const string& si = xml.getChildAttrib("SI");
 
 				// don't bother with private IPs
 				if(Util::isPrivateIp(i4))
 					continue;
 
-				Node::Ptr node = new Node();
-				node->setIp(i4);
-				node->setUdpPort(u4);
+				Node::Ptr tmpNode = new Node();
+				tmpNode->getIdentity().setIp(i4);
+				tmpNode->getIdentity().setUdpPort(u4);
 
-				if(si.empty())
-				{
-					// update our list of possible nodes
-					s->possibleNodes[distance] = node;
-				}
-				else if(s->type == Search::TYPE_FILE)
-				{
-					// this is response to TYPE_FILE
-					
-					// create user as offline (only TCP connected users will be online)
-					UserPtr u = ClientManager::getInstance()->getUser(cid);
-					u->setFlag(User::DHT);
-					
-					// TODO: ping node
-					
-					SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, Util::toInt64(si), Util::emptyString, "DHT", Util::emptyString, user->getIp(), TTHValue(s->term), token));
-					fire(SearchManagerListener::SR(), sr);
-				}
+				// update our list of possible nodes
+				s->possibleNodes[distance] = tmpNode;
 			}
+									
 			xml.stepOut();
 		}
 		catch(const SimpleXMLException&)
@@ -295,7 +322,7 @@ namespace dht
 			cmd.addParam("SI", Util::toString(size));
 		
 			i->second->setExpires(GET_TICK() + NODE_RESPONSE_TIMEOUT);
-			DHT::getInstance()->send(cmd, i->second->getIp(), static_cast<uint16_t>(Util::toInt(i->second->getUdpPort())));
+			DHT::getInstance()->send(cmd, i->second->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(i->second->getIdentity().getUdpPort())));
 			
 			if(k++ == K)
 				break;
@@ -309,14 +336,12 @@ namespace dht
 	{
 		Lock l(cs);
 		
-		bool publishing = false;
 		SearchMap::iterator it = searches.begin();
 		while(it != searches.end())
 		{
 			Search* s = it->second;
 			
-			// TODO: check maximum responses to search request
-			uint64_t timeout = SEARCHNODE_LIFETIME; // default timeout = 2 minutes
+			uint64_t timeout;
 			switch(s->type)
 			{
 				case Search::TYPE_FILE:
@@ -327,8 +352,10 @@ namespace dht
 					break;
 				case Search::TYPE_STOREFILE:
 					timeout = SEARCHSTOREFILE_LIFETIME;
-					publishing = true;
 					break;
+				default:
+					// invalid search type
+					continue;
 			}
 			
 			// remove long search, process active search
@@ -340,6 +367,7 @@ namespace dht
 				if(s->type == Search::TYPE_STOREFILE)
 				{
 					publishFile(s->respondedNodes, s->term, s->filesize);
+					IndexManager::getInstance()->setPublishing(IndexManager::getInstance()->getPublishing() - 1);
 				}
 
 				delete s;
@@ -349,8 +377,6 @@ namespace dht
 				++it;
 			}		
 		}
-		
-		IndexManager::getInstance()->setPublishing(publishing);
 	}
 	
 }

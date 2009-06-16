@@ -25,6 +25,7 @@
 
 #include "../client/AdcCommand.h"
 #include "../client/CID.h"
+#include "../client/MerkleTree.h"
 #include "../client/Singleton.h"
 
 namespace dht
@@ -57,15 +58,22 @@ namespace dht
 		/** Removes dead nodes */
 		void checkExpiration(uint64_t aTick);
 		
+		/** Finds the file in the network */
+		void findFile(const string& tth);
+		
+		/** Sends our info to specified ip:port */
+		void info(const string& ip, uint16_t port, bool wantResponse);
+		
 	private:
 		/** Classes that can access to my private members */
 		friend class Singleton<DHT>;
 		friend class SearchManager;
 		
-		void handle(AdcCommand::SCH, const Node::Ptr& user, AdcCommand& c) throw();	// incoming search request
-		void handle(AdcCommand::RES, const Node::Ptr& user, AdcCommand& c) throw();	// incoming search result
-		void handle(AdcCommand::PUB, const Node::Ptr& user, AdcCommand& c) throw();	// incoming publish request
-		void handle(AdcCommand::STA, const Node::Ptr& user, AdcCommand& c) throw();	// status message
+		void handle(AdcCommand::INF, const Node::Ptr& node, AdcCommand& c) throw();	// user's info
+		void handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) throw();	// incoming search request
+		void handle(AdcCommand::RES, const Node::Ptr& node, AdcCommand& c) throw();	// incoming search result
+		void handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) throw();	// incoming publish request
+		void handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw();	// status message
 			
 		/** Unsupported command */
 		template<typename T> void handle(T, const Node::Ptr&user, AdcCommand&) { }
@@ -75,6 +83,9 @@ namespace dht
 		
 		/** Routing table */
 		KBucket*	bucket[ID_BITS];
+		
+		/** Storage for all online users */
+		std::tr1::unordered_map<CID, OnlineUser*> onlineUsers;
 		
 		/** Lock to routing table */
 		CriticalSection	cs;
@@ -87,6 +98,12 @@ namespace dht
 
 		/** Finds "max" closest nodes and stores them to the list */
 		void getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max);
+		
+		/** Loads network information from XML file */
+		void loadData();
+		
+		/** Saves network information to XML file */
+		void saveData();		
 	};
 
 }
