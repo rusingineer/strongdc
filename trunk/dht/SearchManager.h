@@ -23,6 +23,7 @@
 #include "..\client\CID.h"
 #include "..\client\CriticalSection.h"
 #include "..\client\FastAlloc.h"
+#include "..\client\MerkleTree.h"
 #include "..\client\SearchManagerListener.h"
 #include "..\client\Singleton.h"
 #include "..\client\Speaker.h"
@@ -88,10 +89,10 @@ namespace dht
 		void findStore(const string& tth, int64_t size);		
 		
 		/** Process incoming search request */
-		void processSearchRequest(const Node::Ptr& user, const AdcCommand& cmd);
+		void processSearchRequest(const Node::Ptr& node, const AdcCommand& cmd);
 
 		/** Process incoming search result */
-		void processSearchResult(const Node::Ptr& user, const AdcCommand& cmd);
+		void processSearchResult(const Node::Ptr& node, const AdcCommand& cmd);
 		
 		/** Processes all running searches and removes long-time ones */
 		void processSearches();

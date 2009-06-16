@@ -26,12 +26,12 @@ namespace dht
 {
 
 	struct Node :
-		public FastAlloc<User>, public intrusive_ptr_base<User>, public Identity
+		public OnlineUser
 	{
 		typedef boost::intrusive_ptr<Node> Ptr;
 		
-		Node() { }
-		Node(const UserPtr& u) : Identity(u, 0) { }
+		Node() : OnlineUser(NULL, *reinterpret_cast<Client*>(NULL), 0) { }
+		Node(const UserPtr& u) : OnlineUser(u, *reinterpret_cast<Client*>(NULL), 0) { }
 		~Node()	{ }
 		
 		GETSET(uint64_t, expires, Expires);

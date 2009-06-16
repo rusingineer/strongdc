@@ -24,6 +24,7 @@ namespace dht
 #define BOOTSTRAP_URL				"http://strongdc.sourceforge.net/bootstrap/"
 
 #define DHT_UDPPORT					6184							// default DHT port (TODO: make as option)
+#define DHT_FILE					"dht.xml"						// local file with all information got from the network
 
 #define ID_BITS						192								// size of identificator (in bits)
 
@@ -43,8 +44,16 @@ namespace dht
 #define MAX_PUBLISHED_FILES			200								// max local files to publish
 #define MIN_PUBLISH_FILESIZE		1024 * 1024 // 1 MiB			// files below this size won't be published
 #define REPUBLISH_TIME				24*60*60*1000	// 24 hours		// when our filelist should be republished
+#define MAX_PUBLISHES_AT_TIME		2								// how many files can be published at one time
 
 #define NODE_RESPONSE_TIMEOUT		1*60*1000	// 1 minute			// node has this time to response else we ignore him/mark him as dead node
+#define NODE_EXPIRATION				2*60*60*1000 // 2 hours			// when node should be marked as possibly dead
+
+#define CLIENT_PROTOCOL				"ADC/1.0"						// protocol used for file transfers
+#define SECURE_CLIENT_PROTOCOL_TEST	"ADCS/0.10"						// protocol used for secure file transfers
+#define ADCS_FEATURE				"ADC0"							// support for secure protocol
+#define TCP4_FEATURE				"TCP4"							// support for active TCP
+#define UDP4_FEATURE				"UDP4"							// support for active UDP
 	
 using namespace dcpp;
 

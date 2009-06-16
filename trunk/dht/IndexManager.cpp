@@ -59,6 +59,12 @@ namespace dht
 			
 			if(sources.size() > MAX_SEARCH_RESULTS)
 				sources.pop_front();
+		}
+		else
+		{
+			// new file
+			tthList.insert(std::make_pair(tth, SourceList(1, source)));
+			
 		}	
 	}
 
@@ -78,21 +84,17 @@ namespace dht
 
 	void IndexManager::publishNextFile()
 	{
-		// publish only 1 file at time
-		if(publishing)
-			return;
-			
 		File f;
 		{
 			Lock l(cs);
-			
+						
 			if(publishQueue.empty())
 				return;
+
+			publishing++;				
 				
 			f = publishQueue.front(); // get the first file in queue
 			publishQueue.pop_front(); // and remove it from queue
-			
-			publishing = true;
 		}
 		SearchManager::getInstance()->findStore(f.tth.toBase32(), f.size);
 	}
@@ -146,9 +148,9 @@ namespace dht
 					
 					Identity identity(ClientManager::getInstance()->getUser(cid), 0);
 					identity.getUser()->setFlag(User::DHT);
-					identity.setIp(xml.getChildAttrib("IP"));
-					identity.setUdpPort(xml.getChildAttrib("UDP"));
-					identity.set("SI", xml.getChildAttrib("size"));
+					identity.setIp(xml.getChildAttrib("I4"));
+					identity.setUdpPort(xml.getChildAttrib("U4"));
+					identity.set("SI", xml.getChildAttrib("SI"));
 					
 					addIndex(tth, identity);
 				}
@@ -177,9 +179,9 @@ namespace dht
 				
 				xml.addTag("Source");
 				xml.addChildAttrib("CID", id.getUser()->getCID().toBase32());
-				xml.addChildAttrib("IP", id.getIp());
-				xml.addChildAttrib("UDP", id.getUdpPort());
-				xml.addChildAttrib("size", id.get("SI"));		
+				xml.addChildAttrib("I4", id.getIp());
+				xml.addChildAttrib("U4", id.getUdpPort());
+				xml.addChildAttrib("SI", id.get("SI"));		
 			}
 			xml.stepOut();
 		}
@@ -190,7 +192,7 @@ namespace dht
 	/*
 	 * Processes incoming request to publish file 
 	 */
-	void IndexManager::processPublishRequest(const Node::Ptr& user, const AdcCommand& cmd)
+	void IndexManager::processPublishRequest(const Node::Ptr& node, const AdcCommand& cmd)
 	{
 		string cid = cmd.getParam(0);
 		if(cid.size() != 39)
@@ -201,19 +203,20 @@ namespace dht
 			return;	// nothing to identify a file?
 			
 		string size;
-		if(!cmd.getParam("SI", 0, tth))
+		if(!cmd.getParam("SI", 0, size))
 			return;	// no file size?
 			
 		Identity identity(ClientManager::getInstance()->getUser(CID(cid)), 0);
 		identity.getUser()->setFlag(User::DHT);
-		identity.setIp(user->getIp());
-		identity.setUdpPort(user->getUdpPort());
+		identity.setIp(node->getIdentity().getIp());
+		identity.setUdpPort(node->getIdentity().getUdpPort());
 		identity.set("SI", size);
 						
 		addIndex(TTHValue(tth), identity);
 		
 		// send response
-		DHT::getInstance()->send(AdcCommand(AdcCommand::SEV_SUCCESS, AdcCommand::ERROR_GENERIC, "File published: " + tth, AdcCommand::TYPE_UDP), user->getIp(), static_cast<uint16_t>(Util::toInt(user->getUdpPort())));	
+		DHT::getInstance()->send(AdcCommand(AdcCommand::SEV_SUCCESS, AdcCommand::ERROR_GENERIC, "File published: " + tth, AdcCommand::TYPE_UDP), 
+											node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));	
 	}
 
 	/*

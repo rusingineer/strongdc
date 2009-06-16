@@ -67,11 +67,12 @@ public:
 	/** Save all indexes to disk */
 	void saveIndexes(SimpleXML& xml);
 		
-	/** Sets whether file publishing is active */
-	void setPublishing(bool _pub) { publishing = _pub; }
+	/** How many files is currently being published */
+	void setPublishing(uint8_t _pub) { publishing = _pub; }
+	uint8_t getPublishing() const { return publishing; }
 	
 	/** Processes incoming request to publish file */
-	void processPublishRequest(const Node::Ptr& user, const AdcCommand& cmd);
+	void processPublishRequest(const Node::Ptr& node, const AdcCommand& cmd);
 	
 private:
 
@@ -83,8 +84,8 @@ private:
 	typedef std::deque<File> FileQueue;
 	FileQueue publishQueue;
 		
-	/** Publishing is currently in the process */
-	bool publishing;
+	/** How many files is currently being published */
+	uint8_t publishing;
 	
 	/** Synchronizes access to tthList */
 	mutable CriticalSection cs;

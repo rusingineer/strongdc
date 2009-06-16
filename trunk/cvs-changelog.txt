@@ -1,3 +1,10 @@
+** svn437
+	fixed TTH of published files
+	fixed publish response
+	published files are saved on exit
+	DHT searching works
+	begun work on DHT connections
+
 ** svn436
 	partial implementation of DHT search engine
 

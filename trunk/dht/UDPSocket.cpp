@@ -38,12 +38,19 @@ namespace dht
 	#define BUFSIZE 16384	
 
 	UDPSocket::UDPSocket(void) : stop(false), port(0)
+#ifdef _DEBUG
+		, sentBytes(0), receivedBytes(0)
+#endif	
 	{
 	}
 
 	UDPSocket::~UDPSocket(void)
 	{
 		disconnect();
+		
+#ifdef _DEBUG
+		dcdebug("DHT stats, received: %d bytes, sent: %d bytes\n", receivedBytes, sentBytes);
+#endif		
 	}
 	
 	/* 
@@ -94,6 +101,7 @@ namespace dht
 			sockaddr_in remoteAddr = { 0 };
 			boost::scoped_array<uint8_t> buf(new uint8_t[BUFSIZE]);			
 			int len = socket->read(&buf[0], BUFSIZE, remoteAddr);
+			dcdrun(receivedBytes += len);
 			
 			if(len > 1)
 			{
@@ -152,6 +160,7 @@ namespace dht
 		{
 			try
 			{
+				dcdrun(sentBytes += packet->length);
 				socket->writeTo(packet->ip, packet->port, packet->data, packet->length);
 			}
 			catch(SocketException& e)
@@ -241,7 +250,7 @@ namespace dht
 		uint8_t* srcBuf = (uint8_t*)command.data();
 		uint8_t* destBuf = new uint8_t[destSize];
 		
-		int result = compress2(destBuf + 1, &destSize, srcBuf, command.length(), SETTING(MAX_COMPRESSION));
+		int result = compress2(destBuf + 1, &destSize, srcBuf, command.length(), 9);
 		if(result == Z_OK && destSize <= command.length())
 		{
 			destBuf[0] = ADC_PACKED_PACKET_HEADER;

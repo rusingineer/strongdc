@@ -87,6 +87,12 @@ namespace dht
 		// Almost all shared access is done within one thread.
 		CriticalSection cs;
 	
+#ifdef _DEBUG
+		// debug constants to optimize bandwidth
+		size_t sentBytes;
+		size_t receivedBytes;
+#endif
+	
 		/** Thread for receiving UDP packets */
 		int run();
 		

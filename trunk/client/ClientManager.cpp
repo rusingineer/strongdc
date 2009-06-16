@@ -38,6 +38,8 @@
 #include "QueueManager.h"
 #include "FinishedManager.h"
 
+#include "../dht/dht.h"
+
 namespace dcpp {
 
 Client* ClientManager::getClient(const string& aHubURL) {
@@ -477,6 +479,9 @@ void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const st
 			c->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
 		}
 	}
+	
+	if(aFileType == SearchManager::TYPE_TTH)
+		dht::DHT::getInstance()->findFile(aString);
 }
 
 uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
