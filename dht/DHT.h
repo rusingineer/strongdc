@@ -27,6 +27,7 @@
 #include "../client/CID.h"
 #include "../client/MerkleTree.h"
 #include "../client/Singleton.h"
+#include "../client/TimerManager.h"
 
 namespace dht
 {
@@ -64,6 +65,12 @@ namespace dht
 		/** Sends our info to specified ip:port */
 		void info(const string& ip, uint16_t port, bool wantResponse);
 		
+		/** Sends Connect To Me request to online node */
+		void connect(const OnlineUser& ou, const string& token);
+		
+		/** Is DHT connected? */
+		bool isConnected() const { return GET_TICK() - lastPacket < CONNECTED_TIMEOUT; }	
+		
 	private:
 		/** Classes that can access to my private members */
 		friend class Singleton<DHT>;
@@ -73,6 +80,7 @@ namespace dht
 		void handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) throw();	// incoming search request
 		void handle(AdcCommand::RES, const Node::Ptr& node, AdcCommand& c) throw();	// incoming search result
 		void handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) throw();	// incoming publish request
+		void handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) throw();	// connection request	
 		void handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw();	// status message
 			
 		/** Unsupported command */
@@ -92,7 +100,10 @@ namespace dht
 		
 		/** Counts of nodes available in k-buckets */
 		unsigned int	nodesCount;
-				
+		
+		/** Time when last packet was received */
+		uint64_t lastPacket;
+						
 		/** Find bucket for storing node */
 		uint8_t findBucket(const CID& cid) const;
 

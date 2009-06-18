@@ -38,7 +38,7 @@
 namespace dht
 {
 
-	DHT::DHT(void) : nodesCount(0)
+	DHT::DHT(void) : nodesCount(0), lastPacket(0)
 	{
 		BootstrapManager::newInstance();
 		SearchManager::newInstance();
@@ -74,7 +74,8 @@ namespace dht
 	 */
 	void DHT::dispatch(const string& aLine, const string& ip, uint16_t port)
 	{
-
+		lastPacket = GET_TICK();
+		
 		// check node's IP address
 		if(Util::isPrivateIp(ip))
 		{
@@ -235,7 +236,8 @@ namespace dht
 	 */
 	void DHT::findFile(const string& tth)
 	{
-		SearchManager::getInstance()->findFile(tth);
+		if(isConnected())
+			SearchManager::getInstance()->findFile(tth);
 	}
 	
 	/** Sends our info to specified ip:port */
@@ -274,6 +276,14 @@ namespace dht
 		cmd.addParam("SU", su);
 			
 		send(cmd, ip, port);		
+	}
+	
+	/*
+	 * Sends Connect To Me request to online node 
+	 */
+	void DHT::connect(const OnlineUser& ou, const string& token)
+	{
+		ConnectionManager::getInstance()->connect(ou, token);
 	}
 	
 	/*
@@ -373,6 +383,11 @@ namespace dht
 	void DHT::handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) throw()
 	{
 		IndexManager::getInstance()->processPublishRequest(node, c);
+	}
+	
+	void DHT::handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) throw()
+	{
+		ConnectionManager::getInstance()->connectToMe(node, c);
 	}
 	
 	void DHT::handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw()

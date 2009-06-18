@@ -163,10 +163,10 @@ namespace dht
 					for(IndexManager::SourceList::const_iterator i = sources.begin(); i != sources.end(); i++)
 					{
 						xml.addTag("Source");
-						xml.addChildAttrib("CID", i->getUser()->getCID().toBase32());
+						xml.addChildAttrib("CID", i->getCID().toBase32());
 						xml.addChildAttrib("I4", i->getIp());
 						xml.addChildAttrib("U4", i->getUdpPort());
-						xml.addChildAttrib("SI", i->get("SI"));
+						xml.addChildAttrib("SI", i->getSize());
 					}
 					break;
 				}
@@ -268,6 +268,8 @@ namespace dht
 					SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, Util::emptyString, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
 					fire(SearchManagerListener::SR(), sr);
 				}
+				
+				xml.resetCurrentChild();
 			}
 			
 			// extract possible nodes

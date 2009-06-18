@@ -18,7 +18,10 @@
  
 #pragma once
 
+#include "KBucket.h"
+
 #include "..\client\Singleton.h"
+#include "..\client\User.h"
 
 namespace dht
 {
@@ -29,6 +32,13 @@ namespace dht
 	public:
 		ConnectionManager(void);
 		~ConnectionManager(void);
+		
+		/** Sends Connect To Me request to online node */
+		void connect(const OnlineUser& ou, const string& token);
+		
+		/** Creates connection to specified node */
+		void connectToMe(const Node::Ptr& node, const AdcCommand& cmd);
+
 	};
 
 }

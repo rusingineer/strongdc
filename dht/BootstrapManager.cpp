@@ -45,8 +45,13 @@ namespace dht
 		dcdebug("MyCID: %s\n", ClientManager::getInstance()->getMe()->getCID().toBase32().c_str());
 		// TODO: make URL settable
 		// TODO: add supported features
-		string url = BOOTSTRAP_URL "?cid=" + ClientManager::getInstance()->getMe()->getCID().toBase32() +
-			"&u4=" + Util::toString(DHT_UDPPORT);
+		string url = BOOTSTRAP_URL "?cid=" + ClientManager::getInstance()->getMe()->getCID().toBase32();
+		
+		// store only active nodes to database
+		if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
+		{
+			url += "&u4=" + Util::toString(DHT_UDPPORT);
+		}
 		
 		httpConnection.setCoralizeState(HttpConnection::CST_NOCORALIZE);
 		httpConnection.downloadFile(url);		

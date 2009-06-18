@@ -23,6 +23,7 @@
 #include "SearchManager.h"
 
 #include "..\client\CID.h"
+#include "..\client\LogManager.h"
 #include "..\client\ShareManager.h"
 #include "..\client\TimerManager.h"
 
@@ -30,7 +31,7 @@ namespace dht
 {
 
 	IndexManager::IndexManager(void) :
-		publishing(false)
+		publishing(0)
 	{
 	}
 
@@ -41,36 +42,53 @@ namespace dht
 	/*
 	 * Add new source to tth list 
 	 */
-	void IndexManager::addIndex(const TTHValue& tth, const Identity& source)
+	void IndexManager::addIndex(const TTHValue& tth, const Node::Ptr& node, uint64_t size)
 	{
+		Source source;
+		source.setCID(node->getUser()->getCID());
+		source.setIp(node->getIdentity().getIp());
+		source.setUdpPort(static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+		source.setSize(size);
+		source.setExpires(GET_TICK() + REPUBLISH_TIME);
+			
 		Lock l(cs);
+		
 		TTHMap::iterator i = tthList.find(tth);
 		if(i != tthList.end())
 		{
 			// no user duplicites
 			SourceList& sources = i->second;
-			for(SourceList::const_iterator s = sources.begin(); s != sources.end(); s++)
+			for(SourceList::iterator s = sources.begin(); s != sources.end(); s++)
 			{
-				if(source.getUser() == (*s).getUser())
-					return;	// TODO: increase lifetime
+				if(node->getUser()->getCID() == (*s).getCID())
+				{
+					// delete old item
+					sources.erase(s);
+					break;
+				}
 			}
 			
+			// old items in front, new items in back
 			sources.push_back(source);
 			
+			// if maximum sources reached, remove the oldest one
 			if(sources.size() > MAX_SEARCH_RESULTS)
 				sources.pop_front();
 		}
 		else
 		{
-			// new file
+			// new file		
 			tthList.insert(std::make_pair(tth, SourceList(1, source)));
-			
 		}	
 	}
 
+	/*
+	 * Finds TTH in known indexes and returns it 
+	 */
 	bool IndexManager::findResult(const TTHValue& tth, SourceList& sources) const
 	{
 		// TODO: remove old indexes
+		// TODO: does file exist in my own sharelist?
 		Lock l(cs);
 		TTHMap::const_iterator i = tthList.find(tth);
 		if(i != tthList.end())
@@ -82,6 +100,9 @@ namespace dht
 		return false;
 	}
 
+	/*
+	 * Try to publish next file in queue 
+	 */
 	void IndexManager::publishNextFile()
 	{
 		File f;
@@ -99,13 +120,11 @@ namespace dht
 		SearchManager::getInstance()->findStore(f.tth.toBase32(), f.size);
 	}
 
+	/*
+	 * Create publish queue from local file list 
+	 */
 	void IndexManager::createPublishQueue(ShareManager::HashFileMap& tthIndex)
 	{
-	#ifdef _DEBUG
-		dcdebug("File list size: %d\n", tthIndex.size());
-		uint64_t startTime = GET_TICK();
-	#endif
-		
 		// copy to map to sort by size
 		std::map<int64_t, const TTHValue*> sizeMap;
 		for(ShareManager::HashFileIter i = tthIndex.begin(); i != tthIndex.end(); i++)
@@ -126,12 +145,12 @@ namespace dht
 		// shuffle
 		random_shuffle(publishQueue.begin(), publishQueue.end());
 		
-	#ifdef _DEBUG	
-		startTime = GET_TICK() - startTime;	
-		dcdebug("Create publishing queue took %I64d ms, stored %d files\n", startTime, publishQueue.size());
-	#endif
+		LogManager::getInstance()->message("DHT: Publishing " + Util::toString(publishQueue.size()) + " files...");
 	}
 
+	/*
+	 * Loads existing indexes from disk 
+	 */
 	void IndexManager::loadIndexes(SimpleXML& xml)
 	{
 		if(xml.findChild("Indexes"))
@@ -140,27 +159,31 @@ namespace dht
 			while(xml.findChild("Index"))
 			{
 				const TTHValue tth = TTHValue(xml.getChildAttrib("TTH"));
+				SourceList sources;
 				
 				xml.stepIn();
 				while(xml.findChild("Source"))
 				{
-					const CID cid = CID(xml.getChildAttrib("CID"));
+					Source source;
+					source.setCID(CID(xml.getChildAttrib("CID")));
+					source.setIp(xml.getChildAttrib("I4"));
+					source.setUdpPort(static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4"))));
+					source.setSize(Util::toInt64(xml.getChildAttrib("SI")));
+					source.setExpires(Util::toInt64(xml.getChildAttrib("expires")));
 					
-					Identity identity(ClientManager::getInstance()->getUser(cid), 0);
-					identity.getUser()->setFlag(User::DHT);
-					identity.setIp(xml.getChildAttrib("I4"));
-					identity.setUdpPort(xml.getChildAttrib("U4"));
-					identity.set("SI", xml.getChildAttrib("SI"));
-					
-					addIndex(tth, identity);
+					sources.push_back(source);
 				}
 				
+				tthList.insert(std::make_pair(tth, sources));
 				xml.stepOut();
 			}
 			xml.stepOut();
 		}
 	}
 
+	/*
+	 * Save all indexes to disk 
+	 */
 	void IndexManager::saveIndexes(SimpleXML& xml)
 	{
 		xml.addTag("Indexes");
@@ -175,13 +198,14 @@ namespace dht
 			xml.stepIn();
 			for(SourceList::const_iterator j = i->second.begin(); j != i->second.end(); j++)
 			{
-				const Identity& id = *j;
+				const Source& source = *j;
 				
 				xml.addTag("Source");
-				xml.addChildAttrib("CID", id.getUser()->getCID().toBase32());
-				xml.addChildAttrib("I4", id.getIp());
-				xml.addChildAttrib("U4", id.getUdpPort());
-				xml.addChildAttrib("SI", id.get("SI"));		
+				xml.addChildAttrib("CID", source.getCID().toBase32());
+				xml.addChildAttrib("I4", source.getIp());
+				xml.addChildAttrib("U4", source.getUdpPort());
+				xml.addChildAttrib("SI", source.getSize());
+				xml.addChildAttrib("expires", source.getExpires());
 			}
 			xml.stepOut();
 		}
@@ -194,10 +218,6 @@ namespace dht
 	 */
 	void IndexManager::processPublishRequest(const Node::Ptr& node, const AdcCommand& cmd)
 	{
-		string cid = cmd.getParam(0);
-		if(cid.size() != 39)
-			return;
-			
 		string tth;
 		if(!cmd.getParam("TR", 0, tth))
 			return;	// nothing to identify a file?
@@ -205,14 +225,8 @@ namespace dht
 		string size;
 		if(!cmd.getParam("SI", 0, size))
 			return;	// no file size?
-			
-		Identity identity(ClientManager::getInstance()->getUser(CID(cid)), 0);
-		identity.getUser()->setFlag(User::DHT);
-		identity.setIp(node->getIdentity().getIp());
-		identity.setUdpPort(node->getIdentity().getUdpPort());
-		identity.set("SI", size);
-						
-		addIndex(TTHValue(tth), identity);
+	
+		addIndex(TTHValue(tth), node, Util::toInt64(size));
 		
 		// send response
 		DHT::getInstance()->send(AdcCommand(AdcCommand::SEV_SUCCESS, AdcCommand::ERROR_GENERIC, "File published: " + tth, AdcCommand::TYPE_UDP), 

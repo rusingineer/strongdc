@@ -297,7 +297,15 @@ void ClientManager::connect(const UserPtr& p, const string& token, const string&
 	OnlineUser* u = findOnlineUser(p->getCID(), hintUrl);
 
 	if(u) {
-		u->getClient().connect(*u, token);
+		if(p->isSet(User::DHT))
+		{
+			// connect to DHT user
+			dht::DHT::getInstance()->connect(*u, token);
+		}
+		else
+		{
+			u->getClient().connect(*u, token);
+		}
 	}
 }
 
@@ -306,7 +314,7 @@ OnlineUser* ClientManager::findOnlineUser(const CID& cid, const string& hintUrl)
 	if(p.first == p.second)
 		return 0;
 
-	if(!hintUrl.empty()) {
+	if(!p.first->second->getUser()->isSet(User::DHT) && !hintUrl.empty()) {
 		for(OnlineIter i = p.first; i != p.second; ++i) {
 			OnlineUser* u = i->second;
 			if(u->getClient().getHubUrl() == hintUrl) {
@@ -499,6 +507,9 @@ uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, in
 		}
 	}
 	
+	if(aFileType == SearchManager::TYPE_TTH)
+		dht::DHT::getInstance()->findFile(aString);
+			
 	return estimateSearchSpan;
 }
 

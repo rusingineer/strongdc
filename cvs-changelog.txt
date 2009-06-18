@@ -1,3 +1,11 @@
+** svn438
+	published sources expiration set to 24 hours
+	DHT active connections should work
+	only active nodes are saved to database
+	DHT uses UDP port 6237
+	fixed parsing file sources
+  manual searching in DHT	
+
 ** svn437
 	fixed TTH of published files
 	fixed publish response
