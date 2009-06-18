@@ -25,6 +25,7 @@
 #include "Utils.h"
 
 #include "../client/ClientManager.h"
+#include "../client/SearchManager.h"
 #include "../client/SearchResult.h"
 #include "../client/SimpleXml.h"
 
@@ -81,6 +82,7 @@ namespace dht
 		Search* s = new Search();
 		s->type = Search::TYPE_NODE;
 		s->term = cid.toBase32();
+		s->token = Util::toString(Util::rand());
 		
 		search(*s);
 	}
@@ -88,11 +90,32 @@ namespace dht
 	/*
 	 * Performs value lookup in the network 
 	 */
-	void SearchManager::findFile(const string& tth)
+	void SearchManager::findFile(const string& tth, const string& token)
 	{
+		// do I have requested TTH in my store?
+		IndexManager::SourceList sources;
+		if(IndexManager::getInstance()->findResult(TTHValue(tth), sources))
+		{
+			for(IndexManager::SourceList::const_iterator i = sources.begin(); i != sources.end(); i++)
+			{
+				// create user as offline (only TCP connected users will be online)
+				UserPtr u = ClientManager::getInstance()->getUser(i->getCID());
+				u->setFlag(User::DHT);
+					
+				// contact node that we are online and we want his info
+				DHT::getInstance()->info(i->getIp(), i->getUdpPort(), true);
+					
+				SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, i->getSize(), Util::emptyString, "DHT", Util::emptyString, i->getIp(), TTHValue(tth), token));
+				dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
+			}
+			
+			return;
+		}
+		
 		Search* s = new Search();
 		s->type = Search::TYPE_FILE;
 		s->term = tth;
+		s->token = token;
 		
 		search(*s);	
 	}
@@ -106,6 +129,7 @@ namespace dht
 		s->type = Search::TYPE_STOREFILE;
 		s->term = tth;
 		s->filesize = size;
+		s->token = Util::toString(Util::rand());
 		
 		search(*s);		
 	}
@@ -266,7 +290,7 @@ namespace dht
 					DHT::getInstance()->info(i4, static_cast<uint16_t>(Util::toInt(u4)), true);
 						
 					SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, Util::emptyString, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
-					fire(SearchManagerListener::SR(), sr);
+					dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 				}
 				
 				xml.resetCurrentChild();

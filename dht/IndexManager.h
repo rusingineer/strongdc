@@ -83,6 +83,9 @@ public:
 	/** Processes incoming request to publish file */
 	void processPublishRequest(const Node::Ptr& node, const AdcCommand& cmd);
 	
+	/** Removes old sources */
+	void checkExpiration(uint64_t aTick);
+	
 private:
 
 	/** Contains known hashes in the network and their sources */

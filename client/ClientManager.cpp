@@ -81,7 +81,11 @@ StringList ClientManager::getHubs(const CID& cid) const {
 	StringList lst;
 	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&cid));
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
-		lst.push_back(i->second->getClient().getHubUrl());
+	
+		if(&i->second->getClient() == NULL)
+			lst.push_back("DHT");
+		else
+			lst.push_back(i->second->getClient().getHubUrl());
 	}
 	return lst;
 }
@@ -91,7 +95,12 @@ StringList ClientManager::getHubNames(const CID& cid) const {
 	StringList lst;
 	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&cid));
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
-		lst.push_back(i->second->getClient().getHubName());
+	
+		if(&i->second->getClient() == NULL)
+			lst.push_back("DHT");
+		else
+			lst.push_back(i->second->getClient().getHubName());
+			
 	}
 	return lst;
 }
@@ -297,7 +306,7 @@ void ClientManager::connect(const UserPtr& p, const string& token, const string&
 	OnlineUser* u = findOnlineUser(p->getCID(), hintUrl);
 
 	if(u) {
-		if(p->isSet(User::DHT))
+		if(&u->getClient() == NULL)
 		{
 			// connect to DHT user
 			dht::DHT::getInstance()->connect(*u, token);
@@ -332,7 +341,10 @@ void ClientManager::privateMessage(const UserPtr& p, const string& msg, bool thi
 	OnlineUser* u = findOnlineUser(p->getCID(), hintUrl);
 	
 	if(u) {
-		u->getClient().privateMessage(u, msg, thirdPerson);
+		if(&u->getClient() == NULL)
+			dht::DHT::getInstance()->privateMessage(*u, msg, thirdPerson);
+		else
+			u->getClient().privateMessage(u, msg, thirdPerson);
 	}
 }
 
@@ -508,7 +520,7 @@ uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, in
 	}
 	
 	if(aFileType == SearchManager::TYPE_TTH)
-		dht::DHT::getInstance()->findFile(aString);
+		dht::DHT::getInstance()->findFile(aString, aToken);
 			
 	return estimateSearchSpan;
 }

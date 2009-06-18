@@ -6,6 +6,7 @@
 #include "SearchManager.h"
 #include "TaskManager.h"
 
+#include "../client/SettingsManager.h"
 #include "../client/TimerManager.h"
 
 namespace dht
@@ -48,7 +49,7 @@ namespace dht
 	
 	void TaskManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 	{
-		if(DHT::getInstance()->isConnected() && aTick >= nextPublishTime)
+		if((SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE) && DHT::getInstance()->isConnected() && aTick >= nextPublishTime)
 		{
 			// republish all files
 			if(IndexManager::getInstance()->publishFiles())
@@ -59,6 +60,7 @@ namespace dht
 		
 		// remove dead nodes
 		DHT::getInstance()->checkExpiration(aTick);
+		IndexManager::getInstance()->checkExpiration(aTick);
 	}
 	
 }

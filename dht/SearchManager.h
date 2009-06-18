@@ -37,7 +37,7 @@ namespace dht
 		public FastAlloc<Search>
 	{
 		
-		Search() : token(Util::toString(Util::rand())), startTime(GET_TICK())
+		Search() : startTime(GET_TICK())
 		{
 		}
 
@@ -83,7 +83,7 @@ namespace dht
 		void findNode(const CID& cid);
 		
 		/** Performs value lookup in the network */
-		void findFile(const string& tth);
+		void findFile(const string& tth, const string& token);
 		
 		/** Performs node lookup to store key/value pair in the network */
 		void findStore(const string& tth, int64_t size);		

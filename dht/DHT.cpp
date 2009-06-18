@@ -234,10 +234,10 @@ namespace dht
 	/*
 	 * Finds the file in the network 
 	 */
-	void DHT::findFile(const string& tth)
+	void DHT::findFile(const string& tth, const string& token)
 	{
 		if(isConnected())
-			SearchManager::getInstance()->findFile(tth);
+			SearchManager::getInstance()->findFile(tth, token);
 	}
 	
 	/** Sends our info to specified ip:port */
@@ -285,6 +285,13 @@ namespace dht
 	{
 		ConnectionManager::getInstance()->connect(ou, token);
 	}
+	
+	/*
+	 * Sends private message to online node 
+	 */
+	void DHT::privateMessage(const OnlineUser& ou, const string& aMessage, bool thirdPerson)
+	{
+	}	
 	
 	/*
 	 * Loads network information from XML file 
