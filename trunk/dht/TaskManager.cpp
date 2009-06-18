@@ -24,16 +24,21 @@ namespace dht
 	
 	// TimerManagerListener
 	void TaskManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
-	{
-		// bootstrap
-		BootstrapManager::getInstance()->bootstrap();
-		
-		if(IndexManager::getInstance()->getPublishing() < MAX_PUBLISHES_AT_TIME)
+	{	
+		if(DHT::getInstance()->isConnected())
 		{
-			// publish next file
-			IndexManager::getInstance()->publishNextFile();
+			if(IndexManager::getInstance()->getPublishing() < MAX_PUBLISHES_AT_TIME)
+			{
+				// publish next file
+				IndexManager::getInstance()->publishNextFile();
+			}
 		}
-				
+		else
+		{
+			// bootstrap
+			BootstrapManager::getInstance()->bootstrap();
+		}
+		
 		if(aTick >= nextSearchTime)
 		{
 			SearchManager::getInstance()->processSearches();
@@ -43,7 +48,7 @@ namespace dht
 	
 	void TaskManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 	{
-		if(aTick >= nextPublishTime)
+		if(DHT::getInstance()->isConnected() && aTick >= nextPublishTime)
 		{
 			// republish all files
 			if(IndexManager::getInstance()->publishFiles())

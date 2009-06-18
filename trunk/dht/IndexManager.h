@@ -40,6 +40,15 @@ struct File
 	int64_t size;
 };
 
+struct Source
+{
+	GETSET(CID, cid, CID);
+	GETSET(string, ip, Ip);
+	GETSET(uint64_t, expires, Expires);
+	GETSET(uint64_t, size, Size);
+	GETSET(uint16_t, udpPort, UdpPort);
+};
+
 class IndexManager :
 	public Singleton<IndexManager>
 {
@@ -47,7 +56,7 @@ public:
 	IndexManager(void);
 	~IndexManager(void);
 
-	typedef std::deque<Identity> SourceList;
+	typedef std::deque<Source> SourceList;
 		
 	/** Finds TTH in known indexes and returns it */
 	bool findResult(const TTHValue& tth, SourceList& sources) const;
@@ -91,7 +100,7 @@ private:
 	mutable CriticalSection cs;
 	
 	/** Add new source to tth list */
-	void addIndex(const TTHValue& tth, const Identity& source);
+	void addIndex(const TTHValue& tth, const Node::Ptr& node, uint64_t size);
 
 };
 

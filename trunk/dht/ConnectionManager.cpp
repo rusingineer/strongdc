@@ -17,7 +17,13 @@
  */
 
 #include "StdAfx.h"
+
+#include "Constants.h"
 #include "ConnectionManager.h"
+#include "DHT.h"
+
+#include "../client/ConnectionManager.h"
+#include "../client/CryptoManager.h"
 
 namespace dht
 {
@@ -28,6 +34,60 @@ namespace dht
 
 	ConnectionManager::~ConnectionManager(void)
 	{
+	}
+	
+	/*
+	 * Sends Connect To Me request to online node 
+	 */
+	void ConnectionManager::connect(const OnlineUser& ou, const string& token)
+	{
+		bool secure = CryptoManager::getInstance()->TLSOk() && ou.getUser()->isSet(User::TLS);
+		uint16_t port = secure ? dcpp::ConnectionManager::getInstance()->getSecurePort() : dcpp::ConnectionManager::getInstance()->getPort();
+		
+		AdcCommand cmd(AdcCommand::CMD_CTM, AdcCommand::TYPE_UDP);
+		cmd.addParam(secure ? SECURE_CLIENT_PROTOCOL_TEST : CLIENT_PROTOCOL);
+		cmd.addParam(Util::toString(port));
+		cmd.addParam(token);
+		
+		DHT::getInstance()->send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())));			
+	}
+
+	/*
+	 * Creates connection to specified node 
+	 */
+	void ConnectionManager::connectToMe(const Node::Ptr& node, const AdcCommand& cmd)
+	{
+		const string& protocol = cmd.getParam(1);
+		const string& port = cmd.getParam(2);
+		const string& token = cmd.getParam(3);
+
+		bool secure = false;
+		if(protocol == CLIENT_PROTOCOL) 
+		{
+			// Nothing special
+		} 
+		else if(protocol == SECURE_CLIENT_PROTOCOL_TEST && CryptoManager::getInstance()->TLSOk()) 
+		{
+			secure = true;
+		} 
+		else 
+		{
+			AdcCommand cmd(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_UNSUPPORTED, "Protocol unknown", AdcCommand::TYPE_UDP);
+			cmd.addParam("PR", protocol);
+			cmd.addParam("TO", token);
+
+			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+			return;
+		}
+
+		if(!node->getIdentity().isTcpActive()) 
+		{
+			AdcCommand err(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_GENERIC, "IP unknown", AdcCommand::TYPE_UDP);
+			DHT::getInstance()->send(err, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+			return;
+		}
+
+		dcpp::ConnectionManager::getInstance()->adcConnect(*node, static_cast<uint16_t>(Util::toInt(port)), token, secure);		
 	}
 	
 }

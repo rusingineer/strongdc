@@ -23,10 +23,12 @@ namespace dht
 
 #define BOOTSTRAP_URL				"http://strongdc.sourceforge.net/bootstrap/"
 
-#define DHT_UDPPORT					6184							// default DHT port (TODO: make as option)
+#define DHT_UDPPORT					6237							// default DHT port (TODO: make as option)
 #define DHT_FILE					"dht.xml"						// local file with all information got from the network
 
 #define ID_BITS						192								// size of identificator (in bits)
+
+#define CONNECTED_TIMEOUT			20*60*1000	// 20 minutes		// when there's no incoming packet for this time, network will be set offline
 
 #define ADC_PACKET_HEADER			'U'								// byte which every uncompressed packet must begin with
 #define ADC_PACKET_FOOTER			0x0a							// byte which every uncompressed packet must end with
