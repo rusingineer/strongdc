@@ -60,13 +60,16 @@ namespace dht
 		void checkExpiration(uint64_t aTick);
 		
 		/** Finds the file in the network */
-		void findFile(const string& tth);
+		void findFile(const string& tth, const string& token = Util::toString(Util::rand()));
 		
 		/** Sends our info to specified ip:port */
 		void info(const string& ip, uint16_t port, bool wantResponse);
 		
 		/** Sends Connect To Me request to online node */
 		void connect(const OnlineUser& ou, const string& token);
+		
+		/** Sends private message to online node */
+		void privateMessage(const OnlineUser& ou, const string& aMessage, bool thirdPerson);
 		
 		/** Is DHT connected? */
 		bool isConnected() const { return GET_TICK() - lastPacket < CONNECTED_TIMEOUT; }	

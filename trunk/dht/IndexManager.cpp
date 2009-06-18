@@ -247,5 +247,34 @@ namespace dht
 		ShareManager::getInstance()->publish();
 		return true;
 	}
+	
+	/*
+	 * Removes old sources 
+	 */
+	void IndexManager::checkExpiration(uint64_t aTick)
+	{
+		Lock l(cs);
+
+		TTHMap::iterator i = tthList.begin();
+		while(i != tthList.end())
+		{
+			SourceList::iterator j = i->second.begin();
+			while(j != i->second.end())
+			{
+				const Source& source = *j;
+				if(source.getExpires() <= aTick)
+					j = i->second.erase(j);
+				else
+					break;	// list is sorted, so finding first non-expired can stop iteration
+				
+			}
+			
+			if(i->second.empty())
+				tthList.erase(i++);
+			else
+				++i;
+		}		
+	}
+	
 
 } // namespace dht
