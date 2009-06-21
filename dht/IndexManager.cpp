@@ -153,6 +153,7 @@ namespace dht
 	 */
 	void IndexManager::loadIndexes(SimpleXML& xml)
 	{
+		xml.resetCurrentChild();
 		if(xml.findChild("Indexes"))
 		{
 			xml.stepIn();

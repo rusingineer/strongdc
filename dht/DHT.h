@@ -40,7 +40,7 @@ namespace dht
 		~DHT(void);
 		
 		/** Socket functions */
-		void listen() { socket.listen(); BootstrapManager::getInstance()->start(); }
+		void listen() { socket.listen(); }
 		void disconnect() { socket.disconnect(); }
 		uint16_t getPort() const { return socket.getPort(); }
 		
@@ -72,8 +72,11 @@ namespace dht
 		void privateMessage(const OnlineUser& ou, const string& aMessage, bool thirdPerson);
 		
 		/** Is DHT connected? */
-		bool isConnected() const { return GET_TICK() - lastPacket < CONNECTED_TIMEOUT; }	
+		bool isConnected() const { return lastPacket && (GET_TICK() - lastPacket < CONNECTED_TIMEOUT); }
 		
+		/** Saves network information to XML file */
+		void saveData();
+				
 	private:
 		/** Classes that can access to my private members */
 		friend class Singleton<DHT>;
@@ -115,9 +118,6 @@ namespace dht
 		
 		/** Loads network information from XML file */
 		void loadData();
-		
-		/** Saves network information to XML file */
-		void saveData();		
 	};
 
 }

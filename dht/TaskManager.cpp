@@ -13,7 +13,7 @@ namespace dht
 {
 
 	TaskManager::TaskManager(void) :
-		nextPublishTime(GET_TICK()), nextSearchTime(GET_TICK())
+		nextPublishTime(GET_TICK()), nextSearchTime(GET_TICK()), nextSelfLookup(GET_TICK())
 	{
 		TimerManager::getInstance()->addListener(this);
 	}
@@ -34,10 +34,19 @@ namespace dht
 				IndexManager::getInstance()->publishNextFile();
 			}
 		}
-		else
+		else if(DHT::getInstance()->getPort() > 0)
 		{
-			// bootstrap
-			BootstrapManager::getInstance()->bootstrap();
+			if(DHT::getInstance()->getNodesCount() == 0)
+			{
+				// bootstrap if we doesn't know any remote node
+				BootstrapManager::getInstance()->bootstrap();
+			}
+			else if(aTick >= nextSelfLookup)
+			{
+				// find myself in the network
+				SearchManager::getInstance()->findNode(ClientManager::getInstance()->getMe()->getCID());
+				nextSelfLookup = aTick + SELF_LOOKUP_TIMER;
+			}
 		}
 		
 		if(aTick >= nextSearchTime)
@@ -61,6 +70,8 @@ namespace dht
 		// remove dead nodes
 		DHT::getInstance()->checkExpiration(aTick);
 		IndexManager::getInstance()->checkExpiration(aTick);
+		
+		DHT::getInstance()->saveData();
 	}
 	
 }

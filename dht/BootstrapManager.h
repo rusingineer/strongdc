@@ -34,8 +34,6 @@ namespace dht
 		BootstrapManager(void);
 		~BootstrapManager(void);
 		
-		void start();
-		
 		void bootstrap();
 		
 	private:
@@ -45,10 +43,6 @@ namespace dht
 	
 		/** Downloaded node list */
 		string nodesXML;
-		
-		/** List of bootstrap nodes */
-		typedef std::vector<std::pair<CID, Identity>> NodeList;
-		NodeList nodes;
 		
 		// HttpConnectionListener
 		void on(HttpConnectionListener::Data, HttpConnection* conn, const uint8_t* buf, size_t len) throw();

@@ -29,6 +29,8 @@
 
 namespace dcpp {
 
+class ClientBase;
+
 /** A user connected to one or more hubs. */
 class User : public FastAlloc<User>, public intrusive_ptr_base<User>, public Flags
 {
@@ -133,7 +135,7 @@ public:
 	
 	bool isClientType(ClientType ct) const;
 		
-	string setCheat(const Client& c, const string& aCheatDescription, bool aBadClient);
+	string setCheat(const ClientBase& c, const string& aCheatDescription, bool aBadClient);
 	string getReport() const;
 	string updateClientType(const OnlineUser& ou);
 	bool matchProfile(const string& aString, const string& aProfile) const;
@@ -182,7 +184,7 @@ public:
 		size_t operator()(const OnlineUserPtr& x) const { return ((size_t)(&(*x)))/sizeof(OnlineUser); }
 	};
 
-	OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_);
+	OnlineUser(const UserPtr& ptr, ClientBase& client_, uint32_t sid_);
 	virtual ~OnlineUser() throw() { }
 
 	operator UserPtr&() { return getUser(); }
@@ -191,12 +193,15 @@ public:
 	UserPtr& getUser() { return getIdentity().getUser(); }
 	const UserPtr& getUser() const { return getIdentity().getUser(); }
 	Identity& getIdentity() { return identity; }
-	Client& getClient() { return client; }
-	const Client& getClient() const { return client; }
+	Client& getClient() { return (Client&)client; }
+	const Client& getClient() const { return (const Client&)client; }
+	
+	ClientBase& getClientBase() { return client; }	
+	const ClientBase& getClientBase() const { return client; }
 
 	/* UserInfo */
 	bool update(int sortCol, const tstring& oldText = Util::emptyStringT);
-	uint8_t imageIndex() const { return UserInfoBase::getImage(identity, &client); }
+	uint8_t imageIndex() const { return UserInfoBase::getImage(identity, &getClient()); }
 	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
 	bool isHidden() const { return identity.isHidden(); }
 	
@@ -210,7 +215,7 @@ private:
 	OnlineUser(const OnlineUser&);
 	OnlineUser& operator=(const OnlineUser&);
 
-	Client& client;
+	ClientBase& client;
 };
 
 } // namespace dcpp

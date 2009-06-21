@@ -20,6 +20,7 @@
 
 #include "../client/CID.h"
 #include "../client/Pointer.h"
+#include "../client/TimerManager.h"
 #include "../client/User.h"
 
 namespace dht
@@ -30,11 +31,20 @@ namespace dht
 	{
 		typedef boost::intrusive_ptr<Node> Ptr;
 		
-		Node() : OnlineUser(NULL, *reinterpret_cast<Client*>(NULL), 0) { }
-		Node(const UserPtr& u) : OnlineUser(u, *reinterpret_cast<Client*>(NULL), 0) { }
+		Node();
+		Node(const UserPtr& u);
 		~Node()	{ }
 		
-		GETSET(uint64_t, expires, Expires);
+		uint8_t getType() const { return type; }
+		void setType(uint8_t _type);
+		
+	private:
+	
+		friend class KBucket;
+		
+		uint64_t	lastTypeSet;
+		uint64_t	expires;
+		uint8_t		type;
 	};
 		
 	class KBucket
@@ -42,6 +52,8 @@ namespace dht
 	public:
 		KBucket(void);
 		~KBucket(void);
+
+		typedef std::list<Node::Ptr> NodeList;
 		
 		/** Inserts node to bucket */
 		Node::Ptr insert(const UserPtr& u);
@@ -49,13 +61,15 @@ namespace dht
 		/** Finds "max" closest nodes and stores them to the list */
 		void getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max) const;
 		
+		/** Return list of all nodes in this bucket */
+		const NodeList& getNodes() const { return nodes; }
+		
 		/** Removes dead nodes */
 		unsigned int checkExpiration(uint64_t currentTime);
 		
 	private:
 	
-		/** List of nodes in this bucket */
-		typedef std::list<Node::Ptr> NodeList;
+		/** List of nodes in this bucket */	
 		NodeList nodes;
 		
 	};

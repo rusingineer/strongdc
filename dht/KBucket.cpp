@@ -19,14 +19,67 @@
 #include "StdAfx.h"
 
 #include "Constants.h"
+#include "DHT.h"
 #include "KBucket.h"
 #include "Utils.h"
 
+#include "../client/Client.h"
 #include "../client/ClientManager.h"
 
 namespace dht
 {
+	const string DHTName = "DHT";
+	
+	struct DHTClient : public ClientBase
+	{
+		DHTClient() { type = DHT; }
+		
+		const string& getHubUrl() const { return DHTName; }
+		string getHubName() const { return DHTName; }
+		bool isOp() const { return false; }
+		void connect(const OnlineUser& user, const string& token) { DHT::getInstance()->connect(user, token); }
+		void privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson = false) { DHT::getInstance()->privateMessage(*user.get(), aMessage, thirdPerson); }
+	};
+	
+	static DHTClient client;
+	
+	// Set all new nodes' type to 1 to avoid spreading dead nodes..
+	Node::Node() : 
+		OnlineUser(NULL, dht::client, 0), lastTypeSet(GET_TICK()), type(1), expires(0) 
+	{
+	}
+	
+	Node::Node(const UserPtr& u) : 
+		OnlineUser(u, dht::client, 0), lastTypeSet(GET_TICK()), type(1), expires(0) 
+	{
+	}
 
+	void Node::setType(uint8_t _type)
+	{
+		uint64_t time = GET_TICK();
+		if(_type != 0 && time - lastTypeSet < 10*1000)
+		{
+			return;
+		}
+		
+		if(_type > 1 )
+		{
+			if(expires == 0) // Just in case..
+				expires = time + NODE_RESPONSE_TIMEOUT;
+			else if(type == 1)
+				expires = time + NODE_RESPONSE_TIMEOUT;
+			
+			type = 2; //Just in case in case again..
+			return;
+		}
+
+		type = _type;
+		if(type == 0)
+			expires = time + NODE_EXPIRATION;
+		else 
+			expires = time + (NODE_EXPIRATION / 2);		
+	}
+	
 	KBucket::KBucket(void)
 	{
 	}
@@ -46,7 +99,7 @@ namespace dht
 			{
 				// node is already here, move it to the end
 				Node::Ptr node = *it;
-				node->setExpires(GET_TICK() + NODE_EXPIRATION);
+				node->setType(0);
 				
 				nodes.erase(it);
 				nodes.push_back(node);
@@ -55,8 +108,6 @@ namespace dht
 		}
 		
 		Node::Ptr node = new Node(u);
-		node->setExpires(GET_TICK() + NODE_EXPIRATION);
-		
 		if(nodes.size() < K)
 		{
 			// bucket still has room to store new node
@@ -96,7 +147,9 @@ namespace dht
 		}
 	}
 	
-	/** Remove dead nodes */
+	/*
+	 * Remove dead nodes 
+	 */
 	unsigned int KBucket::checkExpiration(uint64_t currentTime)
 	{
 		unsigned int count = 0;
@@ -104,7 +157,7 @@ namespace dht
 		NodeList::iterator i = nodes.begin();
 		while(i != nodes.end())
 		{
-			uint64_t expires = (*i)->getExpires();
+			uint64_t expires = (*i)->expires;
 			if(expires > 0 && expires <= currentTime)
 			{
 				// node is dead, remove it

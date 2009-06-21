@@ -113,6 +113,7 @@ namespace dht
 				C(SCH);	// search request
 				C(RES);	// response to SCH
 				C(PUB);	// request to publish file
+				C(CTM); // connection request
 				C(STA);	// status message
 				
 			default: 
@@ -304,7 +305,23 @@ namespace dht
 			xml.fromXML(dcpp::File(Util::getConfigPath() + DHT_FILE, dcpp::File::READ, dcpp::File::OPEN).read());
 			
 			xml.stepIn();
-			// TODO: load nodes
+			
+			// load nodes
+			if(xml.findChild("Nodes"))
+			{
+				xml.stepIn();
+				while(xml.findChild("Node"))
+				{
+					CID cid		= CID(xml.getChildAttrib("CID"));
+					string i4	= xml.getChildAttrib("I4");
+					uint16_t u4	= static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4")));;
+					
+					addUser(cid, i4, u4);
+				}
+				xml.stepOut();
+			}
+			
+			// load indexes
 			IndexManager::getInstance()->loadIndexes(xml);
 			xml.stepOut();
 		}
@@ -319,11 +336,39 @@ namespace dht
 	 */
 	void DHT::saveData()
 	{
+		Lock l(cs);
+		
 		SimpleXML xml;
 		xml.addTag("DHT");
 		xml.stepIn();
 		
-		// TODO: save nodes
+		// save nodes
+		xml.addTag("Nodes");
+		xml.stepIn();
+
+		for(int i = 0; i < ID_BITS; i++)
+		{
+			if(bucket[i])		
+			{
+				const KBucket::NodeList& nodes = bucket[i]->getNodes();
+				for(KBucket::NodeList::const_iterator j = nodes.begin(); j != nodes.end(); j++)
+				{
+					const Node::Ptr& node = *j;
+					
+					if(node->getType() < 2) // save only active nodes
+					{
+						xml.addTag("Node");
+						xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());
+						xml.addChildAttrib("I4", node->getIdentity().getIp());
+						xml.addChildAttrib("U4", node->getIdentity().getUdpPort());
+					}
+				}
+			}
+		}
+		
+		xml.stepOut();		
+		
+		// save foreign published files
 		IndexManager::getInstance()->saveIndexes(xml);
 		
 		xml.stepOut();

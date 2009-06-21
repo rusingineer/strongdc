@@ -59,7 +59,7 @@ namespace dht
 			cmd.addParam("TY", Util::toString(type));
 			cmd.addParam("TO", token);
 			
-			node->setExpires(GET_TICK() + NODE_RESPONSE_TIMEOUT);
+			node->setType(node->getType() + 1);
 			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
 		}
 		
@@ -105,7 +105,7 @@ namespace dht
 				// contact node that we are online and we want his info
 				DHT::getInstance()->info(i->getIp(), i->getUdpPort(), true);
 					
-				SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, i->getSize(), Util::emptyString, "DHT", Util::emptyString, i->getIp(), TTHValue(tth), token));
+				SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, i->getSize(), tth, "DHT", Util::emptyString, i->getIp(), TTHValue(tth), token));
 				dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 			}
 			
@@ -289,7 +289,7 @@ namespace dht
 					// contact node that we are online and we want his info
 					DHT::getInstance()->info(i4, static_cast<uint16_t>(Util::toInt(u4)), true);
 						
-					SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, Util::emptyString, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
+					SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, s->term, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
 					dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 				}
 				
@@ -347,7 +347,7 @@ namespace dht
 			cmd.addParam("TR", tth);
 			cmd.addParam("SI", Util::toString(size));
 		
-			i->second->setExpires(GET_TICK() + NODE_RESPONSE_TIMEOUT);
+			i->second->setType(i->second->getType() + 1);
 			DHT::getInstance()->send(cmd, i->second->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(i->second->getIdentity().getUdpPort())));
 			
 			if(k++ == K)

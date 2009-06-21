@@ -34,7 +34,7 @@ namespace dcpp {
 
 FastCriticalSection Identity::cs;
 
-OnlineUser::OnlineUser(const UserPtr& ptr, Client& client_, uint32_t sid_) : identity(ptr, sid_), client(client_), isInList(false) { 
+OnlineUser::OnlineUser(const UserPtr& ptr, ClientBase& client_, uint32_t sid_) : identity(ptr, sid_), client(client_), isInList(false) { 
 	inc();
 }
 
@@ -130,7 +130,7 @@ void FavoriteUser::update(const OnlineUser& info) {
 	setUrl(info.getClient().getHubUrl()); 
 }
 
-string Identity::setCheat(const Client& c, const string& aCheatDescription, bool aBadClient) {
+string Identity::setCheat(const ClientBase& c, const string& aCheatDescription, bool aBadClient) {
 	if(!c.isOp() || isOp()) return Util::emptyString;
 
 	if ((!SETTING(FAKERFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -410,7 +410,7 @@ tstring OnlineUser::getText(uint8_t col) const {
 		}
 		case COLUMN_EMAIL: return Text::toT(identity.getEmail());
 		case COLUMN_VERSION: return Text::toT(identity.get("CL").empty() ? identity.get("VE") : identity.get("CL"));
-		case COLUMN_MODE: return identity.isTcpActive(&client) ? _T("A") : _T("P");
+		case COLUMN_MODE: return identity.isTcpActive(&getClient()) ? _T("A") : _T("P");
 		case COLUMN_HUBS: {
 			const tstring hn = Text::toT(identity.get("HN"));
 			const tstring hr = Text::toT(identity.get("HR"));
