@@ -19,7 +19,10 @@ namespace dht
 		uint64_t nextPublishTime;
 		
 		/** When running searches will be processed */
-		uint64_t nextSearchTime;	
+		uint64_t nextSearchTime;
+		
+		/** When initiate searching for myself */
+		uint64_t nextSelfLookup;
 		
 		// TimerManagerListener
 		void on(TimerManagerListener::Second, uint64_t aTick) throw();	

@@ -40,17 +40,17 @@ namespace dht
 		httpConnection.removeListener(this);
 	}
 
-	void BootstrapManager::start()
+	void BootstrapManager::bootstrap()
 	{
-		dcdebug("MyCID: %s\n", ClientManager::getInstance()->getMe()->getCID().toBase32().c_str());
+		LogManager::getInstance()->message("DHT bootstrapping started");
+		
 		// TODO: make URL settable
-		// TODO: add supported features
 		string url = BOOTSTRAP_URL "?cid=" + ClientManager::getInstance()->getMe()->getCID().toBase32();
 		
 		// store only active nodes to database
 		if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
 		{
-			url += "&u4=" + Util::toString(DHT_UDPPORT);
+			url += "&u4=" + Util::toString(DHT::getInstance()->getPort());
 		}
 		
 		httpConnection.setCoralizeState(HttpConnection::CST_NOCORALIZE);
@@ -81,7 +81,8 @@ namespace dht
 					destBuf.reset(new uint8_t[destLen]);
 					
 					result = uncompress(&destBuf[0], &destLen, (Bytef*)nodesXML.data(), nodesXML.length());
-				} while (result == Z_BUF_ERROR);
+				} 
+				while (result == Z_BUF_ERROR);
 				
 				if(result != Z_OK)
 				{
@@ -95,15 +96,11 @@ namespace dht
 					
 				while(remoteXml.findChild("Node"))
 				{
-					CID cid = CID(remoteXml.getChildAttrib("CID"));
-					string i4 = remoteXml.getChildAttrib("I4");
-					string u4 = remoteXml.getChildAttrib("U4");
+					CID cid		= CID(remoteXml.getChildAttrib("CID"));
+					string i4	= remoteXml.getChildAttrib("I4");
+					uint16_t u4 = static_cast<uint16_t>(Util::toInt(remoteXml.getChildAttrib("U4")));
 					
-					Identity id;
-					id.setIp(i4);
-					id.setUdpPort(u4);
-					
-					nodes.push_back(std::make_pair(cid, id));
+					DHT::getInstance()->addUser(cid, i4, u4);
 				}
 
 				remoteXml.stepOut();
@@ -118,32 +115,6 @@ namespace dht
 	void BootstrapManager::on(HttpConnectionListener::Failed, HttpConnection*, const string& aLine) throw()
 	{
 		LogManager::getInstance()->message("DHT bootstrap error: " + aLine);
-	}
-	
-	void BootstrapManager::bootstrap()
-	{
-		if(!nodes.empty() && DHT::getInstance()->getNodesCount() == 0)
-		{
-			LogManager::getInstance()->message("DHT bootstrapping started");
-			
-			// it's time to bootstrap
-			NodeList bootstrapNodes(SEARCH_ALPHA > nodes.size() ? nodes.size() : SEARCH_ALPHA);
-			
-			// insert ALPHA random nodes to routing table
-			std::random_sample_n(nodes.begin(), nodes.end(), bootstrapNodes.begin(), SEARCH_ALPHA);
-			
-			for(NodeList::const_iterator i = bootstrapNodes.begin(); i != bootstrapNodes.end(); i++)
-			{
-				CID cid		= i->first;
-				string i4	= i->second.getIp();
-				uint16_t u4	= static_cast<uint16_t>(Util::toInt(i->second.getUdpPort()));
-				
-				DHT::getInstance()->addUser(cid, i4, u4);
-			}
-			
-			// find myself in the network
-			SearchManager::getInstance()->findNode(ClientManager::getInstance()->getMe()->getCID());			
-		}
 	}
 	
 }

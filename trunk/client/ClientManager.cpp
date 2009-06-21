@@ -81,11 +81,7 @@ StringList ClientManager::getHubs(const CID& cid) const {
 	StringList lst;
 	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&cid));
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
-	
-		if(&i->second->getClient() == NULL)
-			lst.push_back("DHT");
-		else
-			lst.push_back(i->second->getClient().getHubUrl());
+		lst.push_back(i->second->getClientBase().getHubUrl());
 	}
 	return lst;
 }
@@ -95,12 +91,7 @@ StringList ClientManager::getHubNames(const CID& cid) const {
 	StringList lst;
 	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&cid));
 	for(OnlineIterC i = op.first; i != op.second; ++i) {
-	
-		if(&i->second->getClient() == NULL)
-			lst.push_back("DHT");
-		else
-			lst.push_back(i->second->getClient().getHubName());
-			
+		lst.push_back(i->second->getClientBase().getHubName());		
 	}
 	return lst;
 }
@@ -306,15 +297,7 @@ void ClientManager::connect(const UserPtr& p, const string& token, const string&
 	OnlineUser* u = findOnlineUser(p->getCID(), hintUrl);
 
 	if(u) {
-		if(&u->getClient() == NULL)
-		{
-			// connect to DHT user
-			dht::DHT::getInstance()->connect(*u, token);
-		}
-		else
-		{
-			u->getClient().connect(*u, token);
-		}
+		u->getClientBase().connect(*u, token);
 	}
 }
 
@@ -326,7 +309,7 @@ OnlineUser* ClientManager::findOnlineUser(const CID& cid, const string& hintUrl)
 	if(!p.first->second->getUser()->isSet(User::DHT) && !hintUrl.empty()) {
 		for(OnlineIter i = p.first; i != p.second; ++i) {
 			OnlineUser* u = i->second;
-			if(u->getClient().getHubUrl() == hintUrl) {
+			if(u->getClientBase().getHubUrl() == hintUrl) {
 				return u;
 			}
 		}
@@ -341,10 +324,7 @@ void ClientManager::privateMessage(const UserPtr& p, const string& msg, bool thi
 	OnlineUser* u = findOnlineUser(p->getCID(), hintUrl);
 	
 	if(u) {
-		if(&u->getClient() == NULL)
-			dht::DHT::getInstance()->privateMessage(*u, msg, thirdPerson);
-		else
-			u->getClient().privateMessage(u, msg, thirdPerson);
+		u->getClientBase().privateMessage(u, msg, thirdPerson);
 	}
 }
 
@@ -451,7 +431,7 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 void ClientManager::userCommand(const UserPtr& p, const UserCommand& uc, StringMap& params, bool compatibility) {
 	Lock l(cs);
 	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-	if(i == onlineUsers.end())
+	if(i == onlineUsers.end() || i->second->getClientBase().type == ClientBase::DHT)
 		return;
 
 	OnlineUser& ou = *i->second;
@@ -654,7 +634,7 @@ void ClientManager::fileListDisconnected(const UserPtr& p) {
 
 			if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
 				c = &ou.getClient();
-				report = ou.getIdentity().setCheat(ou.getClient(), "Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
+				report = ou.getIdentity().setCheat(ou.getClientBase(), "Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
 				ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(DISCONNECT_RAW));
 			}
 		}
@@ -682,7 +662,7 @@ void ClientManager::connectionTimeout(const UserPtr& p) {
 	
 			if(connectionTimeouts == SETTING(ACCEPTED_TIMEOUTS)) {
 				c = &ou.getClient();
-				report = ou.getIdentity().setCheat(ou.getClient(), "Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
+				report = ou.getIdentity().setCheat(ou.getClientBase(), "Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
 				remove = true;
 				sendRawCommand(ou.getUser(), ou.getClient(), SETTING(TIMEOUT_RAW));
 			}
@@ -739,7 +719,7 @@ void ClientManager::checkCheating(const UserPtr& p, DirectoryListing* dl) {
 			}
 			detectString += STRING(CHECK_SHOW_REAL_SHARE);
 
-			report = ou->getIdentity().setCheat(ou->getClient(), detectString, false);
+			report = ou->getIdentity().setCheat(ou->getClientBase(), detectString, false);
 			sendRawCommand(ou->getUser(), ou->getClient(), SETTING(FAKESHARE_RAW));
 		}
 		ou->getIdentity().set("FC", "1");
@@ -765,7 +745,7 @@ void ClientManager::setCheating(const UserPtr& p, const string& aTestSURString, 
 			report = ou->getIdentity().updateClientType(*ou);
 		}
 		if(!aCheatString.empty()) {
-			report = ou->getIdentity().setCheat(ou->getClient(), aCheatString, aBadClient);
+			report = ou->getIdentity().setCheat(ou->getClientBase(), aCheatString, aBadClient);
 		}
 		if(aRawCommand != -1)
 			sendRawCommand(ou->getUser(), ou->getClient(), aRawCommand);

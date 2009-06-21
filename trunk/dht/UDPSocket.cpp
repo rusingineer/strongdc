@@ -83,6 +83,7 @@ namespace dht
 		{
 			socket.reset(new Socket);
 			socket->create(Socket::TYPE_UDP);
+			socket->setSocketOpt(SO_REUSEADDR, 1);
 			port = socket->bind(static_cast<uint16_t>(DHT_UDPPORT), SETTING(BIND_ADDRESS));
 		
 			start();
@@ -255,8 +256,6 @@ namespace dht
 		{
 			destBuf[0] = ADC_PACKED_PACKET_HEADER;
 			destSize += 1;
-			
-			dcdebug("Packet compressed successfuly, original size = %d bytes, new size %d bytes\n", command.length() + 1, destSize);
 		}
 		else
 		{

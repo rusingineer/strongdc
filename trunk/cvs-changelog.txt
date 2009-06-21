@@ -1,3 +1,11 @@
+** svn440
+	better dead nodes detection
+	fixed broken DHT connections
+	fixed DHT connected status on startup
+	save DHT status every minute
+	improved bootstrapping
+	DHT uses UDP port 6239
+
 ** svn439
 	working published files expiration
 	fixed crashes when getting DHT hub info

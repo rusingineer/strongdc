@@ -367,14 +367,14 @@ void ConnectionManager::adcConnect(const OnlineUser& aUser, uint16_t aPort, cons
 	if(shuttingDown)
 		return;
 
-	if(checkIpFlood(aUser.getIdentity().getIp(), aPort, "ADC Nick: " + aUser.getIdentity().getNick() + ", Hub: " + aUser.getClient().getHubName()))
+	if(checkIpFlood(aUser.getIdentity().getIp(), aPort, "ADC Nick: " + aUser.getIdentity().getNick() + ", Hub: " + (&aUser.getClient() == NULL ? "DHT" : aUser.getClient().getHubName())))
 		return;
 
 	UserConnection* uc = getConnection(false, secure);
 	uc->setToken(aToken);
 	uc->setEncoding(const_cast<string*>(&Text::utf8));
 	uc->setState(UserConnection::STATE_CONNECT);
-	uc->setHubUrl(aUser.getClient().getHubUrl());
+	uc->setHubUrl(&aUser.getClient() == NULL ? "DHT" : aUser.getClient().getHubUrl());
 	if(aUser.getIdentity().isOp()) {
 		uc->setFlag(UserConnection::FLAG_OP);
 	}
