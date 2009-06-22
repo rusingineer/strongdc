@@ -50,7 +50,7 @@ namespace dht
 		/** Sends command to ip and port */
 		void send(const AdcCommand& cmd, const string& ip, uint16_t port);
 		
-		/** Insert (or update) user in routing table */
+		/** Insert (or update) user into routing table */
 		Node::Ptr addUser(const CID& cid, const string& ip, uint16_t port);
 		
 		/** Returns counts of nodes available in k-buckets */
@@ -74,6 +74,9 @@ namespace dht
 		/** Is DHT connected? */
 		bool isConnected() const { return lastPacket && (GET_TICK() - lastPacket < CONNECTED_TIMEOUT); }
 		
+		/** Mark that network data should be saved */
+		void setDirty() { dirty = true; }
+		
 		/** Saves network information to XML file */
 		void saveData();
 				
@@ -96,7 +99,7 @@ namespace dht
 		UDPSocket	socket;
 		
 		/** Routing table */
-		KBucket*	bucket[ID_BITS];
+		KBucket*	bucket;
 		
 		/** Storage for all online users */
 		std::tr1::unordered_map<CID, OnlineUser*> onlineUsers;
@@ -109,9 +112,9 @@ namespace dht
 		
 		/** Time when last packet was received */
 		uint64_t lastPacket;
-						
-		/** Find bucket for storing node */
-		uint8_t findBucket(const CID& cid) const;
+		
+		/** Should the network data be saved? */
+		bool dirty;
 
 		/** Finds "max" closest nodes and stores them to the list */
 		void getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max);

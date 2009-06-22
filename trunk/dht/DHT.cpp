@@ -38,7 +38,7 @@
 namespace dht
 {
 
-	DHT::DHT(void) : nodesCount(0), lastPacket(0)
+	DHT::DHT(void) : nodesCount(0), lastPacket(0), dirty(false)
 	{
 		BootstrapManager::newInstance();
 		SearchManager::newInstance();
@@ -46,7 +46,7 @@ namespace dht
 		TaskManager::newInstance();
 		ConnectionManager::newInstance();
 		
-		memset(bucket, NULL, ID_BITS * sizeof(bucket[0]));
+		bucket = new KBucket();
 		
 		loadData();
 	}
@@ -54,13 +54,11 @@ namespace dht
 	DHT::~DHT(void)
 	{
 		disconnect();
+		
+		dirty = true;
 		saveData();
 		
-		for(int i = 0; i < ID_BITS; i++)
-		{
-			if(bucket[i])
-				delete bucket[i];
-		}
+		delete bucket;
 		
 		ConnectionManager::deleteInstance();		
 		TaskManager::deleteInstance();
@@ -136,62 +134,19 @@ namespace dht
 	{
 		socket.send(cmd, ip, port);
 	}
-
 	
 	/*
-	 * Find bucket for storing node 
-	 */
-	uint8_t DHT::findBucket(const CID& cid) const
-	{
-		// XOR our id and the sender's ID
-		CID distance = Utils::getDistance(cid, ClientManager::getInstance()->getMe()->getCID());
-		// now use the first on bit to determine which bucket it should go in
-		
-		uint8_t bit_on = 0xFF;
-		for (int i = 0; i < CID::SIZE; i++)
-		{
-			// get the byte
-			uint8_t b = *(distance.data() + i);
-			// no bit on in this byte so continue
-			if (b == 0x00)
-				continue;
-			
-			for (uint8_t j = 0; j < 8; j++)
-			{
-				if (b & (0x80 >> j))
-				{
-					// we have found the bit
-					bit_on = static_cast<uint8_t>(((CID::SIZE - 1) - i) * 8 + (7 - j));
-					return bit_on;
-				}
-			}
-		}
-		
-		return bit_on;		
-	}
-	
-	/*
-	 * Insert (or update) user in routing table 
+	 * Insert (or update) user into routing table 
 	 */
 	Node::Ptr DHT::addUser(const CID& cid, const string& ip, uint16_t port)
 	{
 		Lock l(cs);
 		
-		// find the correct bucket to insert in
-		uint8_t bit_on = findBucket(cid);
-		
-		if(bit_on >= ID_BITS)
-			return NULL;
-			
-		// create bucket if it doesn't exist
-		if(bucket[bit_on] == NULL)
-			bucket[bit_on] = new KBucket();
-			
 		// create user as offline (only TCP connected users will be online)
 		UserPtr u = ClientManager::getInstance()->getUser(cid);
 		u->setFlag(User::DHT);
 		
-		Node::Ptr node = bucket[bit_on]->insert(u);
+		Node::Ptr node = bucket->insert(u);
 		node->getIdentity().setIp(ip);
 		node->getIdentity().setUdpPort(Util::toString(port));
 		
@@ -206,11 +161,7 @@ namespace dht
 	void DHT::getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max)
 	{
 		Lock l(cs);
-		for(int i = 0; i < ID_BITS; i++)
-		{
-			if(bucket[i])
-				bucket[i]->getClosestNodes(cid, closest, max);
-		}
+		bucket->getClosestNodes(cid, closest, max);
 	}
 
 	/*
@@ -219,17 +170,7 @@ namespace dht
 	void DHT::checkExpiration(uint64_t aTick)
 	{
 		Lock l(cs);
-		
-		unsigned int count = 0;
-		
-		for(int i = 0; i < ID_BITS; i++)
-		{
-			if(bucket[i])
-				count += bucket[i]->checkExpiration(aTick);
-		}
-		
-		// update nodes count
-		nodesCount = count;
+		nodesCount = bucket->checkExpiration(aTick);
 	}
 	
 	/*
@@ -336,6 +277,9 @@ namespace dht
 	 */
 	void DHT::saveData()
 	{
+		if(!dirty)
+			return;
+			
 		Lock l(cs);
 		
 		SimpleXML xml;
@@ -346,23 +290,17 @@ namespace dht
 		xml.addTag("Nodes");
 		xml.stepIn();
 
-		for(int i = 0; i < ID_BITS; i++)
+		const KBucket::NodeList& nodes = bucket->getNodes();
+		for(KBucket::NodeList::const_iterator j = nodes.begin(); j != nodes.end(); j++)
 		{
-			if(bucket[i])		
-			{
-				const KBucket::NodeList& nodes = bucket[i]->getNodes();
-				for(KBucket::NodeList::const_iterator j = nodes.begin(); j != nodes.end(); j++)
-				{
-					const Node::Ptr& node = *j;
+			const Node::Ptr& node = *j;
 					
-					if(node->getType() < 2) // save only active nodes
-					{
-						xml.addTag("Node");
-						xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());
-						xml.addChildAttrib("I4", node->getIdentity().getIp());
-						xml.addChildAttrib("U4", node->getIdentity().getUdpPort());
-					}
-				}
+			if(node->getType() < 2) // save only active nodes
+			{
+				xml.addTag("Node");
+				xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());
+				xml.addChildAttrib("I4", node->getIdentity().getIp());
+				xml.addChildAttrib("U4", node->getIdentity().getUdpPort());
 			}
 		}
 		
