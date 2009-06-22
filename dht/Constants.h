@@ -28,7 +28,7 @@ namespace dht
 
 #define ID_BITS						192								// size of identificator (in bits)
 
-#define CONNECTED_TIMEOUT			20*60*1000	// 20 minutes		// when there's no incoming packet for this time, network will be set offline
+#define CONNECTED_TIMEOUT			20*60*1000	// 20 minutes		// when there hasn't been any incoming packet for this time, network will be set offline
 
 #define ADC_PACKET_HEADER			'U'								// byte which every uncompressed packet must begin with
 #define ADC_PACKET_FOOTER			0x0a							// byte which every uncompressed packet must end with
@@ -36,7 +36,7 @@ namespace dht
 
 #define SEARCH_ALPHA				3								// degree of search parallelism
 #define MAX_SEARCH_RESULTS			50								// maximum of allowed search results
-#define SEARCH_PROCESSTIME			10*1000	// 10 seconds			// how often to process done search requests				
+#define SEARCH_PROCESSTIME			2*1000	// 2 seconds			// how often to process done search requests				
 #define SEARCHNODE_LIFETIME			2*60*1000	// 2 minutes		// how long to try searching for node
 #define SEARCHFILE_LIFETIME			3*60*1000	// 3 minutes		// how long to try searching for file
 #define SEARCHSTOREFILE_LIFETIME	2*60*1000	// 2 minutes		// how long to try publishing a file

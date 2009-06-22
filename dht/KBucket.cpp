@@ -93,6 +93,7 @@ namespace dht
 	 */
 	Node::Ptr KBucket::insert(const UserPtr& u)
 	{
+		bool dirty = false;
 		for(NodeList::iterator it = nodes.begin(); it != nodes.end(); it++)
 		{
 			if(u->getCID() == (*it)->getUser()->getCID())
@@ -103,20 +104,26 @@ namespace dht
 				
 				nodes.erase(it);
 				nodes.push_back(node);
+				
+				DHT::getInstance()->setDirty();
 				return node;
 			}
 		}
 		
 		Node::Ptr node = new Node(u);
-		if(nodes.size() < K)
+		if(nodes.size() < (K * ID_BITS))
 		{
 			// bucket still has room to store new node
 			nodes.push_back(node);
+			dirty = true;
 		}
 		else
 		{
 			// TODO: we need to ping the first node in bucket and replace it
 		}
+			
+		if(dirty && DHT::getInstance())
+			DHT::getInstance()->setDirty();
 			
 		return node;	
 	}
@@ -157,17 +164,22 @@ namespace dht
 		NodeList::iterator i = nodes.begin();
 		while(i != nodes.end())
 		{
-			uint64_t expires = (*i)->expires;
-			if(expires > 0 && expires <= currentTime)
+			Node::Ptr& node = *i;
+			
+			if(node->getType() > 1 && node->expires > 0 && node->expires <= currentTime)
 			{
 				// node is dead, remove it
 				if((*i)->getUser()->isOnline())
 					ClientManager::getInstance()->putOffline((*i).get());
 					
 				nodes.erase(i++);
+				DHT::getInstance()->setDirty();
 			}
 			else
 			{
+				if(node->expires == 0)
+					node->expires = currentTime;
+					
 				count++;
 				++i;
 			}

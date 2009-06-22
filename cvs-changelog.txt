@@ -1,3 +1,7 @@
+** svn441
+	change in routing table
+	returning more nodes in search response
+
 ** svn440
 	better dead nodes detection
 	fixed broken DHT connections

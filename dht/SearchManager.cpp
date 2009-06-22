@@ -200,7 +200,7 @@ namespace dht
 			{
 				// get nodes closest to requested ID
 				Search::NodeMap nodes;
-				DHT::getInstance()->getClosestNodes(CID(term), nodes, SEARCH_ALPHA);
+				DHT::getInstance()->getClosestNodes(CID(term), nodes, K);
 				
 				// add nodelist in XML format
 				for(Search::NodeMap::const_iterator i = nodes.begin(); i != nodes.end(); i++)

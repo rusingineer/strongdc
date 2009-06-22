@@ -79,7 +79,9 @@ namespace dht
 		{
 			// new file		
 			tthList.insert(std::make_pair(tth, SourceList(1, source)));
-		}	
+		}
+		
+		DHT::getInstance()->setDirty();
 	}
 
 	/*
@@ -255,6 +257,8 @@ namespace dht
 	void IndexManager::checkExpiration(uint64_t aTick)
 	{
 		Lock l(cs);
+		
+		bool dirty = false;
 
 		TTHMap::iterator i = tthList.begin();
 		while(i != tthList.end())
@@ -264,7 +268,10 @@ namespace dht
 			{
 				const Source& source = *j;
 				if(source.getExpires() <= aTick)
+				{
+					dirty = true;
 					j = i->second.erase(j);
+				}
 				else
 					break;	// list is sorted, so finding first non-expired can stop iteration
 				
@@ -274,7 +281,10 @@ namespace dht
 				tthList.erase(i++);
 			else
 				++i;
-		}		
+		}
+		
+		if(dirty)
+			DHT::getInstance()->setDirty();	
 	}
 	
 
