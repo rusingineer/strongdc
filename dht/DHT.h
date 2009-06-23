@@ -54,7 +54,7 @@ namespace dht
 		Node::Ptr addUser(const CID& cid, const string& ip, uint16_t port);
 		
 		/** Returns counts of nodes available in k-buckets */
-		unsigned int getNodesCount() const { return nodesCount; }
+		unsigned int getNodesCount() { Lock l(cs); return bucket->getNodes().size(); }
 		
 		/** Removes dead nodes */
 		void checkExpiration(uint64_t aTick);
@@ -63,7 +63,7 @@ namespace dht
 		void findFile(const string& tth, const string& token = Util::toString(Util::rand()));
 		
 		/** Sends our info to specified ip:port */
-		void info(const string& ip, uint16_t port, bool wantResponse);
+		void info(const string& ip, uint16_t port, bool wantResponse, bool pingOnly = false);
 		
 		/** Sends Connect To Me request to online node */
 		void connect(const OnlineUser& ou, const string& token);
@@ -117,7 +117,7 @@ namespace dht
 		bool dirty;
 
 		/** Finds "max" closest nodes and stores them to the list */
-		void getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max);
+		void getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max, uint8_t maxType);
 		
 		/** Loads network information from XML file */
 		void loadData();

@@ -1,3 +1,20 @@
+  -- StrongDC++ --
+  
+* opraveny tokeny pro odesílání (extra sloty, fronta odesílání atd.)
+*	pøidán øetìzec detekce starých klientù
+* pokud není k dispozici èásteèný seznam souborù, bude stažen úplný
+* opraveny problémy pøi vypnutém segmentovém stahování (DC++ BZR)
+* opraven pád pøi velkém poètu spojení (DC++ BZR)
+* opravena informace o slotech v ADC hubech
+* opravena aktualizace vlastních informací pøi zapnutí omezovaèe na toolbaru
+* vylepšeno ruèní hledání nìèeho, co je naplánováno pro automatické hledání
+* opraveny problémy s OpenSSL
+* lepší detekce hubu pøi client-to-client spojeních
+* snad opraveny problémy s extra sloty
+* odeslání pozice ve frontì a šifrování jsou zapnuty, i když je aktivována emulace
+* implementace vyhledávacího nástroje DHT
+ 
+
 	-- StrongDC++ 2.22 --
 
 * lepší detekce URL v chatu

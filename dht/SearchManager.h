@@ -68,6 +68,9 @@ namespace dht
 		/** File size */
 		int64_t filesize;
 		
+		/** This is partial file search */
+		bool partial;
+		
 		/** Process this search request */
 		bool process();
 	};
@@ -86,7 +89,7 @@ namespace dht
 		void findFile(const string& tth, const string& token);
 		
 		/** Performs node lookup to store key/value pair in the network */
-		void findStore(const string& tth, int64_t size);		
+		void findStore(const string& tth, int64_t size, bool partial);		
 		
 		/** Process incoming search request */
 		void processSearchRequest(const Node::Ptr& node, const AdcCommand& cmd);
@@ -110,7 +113,10 @@ namespace dht
 		void search(Search& s);
 		
 		/** Sends publishing request */
-		void publishFile(Search::NodeMap nodes, const string& tth, int64_t size);
+		void publishFile(Search::NodeMap nodes, const string& tth, int64_t size, bool partial);
+		
+		/** Checks whether we are alreading searching for a term */
+		bool isAlreadySearchingFor(const string& term);
 		
 	};
 

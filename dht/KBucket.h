@@ -36,13 +36,13 @@ namespace dht
 		~Node()	{ }
 		
 		uint8_t getType() const { return type; }
-		void setType(uint8_t _type);
+		void setAlive();
 		
 	private:
 	
 		friend class KBucket;
 		
-		uint64_t	lastTypeSet;
+		uint64_t	created;
 		uint64_t	expires;
 		uint8_t		type;
 	};
@@ -59,13 +59,13 @@ namespace dht
 		Node::Ptr insert(const UserPtr& u);
 		
 		/** Finds "max" closest nodes and stores them to the list */
-		void getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max) const;
+		void getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max, uint8_t maxType) const;
 		
 		/** Return list of all nodes in this bucket */
 		const NodeList& getNodes() const { return nodes; }
 		
 		/** Removes dead nodes */
-		unsigned int checkExpiration(uint64_t currentTime);
+		bool checkExpiration(uint64_t currentTime);
 		
 	private:
 	

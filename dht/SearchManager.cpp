@@ -59,7 +59,6 @@ namespace dht
 			cmd.addParam("TY", Util::toString(type));
 			cmd.addParam("TO", token);
 			
-			node->setType(node->getType() + 1);
 			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
 		}
 		
@@ -79,6 +78,9 @@ namespace dht
 	 */
 	void SearchManager::findNode(const CID& cid)
 	{
+		if(isAlreadySearchingFor(cid.toBase32()))
+			return;
+			
 		Search* s = new Search();
 		s->type = Search::TYPE_NODE;
 		s->term = cid.toBase32();
@@ -92,25 +94,28 @@ namespace dht
 	 */
 	void SearchManager::findFile(const string& tth, const string& token)
 	{
-		// do I have requested TTH in my store?
-		IndexManager::SourceList sources;
-		if(IndexManager::getInstance()->findResult(TTHValue(tth), sources))
-		{
-			for(IndexManager::SourceList::const_iterator i = sources.begin(); i != sources.end(); i++)
-			{
-				// create user as offline (only TCP connected users will be online)
-				UserPtr u = ClientManager::getInstance()->getUser(i->getCID());
-				u->setFlag(User::DHT);
-					
-				// contact node that we are online and we want his info
-				DHT::getInstance()->info(i->getIp(), i->getUdpPort(), true);
-					
-				SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, i->getSize(), tth, "DHT", Util::emptyString, i->getIp(), TTHValue(tth), token));
-				dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
-			}
-			
+		if(isAlreadySearchingFor(tth))
 			return;
-		}
+	
+		// do I have requested TTH in my store?
+		//IndexManager::SourceList sources;
+		//if(IndexManager::getInstance()->findResult(TTHValue(tth), sources))
+		//{
+		//	for(IndexManager::SourceList::const_iterator i = sources.begin(); i != sources.end(); i++)
+		//	{
+		//		// create user as offline (only TCP connected users will be online)
+		//		UserPtr u = ClientManager::getInstance()->getUser(i->getCID());
+		//		u->setFlag(User::DHT);
+		//			
+		//		// contact node that we are online and we want his info
+		//		DHT::getInstance()->info(i->getIp(), i->getUdpPort(), true);
+		//			
+		//		SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, i->getSize(), tth, "DHT", Util::emptyString, i->getIp(), TTHValue(tth), token));
+		//		dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
+		//	}
+		//	
+		//	return;
+		//}
 		
 		Search* s = new Search();
 		s->type = Search::TYPE_FILE;
@@ -123,12 +128,16 @@ namespace dht
 	/*
 	 * Performs node lookup to store key/value pair in the network 
 	 */
-	void SearchManager::findStore(const string& tth, int64_t size)
+	void SearchManager::findStore(const string& tth, int64_t size, bool partial)
 	{
+		if(isAlreadySearchingFor(tth))
+			return;
+	
 		Search* s = new Search();
 		s->type = Search::TYPE_STOREFILE;
 		s->term = tth;
 		s->filesize = size;
+		s->partial = partial;
 		s->token = Util::toString(Util::rand());
 		
 		search(*s);		
@@ -140,7 +149,7 @@ namespace dht
 	void SearchManager::search(Search& s)
 	{
 		// get nodes closest to requested ID
-		DHT::getInstance()->getClosestNodes(CID(s.term), s.possibleNodes, 50);
+		DHT::getInstance()->getClosestNodes(CID(s.term), s.possibleNodes, 50, 3);
 
 		if(s.process())
 		{
@@ -191,6 +200,9 @@ namespace dht
 						xml.addChildAttrib("I4", i->getIp());
 						xml.addChildAttrib("U4", i->getUdpPort());
 						xml.addChildAttrib("SI", i->getSize());
+						
+						if(i->getPartial())
+							xml.addChildAttrib("PF", string("1"));
 					}
 					break;
 				}
@@ -200,7 +212,7 @@ namespace dht
 			{
 				// get nodes closest to requested ID
 				Search::NodeMap nodes;
-				DHT::getInstance()->getClosestNodes(CID(term), nodes, K);
+				DHT::getInstance()->getClosestNodes(CID(term), nodes, K, 2);
 				
 				// add nodelist in XML format
 				for(Search::NodeMap::const_iterator i = nodes.begin(); i != nodes.end(); i++)
@@ -315,7 +327,7 @@ namespace dht
 				const string& u4 = xml.getChildAttrib("U4");
 
 				// don't bother with private IPs
-				if(Util::isPrivateIp(i4))
+				if(i4.empty() || u4.empty() || Util::isPrivateIp(i4))
 					continue;
 
 				Node::Ptr tmpNode = new Node();
@@ -337,7 +349,7 @@ namespace dht
 	/*
 	 * Sends publishing request 
 	 */
-	void SearchManager::publishFile(Search::NodeMap nodes, const string& tth, int64_t size)
+	void SearchManager::publishFile(Search::NodeMap nodes, const string& tth, int64_t size, bool partial)
 	{
 		// send PUB command to K nodes
 		int k = 0;
@@ -346,8 +358,10 @@ namespace dht
 			AdcCommand cmd(AdcCommand::CMD_PUB, AdcCommand::TYPE_UDP);
 			cmd.addParam("TR", tth);
 			cmd.addParam("SI", Util::toString(size));
+			
+			if(partial)
+				cmd.addParam("PF", "1");
 		
-			i->second->setType(i->second->getType() + 1);
 			DHT::getInstance()->send(cmd, i->second->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(i->second->getIdentity().getUdpPort())));
 			
 			if(k++ == K)
@@ -403,6 +417,21 @@ namespace dht
 				++it;
 			}		
 		}
+	}
+	
+	/*
+	 * Checks whether we are alreading searching for a term 
+	 */
+	bool SearchManager::isAlreadySearchingFor(const string& term)
+	{
+		Lock l(cs);
+		for(SearchMap::const_iterator i = searches.begin(); i != searches.end(); i++)
+		{
+			if(i->second->term == term)
+				return true;
+		}
+		
+		return false;
 	}
 	
 }

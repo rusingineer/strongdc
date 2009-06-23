@@ -1,3 +1,20 @@
+  -- StrongDC++ --
+  
+* fixed upload connection tokens (grant extra slot, upload queue etc.)
+*	added cheating string for old clients
+* get full list when partial one is not available
+* fix round-off issue when segmented downloads are disabled (DC++ BZR)
+* fix crash on too many connections (DC++ BZR)
+* fixed slots info in ADC hubs
+* fixed info update on limiter change from toolbar
+* improved manual searching for something planned for autosearch
+* using OpenSSL with disabled TLS extension
+* better hub detection for client-to-client connections
+* hopefully fixed extra slot issues
+* upload queue position and TLS connections are enabled in spite of stealth mode
+* implemented DHT search engine
+
+
 	-- StrongDC++ 2.22 --
 
 * better URL detection in chat

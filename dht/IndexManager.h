@@ -47,6 +47,7 @@ struct Source
 	GETSET(uint64_t, expires, Expires);
 	GETSET(uint64_t, size, Size);
 	GETSET(uint16_t, udpPort, UdpPort);
+	GETSET(bool, partial, Partial);
 };
 
 class IndexManager :
@@ -103,7 +104,7 @@ private:
 	mutable CriticalSection cs;
 	
 	/** Add new source to tth list */
-	void addIndex(const TTHValue& tth, const Node::Ptr& node, uint64_t size);
+	void addIndex(const TTHValue& tth, const Node::Ptr& node, uint64_t size, bool partial);
 
 };
 

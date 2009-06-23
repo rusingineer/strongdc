@@ -42,14 +42,15 @@ namespace dht
 	/*
 	 * Add new source to tth list 
 	 */
-	void IndexManager::addIndex(const TTHValue& tth, const Node::Ptr& node, uint64_t size)
+	void IndexManager::addIndex(const TTHValue& tth, const Node::Ptr& node, uint64_t size, bool partial)
 	{
 		Source source;
 		source.setCID(node->getUser()->getCID());
 		source.setIp(node->getIdentity().getIp());
 		source.setUdpPort(static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
 		source.setSize(size);
-		source.setExpires(GET_TICK() + REPUBLISH_TIME);
+		source.setExpires(GET_TICK() + (partial ? PFS_REPUBLISH_TIME : REPUBLISH_TIME));
+		source.setPartial(partial);
 			
 		Lock l(cs);
 		
@@ -119,7 +120,7 @@ namespace dht
 			f = publishQueue.front(); // get the first file in queue
 			publishQueue.pop_front(); // and remove it from queue
 		}
-		SearchManager::getInstance()->findStore(f.tth.toBase32(), f.size);
+		SearchManager::getInstance()->findStore(f.tth.toBase32(), f.size, false);
 	}
 
 	/*
@@ -173,6 +174,7 @@ namespace dht
 					source.setUdpPort(static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4"))));
 					source.setSize(Util::toInt64(xml.getChildAttrib("SI")));
 					source.setExpires(Util::toInt64(xml.getChildAttrib("expires")));
+					source.setPartial(false);
 					
 					sources.push_back(source);
 				}
@@ -203,6 +205,9 @@ namespace dht
 			{
 				const Source& source = *j;
 				
+				if(source.getPartial())
+					continue;	// don't store partial sources
+					
 				xml.addTag("Source");
 				xml.addChildAttrib("CID", source.getCID().toBase32());
 				xml.addChildAttrib("I4", source.getIp());
@@ -229,7 +234,10 @@ namespace dht
 		if(!cmd.getParam("SI", 0, size))
 			return;	// no file size?
 	
-		addIndex(TTHValue(tth), node, Util::toInt64(size));
+		string partial;
+		cmd.getParam("PI", 0, partial);
+		
+		addIndex(TTHValue(tth), node, Util::toInt64(size), partial == "1");
 		
 		// send response
 		DHT::getInstance()->send(AdcCommand(AdcCommand::SEV_SUCCESS, AdcCommand::ERROR_GENERIC, "File published: " + tth, AdcCommand::TYPE_UDP), 

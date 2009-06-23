@@ -43,41 +43,35 @@ namespace dht
 	
 	static DHTClient client;
 	
-	// Set all new nodes' type to 1 to avoid spreading dead nodes..
+	// Set all new nodes' type to 3 to avoid spreading dead nodes..
 	Node::Node() : 
-		OnlineUser(NULL, dht::client, 0), lastTypeSet(GET_TICK()), type(1), expires(0) 
+		OnlineUser(NULL, dht::client, 0), created(GET_TICK()), type(3), expires(0) 
 	{
 	}
 	
 	Node::Node(const UserPtr& u) : 
-		OnlineUser(u, dht::client, 0), lastTypeSet(GET_TICK()), type(1), expires(0) 
+		OnlineUser(u, dht::client, 0), created(GET_TICK()), type(3), expires(0) 
 	{
 	}
 
-	void Node::setType(uint8_t _type)
+	void Node::setAlive()
 	{
-		uint64_t time = GET_TICK();
-		if(_type != 0 && time - lastTypeSet < 10*1000)
+		// long existing nodes will probably be there for another long time
+		uint64_t hours = (GET_TICK() - created) / 1000 / 60 / 60;
+		switch(hours)
 		{
-			return;
+			case 0:
+				type = 2;
+				expires = GET_TICK() + (NODE_EXPIRATION / 2);
+				break;
+			case 1:
+				type = 1;
+				expires = GET_TICK() + (uint64_t)(NODE_EXPIRATION / 1.5);
+				break;
+			default:	// long existing nodes
+				type = 0;
+				expires = GET_TICK() + NODE_EXPIRATION;			
 		}
-		
-		if(_type > 1 )
-		{
-			if(expires == 0) // Just in case..
-				expires = time + NODE_RESPONSE_TIMEOUT;
-			else if(type == 1)
-				expires = time + NODE_RESPONSE_TIMEOUT;
-			
-			type = 2; //Just in case in case again..
-			return;
-		}
-
-		type = _type;
-		if(type == 0)
-			expires = time + NODE_EXPIRATION;
-		else 
-			expires = time + (NODE_EXPIRATION / 2);		
 	}
 	
 	KBucket::KBucket(void)
@@ -100,7 +94,7 @@ namespace dht
 			{
 				// node is already here, move it to the end
 				Node::Ptr node = *it;
-				node->setType(0);
+				node->setAlive();
 				
 				nodes.erase(it);
 				nodes.push_back(node);
@@ -110,7 +104,7 @@ namespace dht
 			}
 		}
 		
-		Node::Ptr node = new Node(u);
+		Node::Ptr node(new Node(u));
 		if(nodes.size() < (K * ID_BITS))
 		{
 			// bucket still has room to store new node
@@ -131,24 +125,27 @@ namespace dht
 	/*
 	 * Finds "max" closest nodes and stores them to the list 
 	 */
-	void KBucket::getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max) const
+	void KBucket::getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max, uint8_t maxType) const
 	{
 		for(NodeList::const_iterator it = nodes.begin(); it != nodes.end(); it++)
 		{
-			CID distance = Utils::getDistance(cid, (*it)->getUser()->getCID());
-			string ip = (*it)->getIdentity().getIp();
-			if(closest.size() < max)
+			if((*it)->getType() <= maxType)
 			{
-				// just insert
-				closest.insert(std::make_pair(distance, *it));
-			}
-			else
-			{
-				// not enough room, so insert only closer nodes
-				if(distance < closest.rbegin()->first)	// "closest" is sorted map, so just compare with last node
+				CID distance = Utils::getDistance(cid, (*it)->getUser()->getCID());
+				string ip = (*it)->getIdentity().getIp();
+				if(closest.size() < max)
 				{
-					closest.erase(closest.rbegin()->first);
+					// just insert
 					closest.insert(std::make_pair(distance, *it));
+				}
+				else
+				{
+					// not enough room, so insert only closer nodes
+					if(distance < closest.rbegin()->first)	// "closest" is sorted map, so just compare with last node
+					{
+						closest.erase(closest.rbegin()->first);
+						closest.insert(std::make_pair(distance, *it));
+					}
 				}
 			}
 		}
@@ -157,35 +154,59 @@ namespace dht
 	/*
 	 * Remove dead nodes 
 	 */
-	unsigned int KBucket::checkExpiration(uint64_t currentTime)
+	bool KBucket::checkExpiration(uint64_t currentTime)
 	{
-		unsigned int count = 0;
+		bool dirty = false;
 		
 		NodeList::iterator i = nodes.begin();
 		while(i != nodes.end())
 		{
 			Node::Ptr& node = *i;
 			
-			if(node->getType() > 1 && node->expires > 0 && node->expires <= currentTime)
+			if(node->getType() == 4)
 			{
-				// node is dead, remove it
-				if((*i)->getUser()->isOnline())
-					ClientManager::getInstance()->putOffline((*i).get());
+				if(node->expires > 0 && node->expires <= currentTime)
+				{
+					if(node->unique())
+					{
+						// node is dead, remove it
+						if(node->isInList)
+							ClientManager::getInstance()->putOffline((*i).get());
 					
-				nodes.erase(i++);
-				DHT::getInstance()->setDirty();
-			}
-			else
-			{
-				if(node->expires == 0)
-					node->expires = currentTime;
+						i = nodes.erase(i);
+						dirty = true;
+						continue;
+					}
 					
-				count++;
-				++i;
+					i++;
+					continue;
+				}
 			}
+			if(node->expires == 0)
+				node->expires = currentTime;
+					
+			i++;
 		}
 		
-		return count;
+		// ping the oldest (expiring) node
+		Node::Ptr oldest = nodes.front();
+		if(oldest)
+		{
+			if(oldest->expires > currentTime || oldest->getType() == 4)
+			{
+				// cycle nodes
+				nodes.pop_front();
+				nodes.push_back(oldest);
+				
+				return dirty;
+			}
+			
+			oldest->type++;
+			oldest->expires = currentTime + NODE_RESPONSE_TIMEOUT;
+			DHT::getInstance()->info(oldest->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(oldest->getIdentity().getUdpPort())), true, true);
+		}
+		
+		return dirty;
 	}
 	
 	
