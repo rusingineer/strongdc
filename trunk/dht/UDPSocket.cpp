@@ -84,6 +84,7 @@ namespace dht
 			socket.reset(new Socket);
 			socket->create(Socket::TYPE_UDP);
 			socket->setSocketOpt(SO_REUSEADDR, 1);
+			socket->setSocketOpt(SO_RCVBUF, 65536);
 			port = socket->bind(static_cast<uint16_t>(DHT_UDPPORT), SETTING(BIND_ADDRESS));
 		
 			start();
@@ -100,7 +101,7 @@ namespace dht
 		if(socket->wait(POLL_TIMEOUT, Socket::WAIT_READ) == Socket::WAIT_READ)
 		{
 			sockaddr_in remoteAddr = { 0 };
-			boost::scoped_array<uint8_t> buf(new uint8_t[BUFSIZE]);			
+			boost::scoped_array<uint8_t> buf(new uint8_t[BUFSIZE]);	
 			int len = socket->read(&buf[0], BUFSIZE, remoteAddr);
 			dcdrun(receivedBytes += len);
 			
@@ -207,6 +208,7 @@ namespace dht
 					{
 						socket->disconnect();
 						socket->create(Socket::TYPE_UDP);
+						socket->setSocketOpt(SO_RCVBUF, 65536);
 						socket->bind(port, SETTING(BIND_ADDRESS));
 						if(failed)
 						{

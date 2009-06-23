@@ -67,6 +67,7 @@ OnlineUser& AdcHub::getUser(const uint32_t aSID, const CID& aCID) {
 	{
 		Lock l(cs);
 		ou = users.insert(make_pair(aSID, new OnlineUser(p, *this, aSID))).first->second;
+		ou->inc();
 	}
 
 	if(aSID != AdcCommand::HUB_SID)

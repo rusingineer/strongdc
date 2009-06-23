@@ -1,3 +1,10 @@
+** svn442
+	rewritten nodes expiration
+	decreased DHT search lifetimes
+	increased UDP receive buffer size
+	prepared for partial file sharing in DHT
+	forbidden duplicate DHT searches
+
 ** svn441
 	change in routing table
 	returning more nodes in search response

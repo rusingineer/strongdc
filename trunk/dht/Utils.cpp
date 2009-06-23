@@ -24,16 +24,16 @@
 namespace dht
 {
 
-CID Utils::getDistance(const CID& cid1, const CID& cid2)
-{
-	uint8_t distance[CID::SIZE];
-	
-	for(int i = 0; i < CID::SIZE; i++)
+	CID Utils::getDistance(const CID& cid1, const CID& cid2)
 	{
-		distance[i] = cid1.data()[i] ^ cid2.data()[i];
+		uint8_t distance[CID::SIZE];
+		
+		for(int i = 0; i < CID::SIZE; i++)
+		{
+			distance[i] = cid1.data()[i] ^ cid2.data()[i];
+		}
+		
+		return CID(distance);
 	}
-	
-	return CID(distance);
-}
 
 } // namespace dht

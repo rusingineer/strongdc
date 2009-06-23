@@ -35,7 +35,6 @@ namespace dcpp {
 FastCriticalSection Identity::cs;
 
 OnlineUser::OnlineUser(const UserPtr& ptr, ClientBase& client_, uint32_t sid_) : identity(ptr, sid_), client(client_), isInList(false) { 
-	inc();
 }
 
 void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility) const {

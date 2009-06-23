@@ -158,10 +158,10 @@ namespace dht
 	/*
 	 * Finds "max" closest nodes and stores them to the list 
 	 */
-	void DHT::getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max)
+	void DHT::getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max, uint8_t maxType)
 	{
 		Lock l(cs);
-		bucket->getClosestNodes(cid, closest, max);
+		bucket->getClosestNodes(cid, closest, max, maxType);
 	}
 
 	/*
@@ -170,7 +170,8 @@ namespace dht
 	void DHT::checkExpiration(uint64_t aTick)
 	{
 		Lock l(cs);
-		nodesCount = bucket->checkExpiration(aTick);
+		if(bucket->checkExpiration(aTick))
+			setDirty();
 	}
 	
 	/*
@@ -183,7 +184,7 @@ namespace dht
 	}
 	
 	/** Sends our info to specified ip:port */
-	void DHT::info(const string& ip, uint16_t port, bool wantResponse)
+	void DHT::info(const string& ip, uint16_t port, bool wantResponse, bool pingOnly)
 	{
 		// TODO: what info is needed?
 		AdcCommand cmd(AdcCommand::CMD_INF, AdcCommand::TYPE_UDP);
@@ -193,29 +194,31 @@ namespace dht
 #else
 #define VER VERSIONSTRING
 #endif		
-		
-		cmd.addParam("VE", ("StrgDC++ " VER));
-		cmd.addParam("NI", SETTING(NICK));
-		
-		if(wantResponse)
-			cmd.addParam("RE", "1");
-		
-		string su;
-		if(CryptoManager::getInstance()->TLSOk())
+		if(!pingOnly)
 		{
-			su += ADCS_FEATURE ",";
-		}
+			cmd.addParam("VE", ("StrgDC++ " VER));
+			cmd.addParam("NI", SETTING(NICK));
+			
+			if(wantResponse)
+				cmd.addParam("RE", "1");
+			
+			string su;
+			if(CryptoManager::getInstance()->TLSOk())
+			{
+				su += ADCS_FEATURE ",";
+			}
 
-		if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
-		{
-			su += TCP4_FEATURE ",";
-			su += UDP4_FEATURE ",";
+			if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
+			{
+				su += TCP4_FEATURE ",";
+				su += UDP4_FEATURE ",";
+			}
+			
+			if(!su.empty()) {
+				su.erase(su.size() - 1);
+			}
+			cmd.addParam("SU", su);
 		}
-		
-		if(!su.empty()) {
-			su.erase(su.size() - 1);
-		}
-		cmd.addParam("SU", su);
 			
 		send(cmd, ip, port);		
 	}
@@ -295,13 +298,10 @@ namespace dht
 		{
 			const Node::Ptr& node = *j;
 					
-			if(node->getType() < 2) // save only active nodes
-			{
-				xml.addTag("Node");
-				xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());
-				xml.addChildAttrib("I4", node->getIdentity().getIp());
-				xml.addChildAttrib("U4", node->getIdentity().getUdpPort());
-			}
+			xml.addTag("Node");
+			xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());
+			xml.addChildAttrib("I4", node->getIdentity().getIp());
+			xml.addChildAttrib("U4", node->getIdentity().getUdpPort());
 		}
 		
 		xml.stepOut();		
@@ -336,6 +336,9 @@ namespace dht
 		string wantResponse;
 		c.getParam("RE", 0, wantResponse);
 		
+		string nick;
+		c.getParam("NI", 0, nick);
+		
 		// user send us his info, make him online	
 		for(StringIterC i = c.getParameters().begin(); i != c.getParameters().end(); ++i) {
 			if(i->length() < 2)
@@ -350,7 +353,7 @@ namespace dht
 			node->getUser()->setFlag(User::TLS);
 		}		
 		
-		if(!node->isInList)
+		if(!nick.empty() && !node->isInList)
 		{
 			node->isInList = true;
 			ClientManager::getInstance()->putOnline(node.get());
