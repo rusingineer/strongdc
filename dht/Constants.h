@@ -23,7 +23,7 @@ namespace dht
 
 #define BOOTSTRAP_URL				"http://strongdc.sourceforge.net/bootstrap/"
 
-#define DHT_UDPPORT					6239							// default DHT port (TODO: make as option)
+#define DHT_UDPPORT					6240							// default DHT port
 #define DHT_FILE					"dht.xml"						// local file with all information got from the network
 
 #define ID_BITS						192								// size of identificator (in bits)
@@ -35,10 +35,10 @@ namespace dht
 #define ADC_PACKED_PACKET_HEADER	0xc1							// compressed packet detection byte
 
 #define SEARCH_ALPHA				3								// degree of search parallelism
-#define MAX_SEARCH_RESULTS			50								// maximum of allowed search results
-#define SEARCH_PROCESSTIME			2*1000	// 2 seconds			// how often to process done search requests				
-#define SEARCHNODE_LIFETIME			90*1000	// 90 seconds			// how long to try searching for node
-#define SEARCHFILE_LIFETIME			90*1000	// 90 seconds			// how long to try searching for file
+#define MAX_SEARCH_RESULTS			300								// maximum of allowed search results
+#define SEARCH_PROCESSTIME			3*1000	// 3 seconds			// how often to process done search requests				
+#define SEARCHNODE_LIFETIME			2*60*1000	// 2 minutes		// how long to try searching for node
+#define SEARCHFILE_LIFETIME			2*60*1000	// 2 minutes		// how long to try searching for file
 #define SEARCHSTOREFILE_LIFETIME	3*60*1000	// 3 minutes		// how long to try publishing a file
 #define SELF_LOOKUP_TIMER			4*60*60*1000	// 4 hours		// how often to search for self node
 
@@ -49,6 +49,8 @@ namespace dht
 #define REPUBLISH_TIME				24*60*60*1000	// 24 hours		// when our filelist should be republished
 #define PFS_REPUBLISH_TIME			1*60*60*1000	// 1 hour		// when partially downloaded files should be republished
 #define MAX_PUBLISHES_AT_TIME		2								// how many files can be published at one time
+
+#define FW_RESPONSES				3								// how many UDP port checks are needed to detect we are firewalled
 
 #define NODE_RESPONSE_TIMEOUT		2*60*1000	// 2 minutes		// node has this time to response else we ignore him/mark him as dead node
 #define NODE_EXPIRATION				2*60*60*1000 // 2 hours			// when node should be marked as possibly dead

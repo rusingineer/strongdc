@@ -126,7 +126,7 @@
 #define IDC_REMOVE_ALL                  1010
 #define IDC_ADD                         1011
 #define IDC_REMOVE                      1012
-#define IDC_RECHECK						1013
+#define IDC_RECHECK                     1013
 #define IDC_TOTAL                       1014
 #define IDC_SLOTS                       1015
 #define IDC_SLOTSPIN                    1016
@@ -554,6 +554,7 @@
 #define IDC_PORT_TLS                    1318
 #define IDC_SETTINGS_SOCKET_OUT_BUFFER  1319
 #define IDC_PROFILE_COUNT               1319
+#define IDC_PORT_DHT                    1319
 #define IDC_SETTINGS_SOCKET_IN_BUFFER   1320
 #define IDC_PROFILE_VERSION             1320
 #define IDC_RAW                         1322
@@ -588,6 +589,8 @@
 #define IDC_CLOSE_ALL_SEARCH_FRAME      1426
 #define IDC_SETTINGS_PORT_TLS           1427
 #define IDC_MATCH_ALL                   1428
+#define IDC_SETTINGS_PORT_TLS2          1428
+#define IDC_SETTINGS_PORT_DHT           1428
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
 #define IDC_UPDATE_VERSION_LATEST_LBL   1447

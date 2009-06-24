@@ -30,14 +30,17 @@ namespace dht
 struct File
 {
 	File() { };
-	File(const TTHValue& _tth, int64_t _size) :
-		tth(_tth), size(_size) { }
+	File(const TTHValue& _tth, int64_t _size, bool _partial) :
+		tth(_tth), size(_size), partial(_partial) { }
 		
 	/** File hash */
 	TTHValue tth;
 	
 	/** File size in bytes */
 	int64_t size;
+	
+	/** Is it partially downloaded file? */
+	bool partial;
 };
 
 struct Source
@@ -68,9 +71,6 @@ public:
 	/** Create publish queue from local file list */
 	void createPublishQueue(ShareManager::HashFileMap& tthIndex);
 	
-	/** Publishes all files in queue */
-	bool publishFiles();
-	
 	/** Loads existing indexes from disk */
 	void loadIndexes(SimpleXML& xml);
 	
@@ -86,6 +86,9 @@ public:
 	
 	/** Removes old sources */
 	void checkExpiration(uint64_t aTick);
+	
+	/** Publishes partially downloaded file */
+	void publishPartialFile(const TTHValue& tth);
 	
 private:
 

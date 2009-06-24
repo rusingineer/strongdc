@@ -1,3 +1,10 @@
+** svn443
+	make option to set DHT/UDP port (still cannot be changed)
+	added IP:port check for DHT packets
+	partial file sharing in DHT
+	UDP buffer size respects settings
+	DHT uses UDP port 6240
+
 ** svn442
 	rewritten nodes expiration
 	decreased DHT search lifetimes

@@ -24,9 +24,7 @@
 #include "..\client\CriticalSection.h"
 #include "..\client\FastAlloc.h"
 #include "..\client\MerkleTree.h"
-#include "..\client\SearchManagerListener.h"
 #include "..\client\Singleton.h"
-#include "..\client\Speaker.h"
 #include "..\client\TimerManager.h"
 #include "..\client\User.h"
 
@@ -76,7 +74,7 @@ namespace dht
 	};
 		
 	class SearchManager :
-		public Speaker<SearchManagerListener>, public Singleton<SearchManager>
+		public Singleton<SearchManager>
 	{
 	public:
 		SearchManager(void);
@@ -113,7 +111,7 @@ namespace dht
 		void search(Search& s);
 		
 		/** Sends publishing request */
-		void publishFile(Search::NodeMap nodes, const string& tth, int64_t size, bool partial);
+		void publishFile(const Search::NodeMap& nodes, const string& tth, int64_t size, bool partial);
 		
 		/** Checks whether we are alreading searching for a term */
 		bool isAlreadySearchingFor(const string& term);

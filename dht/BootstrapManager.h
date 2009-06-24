@@ -36,8 +36,17 @@ namespace dht
 		
 		void bootstrap();
 		
+		void process();
+		
+		void addBootstrapNode(const string& ip, uint16_t udpPort);
+		
 	private:
 	
+		CriticalSection cs;
+		
+		/** List of bootstrap nodes */
+		deque<std::pair<string, uint16_t>> bootstrapNodes;
+		
 		/** HTTP connection for bootstrapping */ 
 		HttpConnection httpConnection;
 	

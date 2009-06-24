@@ -143,7 +143,7 @@ public:
 		time_t aAdded, const TTHValue& tth) :
 		Flags(aFlag), target(aTarget), maxSegments(1), fileBegin(0),
 		size(aSize), priority(aPriority), added(aAdded),
-		tthRoot(tth), autoPriority(false)
+		tthRoot(tth), autoPriority(false), nextPublishingTime(0)
 	{
 		inc();
 		setFlag(FLAG_AUTODROP);
@@ -153,7 +153,7 @@ public:
 		Flags(rhs), done(rhs.done), downloads(rhs.downloads), target(rhs.target), 
 		size(rhs.size), priority(rhs.priority), added(rhs.added), tthRoot(rhs.tthRoot),
 		autoPriority(rhs.autoPriority), maxSegments(rhs.maxSegments), fileBegin(rhs.fileBegin),
-		sources(rhs.sources), badSources(rhs.badSources), tempTarget(rhs.tempTarget)
+		sources(rhs.sources), badSources(rhs.badSources), tempTarget(rhs.tempTarget), nextPublishingTime(rhs.nextPublishingTime)
 	{
 		inc();
 	}
@@ -256,6 +256,7 @@ public:
 	GETSET(DownloadList, downloads, Downloads);
 	GETSET(string, target, Target);
 	GETSET(uint64_t, fileBegin, FileBegin);
+	GETSET(uint64_t, nextPublishingTime, NextPublishingTime);
 	GETSET(int64_t, size, Size);
 	GETSET(time_t, added, Added);
 	GETSET(Priority, priority, Priority);

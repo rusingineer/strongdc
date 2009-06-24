@@ -37,6 +37,9 @@ public:
 		return TTHValue(const_cast<uint8_t*>(getDistance(cid, CID(tth.data)).data()));
 	}
 	
+	/** Detect whether it is correct to use IP:port in DHT network */
+	static bool isGoodIPPort(const string& ip, uint16_t port);
+	
 private:
 	Utils(void) { }
 	~Utils(void) { }

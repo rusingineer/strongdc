@@ -40,6 +40,8 @@
 #include "SearchResult.h"
 #include "MerkleCheckOutputStream.h"
 
+#include "../dht/IndexManager.h"
+
 #include <limits>
 
 #ifdef ff
@@ -570,8 +572,10 @@ struct PartsInfoReqParam{
 };
 
 void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
+	
 	string searchString;
 	vector<const PartsInfoReqParam*> params;
+	TTHValue* tthPub = NULL;
 
 	{
 		Lock l(cs);
@@ -602,8 +606,10 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 
 			source->setPendingQueryCount(source->getPendingQueryCount() + 1);
 			source->setNextQueryTime(aTick + 300000);		// 5 minutes
-
 		}
+		
+		if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
+			tthPub = fileQueue.findPFSPubTTH();
 
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {
 			// We keep 30 recent searches to avoid duplicate searches
@@ -641,6 +647,13 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 		delete param;
 	}
 
+	// DHT PFS announce
+	if(tthPub)
+	{
+		dht::IndexManager::getInstance()->publishPartialFile(*tthPub);
+		delete tthPub;
+	}
+	
 	if(!searchString.empty()) {
 		SearchManager::getInstance()->search(searchString, 0, SearchManager::TYPE_TTH, SearchManager::SIZE_DONTCARE, "auto");
 	}
@@ -2113,6 +2126,34 @@ void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl)
 		sl.push_back(i->second);
 	}
 }
+
+TTHValue* QueueManager::FileQueue::findPFSPubTTH()
+{
+	uint64_t now = GET_TICK();
+	QueueItem::Ptr cand = NULL;
+
+	for(QueueItem::StringIter i = queue.begin(); i != queue.end(); i++)
+	{
+		QueueItem::Ptr qi = i->second;
+		if(qi && qi->getSize() >= PARTIAL_SHARE_MIN_SIZE && now >= qi->getNextPublishingTime() && qi->getPriority() > QueueItem::PAUSED)
+		{
+			if(cand == NULL || cand->getNextPublishingTime() > qi->getNextPublishingTime() || (cand->getNextPublishingTime() == qi->getNextPublishingTime() && cand->getPriority() < qi->getPriority()) )
+			{
+				if(qi->getDownloadedBytes() > HashManager::getInstance()->getBlockSize(qi->getTTH()))
+					cand = qi;
+			}
+		}
+	}
+
+	if(cand)
+	{
+		cand->setNextPublishingTime(now + PFS_REPUBLISH_TIME);		// one hour
+		return new TTHValue(cand->getTTH());	
+	}
+
+	return NULL;
+}
+
 
 } // namespace dcpp
 

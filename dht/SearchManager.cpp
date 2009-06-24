@@ -200,9 +200,7 @@ namespace dht
 						xml.addChildAttrib("I4", i->getIp());
 						xml.addChildAttrib("U4", i->getUdpPort());
 						xml.addChildAttrib("SI", i->getSize());
-						
-						if(i->getPartial())
-							xml.addChildAttrib("PF", string("1"));
+						xml.addChildAttrib("PF", i->getPartial());
 					}
 					break;
 				}
@@ -286,21 +284,32 @@ namespace dht
 				{
 					const CID cid		= CID(xml.getChildAttrib("CID"));
 					const string& i4	= xml.getChildAttrib("I4");
-					const string& u4	= xml.getChildAttrib("U4");
+					uint16_t u4			= static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4")));
 					int64_t size		= Util::toInt64(xml.getChildAttrib("SI"));
+					bool partial		= xml.getBoolChildAttrib("PF");
 
 					// don't bother with invalid sources and private IPs
-					if(	cid.isZero() || i4.empty() || u4.empty() || 
-						ClientManager::getInstance()->getMe()->getCID() == cid || Util::isPrivateIp(i4))
+					if(	cid.isZero() || ClientManager::getInstance()->getMe()->getCID() == cid || !Utils::isGoodIPPort(i4, u4))
 						continue;
 
 					// create user as offline (only TCP connected users will be online)
 					UserPtr u = ClientManager::getInstance()->getUser(cid);
 					u->setFlag(User::DHT);
-						
+										
 					// contact node that we are online and we want his info
-					DHT::getInstance()->info(i4, static_cast<uint16_t>(Util::toInt(u4)), true);
+					DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE);
+					
+					if(partial)
+					{
+						// ask for partial file
+						AdcCommand cmd(AdcCommand::CMD_PSR, AdcCommand::TYPE_UDP);
+						cmd.addParam("U4", Util::toString(dcpp::SearchManager::getInstance()->getPort()));
+						cmd.addParam("TR", s->term);
 						
+						DHT::getInstance()->send(cmd, i4, u4);
+						continue;
+					}
+				
 					SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, s->term, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
 					dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 				}
@@ -327,7 +336,7 @@ namespace dht
 				const string& u4 = xml.getChildAttrib("U4");
 
 				// don't bother with private IPs
-				if(i4.empty() || u4.empty() || Util::isPrivateIp(i4))
+				if(!Utils::isGoodIPPort(i4, static_cast<uint16_t>(Util::toInt(u4))))
 					continue;
 
 				Node::Ptr tmpNode = new Node();
@@ -349,7 +358,7 @@ namespace dht
 	/*
 	 * Sends publishing request 
 	 */
-	void SearchManager::publishFile(Search::NodeMap nodes, const string& tth, int64_t size, bool partial)
+	void SearchManager::publishFile(const Search::NodeMap& nodes, const string& tth, int64_t size, bool partial)
 	{
 		// send PUB command to K nodes
 		int k = 0;
@@ -358,6 +367,7 @@ namespace dht
 			AdcCommand cmd(AdcCommand::CMD_PUB, AdcCommand::TYPE_UDP);
 			cmd.addParam("TR", tth);
 			cmd.addParam("SI", Util::toString(size));
+			cmd.addParam("U4", Util::toString(DHT::getInstance()->getPort()));	// for getting firewalled status
 			
 			if(partial)
 				cmd.addParam("PF", "1");
@@ -406,7 +416,7 @@ namespace dht
 					
 				if(s->type == Search::TYPE_STOREFILE)
 				{
-					publishFile(s->respondedNodes, s->term, s->filesize);
+					publishFile(s->respondedNodes, s->term, s->filesize, s->partial);
 					IndexManager::getInstance()->setPublishing(IndexManager::getInstance()->getPublishing() - 1);
 				}
 

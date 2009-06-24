@@ -97,7 +97,7 @@ namespace dht
 		int run();
 		
 		void checkIncoming() throw(SocketException);
-		void checkOutgoing(uint64_t& timer, uint64_t& delay) throw(SocketException);
+		void checkOutgoing(uint64_t& timer) throw(SocketException);
 	};
 
 }

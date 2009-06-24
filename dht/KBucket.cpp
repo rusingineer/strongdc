@@ -203,7 +203,7 @@ namespace dht
 			
 			oldest->type++;
 			oldest->expires = currentTime + NODE_RESPONSE_TIMEOUT;
-			DHT::getInstance()->info(oldest->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(oldest->getIdentity().getUdpPort())), true, true);
+			DHT::getInstance()->info(oldest->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(oldest->getIdentity().getUdpPort())), DHT::PING);
 		}
 		
 		return dirty;

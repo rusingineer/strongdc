@@ -84,8 +84,8 @@ namespace dht
 			socket.reset(new Socket);
 			socket->create(Socket::TYPE_UDP);
 			socket->setSocketOpt(SO_REUSEADDR, 1);
-			socket->setSocketOpt(SO_RCVBUF, 65536);
-			port = socket->bind(static_cast<uint16_t>(DHT_UDPPORT), SETTING(BIND_ADDRESS));
+			socket->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
+			port = socket->bind(static_cast<uint16_t>(SETTING(DHT_PORT)), SETTING(BIND_ADDRESS));
 		
 			start();
 		}
@@ -139,25 +139,25 @@ namespace dht
 		}	
 	}
 	
-	void UDPSocket::checkOutgoing(uint64_t& timer, uint64_t& delay) throw(SocketException)
+	void UDPSocket::checkOutgoing(uint64_t& timer) throw(SocketException)
 	{
 		std::auto_ptr<Packet> packet;
+		
 		{
 			Lock l(cs);
-			if(!sendQueue.empty() && (GET_TICK() - timer > delay))
+			uint64_t now = GET_TICK();
+			if(!sendQueue.empty() && (now - timer > 150))
 			{
 				// take the first packet in queue
 				packet.reset(sendQueue.front());
 				sendQueue.pop_front();
-				
-				// control to avoid flooding UDP interface
-				if(sendQueue.size() > 9)
-					delay = 1000 / sendQueue.size();
+
+				dcdebug("Sending DHT packet: %d bytes, %d ms\n", packet->length, (uint32_t)(now - timer));
 					
-				timer += delay;
+				timer = now;
 			}
 		}
-		
+
 		if(packet.get())
 		{
 			try
@@ -183,16 +183,15 @@ namespace dht
 		DWORD value = FALSE;
 		ioctlsocket(socket->sock, SIO_UDP_CONNRESET, &value);
 		
-		// antiflood variables
+		// antiflood variable
 		uint64_t timer = GET_TICK();
-		uint64_t delay = 100;
 				
 		while(!stop)
 		{
 			try
 			{
 				// check outgoing queue
-				checkOutgoing(timer, delay);
+				checkOutgoing(timer);
 							
 				// check for incoming data
 				checkIncoming();
@@ -208,7 +207,7 @@ namespace dht
 					{
 						socket->disconnect();
 						socket->create(Socket::TYPE_UDP);
-						socket->setSocketOpt(SO_RCVBUF, 65536);
+						socket->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
 						socket->bind(port, SETTING(BIND_ADDRESS));
 						if(failed)
 						{
