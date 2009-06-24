@@ -38,7 +38,7 @@
 namespace dht
 {
 
-	DHT::DHT(void) : nodesCount(0), lastPacket(0), dirty(false)
+	DHT::DHT(void) : lastPacket(0), dirty(false), firewalled(false)
 	{
 		BootstrapManager::newInstance();
 		SearchManager::newInstance();
@@ -72,14 +72,14 @@ namespace dht
 	 */
 	void DHT::dispatch(const string& aLine, const string& ip, uint16_t port)
 	{
-		lastPacket = GET_TICK();
-		
 		// check node's IP address
-		if(Util::isPrivateIp(ip))
+		if(!Utils::isGoodIPPort(ip, port))
 		{
-			socket.send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_BAD_IP, "Your client supplied local IP: " + ip, AdcCommand::TYPE_UDP), ip, port);
+			socket.send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_BAD_IP, "Your client supplied invalid IP: " + ip, AdcCommand::TYPE_UDP), ip, port);
 			return; // local ip supplied
 		}
+		
+		lastPacket = GET_TICK();
 
 		try
 		{
@@ -101,7 +101,7 @@ namespace dht
 			Node::Ptr node = addUser(CID(cid), ip, port);
 			
 			// bootstrap when we insert the first node into table
-			if(nodesCount == 1)
+			if(getNodesCount() == 1)
 				SearchManager::getInstance()->findNode(ClientManager::getInstance()->getMe()->getCID());
 			
 #define C(n) case AdcCommand::CMD_##n: handle(AdcCommand::n(), node, cmd); break;
@@ -113,6 +113,7 @@ namespace dht
 				C(PUB);	// request to publish file
 				C(CTM); // connection request
 				C(STA);	// status message
+				C(PSR);	// partial file request
 				
 			default: 
 				dcdebug("Unknown ADC command: %.50s\n", aLine.c_str());
@@ -150,8 +151,6 @@ namespace dht
 		node->getIdentity().setIp(ip);
 		node->getIdentity().setUdpPort(Util::toString(port));
 		
-		nodesCount++;
-		
 		return node;
 	}
 	
@@ -172,6 +171,8 @@ namespace dht
 		Lock l(cs);
 		if(bucket->checkExpiration(aTick))
 			setDirty();
+			
+		firewalledWanted.clear();
 	}
 	
 	/*
@@ -184,7 +185,7 @@ namespace dht
 	}
 	
 	/** Sends our info to specified ip:port */
-	void DHT::info(const string& ip, uint16_t port, bool wantResponse, bool pingOnly)
+	void DHT::info(const string& ip, uint16_t port, uint32_t type)
 	{
 		// TODO: what info is needed?
 		AdcCommand cmd(AdcCommand::CMD_INF, AdcCommand::TYPE_UDP);
@@ -194,13 +195,13 @@ namespace dht
 #else
 #define VER VERSIONSTRING
 #endif		
-		if(!pingOnly)
+		if(type & PING)
+			cmd.addParam("RE", "1");
+			
+		if(type & MAKE_ONLINE)
 		{
 			cmd.addParam("VE", ("StrgDC++ " VER));
 			cmd.addParam("NI", SETTING(NICK));
-			
-			if(wantResponse)
-				cmd.addParam("RE", "1");
 			
 			string su;
 			if(CryptoManager::getInstance()->TLSOk())
@@ -211,7 +212,9 @@ namespace dht
 			if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
 			{
 				su += TCP4_FEATURE ",";
-				su += UDP4_FEATURE ",";
+				
+				if(!isFirewalled())
+					su += UDP4_FEATURE ",";
 			}
 			
 			if(!su.empty()) {
@@ -219,8 +222,17 @@ namespace dht
 			}
 			cmd.addParam("SU", su);
 		}
+		
+		{
+			Lock l(cs);
+			if((type & FW_CHECK) || (!firewalled && (firewalledWanted.size() + firewalledChecks.size() < FW_RESPONSES)))
+			{
+				firewalledWanted.insert(ip);
+				cmd.addParam("U4", Util::toString(getPort()));
+			}
+		}
 			
-		send(cmd, ip, port);		
+		send(cmd, ip, port);
 	}
 	
 	/*
@@ -236,6 +248,12 @@ namespace dht
 	 */
 	void DHT::privateMessage(const OnlineUser& ou, const string& aMessage, bool thirdPerson)
 	{
+		AdcCommand cmd(AdcCommand::CMD_MSG, AdcCommand::TYPE_UDP);
+		cmd.addParam(aMessage);
+		if(thirdPerson)
+			cmd.addParam("ME", "1");
+			
+		send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())));
 	}	
 	
 	/*
@@ -256,11 +274,13 @@ namespace dht
 				xml.stepIn();
 				while(xml.findChild("Node"))
 				{
-					CID cid		= CID(xml.getChildAttrib("CID"));
+					//CID cid		= CID(xml.getChildAttrib("CID"));
 					string i4	= xml.getChildAttrib("I4");
 					uint16_t u4	= static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4")));;
 					
-					addUser(cid, i4, u4);
+					if(Utils::isGoodIPPort(i4, u4))
+						//addUser(cid, i4, u4);
+						BootstrapManager::getInstance()->addBootstrapNode(i4, u4);
 				}
 				xml.stepOut();
 			}
@@ -333,8 +353,24 @@ namespace dht
 
 	void DHT::handle(AdcCommand::INF, const Node::Ptr& node, AdcCommand& c) throw()
 	{
+		string ip = node->getIdentity().getIp();
+		string udpPort = node->getIdentity().getUdpPort();
+		
 		string wantResponse;
 		c.getParam("RE", 0, wantResponse);
+		
+		string internalUdpPort;
+		c.getParam("U4", 0, internalUdpPort);
+		
+		// check node's firewalled status
+		if(!internalUdpPort.empty())
+		{
+			if(internalUdpPort != node->getIdentity().getUdpPort())
+			{
+				// node's internal and external ports differ
+				socket.send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_CONNECT_FAILED, udpPort, AdcCommand::TYPE_UDP), ip, static_cast<uint16_t>(Util::toInt(udpPort)));
+			}
+		}
 		
 		string nick;
 		c.getParam("NI", 0, nick);
@@ -360,7 +396,7 @@ namespace dht
 		}
 		
 		if(wantResponse == "1")
-			info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), false);
+			info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(udpPort)), NONE);
 	}
 	
 	void DHT::handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) throw()
@@ -388,8 +424,40 @@ namespace dht
 		if(c.getParameters().size() < 2)
 			return;
 			
+		int code = Util::toInt(c.getParam(0).substr(1));
+		if(code == AdcCommand::ERROR_CONNECT_FAILED)
+		{
+			// we are probably firewalled, so our internal UDP port is unaccessible
+			uint16_t externalUdpPort = static_cast<uint16_t>(Util::toInt(c.getParam(2)));
+			if(externalUdpPort != getPort())
+			{
+				Lock l(cs);
+				if(!firewalledWanted.count(node->getIdentity().getIp()))
+					return; // we didn't requested status check from this node
+					
+				if(firewalledChecks.count(node->getIdentity().getIp()))
+					return; // already received from this node
+					
+				firewalledChecks.insert(node->getIdentity().getIp());
+				if(firewalledChecks.size() == FW_RESPONSES)
+				{
+					firewalledChecks.clear();
+					firewalledWanted.clear();
+					
+					firewalled = true;
+					LogManager::getInstance()->message("DHT: Firewalled UDP status set");
+					return;
+				}
+			}
+		}
+		
 		// we should disconnect from network when severity is fatal, but it could be possible exploit
 		LogManager::getInstance()->message("DHT (" + node->getIdentity().getIp() + "): " + c.getParam(2)); // TODO: translate	
+	}
+	
+	void DHT::handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw()
+	{
+		dcpp::SearchManager::getInstance()->onPSR(c, node->getUser(), node->getIdentity().getIp());
 	}
 	
 }

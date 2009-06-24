@@ -24,6 +24,8 @@ namespace dht
 		/** When initiate searching for myself */
 		uint64_t nextSelfLookup;
 		
+		uint64_t lastBootstrap;
+		
 		// TimerManagerListener
 		void on(TimerManagerListener::Second, uint64_t aTick) throw();	
 		void on(TimerManagerListener::Minute, uint64_t aTick) throw();

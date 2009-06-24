@@ -39,8 +39,10 @@ namespace dht
 		DHT(void);
 		~DHT(void);
 		
+		enum InfType { NONE = 0, PING = 1, FW_CHECK = 2, MAKE_ONLINE = 4 };
+		
 		/** Socket functions */
-		void listen() { socket.listen(); }
+		void listen() { socket.listen(); BootstrapManager::getInstance()->bootstrap(); }
 		void disconnect() { socket.disconnect(); }
 		uint16_t getPort() const { return socket.getPort(); }
 		
@@ -63,7 +65,7 @@ namespace dht
 		void findFile(const string& tth, const string& token = Util::toString(Util::rand()));
 		
 		/** Sends our info to specified ip:port */
-		void info(const string& ip, uint16_t port, bool wantResponse, bool pingOnly = false);
+		void info(const string& ip, uint16_t port, uint32_t type);
 		
 		/** Sends Connect To Me request to online node */
 		void connect(const OnlineUser& ou, const string& token);
@@ -79,6 +81,9 @@ namespace dht
 		
 		/** Saves network information to XML file */
 		void saveData();
+		
+		/** Returns if our UDP port is open */
+		bool isFirewalled() const { return firewalled; }
 				
 	private:
 		/** Classes that can access to my private members */
@@ -91,6 +96,7 @@ namespace dht
 		void handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) throw();	// incoming publish request
 		void handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) throw();	// connection request	
 		void handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw();	// status message
+		void handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw();	// partial file request
 			
 		/** Unsupported command */
 		template<typename T> void handle(T, const Node::Ptr&user, AdcCommand&) { }
@@ -107,11 +113,13 @@ namespace dht
 		/** Lock to routing table */
 		CriticalSection	cs;
 		
-		/** Counts of nodes available in k-buckets */
-		unsigned int	nodesCount;
-		
 		/** Time when last packet was received */
 		uint64_t lastPacket;
+		
+		/** IPs who we received firewalled status from */
+		std::tr1::unordered_set<string> firewalledWanted;
+		std::tr1::unordered_set<string> firewalledChecks;
+		bool firewalled;
 		
 		/** Should the network data be saved? */
 		bool dirty;

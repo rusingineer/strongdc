@@ -36,4 +36,21 @@ namespace dht
 		return CID(distance);
 	}
 
+	/*
+	 * Detect whether it is correct to use IP:port in DHT network 
+	 */
+	bool Utils::isGoodIPPort(const string& ip, uint16_t port)
+	{
+		// don't allow empty IP and port lower than 1024
+		// ports below 1024 are known service ports, so they shouldn't be used for DHT else it could be used for attacks
+		if(ip.empty() || port < 1024)
+			return false;
+		
+		// don't allow private IPs
+		if(Util::isPrivateIp(ip))
+			return false;
+		
+		return true;
+	}
+
 } // namespace dht

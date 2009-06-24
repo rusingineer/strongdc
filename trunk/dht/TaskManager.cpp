@@ -7,13 +7,14 @@
 #include "TaskManager.h"
 
 #include "../client/SettingsManager.h"
+#include "../client/ShareManager.h"
 #include "../client/TimerManager.h"
 
 namespace dht
 {
 
 	TaskManager::TaskManager(void) :
-		nextPublishTime(GET_TICK()), nextSearchTime(GET_TICK()), nextSelfLookup(GET_TICK())
+		nextPublishTime(GET_TICK()), nextSearchTime(GET_TICK()), nextSelfLookup(GET_TICK() + 3*60*1000), lastBootstrap(0)
 	{
 		TimerManager::getInstance()->addListener(this);
 	}
@@ -28,24 +29,19 @@ namespace dht
 	{	
 		if(DHT::getInstance()->isConnected())
 		{
-			if(IndexManager::getInstance()->getPublishing() < MAX_PUBLISHES_AT_TIME)
+			if((SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)  && !DHT::getInstance()->isFirewalled() && IndexManager::getInstance()->getPublishing() < MAX_PUBLISHES_AT_TIME)
 			{
 				// publish next file
 				IndexManager::getInstance()->publishNextFile();
 			}
 		}
-		else if(DHT::getInstance()->getPort() > 0)
+		else
 		{
-			if(DHT::getInstance()->getNodesCount() == 0)
+			if(aTick - lastBootstrap > 15000 || (DHT::getInstance()->getNodesCount() == 0 && aTick - lastBootstrap >= 2000))
 			{
 				// bootstrap if we doesn't know any remote node
-				BootstrapManager::getInstance()->bootstrap();
-			}
-			else if(aTick >= nextSelfLookup)
-			{
-				// find myself in the network
-				SearchManager::getInstance()->findNode(ClientManager::getInstance()->getMe()->getCID());
-				nextSelfLookup = aTick + SELF_LOOKUP_TIMER;
+				BootstrapManager::getInstance()->process();
+				lastBootstrap = aTick;
 			}
 		}
 		
@@ -53,18 +49,23 @@ namespace dht
 		{
 			SearchManager::getInstance()->processSearches();
 			nextSearchTime = aTick + SEARCH_PROCESSTIME;
+		}
+		
+		if(aTick >= nextSelfLookup)
+		{
+			// find myself in the network
+			SearchManager::getInstance()->findNode(ClientManager::getInstance()->getMe()->getCID());
+			nextSelfLookup = aTick + SELF_LOOKUP_TIMER;
 		}		
 	}
 	
 	void TaskManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 	{
-		if((SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE) && DHT::getInstance()->isConnected() && aTick >= nextPublishTime)
+		if((SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)  && !DHT::getInstance()->isFirewalled() && DHT::getInstance()->isConnected() && aTick >= nextPublishTime)
 		{
 			// republish all files
-			if(IndexManager::getInstance()->publishFiles())
-				nextPublishTime = aTick + REPUBLISH_TIME;
-			else
-				nextPublishTime = aTick + (REPUBLISH_TIME / 4);
+			ShareManager::getInstance()->publish();
+			nextPublishTime = aTick + REPUBLISH_TIME;
 		}
 		
 		// remove dead nodes

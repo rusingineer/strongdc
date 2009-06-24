@@ -254,6 +254,9 @@ public:
 		// find some PFS sources to exchange parts info
 		void findPFSSources(PFSSourceList&);
 
+		// return a PFS tth to DHT publish
+		TTHValue* findPFSPubTTH();
+		
 		QueueItem* findAutoSearch(deque<string>& recent) const;
 		size_t getSize() const { return queue.size(); }
 		const QueueItem::StringMap& getQueue() const { return queue; }

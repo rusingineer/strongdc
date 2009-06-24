@@ -725,8 +725,9 @@
 		<String Name="SettingsSounds">Sounds</String>
 		<String Name="SettingsSpeedsNotAccurate">Note; because of changing download speeds, this is not 100% accurate...</String>
 		<String Name="SettingsStatusInChat">View status messages in main chat</String>
+		<String Name="SettingsDhtPort">DHT/UDP</String>
 		<String Name="SettingsTcpPort">TCP</String>
-		<String Name="SettingsTlsPort">TLS</String>
+		<String Name="SettingsTlsPort">TLS/TCP</String>
 		<String Name="SettingsTextStyles">Colors &amp; Fonts</String>
 		<String Name="SettingsTimeStamps">Show timestamps in chat by default</String>
 		<String Name="SettingsTimeStampsFormat">Set timestamps</String>

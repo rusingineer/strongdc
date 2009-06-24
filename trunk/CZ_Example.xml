@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Language Name="Czech Language" Author="Gigadisk" Version="2.00" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Akceptovaných odpojení</String>
@@ -726,7 +726,7 @@
 		<String Name="SettingsSpeedsNotAccurate">Pozn.: Kvůli kolísání připojení nejsou údaje o rychlosti 100% přesné...</String>
 		<String Name="SettingsStatusInChat">Zobrazovat stavové zprávy na hlavním chatu</String>
 		<String Name="SettingsTcpPort">TCP</String>
-		<String Name="SettingsTlsPort">TLS</String>
+		<String Name="SettingsTlsPort">TLS/TCP</String>
 		<String Name="SettingsTextStyles">Barvy &amp; písma</String>
 		<String Name="SettingsTimeStamps">Nastavení zobrazení času</String>
 		<String Name="SettingsTimeStampsFormat">Zobrazovat časy v chatu</String>

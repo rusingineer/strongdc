@@ -98,9 +98,9 @@ namespace dht
 				{
 					CID cid		= CID(remoteXml.getChildAttrib("CID"));
 					string i4	= remoteXml.getChildAttrib("I4");
-					uint16_t u4 = static_cast<uint16_t>(Util::toInt(remoteXml.getChildAttrib("U4")));
+					string u4	= remoteXml.getChildAttrib("U4");
 					
-					DHT::getInstance()->addUser(cid, i4, u4);
+					addBootstrapNode(i4, static_cast<uint16_t>(Util::toInt(u4)));
 				}
 
 				remoteXml.stepOut();
@@ -115,6 +115,23 @@ namespace dht
 	void BootstrapManager::on(HttpConnectionListener::Failed, HttpConnection*, const string& aLine) throw()
 	{
 		LogManager::getInstance()->message("DHT bootstrap error: " + aLine);
+	}
+	
+	void BootstrapManager::addBootstrapNode(const string& ip, uint16_t udpPort)
+	{
+		bootstrapNodes.push_back(std::make_pair(ip, udpPort));		
+	}
+	
+	void BootstrapManager::process()
+	{
+		Lock l(cs);
+		if(!bootstrapNodes.empty())
+		{
+			// send bootstrap request
+			DHT::getInstance()->info(bootstrapNodes.front().first, bootstrapNodes.front().second, DHT::PING | DHT::FW_CHECK);
+			
+			bootstrapNodes.pop_front();
+		}
 	}
 	
 }

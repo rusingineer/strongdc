@@ -28,6 +28,8 @@
 #include "version.h"
 #include "CID.h"
 
+#include "../dht/dht.h"
+
 namespace dcpp {
 
 StringList SettingsManager::connectionSpeeds;
@@ -125,7 +127,7 @@ const string SettingsManager::settingTags[] =
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
-	"UcSubMenu", "AutoSlots", "Coral", "UseDHT",
+	"UcSubMenu", "AutoSlots", "Coral", "UseDHT", "DHTPort",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -169,6 +171,7 @@ SettingsManager::SettingsManager()
 	setDefault(TCP_PORT, 0);
 	setDefault(UDP_PORT, 0);
 	setDefault(TLS_PORT, 0);
+	setDefault(DHT_PORT, DHT_UDPPORT);
 	setDefault(INCOMING_CONNECTIONS, Util::isPrivateIp(Util::getLocalIp()) ? INCOMING_FIREWALL_PASSIVE : INCOMING_DIRECT);
 	setDefault(OUTGOING_CONNECTIONS, OUTGOING_DIRECT);
 	setDefault(AUTO_FOLLOW, true);
