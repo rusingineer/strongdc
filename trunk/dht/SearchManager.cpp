@@ -155,7 +155,7 @@ namespace dht
 		{
 			Lock l(cs);
 			// store search
-			searches[s.token] = &s;
+			searches[&s.token] = &s;
 		}
 	}
 	
@@ -193,7 +193,8 @@ namespace dht
 				if(IndexManager::getInstance()->findResult(TTHValue(term), sources))
 				{
 					// yes, we got sources for this file
-					for(IndexManager::SourceList::const_iterator i = sources.begin(); i != sources.end(); i++)
+					unsigned int n = 300;
+					for(IndexManager::SourceList::const_iterator i = sources.begin(); i != sources.end() && n >= 0; i++, n--)
 					{
 						xml.addTag("Source");
 						xml.addChildAttrib("CID", i->getCID().toBase32());
@@ -259,7 +260,7 @@ namespace dht
 			return;	// missing search token?	
 				
 		Lock l(cs);
-		SearchMap::iterator i = searches.find(token);
+		SearchMap::iterator i = searches.find(&token);
 		if(i == searches.end())
 		{
 			// we didn't search for this
@@ -318,7 +319,8 @@ namespace dht
 			}
 			
 			// extract possible nodes
-			while(xml.findChild("Node"))
+			unsigned int n = K;
+			while(xml.findChild("Node") && n-- >= 0)
 			{
 				const CID cid = CID(xml.getChildAttrib("CID"));
 				
@@ -361,21 +363,17 @@ namespace dht
 	void SearchManager::publishFile(const Search::NodeMap& nodes, const string& tth, int64_t size, bool partial)
 	{
 		// send PUB command to K nodes
-		int k = 0;
-		for(Search::NodeMap::const_iterator i = nodes.begin(); i != nodes.end(); i++)
+		int n = K;
+		for(Search::NodeMap::const_iterator i = nodes.begin(); i != nodes.end() && n >= 0; i++, n--)
 		{
 			AdcCommand cmd(AdcCommand::CMD_PUB, AdcCommand::TYPE_UDP);
 			cmd.addParam("TR", tth);
 			cmd.addParam("SI", Util::toString(size));
-			cmd.addParam("U4", Util::toString(DHT::getInstance()->getPort()));	// for getting firewalled status
 			
 			if(partial)
 				cmd.addParam("PF", "1");
 		
 			DHT::getInstance()->send(cmd, i->second->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(i->second->getIdentity().getUdpPort())));
-			
-			if(k++ == K)
-				break;
 		}
 	}
 	

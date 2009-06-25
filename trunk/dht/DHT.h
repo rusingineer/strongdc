@@ -39,7 +39,7 @@ namespace dht
 		DHT(void);
 		~DHT(void);
 		
-		enum InfType { NONE = 0, PING = 1, FW_CHECK = 2, MAKE_ONLINE = 4 };
+		enum InfType { NONE = 0, PING = 1, MAKE_ONLINE = 2 };
 		
 		/** Socket functions */
 		void listen() { socket.listen(); BootstrapManager::getInstance()->bootstrap(); }
@@ -50,7 +50,7 @@ namespace dht
 		void dispatch(const string& aLine, const string& ip, uint16_t port);
 		
 		/** Sends command to ip and port */
-		void send(const AdcCommand& cmd, const string& ip, uint16_t port);
+		void send(AdcCommand& cmd, const string& ip, uint16_t port);
 		
 		/** Insert (or update) user into routing table */
 		Node::Ptr addUser(const CID& cid, const string& ip, uint16_t port);
@@ -97,6 +97,7 @@ namespace dht
 		void handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) throw();	// connection request	
 		void handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw();	// status message
 		void handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw();	// partial file request
+		void handle(AdcCommand::MSG, const Node::Ptr& node, AdcCommand& c) throw(); // private message
 			
 		/** Unsupported command */
 		template<typename T> void handle(T, const Node::Ptr&user, AdcCommand&) { }
@@ -107,9 +108,6 @@ namespace dht
 		/** Routing table */
 		KBucket*	bucket;
 		
-		/** Storage for all online users */
-		std::tr1::unordered_map<CID, OnlineUser*> onlineUsers;
-		
 		/** Lock to routing table */
 		CriticalSection	cs;
 		
@@ -118,8 +116,9 @@ namespace dht
 		
 		/** IPs who we received firewalled status from */
 		std::tr1::unordered_set<string> firewalledWanted;
-		std::tr1::unordered_set<string> firewalledChecks;
+		std::tr1::unordered_map<string, uint16_t> firewalledChecks;
 		bool firewalled;
+		bool requestFWCheck;
 		
 		/** Should the network data be saved? */
 		bool dirty;

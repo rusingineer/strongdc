@@ -128,7 +128,7 @@ namespace dht
 		if(!bootstrapNodes.empty())
 		{
 			// send bootstrap request
-			DHT::getInstance()->info(bootstrapNodes.front().first, bootstrapNodes.front().second, DHT::PING | DHT::FW_CHECK);
+			DHT::getInstance()->info(bootstrapNodes.front().first, bootstrapNodes.front().second, DHT::PING);
 			
 			bootstrapNodes.pop_front();
 		}

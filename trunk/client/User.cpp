@@ -37,14 +37,14 @@ FastCriticalSection Identity::cs;
 OnlineUser::OnlineUser(const UserPtr& ptr, ClientBase& client_, uint32_t sid_) : identity(ptr, sid_), client(client_), isInList(false) { 
 }
 
-void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility) const {
+void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility, bool dht) const {
 	{
 		FastLock l(cs);
 		for(InfIter i = info.begin(); i != info.end(); ++i) {
 			sm[prefix + string((char*)(&i->first), 2)] = i->second;
 		}
 	}
-	if(user) {
+	if(!dht && user) {
 		sm[prefix + "NI"] = getNick();
 		sm[prefix + "SID"] = getSIDString();
 		sm[prefix + "CID"] = user->getCID().toBase32();

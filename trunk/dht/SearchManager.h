@@ -41,18 +41,6 @@ namespace dht
 
 		enum SearchType { TYPE_FILE = 1, TYPE_NODE = 3, TYPE_STOREFILE = 4 };	// standard types should match ADC protocol
 
-		/** Search type */
-		SearchType type;
-		
-		/** Time when this search has been started */
-		uint64_t startTime;		
-		
-		/** Search identificator */
-		string token;
-	
-		/** Search term (TTH/CID) */
-		string term;
-		
 		/** Nodes where send search request soon to */
 		typedef std::map<CID, Node::Ptr> NodeMap;
 		NodeMap possibleNodes;
@@ -63,8 +51,20 @@ namespace dht
 		/** Nodes who responded to this search request */
 		NodeMap respondedNodes;
 		
+		/** Search identificator */
+		string token;
+	
+		/** Search term (TTH/CID) */
+		string term;
+			
+		/** Time when this search has been started */
+		uint64_t startTime;
+				
 		/** File size */
 		int64_t filesize;
+		
+		/** Search type */
+		SearchType type;
 		
 		/** This is partial file search */
 		bool partial;
@@ -101,7 +101,7 @@ namespace dht
 	private:
 	
 		/** Running search operations */
-		typedef std::tr1::unordered_map<string, Search*> SearchMap;
+		typedef std::tr1::unordered_map<string*, Search*, noCaseStringHash, noCaseStringEq> SearchMap;
 		SearchMap searches;
 		
 		/** Locks access to "searches" */

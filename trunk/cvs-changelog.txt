@@ -1,3 +1,11 @@
+** svn444
+	improved DHT firewall check
+	fixed memory leak
+	changed INF format for ping
+	added sources limit to search results
+	added node count check in search results
+	decreased republish time to 5 hours
+
 ** svn443
 	make option to set DHT/UDP port (still cannot be changed)
 	added IP:port check for DHT packets
