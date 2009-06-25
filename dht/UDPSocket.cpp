@@ -108,32 +108,34 @@ namespace dht
 			if(len > 1)
 			{
 				uLongf destLen = BUFSIZE; // what size should be reserved?
-				uint8_t* destBuf;
+				boost::scoped_array<uint8_t> destBuf;
 				
 				if(buf[0] == ADC_PACKED_PACKET_HEADER) // is this compressed packet?
 				{
-					destBuf = new uint8_t[destLen];
+					destBuf.reset(new uint8_t[destLen]);
 					
 					// decompress incoming packet
-					int result = uncompress(destBuf, &destLen, &buf[0] + 1, len - 1);
+					int result = uncompress(destBuf.get(), &destLen, &buf[0] + 1, len - 1);
 					if(result != Z_OK)
 					{
 						// decompression error!!!
-						delete[] destBuf;
 						return;
 					}
 				}
 				else
 				{
-					destBuf = &buf[0];
+					destBuf.swap(buf);
 					destLen = len;
 				}
 				
 				// process decompressed packet
-				string s((char*)destBuf, destLen);
+				string s((char*)destBuf.get(), destLen);
 				if(s[0] == ADC_PACKET_HEADER && s[s.length() - 1] == ADC_PACKET_FOOTER)	// is it valid ADC command?
 				{	
-					DHT::getInstance()->dispatch(s.substr(0, s.length() - 1), inet_ntoa(remoteAddr.sin_addr), ntohs(remoteAddr.sin_port));
+					string ip = inet_ntoa(remoteAddr.sin_addr);
+					uint16_t port = ntohs(remoteAddr.sin_port);
+					COMMAND_DEBUG(s.substr(0, s.length() - 1), DebugManager::HUB_IN,  ip + ":" + Util::toString(port));
+					DHT::getInstance()->dispatch(s.substr(0, s.length() - 1), ip, port);
 				}
 			}				
 		}	
@@ -152,7 +154,7 @@ namespace dht
 				packet.reset(sendQueue.front());
 				sendQueue.pop_front();
 
-				dcdebug("Sending DHT packet: %d bytes, %d ms\n", packet->length, (uint32_t)(now - timer));
+				//dcdebug("Sending DHT packet: %d bytes, %d ms\n", packet->length, (uint32_t)(now - timer));
 					
 				timer = now;
 			}
@@ -245,6 +247,7 @@ namespace dht
 	void UDPSocket::send(const AdcCommand& cmd, const string& ip, uint16_t port)
 	{
 		string command = cmd.toString(ClientManager::getInstance()->getMe()->getCID());
+		COMMAND_DEBUG(command, DebugManager::HUB_OUT, ip + ":" + Util::toString(port));
 		
 		// compress data to have at least some kind of "encryption"
 		uLongf destSize = compressBound(command.length()) + 1;

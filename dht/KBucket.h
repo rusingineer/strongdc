@@ -20,6 +20,7 @@
 
 #include "../client/CID.h"
 #include "../client/Pointer.h"
+#include "../client/SimpleXML.h"
 #include "../client/TimerManager.h"
 #include "../client/User.h"
 
@@ -53,7 +54,7 @@ namespace dht
 		KBucket(void);
 		~KBucket(void);
 
-		typedef std::list<Node::Ptr> NodeList;
+		typedef std::deque<Node::Ptr> NodeList;
 		
 		/** Inserts node to bucket */
 		Node::Ptr insert(const UserPtr& u);
@@ -66,6 +67,12 @@ namespace dht
 		
 		/** Removes dead nodes */
 		bool checkExpiration(uint64_t currentTime);
+		
+		/** Loads existing nodes from disk */
+		void loadNodes(SimpleXML& xml);
+		
+		/** Save all nodes to disk */
+		void saveNodes(SimpleXML& xml);		
 		
 	private:
 	

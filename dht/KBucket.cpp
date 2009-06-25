@@ -208,6 +208,57 @@ namespace dht
 		
 		return dirty;
 	}
-	
+
+	/*
+	 * Loads existing nodes from disk 
+	 */
+	void KBucket::loadNodes(SimpleXML& xml)
+	{
+		xml.resetCurrentChild();
+		if(xml.findChild("Nodes"))
+		{
+			xml.stepIn();
+			while(xml.findChild("Node"))
+			{
+				//CID cid		= CID(xml.getChildAttrib("CID"));
+				string i4	= xml.getChildAttrib("I4");
+				uint16_t u4	= static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4")));;
+				
+				if(Utils::isGoodIPPort(i4, u4))
+					//addUser(cid, i4, u4);
+					BootstrapManager::getInstance()->addBootstrapNode(i4, u4);
+			}
+			xml.stepOut();
+		}	
+	}
+		
+	/*
+	 * Save all nodes to disk 
+	 */
+	void KBucket::saveNodes(SimpleXML& xml)
+	{
+		xml.addTag("Nodes");
+		xml.stepIn();
+
+		for(KBucket::NodeList::const_iterator j = nodes.begin(); j != nodes.end(); j++)
+		{
+			const Node::Ptr& node = *j;
+					
+			xml.addTag("Node");
+			xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());
+			
+			StringMap params;
+			//node->getIdentity().setUser(NULL);
+			node->getIdentity().getParams(params, Util::emptyString, false, true);
+			
+			for(StringMap::const_iterator i = params.begin(); i != params.end(); i++)
+				xml.addChildAttrib(i->first, i->second);
+			//xml.addChildAttrib("I4", node->getIdentity().getIp());
+			//xml.addChildAttrib("U4", node->getIdentity().getUdpPort());
+		}
+		
+		xml.stepOut();	
+	}
+			
 	
 }
