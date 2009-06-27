@@ -43,7 +43,7 @@ namespace dcpp {
 
 static const string DOWNLOAD_AREA = "Downloads";
 
-DownloadManager::DownloadManager() : mDownloadLimit(0), mBytesSpokenFor(0),
+DownloadManager::DownloadManager() : mDownloadLimit(0),
 	mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)) {
 	TimerManager::getInstance()->addListener(this);
 }
@@ -364,6 +364,52 @@ void DownloadManager::endData(UserConnection* aSource) {
 	checkDownloads(aSource);
 }
 
+size_t DownloadManager::throttleGetSlice() {
+	if (mThrottleEnable) {
+		if (mDownloadLimit - getRunningAverage() > mByteSlice) {
+			return mByteSlice;
+		} else {
+			return 0;
+		}
+	} else {
+		return (size_t)-1;
+	}
+}
+
+size_t DownloadManager::throttleCycleTime() {
+	if (mThrottleEnable)
+		return mCycleTime;
+	return 0;
+}
+
+void DownloadManager::throttleSetup() {
+	// called once a second, plus when a download starts
+	// from the constructor to BufferedSocket
+	// with 64k, a few people get winsock error 0x2747
+	size_t INBUFSIZE = SETTING(SOCKET_IN_BUFFER);
+
+	const int target_freq_s = 65;
+
+	mDownloadLimit = SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*1024;
+	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (getDownloadCount() > 0);
+	/* Two domains:
+	   (1) Can hit target download rate at target limiting period. From 0 to
+	   1s /limiting_period * INBUFSIZE >= target_rate.
+
+	   (2) Can't hit target upload rate at target limiting period. From here
+	   out, have no choice but to peg the bytes per cycle at max (i.e.
+	   INBUFSIZE) and hope that the latency & etc doesn't kill transfers.
+	*/
+	if (mThrottleEnable) {
+		mCycleTime = 1000 / target_freq_s;
+		if (mDownloadLimit <= target_freq_s * INBUFSIZE) {
+			mByteSlice = mDownloadLimit / target_freq_s;
+		} else {
+			mByteSlice = INBUFSIZE;
+		}
+	}
+}
+
 int64_t DownloadManager::getRunningAverage() {
 	Lock l(cs);
 	int64_t avg = 0;
@@ -551,53 +597,6 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 
 	QueueManager::getInstance()->putDownload(d, false);
 	checkDownloads(aSource);
-}
-
-void DownloadManager::throttleReturnBytes(size_t b) {
-	if (b > 0 && b < 2*mByteSlice) {
-		mBytesSpokenFor -= b;
-		if (mBytesSpokenFor < 0)
-			mBytesSpokenFor = 0;
-	}
-}
-
-size_t DownloadManager::throttleGetSlice() {
-	if (mThrottleEnable) {
-		size_t left = mDownloadLimit - mBytesSpokenFor;
-		if (left > 0) {
-			if (left > 2*mByteSlice) {
-				mBytesSpokenFor += mByteSlice;
-				return mByteSlice;
-			} else {
-				mBytesSpokenFor += left;
-				return left;
-			}
-		} else
-			return 0;
-	} else {
-		return (size_t)-1;
-	}
-}
-
-void DownloadManager::throttleSetup() {
-	// called once a second
-	// with 64k, a few people get winsock error 0x2747
-	size_t num_transfers = downloads.size();
-	mDownloadLimit = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024);
-	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (num_transfers > 0);
-	if (mThrottleEnable) {
-		size_t inbufSize = SETTING(SOCKET_IN_BUFFER);
-		if (mDownloadLimit <= (inbufSize * 10 * num_transfers)) {
-			mByteSlice = mDownloadLimit / (7 * num_transfers);
-			if (mByteSlice > inbufSize)
-				mByteSlice = inbufSize;
-			mCycleTime = 100;
-		} else {
-			mByteSlice = inbufSize;
-			mCycleTime = 1000 * inbufSize / mDownloadLimit;
-		}
-	}
-	mBytesSpokenFor = 0;
 }
 
 } // namespace dcpp

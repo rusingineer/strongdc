@@ -35,11 +35,18 @@ namespace dht
 	/*
 	 * Process this search request 
 	 */
-	bool Search::process()
+	void Search::process()
 	{
+		if(stopping)
+			return;
+			
 		// no node to search
 		if(possibleNodes.empty() || respondedNodes.size() >= MAX_SEARCH_RESULTS)
-			return false;
+		{
+			stopping = true;
+			lifeTime = GET_TICK() + SEARCH_STOPTIME; // wait before deleting not to lose so much delayed results
+			return;
+		}
 			
 		// send search request to the first ALPHA closest nodes
 		size_t nodesCount = min((size_t)SEARCH_ALPHA, possibleNodes.size());
@@ -48,11 +55,11 @@ namespace dht
 		{
 			it = possibleNodes.begin();
 			Node::Ptr node = it->second;
-			
+				
 			// move to tried and delete from possibles
 			triedNodes[it->first] = node;
 			possibleNodes.erase(it);
-
+			
 			// send SCH command
 			AdcCommand cmd(AdcCommand::CMD_SCH, AdcCommand::TYPE_UDP);
 			cmd.addParam("TR", term);
@@ -61,8 +68,6 @@ namespace dht
 			
 			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
 		}
-		
-		return true;
 	}
 		
 	SearchManager::SearchManager(void)
@@ -148,15 +153,32 @@ namespace dht
 	 */
 	void SearchManager::search(Search& s)
 	{
+		// set search lifetime
+		s.lifeTime = GET_TICK();
+		switch(s.type)
+		{
+			case Search::TYPE_FILE:
+				s.lifeTime += SEARCHFILE_LIFETIME;
+				break;
+			case Search::TYPE_NODE:
+				s.lifeTime += SEARCHNODE_LIFETIME;
+				break;
+			case Search::TYPE_STOREFILE:
+				s.lifeTime += SEARCHSTOREFILE_LIFETIME;
+				break;
+		}		
+				
 		// get nodes closest to requested ID
 		DHT::getInstance()->getClosestNodes(CID(s.term), s.possibleNodes, 50, 3);
+		
+		if(s.possibleNodes.empty())
+			return;
+	
+		Lock l(cs);
+		// store search
+		searches[&s.token] = &s;
 
-		if(s.process())
-		{
-			Lock l(cs);
-			// store search
-			searches[&s.token] = &s;
-		}
+		s.process();
 	}
 	
 	/*
@@ -206,8 +228,7 @@ namespace dht
 					break;
 				}
 			}
-			case Search::TYPE_NODE:
-			case Search::TYPE_STOREFILE:
+			default:
 			{
 				// get nodes closest to requested ID
 				Search::NodeMap nodes;
@@ -224,9 +245,6 @@ namespace dht
 							
 				break;
 			}
-			default:
-				// invalid search type
-				return;
 		}
 		
 		xml.stepOut();
@@ -247,10 +265,6 @@ namespace dht
 	 */
 	void SearchManager::processSearchResult(const Node::Ptr& node, const AdcCommand& cmd)
 	{
-		string cid = cmd.getParam(0);
-		if(cid.size() != 39)
-			return;
-			
 		string token;
 		if(!cmd.getParam("TO", 0, token))
 			return;	// missing search token?	
@@ -270,7 +284,7 @@ namespace dht
 		Search* s = i->second;
 		
 		// store this node
-		s->respondedNodes.insert(std::make_pair(Utils::getDistance(CID(cid), CID(s->term)), node));
+		s->respondedNodes.insert(std::make_pair(Utils::getDistance(node->getUser()->getCID(), CID(s->term)), node));
 		
 		try
 		{
@@ -322,10 +336,9 @@ namespace dht
 			unsigned int n = K;
 			while(xml.findChild("Node") && n-- >= 0)
 			{
-				const CID cid = CID(xml.getChildAttrib("CID"));
-				
+				CID cid = CID(xml.getChildAttrib("CID"));
 				CID distance = Utils::getDistance(cid, CID(s->term));
-				
+	
 				// don't bother with myself and nodes we've already tried or queued
 				if(	ClientManager::getInstance()->getMe()->getCID() == cid || 
 					s->possibleNodes.find(distance) != s->possibleNodes.end() ||
@@ -333,15 +346,15 @@ namespace dht
 				{
 					continue;
 				}
-					
-				const string& i4 = xml.getChildAttrib("I4");
-				const string& u4 = xml.getChildAttrib("U4");
 
+				const string& i4 = xml.getChildAttrib("I4");
+				const string& u4 = xml.getChildAttrib("U4");	
+					
 				// don't bother with private IPs
 				if(!Utils::isGoodIPPort(i4, static_cast<uint16_t>(Util::toInt(u4))))
 					continue;
 
-				Node::Ptr tmpNode = new Node();
+				Node::Ptr tmpNode(new Node());
 				tmpNode->getIdentity().setIp(i4);
 				tmpNode->getIdentity().setUdpPort(u4);
 
@@ -389,27 +402,13 @@ namespace dht
 		{
 			Search* s = it->second;
 			
-			uint64_t timeout;
-			switch(s->type)
-			{
-				case Search::TYPE_FILE:
-					timeout = SEARCHFILE_LIFETIME;
-					break;
-				case Search::TYPE_NODE:
-					timeout = SEARCHNODE_LIFETIME;
-					break;
-				case Search::TYPE_STOREFILE:
-					timeout = SEARCHSTOREFILE_LIFETIME;
-					break;
-				default:
-					// invalid search type
-					continue;
-			}
+			// process active search
+			s->process();
 			
-			// remove long search, process active search
-			if(s->startTime + timeout < GET_TICK() || !s->process())
+			// remove long search
+			if(s->lifeTime < GET_TICK())
 			{
-				// search time out, stop it
+				// search timed out, stop it
 				searches.erase(it++);
 					
 				if(s->type == Search::TYPE_STOREFILE)

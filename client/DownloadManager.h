@@ -60,17 +60,16 @@ public:
 
 	bool startDownload(QueueItem::Priority prio);
 
-	// the following functions were added to help download throttle
-	inline bool throttle() const { return mThrottleEnable; }
-	void throttleReturnBytes(size_t b);
+	bool throttle() { return mThrottleEnable; }
 	size_t throttleGetSlice();
-	inline size_t throttleCycleTime() const { return mThrottleEnable ? mCycleTime : 0; }
+	size_t throttleCycleTime();
 
 private:
 	void throttleSetup();
 	bool mThrottleEnable;
-	size_t mCycleTime;
-	size_t mBytesSpokenFor, mDownloadLimit, mByteSlice;
+	size_t 	   mDownloadLimit,
+		   mCycleTime,
+		   mByteSlice; // download throttling
 	
 	CriticalSection cs;
 	DownloadList downloads;

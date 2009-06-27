@@ -14,7 +14,8 @@ namespace dht
 {
 
 	TaskManager::TaskManager(void) :
-		nextPublishTime(GET_TICK()), nextSearchTime(GET_TICK()), nextSelfLookup(GET_TICK() + 3*60*1000), lastBootstrap(0)
+		nextPublishTime(GET_TICK()), nextSearchTime(GET_TICK()), nextSelfLookup(GET_TICK() + 3*60*1000), lastBootstrap(0),
+		nextFirewallCheck(GET_TICK() + FWCHECK_TIME) 
 	{
 		TimerManager::getInstance()->addListener(this);
 	}
@@ -29,7 +30,7 @@ namespace dht
 	{	
 		if(DHT::getInstance()->isConnected())
 		{
-			if((SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)  && !DHT::getInstance()->isFirewalled() && IndexManager::getInstance()->getPublishing() < MAX_PUBLISHES_AT_TIME)
+			if(!DHT::getInstance()->isFirewalled() && IndexManager::getInstance()->getPublishing() < MAX_PUBLISHES_AT_TIME)
 			{
 				// publish next file
 				IndexManager::getInstance()->publishNextFile();
@@ -56,12 +57,18 @@ namespace dht
 			// find myself in the network
 			SearchManager::getInstance()->findNode(ClientManager::getInstance()->getMe()->getCID());
 			nextSelfLookup = aTick + SELF_LOOKUP_TIMER;
-		}		
+		}
+		
+		if(aTick >= nextFirewallCheck)
+		{
+			DHT::getInstance()->setRequestFWCheck();
+			nextFirewallCheck = aTick + FWCHECK_TIME;
+		}
 	}
 	
 	void TaskManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 	{
-		if((SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)  && !DHT::getInstance()->isFirewalled() && DHT::getInstance()->isConnected() && aTick >= nextPublishTime)
+		if(!DHT::getInstance()->isFirewalled() && DHT::getInstance()->isConnected() && aTick >= nextPublishTime)
 		{
 			// republish all files
 			ShareManager::getInstance()->publish();

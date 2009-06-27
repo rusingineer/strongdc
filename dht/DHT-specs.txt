@@ -41,11 +41,11 @@ PSR - partial file request
 MSG - private message (not supported yet)
 
 STA - status message
-- code 
-	42 - our external UDP port doesn't match the internal one, so we should set 
-       firewalled status to stop publishing our files. Client should set 
-       firewalled status only when message received from more different clients
-       to avoid remote exploit. Description contains our external UDP port.
+- code
+	80 - generic DHT status message
+	81 - file publish response (TR - published file TTH)
+	82 - firewalled UDP check response (I4, U4 - our external IP/UDP port)
+	
 - description
 
 ********************************************************************************
@@ -53,6 +53,6 @@ STA - status message
 ********************************************************************************
 
 * each command can contain FW parameter with our internal UDP port, which means 
-  that remote node must send us STA with error code 42 containing our external 
-  UDP port.
+  that remote node must send us STA with error code 82 containing our external 
+  IP and UDP port.
   

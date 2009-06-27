@@ -24,6 +24,9 @@ namespace dht
 		/** When initiate searching for myself */
 		uint64_t nextSelfLookup;
 		
+		/** When request next firewall check */
+		uint64_t nextFirewallCheck;
+		
 		uint64_t lastBootstrap;
 		
 		// TimerManagerListener

@@ -37,9 +37,10 @@ namespace dht
 #define SEARCH_ALPHA				3								// degree of search parallelism
 #define MAX_SEARCH_RESULTS			300								// maximum of allowed search results
 #define SEARCH_PROCESSTIME			3*1000	// 3 seconds			// how often to process done search requests				
-#define SEARCHNODE_LIFETIME			2*60*1000	// 2 minutes		// how long to try searching for node
-#define SEARCHFILE_LIFETIME			2*60*1000	// 2 minutes		// how long to try searching for file
-#define SEARCHSTOREFILE_LIFETIME	3*60*1000	// 3 minutes		// how long to try publishing a file
+#define SEARCH_STOPTIME				15*1000	// 15 seconds			// how long to wait for delayed search results before deleting the search
+#define SEARCHNODE_LIFETIME			45*1000	// 45 seconds			// how long to try searching for node
+#define SEARCHFILE_LIFETIME			45*1000	// 45 seconds			// how long to try searching for file
+#define SEARCHSTOREFILE_LIFETIME	140*1000	// 140 seconds		// how long to try publishing a file
 #define SELF_LOOKUP_TIMER			4*60*60*1000	// 4 hours		// how often to search for self node
 
 #define K							10								// maximum nodes in one bucket
@@ -51,6 +52,7 @@ namespace dht
 #define MAX_PUBLISHES_AT_TIME		3								// how many files can be published at one time
 
 #define FW_RESPONSES				3								// how many UDP port checks are needed to detect we are firewalled
+#define FWCHECK_TIME				1*60*60*1000					// how often request firewalled UDP check
 
 #define NODE_RESPONSE_TIMEOUT		2*60*1000	// 2 minutes		// node has this time to response else we ignore him/mark him as dead node
 #define NODE_EXPIRATION				2*60*60*1000 // 2 hours			// when node should be marked as possibly dead

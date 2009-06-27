@@ -35,42 +35,28 @@ namespace dht
 		public FastAlloc<Search>
 	{
 		
-		Search() : startTime(GET_TICK())
+		Search() : partial(false), stopping(false)
 		{
 		}
 
 		enum SearchType { TYPE_FILE = 1, TYPE_NODE = 3, TYPE_STOREFILE = 4 };	// standard types should match ADC protocol
-
-		/** Nodes where send search request soon to */
-		typedef std::map<CID, Node::Ptr> NodeMap;
-		NodeMap possibleNodes;
-		
-		/** Nodes where search request has already been sent to */
-		NodeMap triedNodes;
-		
-		/** Nodes who responded to this search request */
-		NodeMap respondedNodes;
-		
-		/** Search identificator */
-		string token;
 	
-		/** Search term (TTH/CID) */
-		string term;
+		typedef std::map<CID, Node::Ptr> NodeMap;
 			
-		/** Time when this search has been started */
-		uint64_t startTime;
-				
-		/** File size */
-		int64_t filesize;
+		NodeMap possibleNodes;	// nodes where send search request soon to
+		NodeMap triedNodes;		// nodes where search request has already been sent to
+		NodeMap respondedNodes;	// nodes who responded to this search request
+
+		string token;			// search identificator
+		string term;			// search term (TTH/CID)
+		uint64_t lifeTime;		// time when this search has been started
+		int64_t filesize;		// file size
+		SearchType type;		// search type
+		bool partial;			// is this partial file search?
+		bool stopping;			// search is being stopped
 		
-		/** Search type */
-		SearchType type;
-		
-		/** This is partial file search */
-		bool partial;
-		
-		/** Process this search request */
-		bool process();
+		/** Processes this search request */
+		void process();
 	};
 		
 	class SearchManager :
