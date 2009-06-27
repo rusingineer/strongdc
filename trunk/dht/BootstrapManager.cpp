@@ -48,7 +48,7 @@ namespace dht
 		string url = BOOTSTRAP_URL "?cid=" + ClientManager::getInstance()->getMe()->getCID().toBase32();
 		
 		// store only active nodes to database
-		if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
+		if(ClientManager::getInstance()->isActive(Util::emptyString))
 		{
 			url += "&u4=" + Util::toString(DHT::getInstance()->getPort());
 		}

@@ -32,14 +32,18 @@
 #include "../client/CryptoManager.h"
 #include "../client/LogManager.h"
 #include "../client/SettingsManager.h"
+#include "../client/ShareManager.h"
 #include "../client/User.h"
 #include "../client/Version.h"
 
 namespace dht
 {
 
-	DHT::DHT(void) : lastPacket(0), dirty(false), firewalled(false), requestFWCheck(true)
+	DHT::DHT(void) : lastPacket(0), dirty(false), requestFWCheck(true)
 	{
+		// start with global firewalled status
+		firewalled = !ClientManager::getInstance()->isActive(Util::emptyString);
+		
 		BootstrapManager::newInstance();
 		SearchManager::newInstance();
 		IndexManager::newInstance();
@@ -97,10 +101,15 @@ namespace dht
 			if(CID(cid) == ClientManager::getInstance()->getMe()->getCID())
 				return;
 				
+			// node is requiring FW check
 			string internalUdpPort;
 			if(cmd.getParam("FW", 0, internalUdpPort))
 			{
-				socket.send(AdcCommand(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_CONNECT_FAILED, Util::toString(port), AdcCommand::TYPE_UDP), ip, port);
+				// send him his external ip and port
+				AdcCommand cmd(AdcCommand::SEV_SUCCESS, AdcCommand::DHT_FWCHECK, "", AdcCommand::TYPE_UDP);
+				cmd.addParam("I4", ip);
+				cmd.addParam("U4", Util::toString(port));
+				socket.send(cmd, ip, port);
 			}
 						
 			// add user to routing table
@@ -141,8 +150,11 @@ namespace dht
 			Lock l(cs);
 			if(requestFWCheck && (firewalledWanted.size() + firewalledChecks.size() < FW_RESPONSES))
 			{
-				firewalledWanted.insert(ip);
-				cmd.addParam("FW", Util::toString(getPort()));
+				if(firewalledWanted.count(ip) == 0)	// only when not requested from this node yet
+				{
+					firewalledWanted.insert(ip);
+					cmd.addParam("FW", Util::toString(getPort()));
+				}
 			}
 		}
 		socket.send(cmd, ip, port);
@@ -196,7 +208,9 @@ namespace dht
 			SearchManager::getInstance()->findFile(tth, token);
 	}
 	
-	/** Sends our info to specified ip:port */
+	/*
+	 * Sends our info to specified ip:port 
+	 */
 	void DHT::info(const string& ip, uint16_t port, uint32_t type)
 	{
 		// TODO: what info is needed?
@@ -209,25 +223,33 @@ namespace dht
 #endif		
 
 		cmd.addParam("TY", Util::toString(type));
+		
+		if(type & PING)	// compatibility reasons
+			cmd.addParam("RE", "1");
 			
 		if(type & MAKE_ONLINE)
 		{
 			cmd.addParam("VE", ("StrgDC++ " VER));
 			cmd.addParam("NI", SETTING(NICK));
 			
+			if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
+				cmd.addParam("US", Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024));
+			} else {
+				cmd.addParam("US", Util::toString((long)(Util::toDouble(SETTING(UPLOAD_SPEED))*1024*1024/8)));
+			}
+			
 			string su;
 			if(CryptoManager::getInstance()->TLSOk())
-			{
 				su += ADCS_FEATURE ",";
-			}
 
-			if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
-			{
+			// TCP status according to global status
+			if(ClientManager::getInstance()->isActive(Util::emptyString))
 				su += TCP4_FEATURE ",";
-				
-				if(!isFirewalled())
-					su += UDP4_FEATURE ",";
-			}
+			
+			// UDP status according to UDP status check
+			if(!isFirewalled())
+				su += UDP4_FEATURE ",";
+			
 			
 			if(!su.empty()) {
 				su.erase(su.size() - 1);
@@ -331,15 +353,16 @@ namespace dht
 		string ip = node->getIdentity().getIp();
 		string udpPort = node->getIdentity().getUdpPort();
 		
-		string typeString;
-		c.getParam("TY", 0, typeString);
-		InfType it = (InfType)Util::toInt(typeString);		
-		
-		for(StringIterC i = c.getParameters().begin() + 1; i != c.getParameters().end(); ++i) {
+		InfType it = MAKE_ONLINE;	// compatibility reasons
+		for(StringIterC i = c.getParameters().begin() + 1; i != c.getParameters().end(); ++i)
+		{
 			if(i->length() < 2)
 				continue;
 
-			if(i->substr(0, 2) != "TY")
+			string parameter_name = i->substr(0, 2);
+			if(parameter_name == "TY")
+				it = (InfType)Util::toInt(i->substr(2));
+			else if((parameter_name != "I4") && (parameter_name != "U4")) // avoid IP+port spoofing
 				node->getIdentity().set(i->c_str(), i->substr(2));
 		}
 		
@@ -383,53 +406,83 @@ namespace dht
 		if(c.getParameters().size() < 2)
 			return;
 			
+		string fromIP = node->getIdentity().getIp();
 		int code = Util::toInt(c.getParam(0).substr(1));
-		if(code == AdcCommand::ERROR_CONNECT_FAILED)
-		{
-			Lock l(cs);
-			if(!firewalledWanted.count(node->getIdentity().getIp()))
-				return; // we didn't requested status check from this node
-				
-			if(firewalledChecks.count(node->getIdentity().getIp()))
-				return; // already received from this node		
 		
-			uint16_t externalUdpPort = static_cast<uint16_t>(Util::toInt(c.getParam(2)));
-			firewalledChecks.insert(std::make_pair(node->getIdentity().getIp(), externalUdpPort));
-			
-			if(firewalledChecks.size() == FW_RESPONSES)
+		switch(code)
+		{
+			case AdcCommand::SUCCESS:
+			case AdcCommand::DHT_GENERIC:
+				LogManager::getInstance()->message("DHT (" + fromIP + "): " + c.getParam(2));
+				break;
+				
+			case AdcCommand::DHT_FILE_PUBLISHED:
 			{
-				// when we received more firewalled statuses, we will be firewalled
-				int fw = 0;
-				for(std::tr1::unordered_map<string, uint16_t>::const_iterator i = firewalledChecks.begin(); i != firewalledChecks.end(); i++)
+				try
 				{
-					if(i->second != getPort())
-						fw++;
-					else
-						fw--;
+					string tth;
+					if(c.getParam("TR", 1, tth))
+					{
+						string fileName = Util::getFileName(ShareManager::getInstance()->toVirtual(TTHValue(tth)));
+						LogManager::getInstance()->message("DHT (" + fromIP + "): File published: " + fileName);
+					}
+				
 				}
+				catch(ShareException&)
+				{
+					// published non-shared file??? Maybe bad client
+				}
+				break;
+			}	
+			case AdcCommand::DHT_FWCHECK:
+			{
+				Lock l(cs);
+				if(!firewalledWanted.count(fromIP))
+					return; // we didn't requested firewall check from this node
+					
+				firewalledWanted.erase(fromIP);
+				if(firewalledChecks.count(fromIP))
+					return; // already received firewall check from this node		
+			
+				string externalIp;
+				string externalUdpPort;
+				if(!c.getParam("I4", 1, externalIp) || !c.getParam("U4", 1, externalUdpPort))
+					return;	// no IP and port in response
+					
+				firewalledChecks.insert(std::make_pair(fromIP, static_cast<uint16_t>(Util::toInt(externalUdpPort))));
+				
+				if(firewalledChecks.size() == FW_RESPONSES)
+				{
+					// when we received more firewalled statuses, we will be firewalled
+					int fw = 0;
+					for(std::tr1::unordered_map<string, uint16_t>::const_iterator i = firewalledChecks.begin(); i != firewalledChecks.end(); i++)
+					{
+						if(i->second != getPort())
+							fw++;
+						else
+							fw--;
+					}
 
-				if(fw >= 0)
-				{		
-					// we are probably firewalled, so our internal UDP port is unaccessible		
-					firewalled = true;
-					LogManager::getInstance()->message("DHT: Firewalled UDP status set");
+					if(fw >= 0)
+					{		
+						// we are probably firewalled, so our internal UDP port is unaccessible		
+						firewalled = true;
+						LogManager::getInstance()->message("DHT: Firewalled UDP status set");
+					}
+					else
+					{
+						firewalled = false;
+						LogManager::getInstance()->message("DHT: Our UDP port seems to be opened");	
+					}
+					
+					firewalledChecks.clear();
+					firewalledWanted.clear();
+					
+					requestFWCheck = false;
 				}
-				else
-				{
-					firewalled = false;
-					LogManager::getInstance()->message("DHT: Our UDP port seems to be opened");	
-				}
-				
-				firewalledChecks.clear();
-				firewalledWanted.clear();
-				
-				requestFWCheck = false;
-				return;
+				break;
 			}
 		}
-		
-		// we should disconnect from network when severity is fatal, but it could be possible exploit
-		LogManager::getInstance()->message("DHT (" + node->getIdentity().getIp() + "): " + c.getParam(2)); // TODO: translate	
 	}
 	
 	void DHT::handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw()

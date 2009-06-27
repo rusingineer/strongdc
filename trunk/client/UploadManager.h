@@ -127,8 +127,9 @@ public:
 	void abortUpload(const string& aFile, bool waiting = true);
 	
 	// Upload throttling
+	bool throttle() { return mThrottleEnable; }
 	size_t throttleGetSlice();
-	inline size_t throttleCycleTime() const { return mThrottleEnable ? mCycleTime : 0; }
+	size_t throttleCycleTime();
 	
 	GETSET(uint8_t, extraPartial, ExtraPartial);
 	GETSET(uint8_t, extra, Extra);
@@ -137,10 +138,13 @@ public:
 private:
 	bool isFireball;
 	bool isFileServer;
+	void throttleSetup();	
 	bool mThrottleEnable;
 	uint8_t running;
 
-	size_t mBytesSpokenFor, mUploadLimit, mCycleTime, mByteSlice;
+	size_t 	   mUploadLimit,
+		   mCycleTime,
+		   mByteSlice;
 	uint64_t m_iHighSpeedStartTick;
 
 	UploadList uploads;
@@ -155,8 +159,6 @@ private:
 
 	size_t addFailedUpload(const UserPtr& aUser, const string& token, const string& file, int64_t pos, int64_t size);
 	void notifyQueuedUsers();
-
-	void throttleSetup();
 
 	friend class Singleton<UploadManager>;
 	UploadManager() throw();

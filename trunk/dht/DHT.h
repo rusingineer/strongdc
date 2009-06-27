@@ -84,6 +84,8 @@ namespace dht
 		
 		/** Returns if our UDP port is open */
 		bool isFirewalled() const { return firewalled; }
+		
+		void setRequestFWCheck() { Lock l(cs); requestFWCheck = true; firewalledWanted.clear(); firewalledChecks.clear(); }
 				
 	private:
 		/** Classes that can access to my private members */

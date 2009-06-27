@@ -90,7 +90,6 @@ namespace dht
 	 */
 	bool IndexManager::findResult(const TTHValue& tth, SourceList& sources) const
 	{
-		// TODO: remove old indexes
 		// TODO: does file exist in my own sharelist?
 		Lock l(cs);
 		TTHMap::const_iterator i = tthList.find(tth);
@@ -240,7 +239,8 @@ namespace dht
 		addIndex(TTHValue(tth), node, Util::toInt64(size), partial == "1");
 		
 		// send response
-		AdcCommand res(AdcCommand::SEV_SUCCESS, AdcCommand::ERROR_GENERIC, "File published: " + tth, AdcCommand::TYPE_UDP);
+		AdcCommand res(AdcCommand::SEV_SUCCESS, AdcCommand::DHT_FILE_PUBLISHED, "File published", AdcCommand::TYPE_UDP);
+		res.addParam("TR", tth);
 		DHT::getInstance()->send(res, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));	
 	}
 

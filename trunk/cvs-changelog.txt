@@ -1,3 +1,8 @@
+** svn445
+	small fix to avoid IP spoofing via INF
+	updated bandwidth limiter code (BCDC++)
+	better STA handling in DHT
+
 ** svn444
 	improved DHT firewall check
 	fixed memory leak
