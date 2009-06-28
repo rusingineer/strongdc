@@ -37,6 +37,8 @@
 #include "QueueManager.h"
 #include "FinishedManager.h"
 
+#include <cmath>
+
 namespace dcpp {
 
 static const string UPLOAD_AREA = "Uploads";
@@ -343,7 +345,7 @@ ok:
 	return true;
 }
 
-int64_t UploadManager::getRunningAverage() {
+int64_t UploadManager::getRunningAverage() const {
 	Lock l(cs);
 	int64_t avg = 0;
 	for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); ++i) {
@@ -761,19 +763,22 @@ void UploadManager::on(ClientManagerListener::UserDisconnected, const UserPtr& a
 	}
 }
 
-size_t UploadManager::throttleGetSlice()  {
+size_t UploadManager::throttleGetSlice() const {
 	if (mThrottleEnable) {
-		if (mUploadLimit - getRunningAverage() > mByteSlice) {
-			return mByteSlice;
+		int64_t left = mUploadLimit - getRunningAverage();
+		if (-left >= mUploadLimit)  {
+			return 4; // must send > 0 bytes or threadSendFile thinks the transfer is complete
+		} else if (left <= 0) {
+			return mByteSlice * static_cast<size_t>(std::pow(1+double(left)/mUploadLimit, 0.25));
 		} else {
-			return 16; // must send > 0 bytes or threadSendFile thinks the transfer is complete
+			return mByteSlice;
 		}
 	} else {
 		return (size_t)-1;
 	}
 }
 
-size_t UploadManager::throttleCycleTime() {
+size_t UploadManager::throttleCycleTime() const {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;
@@ -783,11 +788,12 @@ void UploadManager::throttleSetup() {
 	// called once a second, plus when uploads start
 	// from the constructor to BufferedSocket
 	size_t OUTBUFSIZE = SETTING(SOCKET_OUT_BUFFER);
+	size_t numUploads = getUploadCount();
 
-	const int target_freq_s = 65;
+	const int target_freq_s = 30;
 
 	mUploadLimit = SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024;
-	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (getUploadCount() > 0);
+	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (numUploads > 0);
 	/* Two domains:
 	   (1) Can hit target upload rate at target limiting period. From 0 to
 	   1s /limiting_period * OUTBUFSIZE >= target_rate.
@@ -799,7 +805,7 @@ void UploadManager::throttleSetup() {
 	if (mThrottleEnable) {
 		mCycleTime = 1000 / target_freq_s;
 		if (mUploadLimit <= target_freq_s * OUTBUFSIZE) {
-			mByteSlice = mUploadLimit / target_freq_s;
+			mByteSlice = mUploadLimit / (target_freq_s * numUploads);
 		} else {
 			mByteSlice = OUTBUFSIZE;
 		}

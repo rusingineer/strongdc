@@ -39,6 +39,8 @@ namespace dht
 		{
 		}
 
+		~Search();
+		
 		enum SearchType { TYPE_FILE = 1, TYPE_NODE = 3, TYPE_STOREFILE = 4 };	// standard types should match ADC protocol
 	
 		typedef std::map<CID, Node::Ptr> NodeMap;

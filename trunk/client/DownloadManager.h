@@ -50,7 +50,7 @@ public:
 	void abortDownload(const string& aTarget);
 
 	/** @return Running average download speed in Bytes/s */
-	int64_t getRunningAverage();
+	int64_t getRunningAverage() const;
 
 	/** @return Number of downloads. */ 
 	size_t getDownloadCount() {
@@ -60,9 +60,9 @@ public:
 
 	bool startDownload(QueueItem::Priority prio);
 
-	bool throttle() { return mThrottleEnable; }
-	size_t throttleGetSlice();
-	size_t throttleCycleTime();
+	bool throttle() const { return mThrottleEnable; }
+	size_t throttleGetSlice() const;
+	size_t throttleCycleTime() const;
 
 private:
 	void throttleSetup();
@@ -71,7 +71,7 @@ private:
 		   mCycleTime,
 		   mByteSlice; // download throttling
 	
-	CriticalSection cs;
+	mutable CriticalSection cs;
 	DownloadList downloads;
 	UserConnectionList idlers;
 

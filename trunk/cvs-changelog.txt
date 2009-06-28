@@ -1,3 +1,8 @@
+** svn447
+	bandwidth limiter fixes (DC++ BZR)
+	hopefully fixed DHT file publishing
+	fixed publishing partial files
+
 ** svn446
 	fixed crash when no nodes available
 	possible fix for STA commands
@@ -5,7 +10,7 @@
 
 ** svn445
 	small fix to avoid IP spoofing via INF
-	updated bandwidth limiter code (BCDC++)
+	updated bandwidth limiter code (BCDC++ BZR)
 	better STA handling in DHT
 
 ** svn444

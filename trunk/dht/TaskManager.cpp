@@ -30,7 +30,7 @@ namespace dht
 	{	
 		if(DHT::getInstance()->isConnected())
 		{
-			if(!DHT::getInstance()->isFirewalled() && IndexManager::getInstance()->getPublishing() < MAX_PUBLISHES_AT_TIME)
+			if(!DHT::getInstance()->isFirewalled())
 			{
 				// publish next file
 				IndexManager::getInstance()->publishNextFile();
