@@ -1,3 +1,8 @@
+** svn446
+	fixed crash when no nodes available
+	possible fix for STA commands
+	changed STA commands to match ADC protocol
+
 ** svn445
 	small fix to avoid IP spoofing via INF
 	updated bandwidth limiter code (BCDC++)

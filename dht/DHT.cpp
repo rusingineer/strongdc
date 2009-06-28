@@ -106,7 +106,8 @@ namespace dht
 			if(cmd.getParam("FW", 0, internalUdpPort))
 			{
 				// send him his external ip and port
-				AdcCommand cmd(AdcCommand::SEV_SUCCESS, AdcCommand::DHT_FWCHECK, "", AdcCommand::TYPE_UDP);
+				AdcCommand cmd(AdcCommand::SEV_SUCCESS, AdcCommand::SUCCESS, "UDP Firewall check processed", AdcCommand::TYPE_UDP);
+				cmd.addParam("FC", "FWCHECK");
 				cmd.addParam("I4", ip);
 				cmd.addParam("U4", Util::toString(port));
 				socket.send(cmd, ip, port);
@@ -403,20 +404,19 @@ namespace dht
 	
 	void DHT::handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw()
 	{
-		if(c.getParameters().size() < 2)
+		if(c.getParameters().size() < 3)
 			return;
 			
 		string fromIP = node->getIdentity().getIp();
-		int code = Util::toInt(c.getParam(0).substr(1));
+		int code = Util::toInt(c.getParam(1).substr(1));
 		
-		switch(code)
+		if(code == 0)
 		{
-			case AdcCommand::SUCCESS:
-			case AdcCommand::DHT_GENERIC:
-				LogManager::getInstance()->message("DHT (" + fromIP + "): " + c.getParam(2));
-				break;
+			string resTo;
+			if(!c.getParam("FC", 2, resTo))
+				return;
 				
-			case AdcCommand::DHT_FILE_PUBLISHED:
+			if(resTo == "PUB")
 			{
 				try
 				{
@@ -432,9 +432,8 @@ namespace dht
 				{
 					// published non-shared file??? Maybe bad client
 				}
-				break;
-			}	
-			case AdcCommand::DHT_FWCHECK:
+			}
+			else if(resTo == "FWCHECK")
 			{
 				Lock l(cs);
 				if(!firewalledWanted.count(fromIP))
@@ -480,9 +479,12 @@ namespace dht
 					
 					requestFWCheck = false;
 				}
-				break;
-			}
+			}	
+			return;
 		}
+
+		// display message in all other cases
+		LogManager::getInstance()->message("DHT (" + fromIP + "): " + c.getParam(2));
 	}
 	
 	void DHT::handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw()
