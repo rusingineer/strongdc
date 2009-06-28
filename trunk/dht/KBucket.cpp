@@ -188,10 +188,10 @@ namespace dht
 			i++;
 		}
 		
-		// ping the oldest (expiring) node
-		Node::Ptr oldest = nodes.front();
-		if(oldest)
+		if(!nodes.empty())
 		{
+			// ping the oldest (expiring) node
+			Node::Ptr oldest = nodes.front();
 			if(oldest->expires > currentTime || oldest->getType() == 4)
 			{
 				// cycle nodes

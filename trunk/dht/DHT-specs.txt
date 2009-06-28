@@ -41,18 +41,16 @@ PSR - partial file request
 MSG - private message (not supported yet)
 
 STA - status message
-- code
-	80 - generic DHT status message
-	81 - file publish response (TR - published file TTH)
-	82 - firewalled UDP check response (I4, U4 - our external IP/UDP port)
-	
+- code	
 - description
+- FC = PUB - response to file publish request (TR contains published file TTH)
+	   = FWCHECK - response to UDP firewall check (I4, U4 - our external IP/port)
 
 ********************************************************************************
 * NOTES                                                                        *
 ********************************************************************************
 
 * each command can contain FW parameter with our internal UDP port, which means 
-  that remote node must send us STA with error code 82 containing our external 
-  IP and UDP port.
+  that remote node must send us STA with error code 0 and FC set to FWCHECK 
+  containing our external IP and UDP port.
   
