@@ -33,6 +33,7 @@
 #include "ZUtils.h"
 
 #include <limits>
+#include <cmath>
 
 // some strange mac definition
 #ifdef ff
@@ -364,19 +365,22 @@ void DownloadManager::endData(UserConnection* aSource) {
 	checkDownloads(aSource);
 }
 
-size_t DownloadManager::throttleGetSlice() {
+size_t DownloadManager::throttleGetSlice() const {
 	if (mThrottleEnable) {
-		if (mDownloadLimit - getRunningAverage() > mByteSlice) {
-			return mByteSlice;
-		} else {
+		int64_t left = mDownloadLimit - getRunningAverage();
+		if (-left >= mDownloadLimit)  {
 			return 0;
+		} else if (left <= 0) {
+			return mByteSlice * static_cast<size_t>(std::pow(1+double(left)/mDownloadLimit, 0.25));
+		} else {
+			return mByteSlice;
 		}
 	} else {
 		return (size_t)-1;
 	}
 }
 
-size_t DownloadManager::throttleCycleTime() {
+size_t DownloadManager::throttleCycleTime() const {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;
@@ -387,11 +391,12 @@ void DownloadManager::throttleSetup() {
 	// from the constructor to BufferedSocket
 	// with 64k, a few people get winsock error 0x2747
 	size_t INBUFSIZE = SETTING(SOCKET_IN_BUFFER);
+	size_t numDownloads = getDownloadCount();
 
-	const int target_freq_s = 65;
+	const int target_freq_s = 30;
 
 	mDownloadLimit = SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*1024;
-	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (getDownloadCount() > 0);
+	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (numDownloads > 0);
 	/* Two domains:
 	   (1) Can hit target download rate at target limiting period. From 0 to
 	   1s /limiting_period * INBUFSIZE >= target_rate.
@@ -403,14 +408,14 @@ void DownloadManager::throttleSetup() {
 	if (mThrottleEnable) {
 		mCycleTime = 1000 / target_freq_s;
 		if (mDownloadLimit <= target_freq_s * INBUFSIZE) {
-			mByteSlice = mDownloadLimit / target_freq_s;
+			mByteSlice = mDownloadLimit / (target_freq_s * numDownloads);
 		} else {
 			mByteSlice = INBUFSIZE;
 		}
 	}
 }
 
-int64_t DownloadManager::getRunningAverage() {
+int64_t DownloadManager::getRunningAverage() const {
 	Lock l(cs);
 	int64_t avg = 0;
 	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {

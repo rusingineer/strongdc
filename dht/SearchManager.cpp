@@ -32,6 +32,12 @@
 namespace dht
 {
 
+	Search::~Search()
+	{
+		if(type == TYPE_STOREFILE)
+			IndexManager::getInstance()->decPublishing();
+	}
+	
 	/*
 	 * Process this search request 
 	 */
@@ -136,7 +142,10 @@ namespace dht
 	void SearchManager::findStore(const string& tth, int64_t size, bool partial)
 	{
 		if(isAlreadySearchingFor(tth))
+		{
+			IndexManager::getInstance()->decPublishing();
 			return;
+		}
 	
 		Search* s = new Search();
 		s->type = Search::TYPE_STOREFILE;
@@ -172,7 +181,10 @@ namespace dht
 		DHT::getInstance()->getClosestNodes(CID(s.term), s.possibleNodes, 50, 3);
 		
 		if(s.possibleNodes.empty())
+		{
+			delete &s;
 			return;
+		}
 	
 		Lock l(cs);
 		// store search
@@ -414,7 +426,6 @@ namespace dht
 				if(s->type == Search::TYPE_STOREFILE)
 				{
 					publishFile(s->respondedNodes, s->term, s->filesize, s->partial);
-					IndexManager::getInstance()->setPublishing(IndexManager::getInstance()->getPublishing() - 1);
 				}
 
 				delete s;

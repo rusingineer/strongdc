@@ -246,15 +246,13 @@ namespace dht
 					
 			xml.addTag("Node");
 			xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());
-			
+			xml.addChildAttrib("type", Util::toString(node->getType()));
+
 			StringMap params;
-			//node->getIdentity().setUser(NULL);
 			node->getIdentity().getParams(params, Util::emptyString, false, true);
 			
 			for(StringMap::const_iterator i = params.begin(); i != params.end(); i++)
 				xml.addChildAttrib(i->first, i->second);
-			//xml.addChildAttrib("I4", node->getIdentity().getIp());
-			//xml.addChildAttrib("U4", node->getIdentity().getUdpPort());
 		}
 		
 		xml.stepOut();	

@@ -418,19 +418,20 @@ namespace dht
 				
 			if(resTo == "PUB")
 			{
+				string tth;
+				if(!c.getParam("TR", 1, tth))
+					return;
+					
 				try
 				{
-					string tth;
-					if(c.getParam("TR", 1, tth))
-					{
-						string fileName = Util::getFileName(ShareManager::getInstance()->toVirtual(TTHValue(tth)));
-						LogManager::getInstance()->message("DHT (" + fromIP + "): File published: " + fileName);
-					}
-				
+					string fileName = Util::getFileName(ShareManager::getInstance()->toVirtual(TTHValue(tth)));
+					LogManager::getInstance()->message("DHT (" + fromIP + "): File published: " + fileName);
 				}
 				catch(ShareException&)
 				{
-					// published non-shared file??? Maybe bad client
+					// published non-shared file??? Maybe partial file
+					LogManager::getInstance()->message("DHT (" + fromIP + "): Partial file published: " + tth);
+					
 				}
 			}
 			else if(resTo == "FWCHECK")

@@ -111,10 +111,10 @@ namespace dht
 		{
 			Lock l(cs);
 						
-			if(publishQueue.empty())
+			if(publishQueue.empty() || publishing >= MAX_PUBLISHES_AT_TIME)
 				return;
 
-			publishing++;				
+			incPublishing();
 				
 			f = publishQueue.front(); // get the first file in queue
 			publishQueue.pop_front(); // and remove it from queue
@@ -234,7 +234,7 @@ namespace dht
 			return;	// no file size?
 	
 		string partial;
-		cmd.getParam("PI", 0, partial);
+		cmd.getParam("PF", 0, partial);
 		
 		addIndex(TTHValue(tth), node, Util::toInt64(size), partial == "1");
 		

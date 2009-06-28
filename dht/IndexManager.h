@@ -78,8 +78,8 @@ public:
 	void saveIndexes(SimpleXML& xml);
 		
 	/** How many files is currently being published */
-	void setPublishing(uint8_t _pub) { publishing = _pub; }
-	uint8_t getPublishing() const { return publishing; }
+	void incPublishing() { Thread::safeInc(publishing); }
+	void decPublishing() { Lock l(cs); Thread::safeDec(publishing); }
 	
 	/** Processes incoming request to publish file */
 	void processPublishRequest(const Node::Ptr& node, const AdcCommand& cmd);
@@ -101,7 +101,7 @@ private:
 	FileQueue publishQueue;
 		
 	/** How many files is currently being published */
-	uint8_t publishing;
+	volatile long publishing;
 	
 	/** Synchronizes access to tthList */
 	mutable CriticalSection cs;
