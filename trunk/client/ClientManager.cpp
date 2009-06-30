@@ -471,6 +471,9 @@ void ClientManager::on(AdcSearch, const Client* c, const AdcCommand& adc, const 
 }
 
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
+	if(aFileType == SearchManager::TYPE_TTH)
+		dht::DHT::getInstance()->findFile(aString);
+		
 	Lock l(cs);
 
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
@@ -479,12 +482,12 @@ void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const st
 			c->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
 		}
 	}
-	
-	if(aFileType == SearchManager::TYPE_TTH)
-		dht::DHT::getInstance()->findFile(aString);
 }
 
 uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
+	if(aFileType == SearchManager::TYPE_TTH)
+		dht::DHT::getInstance()->findFile(aString, aToken);
+
 	Lock l(cs);
 
 	uint64_t estimateSearchSpan = 0;
@@ -499,9 +502,6 @@ uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, in
 		}
 	}
 	
-	if(aFileType == SearchManager::TYPE_TTH)
-		dht::DHT::getInstance()->findFile(aString, aToken);
-			
 	return estimateSearchSpan;
 }
 

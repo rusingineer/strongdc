@@ -125,18 +125,25 @@ namespace dht
 	/*
 	 * Finds "max" closest nodes and stores them to the list 
 	 */
-	void KBucket::getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max, uint8_t maxType) const
+	void KBucket::getClosestNodes(const CID& cid, Node::Map& closest, unsigned int max, uint8_t maxType) const
 	{
 		for(NodeList::const_iterator it = nodes.begin(); it != nodes.end(); it++)
 		{
-			if((*it)->getType() <= maxType)
+			const Node::Ptr& node = *it;
+			
+			// don't spread firewalled nodes
+			if(!node->getIdentity().get("FW").empty())
+				if(node->getIdentity().get("FW") != node->getIdentity().getUdpPort())
+					continue;
+			
+			if(node->getType() <= maxType)
 			{
-				CID distance = Utils::getDistance(cid, (*it)->getUser()->getCID());
-				string ip = (*it)->getIdentity().getIp();
+				CID distance = Utils::getDistance(cid, node->getUser()->getCID());
+				string ip = node->getIdentity().getIp();
 				if(closest.size() < max)
 				{
 					// just insert
-					closest.insert(std::make_pair(distance, *it));
+					closest.insert(std::make_pair(distance, node));
 				}
 				else
 				{
@@ -144,7 +151,7 @@ namespace dht
 					if(distance < closest.rbegin()->first)	// "closest" is sorted map, so just compare with last node
 					{
 						closest.erase(closest.rbegin()->first);
-						closest.insert(std::make_pair(distance, *it));
+						closest.insert(std::make_pair(distance, node));
 					}
 				}
 			}
@@ -233,16 +240,20 @@ namespace dht
 	}
 		
 	/*
-	 * Save all nodes to disk 
+	 * Save bootstrap nodes to disk 
 	 */
 	void KBucket::saveNodes(SimpleXML& xml)
 	{
 		xml.addTag("Nodes");
 		xml.stepIn();
 
-		for(KBucket::NodeList::const_iterator j = nodes.begin(); j != nodes.end(); j++)
+		// get 50 nodes closest to me to bootstrap from them next time
+		Node::Map closestToMe;
+		getClosestNodes(ClientManager::getInstance()->getMe()->getCID(), closestToMe, 50, 3);
+		
+		for(Node::Map::const_iterator j = closestToMe.begin(); j != closestToMe.end(); j++)
 		{
-			const Node::Ptr& node = *j;
+			const Node::Ptr& node = j->second;
 					
 			xml.addTag("Node");
 			xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());

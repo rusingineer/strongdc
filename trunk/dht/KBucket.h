@@ -31,6 +31,7 @@ namespace dht
 		public OnlineUser
 	{
 		typedef boost::intrusive_ptr<Node> Ptr;
+		typedef std::map<CID, Node::Ptr> Map;
 		
 		Node();
 		Node(const UserPtr& u);
@@ -60,7 +61,7 @@ namespace dht
 		Node::Ptr insert(const UserPtr& u);
 		
 		/** Finds "max" closest nodes and stores them to the list */
-		void getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max, uint8_t maxType) const;
+		void getClosestNodes(const CID& cid, Node::Map& closest, unsigned int max, uint8_t maxType) const;
 		
 		/** Return list of all nodes in this bucket */
 		const NodeList& getNodes() const { return nodes; }
@@ -71,7 +72,7 @@ namespace dht
 		/** Loads existing nodes from disk */
 		void loadNodes(SimpleXML& xml);
 		
-		/** Save all nodes to disk */
+		/** Save bootstrap nodes to disk */
 		void saveNodes(SimpleXML& xml);		
 		
 	private:

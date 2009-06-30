@@ -548,6 +548,8 @@
 #define IDC_SETTINGS_CONFIRM_OPTIONS    1315
 #define IDC_PROFILE_MESSAGE             1315
 #define IDC_CONFIRM_OPTIONS             1316
+#define IDC_CHECK1                      1316
+#define IDC_UPDATE_IP                   1316
 #define IDC_SOCKET_IN_BUFFER            1317
 #define IDC_SOCKET_OUT_BUFFER           1318
 #define IDC_TLS_CERTIFICATE_FILE        1318
@@ -589,7 +591,6 @@
 #define IDC_CLOSE_ALL_SEARCH_FRAME      1426
 #define IDC_SETTINGS_PORT_TLS           1427
 #define IDC_MATCH_ALL                   1428
-#define IDC_SETTINGS_PORT_TLS2          1428
 #define IDC_SETTINGS_PORT_DHT           1428
 #define IDC_UPDATE_VERSION              1445
 #define IDC_UPDATE_VERSION_CURRENT_LBL  1446
@@ -816,7 +817,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        307
 #define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         1316
+#define _APS_NEXT_CONTROL_VALUE         1317
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

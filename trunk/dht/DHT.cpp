@@ -101,21 +101,24 @@ namespace dht
 			if(CID(cid) == ClientManager::getInstance()->getMe()->getCID())
 				return;
 				
+			// add user to routing table
+			Node::Ptr node = addUser(CID(cid), ip, port);				
+				
 			// node is requiring FW check
 			string internalUdpPort;
 			if(cmd.getParam("FW", 0, internalUdpPort))
 			{
+				// save his internal port not to spread this node later
+				node->getIdentity().set("FW", internalUdpPort);
+				
 				// send him his external ip and port
-				AdcCommand cmd(AdcCommand::SEV_SUCCESS, AdcCommand::SUCCESS, "UDP Firewall check processed", AdcCommand::TYPE_UDP);
+				AdcCommand cmd(AdcCommand::SEV_SUCCESS, AdcCommand::SUCCESS, (Util::toInt(internalUdpPort) == port) ? "UDP port opened" : "UDP port closed", AdcCommand::TYPE_UDP);
 				cmd.addParam("FC", "FWCHECK");
 				cmd.addParam("I4", ip);
 				cmd.addParam("U4", Util::toString(port));
 				socket.send(cmd, ip, port);
 			}
-						
-			// add user to routing table
-			Node::Ptr node = addUser(CID(cid), ip, port);
-			
+		
 #define C(n) case AdcCommand::CMD_##n: handle(AdcCommand::n(), node, cmd); break;
 			switch(cmd.getCommand()) 
 			{
@@ -225,9 +228,6 @@ namespace dht
 
 		cmd.addParam("TY", Util::toString(type));
 		
-		if(type & PING)	// compatibility reasons
-			cmd.addParam("RE", "1");
-			
 		if(type & MAKE_ONLINE)
 		{
 			cmd.addParam("VE", ("StrgDC++ " VER));
@@ -289,13 +289,15 @@ namespace dht
 	{
 		try
 		{
+			dcpp::File f(Util::getConfigPath() + DHT_FILE, dcpp::File::READ, dcpp::File::OPEN);
 			SimpleXML xml;
-			xml.fromXML(dcpp::File(Util::getConfigPath() + DHT_FILE, dcpp::File::READ, dcpp::File::OPEN).read());
+			xml.fromXML(f.read());
 			
 			xml.stepIn();
 			
-			// load nodes
-			bucket->loadNodes(xml);
+			// load nodes; when file is older than 7 days, bootstrap from database later
+			if(f.getLastModified() > time(NULL) - 7 * 24 * 60 * 60)
+				bucket->loadNodes(xml);
 			
 			// load indexes
 			IndexManager::getInstance()->loadIndexes(xml);
@@ -354,7 +356,7 @@ namespace dht
 		string ip = node->getIdentity().getIp();
 		string udpPort = node->getIdentity().getUdpPort();
 		
-		InfType it = MAKE_ONLINE;	// compatibility reasons
+		InfType it = NONE;
 		for(StringIterC i = c.getParameters().begin() + 1; i != c.getParameters().end(); ++i)
 		{
 			if(i->length() < 2)
@@ -454,6 +456,7 @@ namespace dht
 				if(firewalledChecks.size() == FW_RESPONSES)
 				{
 					// when we received more firewalled statuses, we will be firewalled
+					// TODO: get most common IP address
 					int fw = 0;
 					for(std::tr1::unordered_map<string, uint16_t>::const_iterator i = firewalledChecks.begin(); i != firewalledChecks.end(); i++)
 					{
@@ -472,7 +475,7 @@ namespace dht
 					else
 					{
 						firewalled = false;
-						LogManager::getInstance()->message("DHT: Our UDP port seems to be opened");	
+						LogManager::getInstance()->message("DHT: Our UDP port seems to be opened (IP: " + externalIp + ")");	
 					}
 					
 					firewalledChecks.clear();
@@ -485,7 +488,9 @@ namespace dht
 		}
 
 		// display message in all other cases
-		LogManager::getInstance()->message("DHT (" + fromIP + "): " + c.getParam(2));
+		string msg = c.getParam(2);
+		if(!msg.empty())
+			LogManager::getInstance()->message("DHT (" + fromIP + "): " + msg);
 	}
 	
 	void DHT::handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw()
@@ -498,7 +503,7 @@ namespace dht
 		// not supported yet
 		//fire(ClientListener::PrivateMessage(), this, *node, to, node, c.getParam(0), c.hasFlag("ME", 1));
 		
-		privateMessage(*node, "Sorry, private messages aren't supported yet!", false);
+		//privateMessage(*node, "Sorry, private messages aren't supported yet!", false);
 	}
 	
 }

@@ -31,7 +31,7 @@ namespace dht
 {
 
 	IndexManager::IndexManager(void) :
-		publishing(0)
+		publishing(0), publish(false)
 	{
 	}
 
@@ -172,7 +172,7 @@ namespace dht
 					source.setIp(xml.getChildAttrib("I4"));
 					source.setUdpPort(static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4"))));
 					source.setSize(Util::toInt64(xml.getChildAttrib("SI")));
-					source.setExpires(Util::toInt64(xml.getChildAttrib("expires")));
+					source.setExpires(Util::toInt64(xml.getChildAttrib("EX")));
 					source.setPartial(false);
 					
 					sources.push_back(source);
@@ -190,13 +190,13 @@ namespace dht
 	 */
 	void IndexManager::saveIndexes(SimpleXML& xml)
 	{
-		xml.addTag("Indexes");
+		xml.addTag("Files");
 		xml.stepIn();
 
 		Lock l(cs);
 		for(TTHMap::const_iterator i = tthList.begin(); i != tthList.end(); i++)
 		{
-			xml.addTag("Index");
+			xml.addTag("File");
 			xml.addChildAttrib("TTH", i->first.toBase32());
 			
 			xml.stepIn();
@@ -212,7 +212,7 @@ namespace dht
 				xml.addChildAttrib("I4", source.getIp());
 				xml.addChildAttrib("U4", source.getUdpPort());
 				xml.addChildAttrib("SI", source.getSize());
-				xml.addChildAttrib("expires", source.getExpires());
+				xml.addChildAttrib("EX", source.getExpires());
 			}
 			xml.stepOut();
 		}

@@ -42,19 +42,22 @@ namespace dht
 
 	void BootstrapManager::bootstrap()
 	{
-		LogManager::getInstance()->message("DHT bootstrapping started");
-		
-		// TODO: make URL settable
-		string url = BOOTSTRAP_URL "?cid=" + ClientManager::getInstance()->getMe()->getCID().toBase32();
-		
-		// store only active nodes to database
-		if(ClientManager::getInstance()->isActive(Util::emptyString))
+		if(bootstrapNodes.empty())
 		{
-			url += "&u4=" + Util::toString(DHT::getInstance()->getPort());
+			LogManager::getInstance()->message("DHT bootstrapping started");
+			
+			// TODO: make URL settable
+			string url = BOOTSTRAP_URL "?cid=" + ClientManager::getInstance()->getMe()->getCID().toBase32();
+			
+			// store only active nodes to database
+			if(ClientManager::getInstance()->isActive(Util::emptyString))
+			{
+				url += "&u4=" + Util::toString(DHT::getInstance()->getPort());
+			}
+			
+			httpConnection.setCoralizeState(HttpConnection::CST_NOCORALIZE);
+			httpConnection.downloadFile(url);
 		}
-		
-		httpConnection.setCoralizeState(HttpConnection::CST_NOCORALIZE);
-		httpConnection.downloadFile(url);		
 	}
 	
 	void BootstrapManager::on(HttpConnectionListener::Data, HttpConnection*, const uint8_t* buf, size_t len) throw()
