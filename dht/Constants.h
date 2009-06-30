@@ -23,7 +23,7 @@ namespace dht
 
 #define BOOTSTRAP_URL				"http://strongdc.sourceforge.net/bootstrap/"
 
-#define DHT_UDPPORT					6240							// default DHT port
+#define DHT_UDPPORT					6241							// default DHT port
 #define DHT_FILE					"dht.xml"						// local file with all information got from the network
 
 #define ID_BITS						192								// size of identificator (in bits)
@@ -50,6 +50,7 @@ namespace dht
 #define REPUBLISH_TIME				5*60*60*1000	// 5 hours		// when our filelist should be republished
 #define PFS_REPUBLISH_TIME			1*60*60*1000	// 1 hour		// when partially downloaded files should be republished
 #define MAX_PUBLISHES_AT_TIME		3								// how many files can be published at one time
+#define PUBLISH_TIME				2*1000	// 2 seconds			// how often publishes files
 
 #define FW_RESPONSES				3								// how many UDP port checks are needed to detect we are firewalled
 #define FWCHECK_TIME				1*60*60*1000					// how often request firewalled UDP check

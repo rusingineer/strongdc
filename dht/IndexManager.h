@@ -81,6 +81,10 @@ public:
 	void incPublishing() { Thread::safeInc(publishing); }
 	void decPublishing() { Lock l(cs); Thread::safeDec(publishing); }
 	
+	/** Is publishing allowed? */
+	void setPublish(bool _publish) { publish = _publish; }
+	bool getPublish() const { return publish; }
+	
 	/** Processes incoming request to publish file */
 	void processPublishRequest(const Node::Ptr& node, const AdcCommand& cmd);
 	
@@ -99,7 +103,10 @@ private:
 	/** Queue of files prepared for publishing */
 	typedef std::deque<File> FileQueue;
 	FileQueue publishQueue;
-		
+	
+	/** Is publishing allowed? */
+	bool publish;
+	
 	/** How many files is currently being published */
 	volatile long publishing;
 	

@@ -34,8 +34,11 @@ namespace dht
 
 	Search::~Search()
 	{
-		if(type == TYPE_STOREFILE)
-			IndexManager::getInstance()->decPublishing();
+		switch(type)
+		{
+			case TYPE_NODE: IndexManager::getInstance()->setPublish(true); break;
+			case TYPE_STOREFILE: IndexManager::getInstance()->decPublishing(); break;
+		}
 	}
 	
 	/*
@@ -56,7 +59,7 @@ namespace dht
 			
 		// send search request to the first ALPHA closest nodes
 		size_t nodesCount = min((size_t)SEARCH_ALPHA, possibleNodes.size());
-		Search::NodeMap::iterator it;
+		Node::Map::iterator it;
 		for(size_t i = 0; i < nodesCount; i++)
 		{
 			it = possibleNodes.begin();
@@ -227,8 +230,8 @@ namespace dht
 				if(IndexManager::getInstance()->findResult(TTHValue(term), sources))
 				{
 					// yes, we got sources for this file
-					unsigned int n = 300;
-					for(IndexManager::SourceList::const_iterator i = sources.begin(); i != sources.end() && n >= 0; i++, n--)
+					unsigned int n = MAX_SEARCH_RESULTS;
+					for(IndexManager::SourceList::const_iterator i = sources.begin(); i != sources.end() && n > 0; i++, n--)
 					{
 						xml.addTag("Source");
 						xml.addChildAttrib("CID", i->getCID().toBase32());
@@ -243,11 +246,11 @@ namespace dht
 			default:
 			{
 				// get nodes closest to requested ID
-				Search::NodeMap nodes;
+				Node::Map nodes;
 				DHT::getInstance()->getClosestNodes(CID(term), nodes, K, 2);
 				
 				// add nodelist in XML format
-				for(Search::NodeMap::const_iterator i = nodes.begin(); i != nodes.end(); i++)
+				for(Node::Map::const_iterator i = nodes.begin(); i != nodes.end(); i++)
 				{
 					xml.addTag("Node");
 					xml.addChildAttrib("CID", i->second->getUser()->getCID().toBase32());
@@ -346,7 +349,7 @@ namespace dht
 			
 			// extract possible nodes
 			unsigned int n = K;
-			while(xml.findChild("Node") && n-- >= 0)
+			while(xml.findChild("Node") && n-- > 0)
 			{
 				CID cid = CID(xml.getChildAttrib("CID"));
 				CID distance = Utils::getDistance(cid, CID(s->term));
@@ -385,11 +388,11 @@ namespace dht
 	/*
 	 * Sends publishing request 
 	 */
-	void SearchManager::publishFile(const Search::NodeMap& nodes, const string& tth, int64_t size, bool partial)
+	void SearchManager::publishFile(const Node::Map& nodes, const string& tth, int64_t size, bool partial)
 	{
 		// send PUB command to K nodes
 		int n = K;
-		for(Search::NodeMap::const_iterator i = nodes.begin(); i != nodes.end() && n >= 0; i++, n--)
+		for(Node::Map::const_iterator i = nodes.begin(); i != nodes.end() && n > 0; i++, n--)
 		{
 			AdcCommand cmd(AdcCommand::CMD_PUB, AdcCommand::TYPE_UDP);
 			cmd.addParam("TR", tth);

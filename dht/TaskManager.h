@@ -15,8 +15,11 @@ namespace dht
 		
 	private:
 	
-		/** Time when our files will be republished */
+		/** Time of publishing next file in queue */
 		uint64_t nextPublishTime;
+		
+		/** Time when our files will be republished */
+		uint64_t nextRepublishTime;
 		
 		/** When running searches will be processed */
 		uint64_t nextSearchTime;

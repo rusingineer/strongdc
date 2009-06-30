@@ -1,3 +1,11 @@
+** svn448
+	when dht.xml is older than 7 days, bootstrap from database
+	fixed deadlock
+	DHT publishing is delayed until bootstrapping is completed
+	don't spread firewalled DHT sources, not reliable but good enough
+	publish one file in 2 seconds
+	DHT uses UDP port 6241	
+
 ** svn447
 	bandwidth limiter fixes (DC++ BZR)
 	hopefully fixed DHT file publishing
