@@ -116,7 +116,7 @@ public:
 	void sendRawCommand(const UserPtr& user, const Client& c, const int aRawCommand);
 
 	int getMode(const string& aHubUrl) const;
-	bool isActive(const string& aHubUrl) const { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
+	bool isActive(const string& aHubUrl = Util::emptyString) const { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 
 	void lock() throw() { cs.enter(); }
 	void unlock() throw() { cs.leave(); }

@@ -41,15 +41,26 @@ namespace dht
 	 */
 	void ConnectionManager::connect(const OnlineUser& ou, const string& token)
 	{
-		bool secure = CryptoManager::getInstance()->TLSOk() && ou.getUser()->isSet(User::TLS);
-		uint16_t port = secure ? dcpp::ConnectionManager::getInstance()->getSecurePort() : dcpp::ConnectionManager::getInstance()->getPort();
-		
-		AdcCommand cmd(AdcCommand::CMD_CTM, AdcCommand::TYPE_UDP);
+		connect(ou, token, CryptoManager::getInstance()->TLSOk() && ou.getUser()->isSet(User::TLS));
+	}
+	
+	void ConnectionManager::connect(const OnlineUser& ou, const string& token, bool secure)
+	{
+		bool active = ClientManager::getInstance()->isActive();
+
+		// if I am not active, send reverse connect to me request
+		AdcCommand cmd(active ? AdcCommand::CMD_CTM : AdcCommand::CMD_RCM, AdcCommand::TYPE_UDP);
 		cmd.addParam(secure ? SECURE_CLIENT_PROTOCOL_TEST : CLIENT_PROTOCOL);
-		cmd.addParam(Util::toString(port));
+		
+		if(active)
+		{
+			uint16_t port = secure ? dcpp::ConnectionManager::getInstance()->getSecurePort() : dcpp::ConnectionManager::getInstance()->getPort();
+			cmd.addParam(Util::toString(port));
+		}		
+
 		cmd.addParam(token);
 		
-		DHT::getInstance()->send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())));			
+		DHT::getInstance()->send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())));
 	}
 
 	/*
@@ -88,6 +99,40 @@ namespace dht
 		}
 
 		dcpp::ConnectionManager::getInstance()->adcConnect(*node, static_cast<uint16_t>(Util::toInt(port)), token, secure);		
+	}
+	
+	/*
+	 * Sends request to create connection with me
+	 */
+	void ConnectionManager::revConnectToMe(const Node::Ptr& node, const AdcCommand& cmd)
+	{
+		// this is valid for active-passive connections only
+		if(!ClientManager::getInstance()->isActive())
+			return;
+			
+		const string& protocol = cmd.getParam(0);
+		const string& token = cmd.getParam(1);
+
+		bool secure;
+		if(protocol == CLIENT_PROTOCOL)
+		{
+			secure = false;
+		}
+		else if(protocol == SECURE_CLIENT_PROTOCOL_TEST && CryptoManager::getInstance()->TLSOk())
+		{
+			secure = true;
+		}
+		else
+		{
+			AdcCommand sta(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_UNSUPPORTED, "Protocol unknown", AdcCommand::TYPE_UDP);
+			sta.addParam("PR", protocol);
+			sta.addParam("TO", token);
+
+			DHT::getInstance()->send(sta, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+			return;
+		}
+		
+		connect(*node, token, secure);
 	}
 	
 }

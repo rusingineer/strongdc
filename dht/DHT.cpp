@@ -127,6 +127,7 @@ namespace dht
 				C(RES);	// response to SCH
 				C(PUB);	// request to publish file
 				C(CTM); // connection request
+				C(RCM); // reverse connection request
 				C(STA);	// status message
 				C(PSR);	// partial file request
 				C(MSG);	// private message
@@ -351,6 +352,7 @@ namespace dht
 	 * Message processing
 	 */
 
+	// user's info
 	void DHT::handle(AdcCommand::INF, const Node::Ptr& node, AdcCommand& c) throw()
 	{
 		string ip = node->getIdentity().getIp();
@@ -384,26 +386,37 @@ namespace dht
 			info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(udpPort)), it & ~PING);	// remove ping flag to avoid ping-pong-ping-pong-ping...
 	}
 	
+	// incoming search request
 	void DHT::handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) throw()
 	{
 		SearchManager::getInstance()->processSearchRequest(node, c);
 	}
 	
+	// incoming search result
 	void DHT::handle(AdcCommand::RES, const Node::Ptr& node, AdcCommand& c) throw()
 	{
 		SearchManager::getInstance()->processSearchResult(node, c);
 	}
 	
+	// incoming publish request
 	void DHT::handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) throw()
 	{
 		IndexManager::getInstance()->processPublishRequest(node, c);
 	}
 	
+	// connection request
 	void DHT::handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) throw()
 	{
 		ConnectionManager::getInstance()->connectToMe(node, c);
 	}
 	
+	// reverse connection request
+	void DHT::handle(AdcCommand::RCM, const Node::Ptr& node, AdcCommand& c) throw()
+	{
+		ConnectionManager::getInstance()->revConnectToMe(node, c);
+	}
+	
+	// status message
 	void DHT::handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw()
 	{
 		if(c.getParameters().size() < 3)
@@ -467,7 +480,7 @@ namespace dht
 					}
 
 					if(fw >= 0)
-					{		
+					{
 						// we are probably firewalled, so our internal UDP port is unaccessible		
 						firewalled = true;
 						LogManager::getInstance()->message("DHT: Firewalled UDP status set");
@@ -493,14 +506,16 @@ namespace dht
 			LogManager::getInstance()->message("DHT (" + fromIP + "): " + msg);
 	}
 	
+	// partial file request
 	void DHT::handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw()
 	{
 		dcpp::SearchManager::getInstance()->onPSR(c, node->getUser(), node->getIdentity().getIp());
 	}
 
+	// private message
 	void DHT::handle(AdcCommand::MSG, const Node::Ptr& node, AdcCommand& c) throw()
 	{
-		// not supported yet
+		// not implemented yet
 		//fire(ClientListener::PrivateMessage(), this, *node, to, node, c.getParam(0), c.hasFlag("ME", 1));
 		
 		//privateMessage(*node, "Sorry, private messages aren't supported yet!", false);
