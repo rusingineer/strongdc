@@ -1,7 +1,7 @@
   -- StrongDC++ --
   
 * fixed upload connection tokens (grant extra slot, upload queue etc.)
-*	added cheating string for old clients
+* added cheating string for old clients
 * get full list when partial one is not available
 * fix round-off issue when segmented downloads are disabled (DC++ BZR)
 * fix crash on too many connections (DC++ BZR)

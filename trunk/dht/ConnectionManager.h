@@ -35,9 +35,13 @@ namespace dht
 		
 		/** Sends Connect To Me request to online node */
 		void connect(const OnlineUser& ou, const string& token);
+		void connect(const OnlineUser& ou, const string& token, bool secure);
 		
 		/** Creates connection to specified node */
 		void connectToMe(const Node::Ptr& node, const AdcCommand& cmd);
+		
+		/** Sends request to create connection with me */
+		void revConnectToMe(const Node::Ptr& node, const AdcCommand& cmd);
 
 	};
 

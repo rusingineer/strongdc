@@ -100,7 +100,7 @@ void Client::reloadSettings(bool updateNick) {
 }
 
 bool Client::isActive() const {
-	return ClientManager::getInstance()->getMode(hubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE;
+	return ClientManager::getInstance()->isActive(hubUrl);
 }
 
 void Client::connect() {

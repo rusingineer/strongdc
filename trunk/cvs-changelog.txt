@@ -1,3 +1,6 @@
+** svn449
+	added support for DHT passive connections
+
 ** svn448
 	when dht.xml is older than 7 days, bootstrap from database
 	fixed deadlock

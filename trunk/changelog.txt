@@ -1,7 +1,7 @@
   -- StrongDC++ --
   
 * opraveny tokeny pro odesílání (extra sloty, fronta odesílání atd.)
-*	pøidán øetìzec detekce starých klientù
+* pøidán øetìzec detekce starých klientù
 * pokud není k dispozici èásteèný seznam souborù, bude stažen úplný
 * opraveny problémy pøi vypnutém segmentovém stahování (DC++ BZR)
 * opraven pád pøi velkém poètu spojení (DC++ BZR)
