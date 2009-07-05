@@ -46,6 +46,7 @@ public:
 	StringList getHubNames(const CID& cid) const;
 	StringList getNicks(const CID& cid) const;
 	string getConnection(const CID& cid) const;
+	uint8_t getSlots(const CID& cid) const;
 
 	bool isConnected(const string& aUrl) const;
 	

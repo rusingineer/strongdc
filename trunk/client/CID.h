@@ -57,7 +57,10 @@ private:
 
 } // namespace dcpp
 
-namespace std { //namespace tr1 { 
+namespace std { 
+#if !defined(_STLPORT_VERSION)
+	namespace tr1 {
+#endif
 template<>
 struct hash<dcpp::CID> {
 	size_t operator()(const dcpp::CID& rhs) const {
@@ -71,6 +74,9 @@ struct hash<dcpp::CID*> {
 		return *reinterpret_cast<const size_t*>(rhs);
 	}
 };
+#if !defined(_STLPORT_VERSION)
+}
+#endif
 
 template<>
 struct equal_to<dcpp::CID*> {
@@ -78,7 +84,6 @@ struct equal_to<dcpp::CID*> {
 		return (*lhs) == (*rhs);
 	}
 };
-//}
 }
 
 #endif // !defined(CID_H)

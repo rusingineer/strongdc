@@ -184,12 +184,7 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 	}
 
 	if(!u->getIdentity().get("US").empty()) {
-		char buf[16];
-		snprintf(buf, sizeof(buf), "%.3g", Util::toDouble(u->getIdentity().get("US")) * 8 / 1024 / 1024);
-
-		char *cp;
-		if( (cp=strchr(buf, ',')) != NULL) *cp='.';
-		u->getIdentity().setConnection(buf);
+		u->getIdentity().setConnection(Util::formatBytes(u->getIdentity().get("US")) + "/s");
 	}
 
 	if(u->getUser() == getMyIdentity().getUser()) {

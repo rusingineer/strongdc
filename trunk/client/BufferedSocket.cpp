@@ -302,7 +302,6 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	size_t sendMaximum;
 	uint64_t start = 0, current= 0;
 	bool throttling;
-	
 	while(true) {
 		if(disconnecting)
 			return;
@@ -347,7 +346,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 			} else {
 				writeSize = min(sockSize / 2, writeBuf.size() - writePos);
 			}
-			
+
 			int written = sock->write(&writeBuf[writePos], writeSize);
 			if(written > 0) {
 				writePos += written;
