@@ -96,10 +96,25 @@ extern "C" {
 
 typedef struct dtls1_bitmap_st
 	{
-	PQ_64BIT map;
-	unsigned long length;     /* sizeof the bitmap in bits */
-	PQ_64BIT max_seq_num;  /* max record number seen so far */
+	unsigned long map;		/* track 32 packets on 32-bit systems
+					   and 64 - on 64-bit systems */
+	unsigned char max_seq_num[8];	/* max record number seen so far,
+					   64-bit value in big-endian
+					   encoding */
 	} DTLS1_BITMAP;
+
+struct dtls1_retransmit_state
+	{
+	EVP_CIPHER_CTX *enc_write_ctx;	/* cryptographic state */
+	EVP_MD_CTX *write_hash;			/* used for mac generation */
+#ifndef OPENSSL_NO_COMP
+	COMP_CTX *compress;				/* compression */
+#else
+	char *compress;	
+#endif
+	SSL_SESSION *session;
+	unsigned short epoch;
+	};
 
 struct hm_header_st
 	{
@@ -109,6 +124,7 @@ struct hm_header_st
 	unsigned long frag_off;
 	unsigned long frag_len;
 	unsigned int is_ccs;
+	struct dtls1_retransmit_state saved_retransmit_state;
 	};
 
 struct ccs_header_st
@@ -168,6 +184,9 @@ typedef struct dtls1_state_st
 
 	unsigned short handshake_read_seq;
 
+	/* save last sequence number for retransmissions */
+	unsigned char last_write_sequence[8];
+
 	/* Received handshake records (processed and unprocessed) */
 	record_pqueue unprocessed_rcds;
 	record_pqueue processed_rcds;
@@ -177,6 +196,13 @@ typedef struct dtls1_state_st
 
 	/* Buffered (sent) handshake records */
 	pqueue sent_messages;
+
+	/* Buffered application records.
+	 * Only for records between CCS and Finished
+	 * to prevent either protocol violation or
+	 * unnecessary message loss.
+	 */
+	record_pqueue buffered_app_data;
 
 	unsigned int mtu; /* max wire packet size */
 

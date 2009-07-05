@@ -84,6 +84,9 @@ namespace dht
 		/** Processes all running searches and removes long-time ones */
 		void processSearches();
 		
+		/** Processes incoming search results */
+		void processSearchResults(const UserPtr& user);
+		
 	private:
 	
 		/** Running search operations */
@@ -92,6 +95,9 @@ namespace dht
 		
 		/** Locks access to "searches" */
 		CriticalSection cs;
+		
+		typedef std::tr1::unordered_multimap<CID, std::pair<uint64_t, SearchResultPtr>> ResultsMap;
+		ResultsMap searchResults;
 		
 		/** Performs general search operation in the network */
 		void search(Search& s);

@@ -763,7 +763,7 @@ void UploadManager::on(ClientManagerListener::UserDisconnected, const UserPtr& a
 	}
 }
 
-size_t UploadManager::throttleGetSlice() const {
+size_t UploadManager::throttleGetSlice()  {
 	if (mThrottleEnable) {
 		int64_t left = mUploadLimit - getRunningAverage();
 		if (-left >= mUploadLimit)  {
@@ -778,7 +778,7 @@ size_t UploadManager::throttleGetSlice() const {
 	}
 }
 
-size_t UploadManager::throttleCycleTime() const {
+size_t UploadManager::throttleCycleTime() {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;
@@ -810,8 +810,8 @@ void UploadManager::throttleSetup() {
 			mByteSlice = OUTBUFSIZE;
 		}
 	}
-
-	// dcdebug("UM mByteSlice: %d; mCycleTime: %d\n", mByteSlice, mCycleTime);
+	
+	// dcdebug("UM mByteSlice: %d; mCycleTime: %d\n", mByteSlice, mCycleTime);	
 }
 
 void UploadManager::removeDelayUpload(const UserPtr& aUser) {

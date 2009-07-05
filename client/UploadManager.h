@@ -127,9 +127,9 @@ public:
 	void abortUpload(const string& aFile, bool waiting = true);
 	
 	// Upload throttling
-	bool throttle() const { return mThrottleEnable; }
-	size_t throttleGetSlice() const;
-	size_t throttleCycleTime() const;
+	bool throttle() { return mThrottleEnable; }
+	size_t throttleGetSlice();
+	size_t throttleCycleTime();
 	
 	GETSET(uint8_t, extraPartial, ExtraPartial);
 	GETSET(uint8_t, extra, Extra);

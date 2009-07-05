@@ -33,6 +33,7 @@
 #include "../client/LogManager.h"
 #include "../client/SettingsManager.h"
 #include "../client/ShareManager.h"
+#include "../client/UploadManager.h"
 #include "../client/User.h"
 #include "../client/Version.h"
 
@@ -233,6 +234,7 @@ namespace dht
 		{
 			cmd.addParam("VE", ("StrgDC++ " VER));
 			cmd.addParam("NI", SETTING(NICK));
+			cmd.addParam("SL", Util::toString(UploadManager::getInstance()->getSlots()));
 			
 			if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
 				cmd.addParam("US", Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024));
@@ -376,10 +378,17 @@ namespace dht
 			node->getUser()->setFlag(User::TLS);
 		}		
 		
+		if(!node->getIdentity().get("US").empty()) {
+			node->getIdentity().setConnection(Util::formatBytes(node->getIdentity().get("US")) + "/s");
+		}
+			
 		if((it & MAKE_ONLINE) && !node->isInList)
 		{
 			node->isInList = true;
 			ClientManager::getInstance()->putOnline(node.get());
+			
+			// do we wait for any search results from this user?
+			SearchManager::getInstance()->processSearchResults(node->getUser());
 		}
 		
 		if(it & PING)

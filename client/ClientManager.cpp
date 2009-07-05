@@ -124,6 +124,16 @@ string ClientManager::getConnection(const CID& cid) const {
 	return STRING(OFFLINE);
 }
 
+uint8_t ClientManager::getSlots(const CID& cid) const
+{
+	Lock l(cs);
+	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&cid));
+	if(i != onlineUsers.end()) {
+		return static_cast<uint8_t>(Util::toInt(i->second->getIdentity().get("SL")));
+	}
+	return 0;
+}
+
 bool ClientManager::isConnected(const string& aUrl) const {
 	Lock l(cs);
 

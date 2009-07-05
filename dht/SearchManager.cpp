@@ -325,23 +325,36 @@ namespace dht
 					// create user as offline (only TCP connected users will be online)
 					UserPtr u = ClientManager::getInstance()->getUser(cid);
 					u->setFlag(User::DHT);
-										
-					// contact node that we are online and we want his info
-					DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE);
 					
 					if(partial)
 					{
+						if(!u->isOnline())	// TODO: only node type < 3
+						{
+							// node is not online, try to contact him
+							DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE);				
+						}
+						
 						// ask for partial file
 						AdcCommand cmd(AdcCommand::CMD_PSR, AdcCommand::TYPE_UDP);
 						cmd.addParam("U4", Util::toString(dcpp::SearchManager::getInstance()->getPort()));
 						cmd.addParam("TR", s->term);
 						
 						DHT::getInstance()->send(cmd, i4, u4);
-						continue;
 					}
-				
-					SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, s->term, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
-					dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
+					else
+					{
+						SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, Util::emptyString, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
+						if(!u->isOnline())	// TODO: only node type < 3
+						{
+							// node is not online, try to contact him
+							searchResults.insert(std::make_pair(u->getCID(), std::make_pair(GET_TICK(), sr)));
+							DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE);						
+						}
+						else
+						{
+							dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
+						}
+					}
 				}
 				
 				xml.resetCurrentChild();
@@ -437,6 +450,36 @@ namespace dht
 			{
 				++it;
 			}		
+		}
+	}
+	
+	/*
+	 * Processes incoming search results 
+	 */
+	void SearchManager::processSearchResults(const UserPtr& user)
+	{
+		dcassert(user->isOnline());
+
+		uint64_t tick = GET_TICK();
+		
+		ResultsMap::iterator it = searchResults.begin();
+		while(it != searchResults.end())
+		{
+			if(it->first == user->getCID())
+			{
+				// user is online, process his result
+				dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), it->second.second);
+				searchResults.erase(it++);
+			}
+			else if(it->second.first + 60*1000 <= tick)
+			{
+				// delete result from possibly offline user
+				searchResults.erase(it++);
+			}
+			else
+			{
+				++it;
+			}
 		}
 	}
 	

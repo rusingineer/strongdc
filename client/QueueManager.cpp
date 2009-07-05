@@ -311,7 +311,8 @@ void QueueManager::UserQueue::remove(QueueItem* qi, bool removeRunning) {
 }
 
 void QueueManager::UserQueue::remove(QueueItem* qi, const UserPtr& aUser, bool removeRunning) {
-	if(removeRunning && getRunning(aUser) == qi) {
+	QueueItem* q = getRunning(aUser);
+	if(removeRunning && q == qi) {
 		removeDownload(qi, aUser);
 	}
 

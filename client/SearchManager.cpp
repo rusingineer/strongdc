@@ -337,10 +337,11 @@ void SearchManager::onRES(const AdcCommand& cmd, const UserPtr& from, const stri
 		SearchResult::Types type = (file[file.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
 		if(type == SearchResult::TYPE_FILE && tth.empty())
 			return;
-		/// @todo Something about the slots
-		SearchResultPtr sr(new SearchResult(from, type, 0, (uint8_t)freeSlots, size,
+		
+		uint8_t slots = ClientManager::getInstance()->getSlots(from->getCID());
+		SearchResultPtr sr(new SearchResult(from, type, slots, (uint8_t)freeSlots, size,
 			file, hubName, hub, remoteIp, TTHValue(tth), token));
-			fire(SearchManagerListener::SR(), sr);
+		fire(SearchManagerListener::SR(), sr);
 	}
 }
 
@@ -356,7 +357,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 	for(StringIterC i = cmd.getParameters().begin(); i != cmd.getParameters().end(); ++i) {
 		const string& str = *i;
 		if(str.compare(0, 2, "U4") == 0) {
-			udpPort = (uint16_t)Util::toInt(str.substr(2));
+			udpPort = static_cast<uint16_t>(Util::toInt(str.substr(2)));
 		} else if(str.compare(0, 2, "NI") == 0) {
 			nick = str.substr(2);
 		} else if(str.compare(0, 2, "HI") == 0) {

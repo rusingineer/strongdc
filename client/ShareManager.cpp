@@ -1616,6 +1616,9 @@ bool ShareManager::shareFolder(const string& path, bool thoroughCheck /* = false
 }
 
 int64_t ShareManager::addExcludeFolder(const string &path) {
+	
+	HashManager::getInstance()->stopHashing(path);
+	
 	// make sure this is a sub folder of a shared folder
 	bool result = false;
 	for(StringMap::const_iterator i = shares.begin(); i != shares.end(); ++i)
