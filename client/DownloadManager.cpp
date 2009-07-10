@@ -350,7 +350,7 @@ void DownloadManager::endData(UserConnection* aSource) {
 			return;
 		}
 
-		aSource->setSpeed(d->getAverageSpeed());
+		aSource->setSpeed(static_cast<int64_t>(d->getAverageSpeed()));
 		aSource->updateChunkSize(d->getTigerTree().getBlockSize(), d->getSize(), GET_TICK() - d->getStart());
 		
 		dcdebug("Download finished: %s, size " I64_FMT ", downloaded " I64_FMT "\n", d->getPath().c_str(), d->getSize(), d->getPos());
@@ -365,13 +365,13 @@ void DownloadManager::endData(UserConnection* aSource) {
 	checkDownloads(aSource);
 }
 
-size_t DownloadManager::throttleGetSlice() const {
+size_t DownloadManager::throttleGetSlice()  {
 	if (mThrottleEnable) {
 		int64_t left = mDownloadLimit - getRunningAverage();
 		if (-left >= mDownloadLimit)  {
 			return 0;
 		} else if (left <= 0) {
-			return mByteSlice * static_cast<size_t>(std::pow(1+double(left)/mDownloadLimit, 0.25));
+			return mByteSlice*std::pow(1+double(left)/mDownloadLimit, 0.25);
 		} else {
 			return mByteSlice;
 		}
@@ -380,7 +380,7 @@ size_t DownloadManager::throttleGetSlice() const {
 	}
 }
 
-size_t DownloadManager::throttleCycleTime() const {
+size_t DownloadManager::throttleCycleTime() {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;
@@ -415,12 +415,12 @@ void DownloadManager::throttleSetup() {
 	}
 }
 
-int64_t DownloadManager::getRunningAverage() const {
+int64_t DownloadManager::getRunningAverage() {
 	Lock l(cs);
 	int64_t avg = 0;
 	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 		Download* d = *i;
-		avg += d->getAverageSpeed();
+		avg += static_cast<int64_t>(d->getAverageSpeed());
 	}
 	return avg;
 }

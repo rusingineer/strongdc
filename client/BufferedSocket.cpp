@@ -299,8 +299,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	bool readDone = false;
 	dcdebug("Starting threadSend\n");
 	UploadManager *um = UploadManager::getInstance();
-	size_t sendMaximum;
-	uint64_t start = 0, current= 0;
+	size_t sendMaximum, start = 0, current= 0;
 	bool throttling;
 	while(true) {
 		if(disconnecting)
@@ -354,9 +353,9 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 				fire(BufferedSocketListener::BytesSent(), 0, written);
 
 				if(throttling) {
-					uint32_t cycle_time = um->throttleCycleTime();
+					int32_t cycle_time = um->throttleCycleTime();
 					current = TimerManager::getTick();
-					uint32_t sleep_time = cycle_time - static_cast<uint32_t>(current - start);
+					int32_t sleep_time = cycle_time - (current - start);
 					if (sleep_time > 0 && sleep_time <= cycle_time) {
 						Thread::sleep(sleep_time);
 					}

@@ -23,7 +23,7 @@ namespace dht
 
 #define BOOTSTRAP_URL				"http://strongdc.sourceforge.net/bootstrap/"
 
-#define DHT_UDPPORT					6241							// default DHT port
+#define DHT_UDPPORT					6245							// default DHT port
 #define DHT_FILE					"dht.xml"						// local file with all information got from the network
 
 #define ID_BITS						192								// size of identificator (in bits)

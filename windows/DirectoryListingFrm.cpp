@@ -668,6 +668,8 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 		const ItemInfo* ii = ctrlList.getItemData(ctrlList.GetNextItem(-1, LVNI_SELECTED));
 
 		if(ctrlList.GetSelectedCount() == 1 && ii->type == ItemInfo::FILE) {
+			fileMenu.InsertSeparatorFirst(Text::toT(Util::getFileName(ii->file->getName())));
+			
 			//Append Favorite download dirs
 			StringPairList spl = FavoriteManager::getInstance()->getFavoriteDirs();
 			if (spl.size() > 0) {
@@ -722,8 +724,7 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 					targetMenu.AppendMenu(MF_STRING, IDC_DOWNLOAD_TARGET + (++n), i->c_str());
 				}
 			}
-			if(ii->type == ItemInfo::DIRECTORY && ii->type == ItemInfo::DIRECTORY && 
-			   ii->dir->getAdls() && ii->dir->getParent() != dl->getRoot()) {
+			if(ii->type == ItemInfo::DIRECTORY && ii->dir->getAdls() && ii->dir->getParent() != dl->getRoot()) {
 				fileMenu.AppendMenu(MF_STRING, IDC_GO_TO_DIRECTORY, CTSTRING(GO_TO_DIRECTORY));
 			}
 
@@ -791,6 +792,7 @@ LRESULT DirectoryListingFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARA
 			}
 		}
 			
+		directoryMenu.InsertSeparatorFirst(TSTRING(DIRECTORY));
 		directoryMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
 			
 		return TRUE; 

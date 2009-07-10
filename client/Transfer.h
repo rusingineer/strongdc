@@ -45,7 +45,7 @@ public:
 	static const string USER_LIST_NAME_BZ;
 
 	Transfer(UserConnection& conn, const string& path, const TTHValue& tth);
-	~Transfer() { };
+	virtual ~Transfer() { };
 
 	int64_t getPos() const { return pos; }
 
@@ -66,7 +66,7 @@ public:
 	bool getOverlapped() const { return getSegment().getOverlapped(); }
 	void setOverlapped(bool overlap) { segment.setOverlapped(overlap); }
 
-	int64_t getAverageSpeed() const;
+	double getAverageSpeed() const;
 
 	int64_t getSecondsLeft(bool wholeFile = false) const;
 

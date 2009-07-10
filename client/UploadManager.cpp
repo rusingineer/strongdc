@@ -345,12 +345,12 @@ ok:
 	return true;
 }
 
-int64_t UploadManager::getRunningAverage() const {
+int64_t UploadManager::getRunningAverage() {
 	Lock l(cs);
 	int64_t avg = 0;
 	for(UploadList::const_iterator i = uploads.begin(); i != uploads.end(); ++i) {
 		Upload* u = *i;
-		avg += u->getAverageSpeed();
+		avg += static_cast<int64_t>(u->getAverageSpeed());
 	}
 	return avg;
 }
@@ -769,7 +769,7 @@ size_t UploadManager::throttleGetSlice()  {
 		if (-left >= mUploadLimit)  {
 			return 4; // must send > 0 bytes or threadSendFile thinks the transfer is complete
 		} else if (left <= 0) {
-			return mByteSlice * static_cast<size_t>(std::pow(1+double(left)/mUploadLimit, 0.25));
+			return mByteSlice*std::pow(1+double(left)/mUploadLimit, 0.25);
 		} else {
 			return mByteSlice;
 		}
@@ -810,8 +810,8 @@ void UploadManager::throttleSetup() {
 			mByteSlice = OUTBUFSIZE;
 		}
 	}
-	
-	// dcdebug("UM mByteSlice: %d; mCycleTime: %d\n", mByteSlice, mCycleTime);	
+
+	// dcdebug("UM mByteSlice: %d; mCycleTime: %d\n", mByteSlice, mCycleTime);
 }
 
 void UploadManager::removeDelayUpload(const UserPtr& aUser) {

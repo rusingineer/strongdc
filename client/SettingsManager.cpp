@@ -127,7 +127,7 @@ const string SettingsManager::settingTags[] =
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
-	"UcSubMenu", "AutoSlots", "Coral", "UseDHT", "DHTPort",
+	"UcSubMenu", "AutoSlots", "Coral", "UseDHT", "DHTPort", "UpdateIP",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -136,8 +136,6 @@ const string SettingsManager::settingTags[] =
 
 SettingsManager::SettingsManager()
 {
-
-	connectionSpeeds.push_back("0.005");
 	connectionSpeeds.push_back("0.01");
 	connectionSpeeds.push_back("0.02");
 	connectionSpeeds.push_back("0.05");
@@ -546,6 +544,7 @@ SettingsManager::SettingsManager()
 	setDefault(COLOR_DONE, RGB(222, 160, 0));
 	
 	setDefault(USE_DHT, true);
+	setDefault(UPDATE_IP, false);
 	
 #ifdef _WIN32
 	OSVERSIONINFO ver;

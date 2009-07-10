@@ -367,7 +367,7 @@ void ConnectionManager::adcConnect(const OnlineUser& aUser, uint16_t aPort, cons
 	if(shuttingDown)
 		return;
 
-	if(checkIpFlood(aUser.getIdentity().getIp(), aPort, "ADC Nick: " + aUser.getIdentity().getNick() + ", Hub: " + (&aUser.getClient() == NULL ? "DHT" : aUser.getClient().getHubName())))
+	if(checkIpFlood(aUser.getIdentity().getIp(), aPort, "ADC Nick: " + aUser.getIdentity().getNick() + ", Hub: " + aUser.getClientBase().getHubName()))
 		return;
 
 	UserConnection* uc = getConnection(false, secure);

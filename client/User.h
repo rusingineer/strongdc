@@ -27,6 +27,8 @@
 #include "Flags.h"
 #include "forward.h"
 
+#include "StringPool.h"
+
 namespace dcpp {
 
 class ClientBase;
@@ -147,7 +149,7 @@ public:
 	UserPtr& getUser() { return user; }
 	GETSET(UserPtr, user, User);
 private:
-	typedef std::tr1::unordered_map<short, string> InfMap;
+	typedef std::tr1::unordered_map<short, StringPool> InfMap;
 	typedef InfMap::const_iterator InfIter;
 	InfMap info;
 

@@ -111,10 +111,6 @@ namespace dht
 			nodes.push_back(node);
 			dirty = true;
 		}
-		else
-		{
-			// TODO: we need to ping the first node in bucket and replace it
-		}
 			
 		if(dirty && DHT::getInstance())
 			DHT::getInstance()->setDirty();
@@ -130,16 +126,10 @@ namespace dht
 		for(NodeList::const_iterator it = nodes.begin(); it != nodes.end(); it++)
 		{
 			const Node::Ptr& node = *it;
-			
-			// don't spread firewalled nodes
-			if(!node->getIdentity().get("FW").empty())
-				if(node->getIdentity().get("FW") != node->getIdentity().getUdpPort())
-					continue;
-			
-			if(node->getType() <= maxType)
+			if(node->getType() <= maxType && !node->getUser()->isSet(User::PASSIVE))
 			{
 				CID distance = Utils::getDistance(cid, node->getUser()->getCID());
-				string ip = node->getIdentity().getIp();
+
 				if(closest.size() < max)
 				{
 					// just insert

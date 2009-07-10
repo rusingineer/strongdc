@@ -1,3 +1,12 @@
+** svn451
+	fixed random crashes in Release build
+	small tweak for firewalled nodes
+	option to autoupdate IP on DHT firewall check
+	all DHT settings should work
+	default DHT port set to 6245
+	tried adding string pool for storing userinfo
+	updated OpenSSL
+
 ** svn450
 	stop hashing folders excluded from share
 	getting search results from DHT online users only (fixes crashes and non-downloadable files)
@@ -13,7 +22,7 @@
 	DHT publishing is delayed until bootstrapping is completed
 	don't spread firewalled DHT sources, not reliable but good enough
 	publish one file in 2 seconds
-	DHT uses UDP port 6241	
+	DHT uses UDP port 6241
 
 ** svn447
 	bandwidth limiter fixes (DC++ BZR)

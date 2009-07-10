@@ -88,7 +88,7 @@ uint64_t QueueItem::getAverageSpeed() const {
 	uint64_t totalSpeed = 0;
 	
 	for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); i++) {
-		totalSpeed += (*i)->getAverageSpeed();
+		totalSpeed += static_cast<int64_t>((*i)->getAverageSpeed());
 	}
 
 	return totalSpeed;

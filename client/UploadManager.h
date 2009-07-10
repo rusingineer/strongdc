@@ -100,7 +100,7 @@ public:
 	 *
 	 * @return Running average download speed in Bytes/s
 	 */
-	int64_t getRunningAverage() const;
+	int64_t getRunningAverage();
 	
 	uint8_t getSlots() const { return (uint8_t)(max(SETTING(SLOTS), max(SETTING(HUB_SLOTS),0) * Client::getTotalCounts())); }
 
@@ -130,7 +130,7 @@ public:
 	bool throttle() { return mThrottleEnable; }
 	size_t throttleGetSlice();
 	size_t throttleCycleTime();
-	
+		
 	GETSET(uint8_t, extraPartial, ExtraPartial);
 	GETSET(uint8_t, extra, Extra);
 	GETSET(uint64_t, lastGrant, LastGrant);
@@ -138,18 +138,19 @@ public:
 private:
 	bool isFireball;
 	bool isFileServer;
-	void throttleSetup();	
 	bool mThrottleEnable;
 	uint8_t running;
 
+	void throttleSetup();
 	size_t 	   mUploadLimit,
 		   mCycleTime,
 		   mByteSlice;
+		   
 	uint64_t m_iHighSpeedStartTick;
 
 	UploadList uploads;
 	UploadList delayUploads;
-	mutable CriticalSection cs;
+	CriticalSection cs;
 	
 	typedef unordered_map<UserPtr, uint64_t, User::Hash> SlotMap;
 	typedef SlotMap::iterator SlotIter;

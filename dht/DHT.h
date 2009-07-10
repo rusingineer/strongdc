@@ -119,7 +119,7 @@ namespace dht
 		
 		/** IPs who we received firewalled status from */
 		std::tr1::unordered_set<string> firewalledWanted;
-		std::tr1::unordered_map<string, uint16_t> firewalledChecks;
+		std::tr1::unordered_map<string, std::pair<string, uint16_t>> firewalledChecks;
 		bool firewalled;
 		bool requestFWCheck;
 		

@@ -537,6 +537,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\StringPool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\Text.cpp"
 				>
 			</File>
@@ -912,6 +916,10 @@
 						Outputs=".\client\StringDefs.cpp"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\client\StringPool.h"
+				>
 			</File>
 			<File
 				RelativePath=".\client\StringSearch.h"
