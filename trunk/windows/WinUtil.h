@@ -373,7 +373,7 @@ public:
 	static void unRegisterDchubHandler();
 	static void unRegisterADChubHandler();
 	static void unRegisterMagnetHandler();
-	static void parseDchubUrl(const tstring& /*aUrl*/);
+	static void parseDchubUrl(const tstring& /*aUrl*/, bool secure);
 	static void parseADChubUrl(const tstring& /*aUrl*/, bool secure);
 	static void parseMagnetUri(const tstring& /*aUrl*/, bool aOverride = false);
 	static bool parseDBLClick(const tstring& /*aString*/, string::size_type start, string::size_type end);

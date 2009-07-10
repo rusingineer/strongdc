@@ -456,10 +456,9 @@ namespace dht
 	/*
 	 * Processes incoming search results 
 	 */
-	void SearchManager::processSearchResults(const UserPtr& user)
+	bool SearchManager::processSearchResults(const UserPtr& user)
 	{
-		dcassert(user->isOnline());
-
+		bool ok = false;
 		uint64_t tick = GET_TICK();
 		
 		ResultsMap::iterator it = searchResults.begin();
@@ -468,12 +467,13 @@ namespace dht
 			if(it->first == user->getCID())
 			{
 				// user is online, process his result
+				ok = true;
 				dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), it->second.second);
 				searchResults.erase(it++);
 			}
 			else if(it->second.first + 60*1000 <= tick)
 			{
-				// delete result from possibly offline user
+				// delete result from possibly offline users
 				searchResults.erase(it++);
 			}
 			else
@@ -481,6 +481,8 @@ namespace dht
 				++it;
 			}
 		}
+		
+		return ok;
 	}
 	
 	/*

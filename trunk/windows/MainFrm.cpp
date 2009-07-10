@@ -742,8 +742,11 @@ void MainFrame::parseCommandLine(const tstring& cmdLine)
 	string::size_type j;
 
 	if( (j = cmdLine.find(_T("dchub://"), i)) != string::npos) {
-		WinUtil::parseDchubUrl(cmdLine.substr(j));
-		}
+		WinUtil::parseDchubUrl(cmdLine.substr(j), false);
+	}
+	if( (j = cmdLine.find(_T("nmdcs://"), i)) != string::npos) {
+		WinUtil::parseDchubUrl(cmdLine.substr(j), true);
+	}	
 	if( (j = cmdLine.find(_T("adc://"), i)) != string::npos) {
 		WinUtil::parseADChubUrl(cmdLine.substr(j), false);
 	}
@@ -1487,14 +1490,14 @@ void MainFrame::on(QueueManagerListener::Finished, const QueueItem* qi, const st
 	if(qi->isSet(QueueItem::FLAG_CLIENT_VIEW)) {
 		if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 			// This is a file listing, show it...
-			DirectoryListInfo* i = new DirectoryListInfo(qi->getDownloads()[0]->getUser(), Text::toT(qi->getListName()), Text::toT(dir), download->getAverageSpeed());
+			DirectoryListInfo* i = new DirectoryListInfo(qi->getDownloads()[0]->getUser(), Text::toT(qi->getListName()), Text::toT(dir), static_cast<int64_t>(download->getAverageSpeed()));
 
 			PostMessage(WM_SPEAKER, DOWNLOAD_LISTING, (LPARAM)i);
 		} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
 			PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new tstring(Text::toT(qi->getTarget())));
 		}
 	} else if(qi->isSet(QueueItem::FLAG_USER_LIST) && qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)) {
-		DirectoryListInfo* i = new DirectoryListInfo(qi->getDownloads()[0]->getUser(), Text::toT(qi->getListName()), Text::toT(dir), download->getAverageSpeed());
+		DirectoryListInfo* i = new DirectoryListInfo(qi->getDownloads()[0]->getUser(), Text::toT(qi->getListName()), Text::toT(dir), static_cast<int64_t>(download->getAverageSpeed()));
 		
 		if(listQueue.stop) {
 			listQueue.stop = false;

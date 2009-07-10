@@ -481,7 +481,7 @@ void ClientManager::on(AdcSearch, const Client* c, const AdcCommand& adc, const 
 }
 
 void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
-	if(aFileType == SearchManager::TYPE_TTH)
+	if(BOOLSETTING(USE_DHT) && aFileType == SearchManager::TYPE_TTH)
 		dht::DHT::getInstance()->findFile(aString);
 		
 	Lock l(cs);
@@ -495,7 +495,7 @@ void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const st
 }
 
 uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
-	if(aFileType == SearchManager::TYPE_TTH)
+	if(BOOLSETTING(USE_DHT) && aFileType == SearchManager::TYPE_TTH)
 		dht::DHT::getInstance()->findFile(aString, aToken);
 
 	Lock l(cs);

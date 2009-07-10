@@ -64,7 +64,7 @@ AdvancedPage::ListItem AdvancedPage::listItems[] = {
 	{ SettingsManager::MAGNET_ASK, ResourceManager::MAGNET_ASK },
 	{ SettingsManager::CORAL, ResourceManager::CORAL },
 	{ SettingsManager::FAST_HASH, ResourceManager::FAST_HASH },
-	//{ SettingsManager::USE_DHT, ResourceManager::USE_DHT },
+	{ SettingsManager::USE_DHT, ResourceManager::USE_DHT },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

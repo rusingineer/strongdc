@@ -61,6 +61,7 @@ bool SSLSocket::waitConnected(uint64_t millis) {
 		int ret = SSL_connect(ssl);
 		if(ret == 1) {
 			dcdebug("Connected to SSL server using %s\n", SSL_get_cipher(ssl));
+			//SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER|SSL_MODE_ENABLE_PARTIAL_WRITE);
 			return true;
 		}
 		if(!waitWant(ret, millis)) {
@@ -95,6 +96,7 @@ bool SSLSocket::waitAccepted(uint64_t millis) {
 		int ret = SSL_accept(ssl);
 		if(ret == 1) {
 			dcdebug("Connected to SSL client using %s\n", SSL_get_cipher(ssl));
+			//SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER|SSL_MODE_ENABLE_PARTIAL_WRITE);
 			return true;
 		}
 		if(!waitWant(ret, millis)) {

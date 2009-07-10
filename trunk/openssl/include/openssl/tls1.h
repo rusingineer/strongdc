@@ -262,9 +262,9 @@ SSL_CTX_callback_ctrl(ctx,SSL_CTRL_SET_TLSEXT_SERVERNAME_CB,(void (*)(void))cb)
 SSL_CTX_ctrl(ctx,SSL_CTRL_SET_TLSEXT_SERVERNAME_ARG,0, (void *)arg)
 
 #define SSL_CTX_get_tlsext_ticket_keys(ctx, keys, keylen) \
-	SSL_CTX_ctrl((ctx),SSL_CTRL_GET_TLXEXT_TICKET_KEYS,(keylen),(keys))
+	SSL_CTX_ctrl((ctx),SSL_CTRL_GET_TLSEXT_TICKET_KEYS,(keylen),(keys))
 #define SSL_CTX_set_tlsext_ticket_keys(ctx, keys, keylen) \
-	SSL_CTX_ctrl((ctx),SSL_CTRL_SET_TLXEXT_TICKET_KEYS,(keylen),(keys))
+	SSL_CTX_ctrl((ctx),SSL_CTRL_SET_TLSEXT_TICKET_KEYS,(keylen),(keys))
 
 #define SSL_CTX_set_tlsext_status_cb(ssl, cb) \
 SSL_CTX_callback_ctrl(ssl,SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB,(void (*)(void))cb)
@@ -471,7 +471,11 @@ SSL_CTX_callback_ctrl(ssl,SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB,(void (*)(void))cb)
 #define TLS_CT_ECDSA_SIGN		64
 #define TLS_CT_RSA_FIXED_ECDH		65
 #define TLS_CT_ECDSA_FIXED_ECDH 	66
-#define TLS_CT_NUMBER			7
+#define TLS_CT_GOST94_SIGN		21
+#define TLS_CT_GOST01_SIGN		22
+/* when correcting this number, correct also SSL3_CT_NUMBER in ssl3.h (see
+ * comment there) */
+#define TLS_CT_NUMBER			9
 
 #define TLS1_FINISH_MAC_LENGTH		12
 

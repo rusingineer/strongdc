@@ -40,9 +40,9 @@ namespace dht
 	}
 
 	/*
-	 * Add new source to tth list 
+	 * Add new source to tth list
 	 */
-	void IndexManager::addIndex(const TTHValue& tth, const Node::Ptr& node, uint64_t size, bool partial)
+	void IndexManager::addSource(const TTHValue& tth, const Node::Ptr& node, uint64_t size, bool partial)
 	{
 		Source source;
 		source.setCID(node->getUser()->getCID());
@@ -223,7 +223,7 @@ namespace dht
 	/*
 	 * Processes incoming request to publish file 
 	 */
-	void IndexManager::processPublishRequest(const Node::Ptr& node, const AdcCommand& cmd)
+	void IndexManager::processPublishSourceRequest(const Node::Ptr& node, const AdcCommand& cmd)
 	{
 		string tth;
 		if(!cmd.getParam("TR", 0, tth))
@@ -236,7 +236,7 @@ namespace dht
 		string partial;
 		cmd.getParam("PF", 0, partial);
 		
-		addIndex(TTHValue(tth), node, Util::toInt64(size), partial == "1");
+		addSource(TTHValue(tth), node, Util::toInt64(size), partial == "1");
 		
 		// send response
 		AdcCommand res(AdcCommand::SEV_SUCCESS, AdcCommand::SUCCESS, "File published", AdcCommand::TYPE_UDP);

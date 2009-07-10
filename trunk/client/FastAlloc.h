@@ -58,7 +58,7 @@ struct FastAlloc : public FastAllocBase {
 		}
 	}
 protected:
-	virtual ~FastAlloc() { }
+	~FastAlloc() { }
 
 private:
 

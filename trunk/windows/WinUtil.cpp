@@ -1224,9 +1224,13 @@ void WinUtil::openLink(const tstring& url) {
 		return;
 	}
 	if(_strnicmp(Text::fromT(url).c_str(), "dchub://", 8) == 0) {
-		parseDchubUrl(url);
+		parseDchubUrl(url, false);
 		return;
 	}
+	if(_strnicmp(Text::fromT(url).c_str(), "nmdcs://", 8) == 0) {
+		parseDchubUrl(url, true);
+		return;
+	}	
 	if(_strnicmp(Text::fromT(url).c_str(), "adc://", 6) == 0) {
 		parseADChubUrl(url, false);
 		return;
@@ -1239,13 +1243,13 @@ void WinUtil::openLink(const tstring& url) {
 	::ShellExecute(NULL, NULL, url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 }
 
-void WinUtil::parseDchubUrl(const tstring& aUrl) {
+void WinUtil::parseDchubUrl(const tstring& aUrl, bool secure) {
 	string server, file;
 	uint16_t port = 411;
 	Util::decodeUrl(Text::fromT(aUrl), server, port, file);
 	string url = server + ":" + Util::toString(port);
 	if(!server.empty()) {
-		HubFrame::openWindow(Text::toT(server) + _T(":") + Util::toStringW(port));
+		HubFrame::openWindow((secure ? _T("nmdcs://") : _T("")) + Text::toT(server) + _T(":") + Util::toStringW(port));
 	}
 	if(!file.empty()) {
 		if(file[0] == '/') // Remove any '/' in from of the file
@@ -1382,8 +1386,11 @@ bool WinUtil::parseDBLClick(const tstring& aString, string::size_type start, str
 		openLink(aString.substr(start, end-start));
 		return true;
 	} else if(strnicmp(aString.c_str() + start, _T("dchub://"), 8) == 0) {
-		parseDchubUrl(aString.substr(start, end-start));
+		parseDchubUrl(aString.substr(start, end-start), false);
 		return true;
+	} else if(strnicmp(aString.c_str() + start, _T("nmdcs://"), 8) == 0) {
+		parseDchubUrl(aString.substr(start, end-start), true);
+		return true;	
 	} else if(strnicmp(aString.c_str() + start, _T("magnet:?"), 8) == 0) {
 		parseMagnetUri(aString.substr(start, end-start));
 		return true;

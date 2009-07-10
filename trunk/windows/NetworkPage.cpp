@@ -36,6 +36,7 @@ PropPage::TextItem NetworkPage::texts[] = {
 	{ IDC_FIREWALL_NAT, ResourceManager::SETTINGS_FIREWALL_NAT },
 	{ IDC_FIREWALL_PASSIVE, ResourceManager::SETTINGS_FIREWALL_PASSIVE },
 	{ IDC_OVERRIDE, ResourceManager::SETTINGS_OVERRIDE },
+	{ IDC_UPDATE_IP, ResourceManager::SETTINGS_UPDATE_IP },
 	{ IDC_SOCKS5, ResourceManager::SETTINGS_SOCKS5 }, 
 	{ IDC_SETTINGS_PORTS, ResourceManager::SETTINGS_PORTS },
 	{ IDC_SETTINGS_IP, ResourceManager::SETTINGS_EXTERNAL_IP },
@@ -62,6 +63,7 @@ PropPage::Item NetworkPage::items[] = {
 	{ IDC_PORT_TLS,		SettingsManager::TLS_PORT,		PropPage::T_INT },
 	{ IDC_PORT_DHT,		SettingsManager::DHT_PORT,		PropPage::T_INT },	
 	{ IDC_OVERRIDE,		SettingsManager::NO_IP_OVERRIDE, PropPage::T_BOOL },
+	{ IDC_UPDATE_IP,	SettingsManager::UPDATE_IP,		PropPage::T_BOOL },	
 	{ IDC_SOCKS_SERVER, SettingsManager::SOCKS_SERVER,	PropPage::T_STR },
 	{ IDC_SOCKS_PORT,	SettingsManager::SOCKS_PORT,	PropPage::T_INT },
 	{ IDC_SOCKS_USER,	SettingsManager::SOCKS_USER,	PropPage::T_STR },
@@ -181,6 +183,7 @@ void NetworkPage::fixControls() {
 	::EnableWindow(GetDlgItem(IDC_PORT_TCP), upnp || nat);
 	::EnableWindow(GetDlgItem(IDC_PORT_UDP), upnp || nat);
 	::EnableWindow(GetDlgItem(IDC_PORT_TLS), upnp || nat);
+	::EnableWindow(GetDlgItem(IDC_PORT_DHT), upnp || nat);	
 
 	BOOL socks = IsDlgButtonChecked(IDC_SOCKS5);
 	::EnableWindow(GetDlgItem(IDC_SOCKS_SERVER), socks);

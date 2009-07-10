@@ -368,13 +368,14 @@ typedef struct ssl3_buffer_st
  * enough to contain all of the cert types defined either for
  * SSLv3 and TLSv1.
  */
-#define SSL3_CT_NUMBER			7
+#define SSL3_CT_NUMBER			9
 
 
 #define SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS	0x0001
 #define SSL3_FLAGS_DELAY_CLIENT_FINISHED	0x0002
 #define SSL3_FLAGS_POP_BUFFER			0x0004
 #define TLS1_FLAGS_TLS_PADDING_BUG		0x0008
+#define TLS1_FLAGS_SKIP_CERT_VERIFY		0x0010
 
 typedef struct ssl3_state_st
 	{

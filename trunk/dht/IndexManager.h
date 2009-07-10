@@ -86,7 +86,7 @@ public:
 	bool getPublish() const { return publish; }
 	
 	/** Processes incoming request to publish file */
-	void processPublishRequest(const Node::Ptr& node, const AdcCommand& cmd);
+	void processPublishSourceRequest(const Node::Ptr& node, const AdcCommand& cmd);
 	
 	/** Removes old sources */
 	void checkExpiration(uint64_t aTick);
@@ -114,7 +114,7 @@ private:
 	mutable CriticalSection cs;
 	
 	/** Add new source to tth list */
-	void addIndex(const TTHValue& tth, const Node::Ptr& node, uint64_t size, bool partial);
+	void addSource(const TTHValue& tth, const Node::Ptr& node, uint64_t size, bool partial);
 
 };
 

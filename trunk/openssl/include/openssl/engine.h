@@ -335,8 +335,10 @@ void ENGINE_load_nuron(void);
 void ENGINE_load_sureware(void);
 void ENGINE_load_ubsec(void);
 void ENGINE_load_padlock(void);
+#ifdef OPENSSL_SYS_WIN32
 #ifndef OPENSSL_NO_CAPIENG
 void ENGINE_load_capi(void);
+#endif
 #endif
 #ifndef OPENSSL_NO_GMP
 void ENGINE_load_gmp(void);
@@ -730,7 +732,7 @@ typedef int (*dynamic_bind_engine)(ENGINE *e, const char *id,
  * values. */
 void *ENGINE_get_static_state(void);
 
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(__OpenBSD__) || defined(__FreeBSD__) || defined(HAVE_CRYPTODEV)
 void ENGINE_setup_bsd_cryptodev(void);
 #endif
 

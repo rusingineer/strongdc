@@ -62,6 +62,14 @@
 
 #include <openssl/buffer.h>
 #include <openssl/pqueue.h>
+#ifdef OPENSSL_SYS_WIN32
+/* Needed for struct timeval */
+#include <winsock.h>
+#elif defined(OPENSSL_SYS_NETWARE) && !defined(_WINSOCK2API_)
+#include <sys/timeval.h>
+#else
+#include <sys/time.h>
+#endif
 
 #ifdef  __cplusplus
 extern "C" {
@@ -204,13 +212,19 @@ typedef struct dtls1_state_st
 	 */
 	record_pqueue buffered_app_data;
 
-	unsigned int mtu; /* max wire packet size */
+	unsigned int mtu; /* max DTLS packet size */
 
 	struct hm_header_st w_msg_hdr;
 	struct hm_header_st r_msg_hdr;
 
 	struct dtls1_timeout_st timeout;
-	
+
+	/* Indicates when the last handshake msg sent will timeout */
+	struct timeval next_timeout;
+
+	/* Timeout duration */
+	unsigned short timeout_duration;
+
 	/* storage for Alert/Handshake protocol data received but not
 	 * yet processed by ssl3_read_bytes: */
 	unsigned char alert_fragment[DTLS1_AL_HEADER_LENGTH];
@@ -219,6 +233,7 @@ typedef struct dtls1_state_st
 	unsigned int handshake_fragment_len;
 
 	unsigned int retransmitting;
+	unsigned int change_cipher_spec_ok;
 
 	} DTLS1_STATE;
 

@@ -609,7 +609,7 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 			source->setNextQueryTime(aTick + 300000);		// 5 minutes
 		}
 		
-		if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
+		if(BOOLSETTING(USE_DHT) && SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_PASSIVE)
 			tthPub = fileQueue.findPFSPubTTH();
 
 		if(BOOLSETTING(AUTO_SEARCH) && (aTick >= nextSearch) && (fileQueue.getSize() > 0)) {

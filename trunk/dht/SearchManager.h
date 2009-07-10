@@ -85,7 +85,7 @@ namespace dht
 		void processSearches();
 		
 		/** Processes incoming search results */
-		void processSearchResults(const UserPtr& user);
+		bool processSearchResults(const UserPtr& user);
 		
 	private:
 	
