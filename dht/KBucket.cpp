@@ -185,6 +185,8 @@ namespace dht
 			i++;
 		}
 		
+		dcdebug("DHT Nodes: %d\n", nodes.size());
+		
 		if(!nodes.empty())
 		{
 			// ping the oldest (expiring) node

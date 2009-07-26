@@ -39,6 +39,7 @@ WindowsPage::ListItem WindowsPage::listItems[] = {
 	{ SettingsManager::OPEN_PUBLIC, ResourceManager::PUBLIC_HUBS },
 	{ SettingsManager::OPEN_FAVORITE_HUBS, ResourceManager::FAVORITE_HUBS },
 	{ SettingsManager::OPEN_FAVORITE_USERS, ResourceManager::FAVORITE_USERS },
+	{ SettingsManager::OPEN_RECENT_HUBS, ResourceManager::RECENT_HUBS },	
 	{ SettingsManager::OPEN_QUEUE, ResourceManager::DOWNLOAD_QUEUE },
 	{ SettingsManager::OPEN_FINISHED_DOWNLOADS, ResourceManager::FINISHED_DOWNLOADS },
 	{ SettingsManager::OPEN_WAITING_USERS, ResourceManager::WAITING_USERS },

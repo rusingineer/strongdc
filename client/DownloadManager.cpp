@@ -365,7 +365,7 @@ void DownloadManager::endData(UserConnection* aSource) {
 	checkDownloads(aSource);
 }
 
-size_t DownloadManager::throttleGetSlice()  {
+int64_t DownloadManager::throttleGetSlice()  {
 	if (mThrottleEnable) {
 		int64_t left = mDownloadLimit - getRunningAverage();
 		if (-left >= mDownloadLimit)  {
@@ -376,11 +376,11 @@ size_t DownloadManager::throttleGetSlice()  {
 			return mByteSlice;
 		}
 	} else {
-		return (size_t)-1;
+		return -1;
 	}
 }
 
-size_t DownloadManager::throttleCycleTime() {
+uint32_t DownloadManager::throttleCycleTime() const {
 	if (mThrottleEnable)
 		return mCycleTime;
 	return 0;

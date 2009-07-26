@@ -118,7 +118,7 @@ const string SettingsManager::settingTags[] =
  	"UserListDoubleClick", "TransferListDoubleClick", "ChatDoubleClick", "AdcDebug",
 	"ToggleActiveWindow", "ProgressbaroDCStyle", "SearchHistory", 
 	"AcceptedDisconnects", "AcceptedTimeouts",
-	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenQueue", "OpenFinishedDownloads",
+	"OpenPublic", "OpenFavoriteHubs", "OpenFavoriteUsers", "OpenRecentHubs", "OpenQueue", "OpenFinishedDownloads",
 	"OpenFinishedUploads", "OpenSearchSpy", "OpenNetworkStatistics", "OpenNotepad", "OutgoingConnections",
 	"NoIPOverride", "GroupSearchResults", "BoldFinishedDownloads", "BoldFinishedUploads", "BoldQueue", 
 	"BoldHub", "BoldPm", "BoldSearch", "TabsOnTop", "SocketInBuffer", "SocketOutBuffer", 
@@ -271,6 +271,7 @@ SettingsManager::SettingsManager()
 	setDefault(OPEN_PUBLIC, false);
 	setDefault(OPEN_FAVORITE_HUBS, false);
 	setDefault(OPEN_FAVORITE_USERS, false);
+	setDefault(OPEN_RECENT_HUBS, false);
 	setDefault(OPEN_QUEUE, false);
 	setDefault(OPEN_FINISHED_DOWNLOADS, false);
 	setDefault(OPEN_FINISHED_UPLOADS, false);

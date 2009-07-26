@@ -23,6 +23,7 @@
 #include "DHT.h"
 #include "SearchManager.h"
 
+#include "../client/AdcCommand.h"
 #include "../client/ClientManager.h"
 #include "../client/HttpConnection.h"
 #include "../client/LogManager.h"
@@ -131,7 +132,11 @@ namespace dht
 		if(!bootstrapNodes.empty())
 		{
 			// send bootstrap request
-			DHT::getInstance()->info(bootstrapNodes.front().first, bootstrapNodes.front().second, DHT::PING);
+			AdcCommand cmd(AdcCommand::CMD_GET, AdcCommand::TYPE_UDP);
+			cmd.addParam("nodes");
+			cmd.addParam("dht.xml");
+			
+			DHT::getInstance()->send(cmd, bootstrapNodes.front().first, bootstrapNodes.front().second);
 			
 			bootstrapNodes.pop_front();
 		}

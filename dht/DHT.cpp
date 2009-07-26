@@ -112,12 +112,12 @@ namespace dht
 			string internalUdpPort;
 			if(cmd.getParam("FW", 0, internalUdpPort))
 			{
-				bool firewalled = Util::toInt(internalUdpPort) != port;
+				bool firewalled = (Util::toInt(internalUdpPort) != port);
 				if(firewalled)
 					node->getUser()->setFlag(User::PASSIVE);
 				
 				// send him his external ip and port
-				AdcCommand cmd(AdcCommand::SEV_SUCCESS, AdcCommand::SUCCESS, firewalled ? "UDP port opened" : "UDP port closed", AdcCommand::TYPE_UDP);
+				AdcCommand cmd(AdcCommand::SEV_SUCCESS, AdcCommand::SUCCESS, !firewalled ? "UDP port opened" : "UDP port closed", AdcCommand::TYPE_UDP);
 				cmd.addParam("FC", "FWCHECK");
 				cmd.addParam("I4", ip);
 				cmd.addParam("U4", Util::toString(port));
@@ -136,6 +136,8 @@ namespace dht
 				C(STA);	// status message
 				C(PSR);	// partial file request
 				C(MSG);	// private message
+				C(GET); // get some data
+				C(SND); // response to GET
 				
 			default: 
 				dcdebug("Unknown ADC command: %.50s\n", aLine.c_str());
@@ -383,9 +385,11 @@ namespace dht
 		}
 		
 		// do we wait for any search results from this user?
-		if(SearchManager::getInstance()->processSearchResults(node->getUser()) && !node->isInList) // TODO: should be valid for queued users too
+		SearchManager::getInstance()->processSearchResults(node->getUser());
+		
+		if(!node->isInList)
 		{
-			// yes, put him online so we can make a connection with him
+			// put him online so we can make a connection with him
 			ClientManager::getInstance()->putOnline(node.get());
 			node->isInList = true;
 		}
@@ -546,6 +550,84 @@ namespace dht
 		//fire(ClientListener::PrivateMessage(), this, *node, to, node, c.getParam(0), c.hasFlag("ME", 1));
 		
 		//privateMessage(*node, "Sorry, private messages aren't supported yet!", false);
+	}
+	
+	void DHT::handle(AdcCommand::GET, const Node::Ptr& node, AdcCommand& c) throw()
+	{
+		if(c.getParam(1) == "nodes" && c.getParam(2) == "dht.xml")
+		{
+			AdcCommand cmd(AdcCommand::CMD_SND, AdcCommand::TYPE_UDP);
+			cmd.addParam(c.getParam(1));
+			cmd.addParam(c.getParam(2));
+			
+			SimpleXML xml;
+			xml.addTag("Nodes");
+			xml.stepIn();
+			
+			// get 20 random contacts
+			Node::Map nodes;
+			DHT::getInstance()->getClosestNodes(CID::generate(), nodes, 20, 2);
+				
+			// add nodelist in XML format
+			for(Node::Map::const_iterator i = nodes.begin(); i != nodes.end(); i++)
+			{
+				xml.addTag("Node");
+				xml.addChildAttrib("CID", i->second->getUser()->getCID().toBase32());
+				xml.addChildAttrib("I4", i->second->getIdentity().getIp());
+				xml.addChildAttrib("U4", i->second->getIdentity().getUdpPort());			
+			}
+			
+			xml.stepOut();
+				
+			string nodesXML;
+			StringOutputStream sos(nodesXML);
+			sos.write(SimpleXML::utf8Header);
+			xml.toXML(&sos);
+				
+			cmd.addParam(nodesXML);
+			
+			send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+		}
+	}
+	
+	void DHT::handle(AdcCommand::SND, const Node::Ptr& node, AdcCommand& c) throw()
+	{
+		if(c.getParam(1) == "nodes" && c.getParam(2) == "dht.xml")
+		{
+			try
+			{
+				SimpleXML xml;
+				xml.fromXML(c.getParam(3));
+				xml.stepIn();
+				
+				// extract bootstrap nodes
+				unsigned int n = 20;
+				while(xml.findChild("Node") && n-- > 0)
+				{
+					CID cid = CID(xml.getChildAttrib("CID"));
+
+					// don't bother with myself
+					if(ClientManager::getInstance()->getMe()->getCID() == cid)
+						continue;
+
+					const string& i4	= xml.getChildAttrib("I4");
+					uint16_t u4			= static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4")));
+						
+					// don't bother with private IPs
+					if(!Utils::isGoodIPPort(i4, u4))
+						continue;
+
+					// add user to our routing table
+					addUser(CID(cid), i4, u4);
+				}
+										
+				xml.stepOut();
+			}
+			catch(const SimpleXMLException&)
+			{
+				// malformed node list
+			}						
+		}	
 	}
 	
 }

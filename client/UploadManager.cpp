@@ -43,8 +43,7 @@ namespace dcpp {
 
 static const string UPLOAD_AREA = "Uploads";
 
-UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), mUploadLimit(0), 
-	mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)), 
+UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), bandwidthAvailable(0),
 	m_iHighSpeedStartTick(0), isFireball(false), isFileServer(false), extraPartial(0) {	
 	ClientManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
@@ -322,8 +321,6 @@ ok:
 
 	uploads.push_back(u);
 
-	throttleSetup();
-
 	if(aSource.getSlotType() != slotType) {
 		// remove old count
 		switch(aSource.getSlotType()) {
@@ -374,8 +371,6 @@ void UploadManager::removeUpload(Upload* aUpload, bool delay) {
 	dcassert(find(uploads.begin(), uploads.end(), aUpload) != uploads.end());
 	uploads.erase(remove(uploads.begin(), uploads.end(), aUpload), uploads.end());
 	
-	throttleSetup();
-
 	if(delay) {
 		delayUploads.push_back(aUpload);
 	} else {
@@ -701,7 +696,8 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		Lock l(cs);
 		UploadList ticks;
 		
-		throttleSetup();
+		if(BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) > 0)
+			bandwidthAvailable = SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
 
 		for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end();) {
 			Upload* u = *i;
@@ -763,57 +759,6 @@ void UploadManager::on(ClientManagerListener::UserDisconnected, const UserPtr& a
 	}
 }
 
-size_t UploadManager::throttleGetSlice()  {
-	if (mThrottleEnable) {
-		int64_t left = mUploadLimit - getRunningAverage();
-		if (-left >= mUploadLimit)  {
-			return 4; // must send > 0 bytes or threadSendFile thinks the transfer is complete
-		} else if (left <= 0) {
-			return mByteSlice*std::pow(1+double(left)/mUploadLimit, 0.25);
-		} else {
-			return mByteSlice;
-		}
-	} else {
-		return (size_t)-1;
-	}
-}
-
-size_t UploadManager::throttleCycleTime() {
-	if (mThrottleEnable)
-		return mCycleTime;
-	return 0;
-}
-
-void UploadManager::throttleSetup() {
-	// called once a second, plus when uploads start
-	// from the constructor to BufferedSocket
-	size_t OUTBUFSIZE = SETTING(SOCKET_OUT_BUFFER);
-	size_t numUploads = getUploadCount();
-
-	const int target_freq_s = 30;
-
-	mUploadLimit = SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024;
-	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mUploadLimit > 0) && (numUploads > 0);
-	/* Two domains:
-	   (1) Can hit target upload rate at target limiting period. From 0 to
-	   1s /limiting_period * OUTBUFSIZE >= target_rate.
-
-	   (2) Can't hit target upload rate at target limiting period. From here
-	   out, have no choice but to peg the bytes per cycle at max (i.e.
-	   OUTBUFSIZE) and hope that the latency & etc doesn't kill transfers.
-	*/
-	if (mThrottleEnable) {
-		mCycleTime = 1000 / target_freq_s;
-		if (mUploadLimit <= target_freq_s * OUTBUFSIZE) {
-			mByteSlice = mUploadLimit / (target_freq_s * numUploads);
-		} else {
-			mByteSlice = OUTBUFSIZE;
-		}
-	}
-
-	// dcdebug("UM mByteSlice: %d; mCycleTime: %d\n", mByteSlice, mCycleTime);
-}
-
 void UploadManager::removeDelayUpload(const UserPtr& aUser) {
 	Lock l(cs);
 	for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end(); ++i) {
@@ -824,6 +769,25 @@ void UploadManager::removeDelayUpload(const UserPtr& aUser) {
 			break;
 		}
 	}		
+}
+
+// Upload throttling
+size_t UploadManager::throttle(size_t writeSize) {
+	Lock l(cs);
+
+	if(bandwidthAvailable > 0)
+	{
+		size_t slice = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024) / uploads.size();
+		
+		writeSize = min(slice, min(writeSize, static_cast<size_t>(bandwidthAvailable)));
+		bandwidthAvailable -= writeSize;
+	}
+	else
+	{
+		writeSize = 4; // just to avoid starving out
+	}
+	
+	return writeSize;
 }
 	
 /**
