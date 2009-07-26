@@ -165,16 +165,15 @@ void BufferedSocket::threadRead() throw(Exception) {
 	bool throttling = false;
 	if(mode == MODE_DATA)
 	{
-		uint32_t getMaximum;
 		throttling = dm->throttle();
 		if (throttling)
 		{
-			getMaximum = dm->throttleGetSlice();
-			readsize = static_cast<uint32_t>(min(inbuf.size(), getMaximum));
-			if (readsize <= 0) {
+			int64_t getMaximum = dm->throttleGetSlice();
+			if (getMaximum <= 0) {
 				sleep(dm->throttleCycleTime());
 				return;
 			}
+			readsize = min(inbuf.size(), static_cast<size_t>(getMaximum));
 		}
 	}
 	int left = sock->read(&inbuf[0], (int)readsize);
@@ -299,11 +298,8 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	bool readDone = false;
 	dcdebug("Starting threadSend\n");
 	UploadManager *um = UploadManager::getInstance();
-	size_t sendMaximum, start = 0, current= 0;
 	bool throttling;
-	while(true) {
-		if(disconnecting)
-			return;
+	while(!disconnecting) {
 		if(!readDone && readBuf.size() > readPos) {
 			// Fill read buffer
 			size_t bytesRead = readBuf.size() - readPos;
@@ -331,35 +327,33 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 		readPos = 0;
 
 		size_t writePos = 0;
+		int written = 0;
+		size_t writeSize = 0;
 
 		while(writePos < writeBuf.size()) {
 			if(disconnecting)
 				return;
 				
 			throttling = BOOLSETTING(THROTTLE_ENABLE);
-			size_t writeSize;
-			if(throttling) {
-				start = TimerManager::getTick();
-				sendMaximum = um->throttleGetSlice();
-				writeSize = min(min(sockSize / 2, writeBuf.size() - writePos), sendMaximum);
-			} else {
+			
+			if(written != -1) // limit packet only if the last one was sent (to prevent double limiting)
+			{
 				writeSize = min(sockSize / 2, writeBuf.size() - writePos);
+				if(throttling)
+				{
+					writeSize = um->throttle(writeSize);
+				}
 			}
-
-			int written = sock->write(&writeBuf[writePos], writeSize);
+			
+			written = sock->write(&writeBuf[writePos], writeSize);
 			if(written > 0) {
 				writePos += written;
 
 				fire(BufferedSocketListener::BytesSent(), 0, written);
 
-				if(throttling) {
-					int32_t cycle_time = um->throttleCycleTime();
-					current = TimerManager::getTick();
-					int32_t sleep_time = cycle_time - (current - start);
-					if (sleep_time > 0 && sleep_time <= cycle_time) {
-						Thread::sleep(sleep_time);
-					}
-				}
+				if(throttling && writeSize == 4)
+					Thread::sleep(20);	// TODO: better sleeping (correct would be "sleep until next bw reset")
+
 			} else if(written == -1) {
 				if(!readDone && readPos < readBuf.size()) {
 					// Read a little since we're blocking anyway...

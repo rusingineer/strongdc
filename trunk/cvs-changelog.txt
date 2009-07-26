@@ -1,3 +1,8 @@
+** svn452
+	improved bootstrap routine
+	added option to open recent hubs frame on startup
+	rewritten upload limiter, it shouldn't suffer from 50+1=100 problem (need many tests)
+
 ** svn451
 	fixed random crashes in Release build
 	small tweak for firewalled nodes

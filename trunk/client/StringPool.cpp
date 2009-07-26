@@ -3,9 +3,9 @@
 
 #include "StringPool.h"
 
-StringTable* StringPool::table = new StringTable();
+StringPool* pooled_string::pool = new StringPool();
 
-const std::string& StringTable::addString(const std::string& s) 
+const std::string& StringPool::addString(const std::string& s) 
 {
 	StringMap::iterator i = sm.find(s);
 	if(i == sm.end())
@@ -19,9 +19,9 @@ const std::string& StringTable::addString(const std::string& s)
 	}
 }
 
-void StringTable::removeString(const std::string& s)
+void StringPool::removeString(const std::string& s)
 {
-	StringMap::iterator i = sm.find(s);
+	StringMap::iterator i = sm.find(s); 
 	if(i == sm.end())
 		dcassert(0);
 	
@@ -30,24 +30,24 @@ void StringTable::removeString(const std::string& s)
 		sm.erase(i);
 }
 
-StringPool::StringPool(const StringPool& s) : pointer(NULL)
+pooled_string::pooled_string(const pooled_string& s) : data(NULL)
 {
-	if(s.pointer)
-		put(*s.pointer);
+	if(s.data)
+		put(*s.data);
 }
 
-StringPool::~StringPool() 
+pooled_string::~pooled_string() 
 { 
-	if(pointer) 
-		table->removeString(*pointer); 
+	if(data) 
+		pool->removeString(*data); 
 }
 
-StringPool& StringPool::operator=(const std::string& s) 
+pooled_string& pooled_string::operator=(const std::string& s) 
 { 
-	if(pointer == NULL || s != *pointer)
+	if(data == NULL || s != *data)
 	{
-		if(pointer) 
-			table->removeString(*pointer);
+		if(data) 
+			pool->removeString(*data);
 			
 		put(s); 
 	}

@@ -40,6 +40,15 @@ PSR - partial file request
 
 MSG - private message (not supported yet)
 
+GET - request to get some special data
+- type (only "nodes" is currently supported)
+- identifier (only "dht.xml" is currently supported)
+
+SND - response to GET
+- type (must be same as in received GET)
+- identifier (must be same as in received GET)
+- data (when type is "nodes" then node list in XML format)
+
 STA - status message
 - code	
 - description

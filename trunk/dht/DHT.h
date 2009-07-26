@@ -101,6 +101,8 @@ namespace dht
 		void handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw();	// status message
 		void handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw();	// partial file request
 		void handle(AdcCommand::MSG, const Node::Ptr& node, AdcCommand& c) throw(); // private message
+		void handle(AdcCommand::GET, const Node::Ptr& node, AdcCommand& c) throw();
+		void handle(AdcCommand::SND, const Node::Ptr& node, AdcCommand& c) throw();
 			
 		/** Unsupported command */
 		template<typename T> void handle(T, const Node::Ptr&user, AdcCommand&) { }

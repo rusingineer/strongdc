@@ -125,27 +125,20 @@ public:
 	void addConnection(UserConnectionPtr conn);
 	void removeDelayUpload(const UserPtr& aUser);
 	void abortUpload(const string& aFile, bool waiting = true);
-	
-	// Upload throttling
-	bool throttle() { return mThrottleEnable; }
-	size_t throttleGetSlice();
-	size_t throttleCycleTime();
 		
 	GETSET(uint8_t, extraPartial, ExtraPartial);
 	GETSET(uint8_t, extra, Extra);
 	GETSET(uint64_t, lastGrant, LastGrant);
 
+	// Upload throttling
+	size_t throttle(size_t writeSize);
+	
 private:
 	bool isFireball;
 	bool isFileServer;
-	bool mThrottleEnable;
 	uint8_t running;
-
-	void throttleSetup();
-	size_t 	   mUploadLimit,
-		   mCycleTime,
-		   mByteSlice;
-		   
+	
+	int64_t bandwidthAvailable;
 	uint64_t m_iHighSpeedStartTick;
 
 	UploadList uploads;

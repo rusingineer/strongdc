@@ -1,14 +1,14 @@
 #ifndef _STRINGPOOL_H
 #define _STRINGPOOL_H
 
-class StringTable {
+class StringPool {
 
-	typedef std::unordered_map<std::string, size_t> StringMap;
+	typedef std::tr1::unordered_map<std::string, size_t> StringMap;
     StringMap sm;
 
 public:
 
-    StringTable() 
+    StringPool() 
     {
     }
 
@@ -17,29 +17,29 @@ public:
     void removeString(const std::string& s);
 };
 
-class StringPool 
+class pooled_string 
 {
 
-    const std::string* pointer;
-	static StringTable* table;
+    const std::string* data;
+	static StringPool* pool;
 
 public:
 
-	StringPool() : pointer(NULL) 
+	pooled_string() : data(NULL) 
 	{
 	}
 	
-	StringPool(const StringPool&);
+	pooled_string(const pooled_string&);
 	
-	~StringPool();
+	~pooled_string();
 	
-	inline StringPool& operator=(const StringPool& sp) { pointer = sp.pointer; return *this; }
-	StringPool& operator=(const std::string& s);
+	inline pooled_string& operator=(const pooled_string& sp) { data = sp.data; return *this; }
+	pooled_string& operator=(const std::string& s);
 	
 	inline operator const std::string&() const { return get(); }
 
-	inline void put(const std::string& s) { pointer = &table->addString(s); }
-	inline const std::string& get() const { return *pointer; }
+	inline void put(const std::string& s) { data = &pool->addString(s); }
+	inline const std::string& get() const { return *data; }
 
 };
 

@@ -292,7 +292,7 @@ LRESULT CALLBACK splashCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		BitBlt(dc,0, 0 , 350, 120,comp,0,0,SRCCOPY);
 
 		DeleteObject(hi);
-		DeleteObject(comp);
+		DeleteDC(comp);
 		LOGFONT logFont;
 		HFONT hFont;
 		GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(logFont), &logFont);
