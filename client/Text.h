@@ -99,7 +99,13 @@ namespace Text {
 
 	inline char asciiToLower(char c) { dcassert((((uint8_t)c) & 0x80) == 0); return (char)tolower(c); }
 
-	wchar_t toLower(wchar_t c) throw();
+	inline wchar_t toLower(wchar_t c) throw() {
+#ifdef _WIN32
+		return static_cast<wchar_t>(reinterpret_cast<ptrdiff_t>(CharLowerW((LPWSTR)c)));
+#else
+		return (wchar_t)towlower(c);
+#endif
+	}
 	
 	const wstring& toLower(const wstring& str, wstring& tmp) throw();
 	inline wstring toLower(const wstring& str) throw() {

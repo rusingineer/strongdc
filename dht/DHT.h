@@ -116,6 +116,9 @@ namespace dht
 		/** Lock to routing table */
 		CriticalSection	cs;
 		
+		/** Our external IP got from last firewalled check */
+		string lastExternalIP;
+		
 		/** Time when last packet was received */
 		uint64_t lastPacket;
 		

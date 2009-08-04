@@ -1,3 +1,11 @@
+** svn453
+	rewritten download limiter
+	fixed transfer status for filelists
+	added critical section to StringPool
+	upload queue fix
+	added LocalMode option to dcppboot.xml
+	some cleanup in HubFrame's status messages
+
 ** svn452
 	improved bootstrap routine
 	added option to open recent hubs frame on startup

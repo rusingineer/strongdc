@@ -501,7 +501,7 @@ void FavoriteManager::recentsave() {
 		xml.stepOut();
 		xml.stepOut();
 		
-		string fname = Util::getConfigPath() + "Recents.xml";
+		string fname = Util::getPath(Util::PATH_USER_CONFIG) + "Recents.xml";
 
 		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 		f.write(SimpleXML::utf8Header);
@@ -532,6 +532,7 @@ void FavoriteManager::load() {
 
 	try {
 		SimpleXML xml;
+		Util::migrate(getConfigFile());
 		xml.fromXML(File(getConfigFile(), File::READ, File::OPEN).read());
 		
 		if(xml.findChild("Favorites")) {
@@ -544,8 +545,10 @@ void FavoriteManager::load() {
 	}
 
 	try {
+		Util::migrate(Util::getPath(Util::PATH_USER_CONFIG) + "Recents.xml");
+		
 		SimpleXML xml;
-		xml.fromXML(File(Util::getConfigPath() + "Recents.xml", File::READ, File::OPEN).read());
+		xml.fromXML(File(Util::getPath(Util::PATH_USER_CONFIG) + "Recents.xml", File::READ, File::OPEN).read());
 		
 		if(xml.findChild("Recents")) {
 			xml.stepIn();

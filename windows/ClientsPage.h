@@ -83,7 +83,7 @@ private:
 	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw() {
 		conn->removeListener(this);
 		if(!downBuf.empty()) {
-			string fname = Util::getConfigPath() + "Profiles.xml";
+			string fname = Util::getPath(Util::PATH_USER_CONFIG) + "Profiles.xml";
 			File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 			f.write(downBuf);
 			f.close();

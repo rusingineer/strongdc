@@ -57,6 +57,9 @@ namespace dht
 		bucket = new KBucket();
 		
 		loadData();
+		
+		if(BOOLSETTING(UPDATE_IP))
+			SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::emptyString);
 	}
 
 	DHT::~DHT(void)
@@ -294,7 +297,7 @@ namespace dht
 	{
 		try
 		{
-			dcpp::File f(Util::getConfigPath() + DHT_FILE, dcpp::File::READ, dcpp::File::OPEN);
+			dcpp::File f(Util::getPath(Util::PATH_USER_CONFIG) + DHT_FILE, dcpp::File::READ, dcpp::File::OPEN);
 			SimpleXML xml;
 			xml.fromXML(f.read());
 			
@@ -338,14 +341,14 @@ namespace dht
 		
 		try
 		{
-			dcpp::File file(Util::getConfigPath() + DHT_FILE + ".tmp", dcpp::File::WRITE, dcpp::File::CREATE | dcpp::File::TRUNCATE);
+			dcpp::File file(Util::getPath(Util::PATH_USER_CONFIG) + DHT_FILE + ".tmp", dcpp::File::WRITE, dcpp::File::CREATE | dcpp::File::TRUNCATE);
 			BufferedOutputStream<false> bos(&file);
 			bos.write(SimpleXML::utf8Header);
 			xml.toXML(&bos);
 			bos.flush();
 			file.close();
-			dcpp::File::deleteFile(Util::getConfigPath() + DHT_FILE);
-			dcpp::File::renameFile(Util::getConfigPath() + DHT_FILE + ".tmp", Util::getConfigPath() + DHT_FILE);
+			dcpp::File::deleteFile(Util::getPath(Util::PATH_USER_CONFIG) + DHT_FILE);
+			dcpp::File::renameFile(Util::getPath(Util::PATH_USER_CONFIG) + DHT_FILE + ".tmp", Util::getPath(Util::PATH_USER_CONFIG) + DHT_FILE);
 		}
 		catch(const FileException&)
 		{
@@ -445,21 +448,22 @@ namespace dht
 				
 			if(resTo == "PUB")
 			{
-				string tth;
-				if(!c.getParam("TR", 1, tth))
-					return;
-					
-				try
-				{
-					string fileName = Util::getFileName(ShareManager::getInstance()->toVirtual(TTHValue(tth)));
-					LogManager::getInstance()->message("DHT (" + fromIP + "): File published: " + fileName);
-				}
-				catch(ShareException&)
-				{
-					// published non-shared file??? Maybe partial file
-					LogManager::getInstance()->message("DHT (" + fromIP + "): Partial file published: " + tth);
-					
-				}
+				// don't do anything
+				//string tth;
+				//if(!c.getParam("TR", 1, tth))
+				//	return;
+				//	
+				//try
+				//{
+				//	string fileName = Util::getFileName(ShareManager::getInstance()->toVirtual(TTHValue(tth)));
+				//	LogManager::getInstance()->message("DHT (" + fromIP + "): File published: " + fileName);
+				//}
+				//catch(ShareException&)
+				//{
+				//	// published non-shared file??? Maybe partial file
+				//	LogManager::getInstance()->message("DHT (" + fromIP + "): Partial file published: " + tth);
+				//	
+				//}
 			}
 			else if(resTo == "FWCHECK")
 			{
@@ -471,17 +475,17 @@ namespace dht
 				if(firewalledChecks.count(fromIP))
 					return; // already received firewall check from this node		
 			
-				string externalIp;
+				string externalIP;
 				string externalUdpPort;
-				if(!c.getParam("I4", 1, externalIp) || !c.getParam("U4", 1, externalUdpPort))
+				if(!c.getParam("I4", 1, externalIP) || !c.getParam("U4", 1, externalUdpPort))
 					return;	// no IP and port in response
 					
-				firewalledChecks.insert(std::make_pair(fromIP, std::make_pair(externalIp, static_cast<uint16_t>(Util::toInt(externalUdpPort)))));
+				firewalledChecks.insert(std::make_pair(fromIP, std::make_pair(externalIP, static_cast<uint16_t>(Util::toInt(externalUdpPort)))));
 				
 				if(firewalledChecks.size() == FW_RESPONSES)
 				{
 					// when we received more firewalled statuses, we will be firewalled
-					int fw = 0;	string lastIp;
+					int fw = 0;	string lastIP;
 					for(std::tr1::unordered_map<string, std::pair<string, uint16_t>>::const_iterator i = firewalledChecks.begin(); i != firewalledChecks.end(); i++)
 					{
 						string ip = i->second.first;
@@ -492,39 +496,43 @@ namespace dht
 						else
 							fw--;
 							
-						if(lastIp.empty())
+						if(lastIP.empty())
 						{
-							externalIp = ip;
-							lastIp = ip;
+							externalIP = ip;
+							lastIP = ip;
 						}
 						
 						//If the last check matches this one, reset our current IP.
 						//If the last check does not match, wait for our next incoming IP.
 						//This happens for one reason.. a client responsed with a bad IP.
-						if(ip == lastIp)
-							externalIp = ip;
+						if(ip == lastIP)
+							externalIP = ip;
 						else
-							lastIp = ip;
+							lastIP = ip;
 					}
 
 					if(fw >= 0)
 					{
-						// we are probably firewalled, so our internal UDP port is unaccessible		
+						// we are probably firewalled, so our internal UDP port is unaccessible
+						if(externalIP != lastExternalIP || !firewalled)
+							LogManager::getInstance()->message("DHT: Firewalled UDP status set (IP: " + externalIP + ")");
 						firewalled = true;
-						LogManager::getInstance()->message("DHT: Firewalled UDP status set (IP: " + externalIp + ")");
 					}
 					else
 					{
+						if(externalIP != lastExternalIP || firewalled)
+							LogManager::getInstance()->message("DHT: Our UDP port seems to be opened (IP: " + externalIP + ")");
+							
 						firewalled = false;
-						LogManager::getInstance()->message("DHT: Our UDP port seems to be opened (IP: " + externalIp + ")");	
 					}
 					
 					if(BOOLSETTING(UPDATE_IP))
-						SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, externalIp);
+						SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, externalIP);
 						
 					firewalledChecks.clear();
 					firewalledWanted.clear();
 					
+					lastExternalIP = externalIP;
 					requestFWCheck = false;
 				}
 			}	
@@ -532,9 +540,9 @@ namespace dht
 		}
 
 		// display message in all other cases
-		string msg = c.getParam(2);
-		if(!msg.empty())
-			LogManager::getInstance()->message("DHT (" + fromIP + "): " + msg);
+		//string msg = c.getParam(2);
+		//if(!msg.empty())
+		//	LogManager::getInstance()->message("DHT (" + fromIP + "): " + msg);
 	}
 	
 	// partial file request

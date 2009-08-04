@@ -28,8 +28,10 @@ namespace dcpp {
 
 void DetectionManager::load() {
 	try {
+		Util::migrate(Util::getPath(Util::PATH_USER_CONFIG) + "Profiles.xml");
+		
 		SimpleXML xml;
-		xml.fromXML(File(Util::getConfigPath() + "Profiles.xml", File::READ, File::OPEN).read());
+		xml.fromXML(File(Util::getPath(Util::PATH_USER_CONFIG) + "Profiles.xml", File::READ, File::OPEN).read());
 
 		if(xml.findChild("Profiles")) {
 			xml.stepIn();
@@ -357,7 +359,7 @@ void DetectionManager::save() {
 		xml.stepOut();
 		xml.stepOut();
 
-		string fname = Util::getConfigPath() + "Profiles.xml";
+		string fname = Util::getPath(Util::PATH_USER_CONFIG) + "Profiles.xml";
 
 		File f(fname + ".tmp", File::WRITE, File::CREATE | File::TRUNCATE);
 		f.write(SimpleXML::utf8Header);
@@ -373,7 +375,10 @@ void DetectionManager::save() {
 
 void DetectionManager::loadCompressedProfiles() {
 	string xml = Util::emptyString;
-	string file = Util::getConfigPath() + "Profiles.xml";
+	string file = Util::getPath(Util::PATH_USER_CONFIG) + "Profiles.xml";
+	
+	Util::migrate(file + ".bz2");
+	
 	if(!Util::fileExists(file + ".bz2"))
 		return;
 	try {

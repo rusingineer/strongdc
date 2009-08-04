@@ -283,7 +283,7 @@ string Identity::getDetectionField(const string& aName) const {
 }
 
 void Identity::getDetectionParams(StringMap& p) {
-	getParams(p, "", false);
+	getParams(p, Util::emptyString, false);
 	p["PKVE"] = getPkVersion();
 	//p["VEformat"] = getVersion();
    
@@ -355,13 +355,13 @@ string Identity::splitVersion(const string& aExp, string aTag, size_t part) {
 		boost::regex_split(std::back_inserter(out), aTag, reg, boost::regex_constants::match_default, 2);
 		
 		if(part >= out.size())
-			return "";
+			return Util::emptyString;
 		
 		return out[part];
 	} catch(...) {
 	}
 	
-	return "";
+	return Util::emptyString;
 }
 
 int OnlineUser::compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col)  {

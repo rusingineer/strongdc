@@ -44,8 +44,7 @@ namespace dcpp {
 
 static const string DOWNLOAD_AREA = "Downloads";
 
-DownloadManager::DownloadManager() : mDownloadLimit(0),
-	mCycleTime(0), mByteSlice(0), mThrottleEnable(BOOLSETTING(THROTTLE_ENABLE)) {
+DownloadManager::DownloadManager() {
 	TimerManager::getInstance()->addListener(this);
 }
 
@@ -69,8 +68,10 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		Lock l(cs);
 
 		DownloadList tickList;
-		throttleSetup();
 
+		if(BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_DOWNLOAD_SPEED_LIMIT) > 0)
+			bandwidthAvailable = SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024;
+			
 		// Tick each ongoing download
 		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 			Download* d = *i;
@@ -358,61 +359,11 @@ void DownloadManager::endData(UserConnection* aSource) {
 
 	removeDownload(d);
 
-	if(d->getType() == Transfer::TYPE_TREE || d->getType() == Transfer::TYPE_PARTIAL_LIST)
+	if(d->getType() != Transfer::TYPE_FILE)
 		fire(DownloadManagerListener::Complete(), d, d->getType() == Transfer::TYPE_TREE);
 
 	QueueManager::getInstance()->putDownload(d, true, false);	
 	checkDownloads(aSource);
-}
-
-int64_t DownloadManager::throttleGetSlice()  {
-	if (mThrottleEnable) {
-		int64_t left = mDownloadLimit - getRunningAverage();
-		if (-left >= mDownloadLimit)  {
-			return 0;
-		} else if (left <= 0) {
-			return mByteSlice*std::pow(1+double(left)/mDownloadLimit, 0.25);
-		} else {
-			return mByteSlice;
-		}
-	} else {
-		return -1;
-	}
-}
-
-uint32_t DownloadManager::throttleCycleTime() const {
-	if (mThrottleEnable)
-		return mCycleTime;
-	return 0;
-}
-
-void DownloadManager::throttleSetup() {
-	// called once a second, plus when a download starts
-	// from the constructor to BufferedSocket
-	// with 64k, a few people get winsock error 0x2747
-	size_t INBUFSIZE = SETTING(SOCKET_IN_BUFFER);
-	size_t numDownloads = getDownloadCount();
-
-	const int target_freq_s = 30;
-
-	mDownloadLimit = SETTING(MAX_DOWNLOAD_SPEED_LIMIT)*1024;
-	mThrottleEnable = BOOLSETTING(THROTTLE_ENABLE) && (mDownloadLimit > 0) && (numDownloads > 0);
-	/* Two domains:
-	   (1) Can hit target download rate at target limiting period. From 0 to
-	   1s /limiting_period * INBUFSIZE >= target_rate.
-
-	   (2) Can't hit target upload rate at target limiting period. From here
-	   out, have no choice but to peg the bytes per cycle at max (i.e.
-	   INBUFSIZE) and hope that the latency & etc doesn't kill transfers.
-	*/
-	if (mThrottleEnable) {
-		mCycleTime = 1000 / target_freq_s;
-		if (mDownloadLimit <= target_freq_s * INBUFSIZE) {
-			mByteSlice = mDownloadLimit / (target_freq_s * numDownloads);
-		} else {
-			mByteSlice = INBUFSIZE;
-		}
-	}
 }
 
 int64_t DownloadManager::getRunningAverage() {
@@ -567,6 +518,28 @@ void DownloadManager::on(UserConnectionListener::Updated, UserConnection* aSourc
 	}
 	
 	checkDownloads(aSource);
+}
+
+// Download throttling
+size_t DownloadManager::throttle(size_t readSize) {
+	Lock l(cs);
+	
+	if(downloads.size() == 0)
+		return readSize;
+
+	if(bandwidthAvailable > 0)
+	{
+		size_t slice = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024) / downloads.size();
+		
+		readSize = min(slice, min(readSize, static_cast<size_t>(bandwidthAvailable)));
+		bandwidthAvailable -= readSize;
+	}
+	else
+	{
+		readSize = 0;
+	}
+	
+	return readSize;
 }
 
 void DownloadManager::fileNotAvailable(UserConnection* aSource) {
