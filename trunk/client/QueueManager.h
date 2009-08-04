@@ -83,7 +83,7 @@ public:
 	void addTestSUR(UserPtr aUser, const string& hubHint, bool checkList) throw(QueueException, FileException) {
 		StringList nicks = ClientManager::getInstance()->getNicks(*aUser);
 		string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
-		string target = Util::getConfigPath() + "TestSURs\\TestSUR" + nick + aUser->getCID().toBase32();
+		string target = Util::getPath(Util::PATH_USER_CONFIG) + "TestSURs\\TestSUR" + nick + aUser->getCID().toBase32();
 
 		add(target, -1, TTHValue(), aUser, hubHint, (Flags::MaskType)((checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR));
 	}
@@ -92,7 +92,7 @@ public:
 		try {
 			StringList nicks = ClientManager::getInstance()->getNicks(*aUser);
 			string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
-			string target = Util::getConfigPath() + "TestSURs\\TestSUR" + nick + aUser->getCID().toBase32();
+			string target = Util::getPath(Util::PATH_USER_CONFIG) + "TestSURs\\TestSUR" + nick + aUser->getCID().toBase32();
 
 			remove(target);
 		} catch(...) {

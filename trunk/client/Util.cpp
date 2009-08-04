@@ -61,14 +61,46 @@ string Util::awayMsg;
 time_t Util::awayTime;
 
 Util::CountryList Util::countries;
-string Util::configPath;
-string Util::systemPath;
-string Util::dataPath;
+
+string Util::paths[Util::PATH_LAST];
+
+bool Util::localMode = true;
 
 static void sgenrand(unsigned long seed);
 
 extern "C" void bz_internal_error(int errcode) { 
 	dcdebug("bzip2 internal error: %d\n", errcode); 
+}
+
+#ifdef _WIN32
+
+typedef HRESULT (WINAPI* _SHGetKnownFolderPath)(GUID& rfid, DWORD dwFlags, HANDLE hToken, PWSTR *ppszPath);
+
+static string getDownloadsPath(const string& def) {
+	// Try Vista downloads path
+	static _SHGetKnownFolderPath getKnownFolderPath = 0;
+	static HINSTANCE shell32 = NULL;
+
+	if(!shell32) {
+	    shell32 = ::LoadLibrary(_T("Shell32.dll"));
+	    if(shell32)
+	    {
+	    	getKnownFolderPath = (_SHGetKnownFolderPath)::GetProcAddress(shell32, "SHGetKnownFolderPath");
+
+	    	if(getKnownFolderPath) {
+	    		 PWSTR path = NULL;
+	             // Defined in KnownFolders.h.
+	             static GUID downloads = {0x374de290, 0x123f, 0x4565, {0x91, 0x64, 0x39, 0xc4, 0x92, 0x5e, 0x46, 0x7b}};
+	    		 if(getKnownFolderPath(downloads, 0, NULL, &path) == S_OK) {
+	    			 string ret = Text::fromT(path) + "\\";
+	    			 ::CoTaskMemFree(path);
+	    			 return ret;
+	    		 }
+	    	}
+	    }
+	}
+
+	return def + "Downloads\\";
 }
 
 bool nlfound = false;
@@ -127,22 +159,12 @@ int Util::getNetLimiterLimit() {
 			char* w1 = _strdup(txt.c_str());
 
 			if(::strstr(_strupr(w1),_strupr(w2)) != NULL) {
-				char buf1[256];
-				char buf2[256];
-
-				snprintf(buf1, sizeof(buf1), "%X", uint8_t(buf[5]));
-				string a1 = buf1;
-
-				snprintf(buf2, sizeof(buf2), "%X", uint8_t(buf[6]));
-				string a2 = buf2;
-
-				char* limit_hex = _strdup(("0x" + a2 + a1).c_str());
+				char limit_hex[256];
+				snprintf(limit_hex, sizeof(limit_hex), "0x%X%X", uint8_t(buf[6]), uint8_t(buf[5]));
 
 				NetLimiter_UploadLimit = 0;
-
-				sscanf(limit_hex,"%x",&NetLimiter_UploadLimit);
+				sscanf(limit_hex, "%x", &NetLimiter_UploadLimit);
 				NetLimiter_UploadLimit /= 4;
-				delete limit_hex;
 
 				NetLimiter_UploadOn = uint8_t(txt[16]);
 				buf[255] = 0;
@@ -175,56 +197,83 @@ int Util::getNetLimiterLimit() {
 	return NetLimiter_UploadLimit;
 }
 
+#endif
+
 void Util::initialize() {
 	Text::initialize();
 
 	sgenrand((unsigned long)time(NULL));
 
 #ifdef _WIN32
-	TCHAR buf[MAX_PATH+1];
+	TCHAR buf[MAX_PATH+1] = { 0 };
 	::GetModuleFileName(NULL, buf, MAX_PATH);
-	// System config path is DC++ executable path...
-	systemPath = Util::getFilePath(Text::fromT(buf));
-	configPath = systemPath + "Settings\\";
-	dataPath = systemPath;
-	
-#else
-	systemPath = "/etc/";
-	char* home = getenv("HOME");
-	configPath = home ? Text::toUtf8(home) + string("/.dc++/") : "/tmp/";
-	dataPath = configPath; // dataPath in linux is usually prefix + /share/app_name, so we can't represent it here
-#endif
 
-	// Load boot settings
-	try {
-		SimpleXML boot;
-		boot.fromXML(File(systemPath + "dcppboot.xml", File::READ, File::OPEN).read());
-		boot.stepIn();
+	string exePath = Util::getFilePath(Text::fromT(buf));
 
-		if(boot.findChild("ConfigPath")) {
-			StringMap params;
-#ifdef _WIN32
-			TCHAR path[MAX_PATH];
+	// Global config path is StrongDC++ executable path...
+	paths[PATH_GLOBAL_CONFIG] = exePath;
 
-			params["APPDATA"] = Text::fromT((::SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path), path));
-			params["PERSONAL"] = Text::fromT((::SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path), path));
-			configPath = Util::formatParams(boot.getChildData(), params, false);
-#endif
+	paths[PATH_USER_CONFIG] = paths[PATH_GLOBAL_CONFIG] + "Settings\\";
+
+	loadBootConfig();
+
+	if(!File::isAbsolute(paths[PATH_USER_CONFIG])) {
+		paths[PATH_USER_CONFIG] = paths[PATH_GLOBAL_CONFIG] + paths[PATH_USER_CONFIG];
+	}
+
+	paths[PATH_USER_CONFIG] = validateFileName(paths[PATH_USER_CONFIG]);
+
+	if(localMode) {
+		paths[PATH_USER_LOCAL] = paths[PATH_USER_CONFIG];
+	} else {
+		if(::SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, buf) == S_OK) {
+			paths[PATH_USER_CONFIG] = Text::fromT(buf) + "\\StrongDC++\\";
 		}
-	} catch(const Exception& ) {
-		// Unable to load boot settings...
+
+		paths[PATH_USER_LOCAL] = ::SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, buf) == S_OK ? Text::fromT(buf) + "\\StrongDC++\\" : paths[PATH_USER_CONFIG];
 	}
 
-	if(!File::isAbsolute(configPath)) {
-		configPath = systemPath + configPath;
+	paths[PATH_RESOURCES] = exePath;
+	paths[PATH_DOWNLOADS] = getDownloadsPath(paths[PATH_USER_CONFIG]);
+
+#else
+	paths[PATH_GLOBAL_CONFIG] = "/etc/";
+	const char* home_ = getenv("HOME");
+	string home = home_ ? Text::toUtf8(home_) : "/tmp/";
+
+	paths[PATH_USER_CONFIG] = home + "/.strongdc++/";
+
+	loadBootConfig();
+
+	if(!File::isAbsolute(paths[PATH_USER_CONFIG])) {
+		paths[PATH_USER_CONFIG] = paths[PATH_GLOBAL_CONFIG] + paths[PATH_USER_CONFIG];
 	}
-	configPath = Util::validateFileName(configPath);
-	File::ensureDirectory(Util::getConfigPath());	
+
+	paths[PATH_USER_CONFIG] = validateFileName(paths[PATH_USER_CONFIG]);
+
+	if(localMode) {
+		// @todo implement...
+	}
+
+	paths[PATH_USER_LOCAL] = paths[PATH_USER_CONFIG];
+
+	// @todo paths[PATH_RESOURCES] = <replace from sconscript?>;
+
+	paths[PATH_DOWNLOADS] = home + "Downloads/";
+#endif
+
+	paths[PATH_FILE_LISTS] = paths[PATH_USER_LOCAL] + "FileLists" PATH_SEPARATOR_STR;
+	paths[PATH_HUB_LISTS] = paths[PATH_USER_LOCAL] + "HubLists" PATH_SEPARATOR_STR;
+	paths[PATH_NOTEPAD] = paths[PATH_USER_CONFIG] + "Notepad.txt";
+	paths[PATH_EMOPACKS] = paths[PATH_RESOURCES] + "EmoPacks" PATH_SEPARATOR_STR;
+	
+	File::ensureDirectory(paths[PATH_USER_CONFIG]);
+	File::ensureDirectory(paths[PATH_USER_LOCAL]);
 	
 	try {
 		// This product includes GeoIP data created by MaxMind, available from http://maxmind.com/
 		// Updates at http://www.maxmind.com/app/geoip_country
-		string file = Util::getConfigPath() + "GeoIpCountryWhois.csv";
+		string file = getPath(PATH_RESOURCES) + "GeoIpCountryWhois.csv";
 		string data = File(file, File::READ, File::OPEN).read();
 
 		const char* start = data.c_str();
@@ -261,6 +310,53 @@ void Util::initialize() {
 			linestart = lineend + 1;
 		}
 	} catch(const FileException&) {
+	}
+}
+
+void Util::migrate(const string& file) {
+	if(localMode) {
+		return;
+	}
+
+	if(File::getSize(file) != -1) {
+		return;
+	}
+
+	string fname = getFileName(file);
+	string old = paths[PATH_GLOBAL_CONFIG] + fname;
+	if(File::getSize(old) == -1) {
+		return;
+	}
+
+	File::renameFile(old, file);
+}
+
+void Util::loadBootConfig() {
+	// Load boot settings
+	try {
+		SimpleXML boot;
+		boot.fromXML(File(getPath(PATH_GLOBAL_CONFIG) + "dcppboot.xml", File::READ, File::OPEN).read());
+		boot.stepIn();
+
+		if(boot.findChild("LocalMode")) {
+			localMode = boot.getChildData() != "0";
+		}
+
+		boot.resetCurrentChild();
+		
+		if(boot.findChild("ConfigPath")) {
+			StringMap params;
+#ifdef _WIN32
+			// @todo load environment variables instead? would make it more useful on *nix
+			TCHAR path[MAX_PATH];
+
+			params["APPDATA"] = Text::fromT((::SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path), path));
+			params["PERSONAL"] = Text::fromT((::SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path), path));
+#endif
+			paths[PATH_USER_CONFIG] = Util::formatParams(boot.getChildData(), params, false);
+		}
+	} catch(const Exception& ) {
+		// Unable to load boot settings...
 	}
 }
 
@@ -977,12 +1073,12 @@ uint32_t Util::rand() {
 */
 string Util::getIpCountry (const string& IP) {
 	if (BOOLSETTING(GET_USER_COUNTRY)) {
-		dcassert(count(IP.begin(), IP.end(), _T('.')) == 3);
+		dcassert(count(IP.begin(), IP.end(), '.') == 3);
 
 		//e.g IP 23.24.25.26 : w=23, x=24, y=25, z=26
-		string::size_type a = IP.find(_T('.'));
-		string::size_type b = IP.find(_T('.'), a+1);
-		string::size_type c = IP.find(_T('.'), b+2);
+		string::size_type a = IP.find('.');
+		string::size_type b = IP.find('.', a+1);
+		string::size_type c = IP.find('.', b+2);
 
 		uint32_t ipnum = (Util::toUInt32(IP.c_str()) << 24) | 
 			(Util::toUInt32(IP.c_str() + a + 1) << 16) | 
@@ -1059,6 +1155,37 @@ string Util::toNmdcFile(const string& file) {
 	return ret;
 }
 
+string Util::translateError(int aError) {
+#ifdef _WIN32
+	LPTSTR lpMsgBuf;
+	DWORD chars = FormatMessage( 
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM | 
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		aError,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		(LPTSTR) &lpMsgBuf,
+		0,
+		NULL 
+		);
+	if(chars == 0) {
+		return string();
+	}
+	string tmp = Text::fromT(lpMsgBuf);
+	// Free the buffer.
+	LocalFree( lpMsgBuf );
+	string::size_type i = 0;
+
+	while( (i = tmp.find_first_of("\r\n", i)) != string::npos) {
+		tmp.erase(i, 1);
+	}
+	return tmp;
+#else // _WIN32
+	return Text::toUtf8(strerror(aError));
+#endif // _WIN32
+}
+	
 TCHAR* Util::strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound) {
 	TCHAR *s1, *s2;
 	TCHAR *cp = const_cast<TCHAR*>(str1);

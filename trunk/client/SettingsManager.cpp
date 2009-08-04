@@ -163,8 +163,8 @@ SettingsManager::SettingsManager()
 		int64Settings[k] = 0;
 	}
 	
-	setDefault(DOWNLOAD_DIRECTORY, Util::getDataPath() + "Downloads" PATH_SEPARATOR_STR);
-	setDefault(TEMP_DOWNLOAD_DIRECTORY, Util::getDataPath() + "Incomplete" PATH_SEPARATOR_STR);
+	setDefault(DOWNLOAD_DIRECTORY, Util::getPath(Util::PATH_DOWNLOADS));
+	setDefault(TEMP_DOWNLOAD_DIRECTORY, Util::getPath(Util::PATH_USER_LOCAL) + "Incomplete" PATH_SEPARATOR_STR);
 	setDefault(SLOTS, 2);
 	setDefault(TCP_PORT, 0);
 	setDefault(UDP_PORT, 0);
@@ -189,7 +189,7 @@ SettingsManager::SettingsManager()
 	setDefault(DOWNLOAD_SLOTS, 50);
     setDefault(FILE_SLOTS, 15);
 	setDefault(MAX_DOWNLOAD_SPEED, 0);
-	setDefault(LOG_DIRECTORY, Util::getDataPath() + "Logs" PATH_SEPARATOR_STR);
+	setDefault(LOG_DIRECTORY, Util::getPath(Util::PATH_USER_LOCAL) + "Logs" PATH_SEPARATOR_STR);
 	setDefault(LOG_UPLOADS, false);
 	setDefault(LOG_DOWNLOADS, false);
 	setDefault(LOG_PRIVATE_CHAT, false);
@@ -282,9 +282,9 @@ SettingsManager::SettingsManager()
 	setDefault(SOCKET_IN_BUFFER, 64*1024);
 	setDefault(SOCKET_OUT_BUFFER, 64*1024);
 	setDefault(OPEN_WAITING_USERS, false);
-	setDefault(TLS_TRUSTED_CERTIFICATES_PATH, Util::getConfigPath() + "Certificates" PATH_SEPARATOR_STR);
-	setDefault(TLS_PRIVATE_KEY_FILE, Util::getConfigPath() + "Certificates" PATH_SEPARATOR_STR "client.key");
-	setDefault(TLS_CERTIFICATE_FILE, Util::getConfigPath() + "Certificates" PATH_SEPARATOR_STR "client.crt");
+	setDefault(TLS_TRUSTED_CERTIFICATES_PATH, Util::getPath(Util::PATH_USER_CONFIG) + "Certificates" PATH_SEPARATOR_STR);
+	setDefault(TLS_PRIVATE_KEY_FILE, Util::getPath(Util::PATH_USER_CONFIG) + "Certificates" PATH_SEPARATOR_STR "client.key");
+	setDefault(TLS_CERTIFICATE_FILE, Util::getPath(Util::PATH_USER_CONFIG) + "Certificates" PATH_SEPARATOR_STR "client.crt");
 	setDefault(BOLD_FINISHED_DOWNLOADS, true);
 	setDefault(BOLD_FINISHED_UPLOADS, true);
 	setDefault(BOLD_QUEUE, true);

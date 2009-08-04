@@ -160,20 +160,16 @@ void BufferedSocket::threadRead() throw(Exception) {
 	if(state != RUNNING)
 		return;
 
-	DownloadManager *dm = DownloadManager::getInstance();
 	size_t readsize = inbuf.size();
-	bool throttling = false;
 	if(mode == MODE_DATA)
 	{
-		throttling = dm->throttle();
-		if (throttling)
+		if (BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_DOWNLOAD_SPEED_LIMIT) > 0)
 		{
-			int64_t getMaximum = dm->throttleGetSlice();
-			if (getMaximum <= 0) {
-				sleep(dm->throttleCycleTime());
+			readsize = DownloadManager::getInstance()->throttle(readsize);
+			if (readsize == 0) {
+				Thread::sleep(20);	// TODO: better sleeping (correct would be "sleep until next bw reset")
 				return;
 			}
-			readsize = min(inbuf.size(), static_cast<size_t>(getMaximum));
 		}
 	}
 	int left = sock->read(&inbuf[0], (int)readsize);
@@ -267,9 +263,6 @@ void BufferedSocket::threadRead() throw(Exception) {
 							fire(BufferedSocketListener::ModeChange());
 						}
 					}
-					if (throttling) {
-						Thread::sleep(dm->throttleCycleTime());
-					}
 				}
 				break;
 		}
@@ -298,7 +291,6 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	bool readDone = false;
 	dcdebug("Starting threadSend\n");
 	UploadManager *um = UploadManager::getInstance();
-	bool throttling;
 	while(!disconnecting) {
 		if(!readDone && readBuf.size() > readPos) {
 			// Fill read buffer
@@ -326,22 +318,24 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 		writeBuf.resize(readPos);
 		readPos = 0;
 
-		size_t writePos = 0;
+		size_t writePos = 0, writeSize = 0;
 		int written = 0;
-		size_t writeSize = 0;
 
 		while(writePos < writeBuf.size()) {
 			if(disconnecting)
 				return;
 				
-			throttling = BOOLSETTING(THROTTLE_ENABLE);
-			
 			if(written != -1) // limit packet only if the last one was sent (to prevent double limiting)
 			{
 				writeSize = min(sockSize / 2, writeBuf.size() - writePos);
-				if(throttling)
+				if(BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) > 0)
 				{
 					writeSize = um->throttle(writeSize);
+					if(writeSize == 0)
+					{
+						Thread::sleep(20);	// TODO: better sleeping (correct would be "sleep until next bw reset")
+						continue;
+					}
 				}
 			}
 			
@@ -350,9 +344,6 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 				writePos += written;
 
 				fire(BufferedSocketListener::BytesSent(), 0, written);
-
-				if(throttling && writeSize == 4)
-					Thread::sleep(20);	// TODO: better sleeping (correct would be "sleep until next bw reset")
 
 			} else if(written == -1) {
 				if(!readDone && readPos < readBuf.size()) {

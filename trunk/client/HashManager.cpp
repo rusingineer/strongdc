@@ -359,6 +359,8 @@ private:
 
 void HashManager::HashStore::load() {
 	try {
+		Util::migrate(getIndexFile());
+
 		HashLoader l(*this);
 		SimpleXMLReader(&l).fromXML(File(getIndexFile(), File::READ, File::OPEN).read());
 	} catch (const Exception&) {
@@ -428,6 +430,9 @@ void HashLoader::endTag(const string& name, const string&) {
 
 HashManager::HashStore::HashStore() :
 	dirty(false) {
+
+	Util::migrate(getDataFile());
+
 	if (File::getSize(getDataFile()) <= static_cast<int64_t> (sizeof(int64_t))) {
 		try {
 			createDataFile( getDataFile());

@@ -597,7 +597,7 @@ void UploadManager::notifyQueuedUsers() {
 	if(freeslots > 0)
 	{
 		freeslots -= connectingUsers.size();
-		while(freeslots > 0) {
+		while(!waitingUsers.empty() && freeslots > 0) {
 			// let's keep him in the connectingList until he asks for a file
 			WaitingUser wu = waitingUsers.front().first;
 			clearUserFiles(wu.user);
@@ -775,6 +775,9 @@ void UploadManager::removeDelayUpload(const UserPtr& aUser) {
 size_t UploadManager::throttle(size_t writeSize) {
 	Lock l(cs);
 
+	if(uploads.size() == 0)
+		return writeSize;
+		
 	if(bandwidthAvailable > 0)
 	{
 		size_t slice = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024) / uploads.size();
@@ -784,7 +787,7 @@ size_t UploadManager::throttle(size_t writeSize) {
 	}
 	else
 	{
-		writeSize = 4; // just to avoid starving out
+		writeSize = 0;
 	}
 	
 	return writeSize;

@@ -105,6 +105,28 @@ public:
 	static string emptyString;
 	static wstring emptyStringW;
 
+	enum Paths {
+		/** Global configuration */
+		PATH_GLOBAL_CONFIG,
+		/** Per-user configuration (queue, favorites, ...) */
+		PATH_USER_CONFIG,
+		/** Per-user local data (cache, temp files, ...) */
+		PATH_USER_LOCAL,
+		/** Various resources (help files etc) */
+		PATH_RESOURCES,
+		/** Default download location */
+		PATH_DOWNLOADS,
+		/** Default file list location */
+		PATH_FILE_LISTS,
+		/** Default hub list cache */
+		PATH_HUB_LISTS,
+		/** Where the notepad file is stored */
+		PATH_NOTEPAD,
+		/** Folder with emoticons packs*/
+		PATH_EMOPACKS,
+		PATH_LAST
+	};
+
 	static void initialize();
 
 	/** Path of temporary storage */
@@ -119,47 +141,19 @@ public:
 	}
 
 	/** Path of configuration files */
-	static const string& getConfigPath() { return configPath; }
-	static const string& getDataPath() { return dataPath; }
-	static const string& getSystemPath() { return systemPath; }
+	static const string& getPath(Paths path) { return paths[path]; }
+
+	/** Migrate from pre-localmode config location */
+	static void migrate(const string& file);
 
 	/** Path of file lists */
-	static string getListPath() { return getConfigPath() + "FileLists" PATH_SEPARATOR_STR; }
+	static string getListPath() { return getPath(PATH_FILE_LISTS); }
 	/** Path of hub lists */
-	static string getHubListsPath() { return getConfigPath() + "HubLists" PATH_SEPARATOR_STR; }
+	static string getHubListsPath() { return getPath(PATH_HUB_LISTS); }
 	/** Notepad filename */
-	static string getNotepadFile() { return getConfigPath() + "Notepad.txt"; }
+	static string getNotepadFile() { return getPath(PATH_NOTEPAD); }
 
-	static string translateError(int aError) {
-#ifdef _WIN32
-		LPVOID lpMsgBuf;
-		DWORD chars = FormatMessage( 
-			FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-			FORMAT_MESSAGE_FROM_SYSTEM | 
-			FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL,
-			aError,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-			(LPTSTR) &lpMsgBuf,
-			0,
-			NULL 
-			);
-		if(chars == 0) {
-			return string();
-		}
-		string tmp = Text::fromT((LPCTSTR)lpMsgBuf);
-		// Free the buffer.
-		LocalFree( lpMsgBuf );
-		string::size_type i = 0;
-
-		while( (i = tmp.find_first_of("\r\n", i)) != string::npos) {
-			tmp.erase(i, 1);
-		}
-		return tmp;
-#else // _WIN32
-		return Text::toUtf8(strerror(aError));
-#endif // _WIN32
-	}
+	static string translateError(int aError);
 
 	static long getUptime() { return mUptimeSeconds; }
 	static void increaseUptime() { mUptimeSeconds++; }
@@ -426,12 +420,10 @@ public:
 	static int getNetLimiterLimit();
 
 private:
-	/** Per-user configuration */
-	static string configPath;
-	/** Global configuration */
-	static string systemPath;
-	/** Various resources (help files etc) */
-	static string dataPath;
+	/** In local mode, all config and temp files are kept in the same dir as the executable */
+	static bool localMode;
+
+	static string paths[PATH_LAST];
 
 	static bool away;
 	static string awayMsg;
@@ -443,6 +435,8 @@ private:
 	static CountryList countries;
 	
 	static long mUptimeSeconds;
+	
+	static void loadBootConfig();
 };
 	
 /** Case insensitive hash function for strings */

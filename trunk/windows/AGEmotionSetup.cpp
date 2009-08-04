@@ -103,14 +103,14 @@ HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
 void CAGEmotionSetup::Load() {
 	setUseEmoticons(false);
 
-	if((SETTING(EMOTICONS_FILE) == "Disabled") || !Util::fileExists(Util::getDataPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml" )) {
+	if((SETTING(EMOTICONS_FILE) == "Disabled") || !Util::fileExists(Util::getPath(Util::PATH_EMOPACKS) + SETTING(EMOTICONS_FILE) + ".xml" )) {
 		return;
 	}
 
 	
 	try {
 		SimpleXML xml;
-		xml.fromXML(File(Util::getDataPath() + "EmoPacks\\" + SETTING(EMOTICONS_FILE) + ".xml", File::READ, File::OPEN).read());
+		xml.fromXML(File(Util::getPath(Util::PATH_EMOPACKS) + SETTING(EMOTICONS_FILE) + ".xml", File::READ, File::OPEN).read());
 		
 		if(xml.findChild("Emoticons")) {
 			xml.stepIn();
@@ -125,7 +125,7 @@ void CAGEmotionSetup::Load() {
 				if (!strEmotionBmpPath.empty()) {
 					if (strEmotionBmpPath[0] == '.') {
 						// Relativni cesta - dame od aplikace
-						strEmotionBmpPath = Util::getDataPath() + "EmoPacks\\" + strEmotionBmpPath;
+						strEmotionBmpPath = Util::getPath(Util::PATH_EMOPACKS) + strEmotionBmpPath;
 					} else {
 						strEmotionBmpPath = "EmoPacks\\" + strEmotionBmpPath;
 					}

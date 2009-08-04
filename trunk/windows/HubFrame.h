@@ -172,8 +172,7 @@ public:
 	void addLine(const tstring& aLine);
 	void addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
 	void addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo = true);
-	void addClientLine(const tstring& aLine, bool inChat = true);
-	void addClientLine(const tstring& aLine, CHARFORMAT2& cf, bool inChat = true );
+	void addStatus(const tstring& aLine, CHARFORMAT2& cf = WinUtil::m_ChatTextSystem, bool inChat = true);
 	void onEnter();
 	void onTab();
 	void handleTab(bool reverse);
@@ -262,9 +261,9 @@ public:
 
 private:
 	enum Tasks { UPDATE_USER_JOIN, UPDATE_USER, REMOVE_USER, ADD_CHAT_LINE,
-		ADD_STATUS_LINE, ADD_SILENT_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
+		ADD_STATUS_LINE, SET_WINDOW_TITLE, GET_PASSWORD, 
 		PRIVATE_MESSAGE, STATS, CONNECTED, DISCONNECTED, CHEATING_USER,
-		GET_SHUTDOWN, SET_SHUTDOWN, KICK_MSG
+		GET_SHUTDOWN, SET_SHUTDOWN
 	};
 
 	enum FilterModes{
@@ -284,6 +283,12 @@ private:
 		const OnlineUserPtr onlineUser;
 	};
 
+	struct StatusTask : public StringTask {
+		StatusTask(const string& msg, bool _inChat = true) : StringTask(msg), inChat(_inChat) { }
+		
+		bool inChat;
+	};
+	
 	struct MessageTask : public StringTask {
 		MessageTask(const Identity& from_, const string& m) : StringTask(m), from(from_) { }
 		MessageTask(const Identity& from_, const OnlineUserPtr& to_, const OnlineUserPtr& replyTo_, const string& m) : StringTask(m),
@@ -462,7 +467,7 @@ private:
 	void on(HubTopic, const Client*, const string&) throw();
 
 	void speak(Tasks s) { tasks.add(static_cast<uint8_t>(s), 0); PostMessage(WM_SPEAKER); }
-	void speak(Tasks s, const string& msg) { tasks.add(static_cast<uint8_t>(s), new StringTask(msg)); PostMessage(WM_SPEAKER); }
+	void speak(Tasks s, const string& msg, bool inChat = true) { tasks.add(static_cast<uint8_t>(s), new StatusTask(msg, inChat)); PostMessage(WM_SPEAKER); }
 	void speak(Tasks s, const OnlineUserPtr& u) { tasks.add(static_cast<uint8_t>(s), new UserTask(u)); updateUsers = true; }
 	void speak(Tasks s, const Identity& from, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(from, line)); PostMessage(WM_SPEAKER); }
 	void speak(Tasks s, const OnlineUser& from, const OnlineUserPtr& to, const OnlineUserPtr& replyTo, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(from.getIdentity(), to, replyTo, line)); PostMessage(WM_SPEAKER); }

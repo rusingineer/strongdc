@@ -517,7 +517,7 @@ int QueueManager::Rechecker::run() {
 
 QueueManager::QueueManager() : 
 	lastSave(0), 
-	queueFile(Util::getConfigPath() + "Queue.xml"), 
+	queueFile(Util::getPath(Util::PATH_USER_CONFIG) + "Queue.xml"),
 	rechecker(this),
 	dirty(true), 
 	nextSearch(0)
@@ -1705,6 +1705,7 @@ private:
 void QueueManager::loadQueue() throw() {
 	try {
 		QueueLoader l;
+		Util::migrate(getQueueFile());
 		SimpleXMLReader(&l).fromXML(File(getQueueFile(), File::READ, File::OPEN).read());
 		dirty = false;
 	} catch(const Exception&) {

@@ -604,19 +604,17 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 				if(ui->download) {
 					ItemInfo* parent = ii->parent ? ii->parent : ii;
 
-					/* parent item must be updated with correct info about whole file */
-					if(	(ui->status == ItemInfo::STATUS_RUNNING || ui->status == ItemInfo::STATUS_REQUESTING) && (parent->hits == -1))
+					if(ui->type == Transfer::TYPE_FILE || ui->type == Transfer::TYPE_TREE)
 					{
-						ui->updateMask &= ~UpdateInfo::MASK_POS;
-						ui->updateMask &= ~UpdateInfo::MASK_ACTUAL;
-						ui->updateMask &= ~UpdateInfo::MASK_SIZE;
-						ui->updateMask &= ~UpdateInfo::MASK_STATUS_STRING;
-						ui->updateMask &= ~UpdateInfo::MASK_TIMELEFT;
-					}
-					
-					if(ui->status == ItemInfo::STATUS_REQUESTING)
-					{
-						ui->updateMask &= ~UpdateInfo::MASK_STATUS;
+						/* parent item must be updated with correct info about whole file */
+						if(ui->status == ItemInfo::STATUS_RUNNING && parent->hits == -1)
+						{
+							ui->updateMask &= ~UpdateInfo::MASK_POS;
+							ui->updateMask &= ~UpdateInfo::MASK_ACTUAL;
+							ui->updateMask &= ~UpdateInfo::MASK_SIZE;
+							ui->updateMask &= ~UpdateInfo::MASK_STATUS_STRING;
+							ui->updateMask &= ~UpdateInfo::MASK_TIMELEFT;
+						}
 					}
 
 					/* if target has changed, regroup the item */
@@ -629,9 +627,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 					if(changeParent) {
 						ctrlTransfers.insertGroupedItem(ii, false);
 						parent = ii->parent ? ii->parent : ii;
-					}
-
-					if(ii == parent || !parent->collapsed) {
+					} else if(ii == parent || !parent->collapsed) {
 						updateItem(ctrlTransfers.findItem(ii), ui->updateMask);
 					}
 					continue;
@@ -887,7 +883,6 @@ void TransferView::on(DownloadManagerListener::Requesting, const Download* d) th
 	
 	ui->setActual(d->getActual());
 	ui->setSize(d->getSize());
-	ui->setStatus(ItemInfo::STATUS_REQUESTING);
 	ui->setStatusString(TSTRING(REQUESTING) + _T(" ") + getFile(d->getType(), Text::toT(Util::getFileName(d->getPath()))) + _T("..."));
 
 	speak(UPDATE_ITEM, ui);
@@ -1180,20 +1175,15 @@ void TransferView::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw()
 }
 
 void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) throw() {
+	
+	if(qi->getFlags() & QueueItem::FLAG_USER_LIST || qi->getFlags() & QueueItem::FLAG_TESTSUR)
+		return;
+
 	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true);
 	ui->setTarget(Text::toT(qi->getTarget()));
+	ui->setType(Transfer::TYPE_FILE);
 
-	Transfer::Type type = Transfer::TYPE_FILE;
-	if(qi->getFlags() & QueueItem::FLAG_USER_LIST)
-		type = Transfer::TYPE_FULL_LIST;
-	else if(qi->getFlags() & QueueItem::FLAG_PARTIAL_LIST)
-		type = Transfer::TYPE_PARTIAL_LIST;
-	else if(qi->getFlags() & QueueItem::FLAG_TESTSUR)
-		type = Transfer::TYPE_TESTSUR;
-	
-	ui->setType(type);
-
-	if(qi->isRunning() && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
+	if(qi->isRunning()) {
 		double ratio = 0;
 		int64_t totalSpeed = 0;
 		int16_t segs = 0;
@@ -1236,8 +1226,8 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 			ratio = ratio / segs;
 
 			ui->setStatus(ItemInfo::STATUS_RUNNING);
-			ui->setSize(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getSize() : qi->getSize());
-			ui->setPos(qi->isSet(QueueItem::FLAG_USER_LIST) ? qi->getDownloads()[0]->getPos() : qi->getDownloadedBytes());
+			ui->setSize(qi->getSize());
+			ui->setPos(qi->getDownloadedBytes());
 			ui->setActual((int64_t)((double)ui->pos * (ratio == 0 ? 1.00 : ratio)));
 			ui->setTimeLeft((totalSpeed > 0) ? ((ui->size - ui->pos) / totalSpeed) : 0);
 			ui->setSpeed(totalSpeed);
@@ -1300,6 +1290,10 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 }
 
 void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const string&, const Download* download) throw() {
+
+	if(qi->getFlags() & QueueItem::FLAG_USER_LIST || qi->getFlags() & QueueItem::FLAG_TESTSUR)
+		return;
+
 	// update download item
 	UpdateInfo* ui = new UpdateInfo(download->getUser(), true);
 
@@ -1329,6 +1323,10 @@ void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const
 }
 
 void TransferView::on(QueueManagerListener::Removed, const QueueItem* qi) throw() {
+
+	if(qi->getFlags() & QueueItem::FLAG_USER_LIST || qi->getFlags() & QueueItem::FLAG_TESTSUR)
+		return;
+		
 	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true);
 	ui->setTarget(Text::toT(qi->getTarget()));
 	ui->setPos(0);

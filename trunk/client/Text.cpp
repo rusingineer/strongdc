@@ -295,14 +295,6 @@ const wstring& utf8ToWide(const string& str, wstring& tgt) throw() {
 #endif	
 }
 
-wchar_t toLower(wchar_t c) throw() {
-#ifdef _WIN32
-		return static_cast<wchar_t>(reinterpret_cast<ptrdiff_t>(CharLowerW((LPWSTR)c)));
-#else
-		return (wchar_t)towlower(c);
-#endif
-}
-
 const wstring& toLower(const wstring& str, wstring& tmp) throw() {
 	if(str.empty())
 		return Util::emptyStringW;

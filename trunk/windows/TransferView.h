@@ -181,8 +181,7 @@ private:
 	public:
 		enum Status {
 			STATUS_RUNNING,
-			STATUS_WAITING,
-			STATUS_REQUESTING
+			STATUS_WAITING
 		};
 		
 		ItemInfo(const UserPtr& u, bool aDownload);
@@ -226,12 +225,12 @@ private:
 		uint8_t imageIndex() const { return static_cast<uint8_t>(!download ? IMAGE_UPLOAD : (!parent ? IMAGE_DOWNLOAD : IMAGE_SEGMENT)); }
 
 		ItemInfo* createParent() {
-	  		ItemInfo* h = new ItemInfo(UserPtr(NULL), true);
-			h->running = 0;
-			h->hits = 0;
-			h->target = target;
-			h->statusString = TSTRING(CONNECTING);
-			return h;
+	  		ItemInfo* ii = new ItemInfo(UserPtr(NULL), true);
+			ii->running = 0;
+			ii->hits = 0;
+			ii->target = target;
+			ii->statusString = TSTRING(CONNECTING);
+			return ii;
 		}
 
 		inline const tstring& getGroupCond() const { return target; }
@@ -254,8 +253,13 @@ private:
 
 		bool operator==(const ItemInfo& ii) const { return download == ii.download && user == ii.user; }
 
-		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : updateMask(0), user(aUser), queueItem(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0), type(Transfer::TYPE_LAST) { }
-		UpdateInfo(QueueItem* qi, bool isDownload, bool isTransferFailed = false) : updateMask(0), queueItem(qi), user(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0), type(Transfer::TYPE_LAST) { qi->inc(); }
+		UpdateInfo(const UserPtr& aUser, bool isDownload, bool isTransferFailed = false) : 
+			updateMask(0), user(aUser), queueItem(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0), type(Transfer::TYPE_LAST)
+		{ }
+		
+		UpdateInfo(QueueItem* qi, bool isDownload, bool isTransferFailed = false) : 
+			updateMask(0), queueItem(qi), user(NULL), download(isDownload), transferFailed(isTransferFailed), flagImage(0), type(Transfer::TYPE_LAST) 
+		{ qi->inc(); }
 
 		~UpdateInfo() { if(queueItem) queueItem->dec(); }
 

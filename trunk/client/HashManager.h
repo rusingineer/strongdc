@@ -218,8 +218,8 @@ private:
 		bool loadTree(File& dataFile, const TreeInfo& ti, const TTHValue& root, TigerTree& tt);
 		int64_t saveTree(File& dataFile, const TigerTree& tt) throw(FileException);
 
-		string getIndexFile() { return Util::getConfigPath() + "HashIndex.xml"; }
-		string getDataFile() { return Util::getConfigPath() + "HashData.dat"; }
+		string getIndexFile() { return Util::getPath(Util::PATH_USER_CONFIG) + "HashIndex.xml"; }
+		string getDataFile() { return Util::getPath(Util::PATH_USER_CONFIG) + "HashData.dat"; }
 	};
 
 	friend class HashLoader;

@@ -115,11 +115,11 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 #endif
 
 	if(firstException) {
-		File::deleteFile(Util::getDataPath() + "exceptioninfo.txt");
+		File::deleteFile(Util::getPath(Util::PATH_RESOURCES) + "exceptioninfo.txt");
 		firstException = false;
 	}
 
-	if(File::getSize(Util::getDataPath() + "StrongDC.pdb") == -1) {
+	if(File::getSize(Util::getPath(Util::PATH_RESOURCES) + "StrongDC.pdb") == -1) {
 		// No debug symbols, we're not interested...
 		::MessageBox(WinUtil::mainWnd, _T("StrongDC++ has crashed and you don't have StrongDC.pdb file installed. Hence, I can't find out why it crashed, so don't report this as a bug unless you find a solution..."), _T("StrongDC++ has crashed"), MB_OK);
 #ifndef _DEBUG
@@ -129,7 +129,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 #endif
 	}
 
-	File f(Util::getConfigPath() + "exceptioninfo.txt", File::WRITE, File::OPEN | File::CREATE);
+	File f(Util::getPath(Util::PATH_RESOURCES) + "exceptioninfo.txt", File::WRITE, File::OPEN | File::CREATE);
 	f.setEndPos(0);
 	
 	DWORD exceptionCode = e->ExceptionRecord->ExceptionCode ;
@@ -471,7 +471,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	// For SHBrowseForFolder, UPnP
 	HRESULT hRes = ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED); 
 #ifdef _DEBUG
-	EXTENDEDTRACEINITIALIZE( Util::getDataPath().c_str() );
+	EXTENDEDTRACEINITIALIZE(Util::getPath(Util::PATH_RESOURCES).c_str());
 	//File::deleteFile(Util::getDataPath() + "exceptioninfo.txt");
 #endif
 	LPTOP_LEVEL_EXCEPTION_FILTER pOldSEHFilter = NULL;
