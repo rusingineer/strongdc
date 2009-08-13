@@ -48,7 +48,7 @@ ResourceManager::Strings HubFrame::columnNames[] = { ResourceManager::NICK, Reso
 	ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::IP_BARE, ResourceManager::EMAIL,
 	ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS };
 
-extern CAGEmotionSetup* g_pEmotionsSetup;
+extern EmoticonSetup* g_pEmotionsSetup;
 
 LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {

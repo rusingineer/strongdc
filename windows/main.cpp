@@ -110,7 +110,7 @@ LONG __stdcall DCUnhandledExceptionFilter( LPEXCEPTION_POINTERS e )
 #endif
 
 	// The release version loads the dll and pdb:s here...
-	EXTENDEDTRACEINITIALIZE( Util::getDataPath().c_str() );
+	EXTENDEDTRACEINITIALIZE( Util::getPath(Util::PATH_RESOURCES).c_str() );
 
 #endif
 
@@ -472,7 +472,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	HRESULT hRes = ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED); 
 #ifdef _DEBUG
 	EXTENDEDTRACEINITIALIZE(Util::getPath(Util::PATH_RESOURCES).c_str());
-	//File::deleteFile(Util::getDataPath() + "exceptioninfo.txt");
 #endif
 	LPTOP_LEVEL_EXCEPTION_FILTER pOldSEHFilter = NULL;
 	pOldSEHFilter = SetUnhandledExceptionFilter(&DCUnhandledExceptionFilter);

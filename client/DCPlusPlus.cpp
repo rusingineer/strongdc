@@ -39,6 +39,7 @@
 #include "DebugManager.h"
 #include "DetectionManager.h"
 #include "WebServerManager.h"
+#include "ThrottleManager.h"
 
 #include "../dht/dht.h"
 #include "../windows/PopupManager.h"
@@ -79,6 +80,7 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	ConnectionManager::newInstance();
 	DownloadManager::newInstance();
 	UploadManager::newInstance();
+	ThrottleManager::newInstance();
 	ShareManager::newInstance();
 	FavoriteManager::newInstance();
 	QueueManager::newInstance();
@@ -132,6 +134,7 @@ void shutdown() {
 	FinishedManager::deleteInstance();
 	ShareManager::deleteInstance();
 	CryptoManager::deleteInstance();
+	ThrottleManager::deleteInstance();
 	DownloadManager::deleteInstance();
 	UploadManager::deleteInstance();
 	QueueManager::deleteInstance();

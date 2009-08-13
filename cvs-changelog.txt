@@ -1,3 +1,6 @@
+** svn454
+	refactored bandwidth limiter
+
 ** svn453
 	rewritten download limiter
 	fixed transfer status for filelists

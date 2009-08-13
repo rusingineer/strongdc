@@ -40,7 +40,7 @@ PrivateFrame::FrameMap PrivateFrame::frames;
 tstring pSelectedLine = Util::emptyStringT;
 tstring pSelectedURL = Util::emptyStringT;
 
-extern CAGEmotionSetup* g_pEmotionsSetup;
+extern EmoticonSetup* g_pEmotionsSetup;
 
 LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
