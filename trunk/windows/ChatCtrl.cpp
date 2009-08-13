@@ -25,7 +25,7 @@
 #include "PrivateFrame.h"
 #include "atlstr.h"
 
-CAGEmotionSetup* g_pEmotionsSetup = NULL;
+EmoticonSetup* g_pEmotionsSetup = NULL;
 
 #define MAX_EMOTICONS 48
 
@@ -40,7 +40,7 @@ static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("f
 
 ChatCtrl::ChatCtrl() : ccw(_T("edit"), this), client(NULL), m_bPopupMenu(false) {
 	if(g_pEmotionsSetup == NULL) {
-		g_pEmotionsSetup = new CAGEmotionSetup();
+		g_pEmotionsSetup = new EmoticonSetup();
 	}
 	
 	g_pEmotionsSetup->inc();
@@ -197,13 +197,13 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 
 	// Insert emoticons
 	if(bUseEmo && g_pEmotionsSetup->getUseEmoticons()) {
-		const CAGEmotion::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
+		const Emoticon::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
 		uint8_t smiles = 0; int nIdxFound = -1;
 		while(true) {
 			TCHAR *rpl = NULL;
-			CAGEmotion* pFoundEmotion = NULL;
+			Emoticon* pFoundEmotion = NULL;
 			int64_t len = _tcslen(sText);
-			for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
+			for(Emoticon::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
 				nIdxFound = -1;
 				TCHAR *txt = Util::strstr(sText, (*pEmotion)->getEmotionText().c_str(), &nIdxFound);
 				if((txt < rpl && txt) || !rpl && txt) {

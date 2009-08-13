@@ -39,8 +39,8 @@ PropPage::TextItem LimitPage::texts[] = {
 }; 
 
 PropPage::Item LimitPage::items[] = {
-	{ IDC_MX_UP_SP_LMT_NORMAL, SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, PropPage::T_INT },
-	{ IDC_MX_DW_SP_LMT_NORMAL, SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, PropPage::T_INT },
+	{ IDC_MX_UP_SP_LMT_NORMAL, SettingsManager::MAX_UPLOAD_SPEED_LIMIT, PropPage::T_INT },
+	{ IDC_MX_DW_SP_LMT_NORMAL, SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, PropPage::T_INT },
 	{ IDC_TIME_LIMITING, SettingsManager::TIME_DEPENDENT_THROTTLE, PropPage::T_BOOL },
 	{ IDC_MX_UP_SP_LMT_TIME, SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, PropPage::T_INT },
 	{ IDC_MX_DW_SP_LMT_TIME, SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, PropPage::T_INT },
@@ -124,24 +124,6 @@ LRESULT LimitPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 void LimitPage::write()
 {
 	PropPage::write((HWND)*this, items);
-
-/*	if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) > 0) {
-		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) < ((2 * SETTING(SLOTS)) + 3) ) {
-			settings->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_NORMAL, ((2 * SETTING(SLOTS)) + 3) );
-		}
-		if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL) == 0) ) {
-			settings->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, (SETTING(MAX_UPLOAD_SPEED_LIMIT_NORMAL)*7) );
-		}
-	}
-
-	if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) > 0) {
-		if( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < ((2 * SETTING(SLOTS)) + 3) ) {
-			settings->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, ((2 * SETTING(SLOTS)) + 3) );
-		}
-		if ( (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > ( SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 7)) || ( SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0) ) {
-			settings->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, (SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)*7) );
-		}
-	}*/
 
 	// Do specialized writing here
 	// settings->set(XX, YY);

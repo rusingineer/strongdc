@@ -12,7 +12,7 @@
 
 #define EMOTICONS_ICONMARGIN 8
 
-extern CAGEmotionSetup* g_pEmotionsSetup;
+extern EmoticonSetup* g_pEmotionsSetup;
 
 WNDPROC EmoticonsDlg::m_MFCWndProc = 0;
 EmoticonsDlg* EmoticonsDlg::m_pDialog = NULL;
@@ -24,10 +24,10 @@ LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND h
 	result = buf;
 	// pro ucely testovani emoticon packu...
 	if ((GetKeyState(VK_SHIFT) & 0x8000) && (GetKeyState(VK_CONTROL) & 0x8000)) {
-		const CAGEmotion::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
+		const Emoticon::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
 		result = _T("");
 		string lastEmotionPath = "";
-		for(CAGEmotion::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
+		for(Emoticon::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
 			if (lastEmotionPath != (*pEmotion)->getEmotionBmpPath()) result += (*pEmotion)->getEmotionText() + _T(" ");
 			lastEmotionPath = (*pEmotion)->getEmotionBmpPath();
 		}
@@ -45,7 +45,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 
 	if(g_pEmotionsSetup->getUseEmoticons() && SETTING(EMOTICONS_FILE)!="Disabled") {
 
-		const CAGEmotion::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
+		const Emoticon::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
 
 		if(Emoticons.empty()) {
 			PostMessage(WM_CLOSE);
@@ -54,7 +54,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 
 		unsigned int pocet = 0;
 		string lastEmotionPath = "";
-		CAGEmotion::Iter pEmotion;
+		Emoticon::Iter pEmotion;
 		for(pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); pEmotion++)
 		{
 			if ((*pEmotion)->getEmotionBmpPath() != lastEmotionPath) pocet++;

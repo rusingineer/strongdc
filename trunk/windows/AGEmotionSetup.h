@@ -26,15 +26,15 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-// CAGEmotion
+// Emoticon
 
-class CAGEmotion : public FastAlloc<CAGEmotion> {
+class Emoticon : public FastAlloc<Emoticon> {
 public:
-	typedef list<CAGEmotion*> List;
+	typedef list<Emoticon*> List;
 	typedef List::const_iterator Iter;
 
-	CAGEmotion(const tstring& strEmotionText, const string& strEmotionBmpPath);
-	~CAGEmotion() {	}
+	Emoticon(const tstring& strEmotionText, const string& strEmotionBmpPath);
+	~Emoticon() {	}
 	
 	const tstring& getEmotionText() const { return m_EmotionText; }
 	HBITMAP getEmotionBmp() const {	return m_EmotionBmp; }
@@ -47,23 +47,23 @@ private:
 	HBITMAP		m_EmotionBmp;
 };
 
-// CAGEmotionSetup
+// EmoticonSetup
 
-class CAGEmotionSetup : public intrusive_ptr_base<CAGEmotionSetup> {
+class EmoticonSetup : public intrusive_ptr_base<EmoticonSetup> {
 public:
-	CAGEmotionSetup() { Load(); }
-	~CAGEmotionSetup() { Unload(); }
+	EmoticonSetup() { Load(); }
+	~EmoticonSetup() { Unload(); }
 
 	// Variables
 	GETSET(bool, useEmoticons, UseEmoticons);
 
-	const CAGEmotion::List& getEmoticonsList() const { return EmotionsList; }
+	const Emoticon::List& getEmoticonsList() const { return EmotionsList; }
 
 	void Load();
 	void Unload();
 	
 private:
-	CAGEmotion::List EmotionsList;
+	Emoticon::List EmotionsList;
 };
 
 #endif // AGEMOTIONSETUP_H__

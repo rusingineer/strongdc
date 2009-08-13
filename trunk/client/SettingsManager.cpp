@@ -87,9 +87,9 @@ const string SettingsManager::settingTags[] =
 	"TextFavBackColor", "TextFavForeColor", "TextFavBold", "TextFavItalic", 
 	"TextOPBackColor", "TextOPForeColor", "TextOPBold", "TextOPItalic", 
 	"TextURLBackColor", "TextURLForeColor", "TextURLBold", "TextURLItalic", 
-	"BoldAuthorsMess", "UploadLimitNormal", "ThrottleEnable", "HubSlots", "DownloadLimitNormal", 
-	"UploadLimitTime", "DownloadLimitTime", "TimeThrottle", "TimeLimitStart", "TimeLimitEnd",
-	"RemoveForbidden", "ProgressTextDown", "ProgressTextUp", "ShowInfoTips", "ExtraDownloadSlots",
+	"BoldAuthorsMess", "ThrottleEnable", "UploadLimitTime", "DownloadLimitTime", "HubSlots",
+	"TimeThrottle", "TimeLimitStart", "TimeLimitEnd", "RemoveForbidden",
+	"ProgressTextDown", "ProgressTextUp", "ShowInfoTips", "ExtraDownloadSlots",
 	"MinimizeOnStratup", "ConfirmDelete", "DefaultSearchFreeSlots", "SendUnknownCommands",
 	"ErrorColor", "ExpandQueue", "TransferSplitSize",
 	"DisconnectSpeed", "DisconnectFileSpeed", "DisconnectTime", "RemoveSpeed",
@@ -314,8 +314,8 @@ SettingsManager::SettingsManager()
 	setDefault(EXTRA_PARTIAL_SLOTS, 1);
 	setDefault(SHUTDOWN_TIMEOUT, 150);
 	setDefault(SEARCH_PASSIVE, false);
-	setDefault(MAX_UPLOAD_SPEED_LIMIT_NORMAL, 0);
-	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_NORMAL, 0);
+	setDefault(MAX_UPLOAD_SPEED_LIMIT, 0);
+	setDefault(MAX_DOWNLOAD_SPEED_LIMIT, 0);
 	setDefault(MAX_UPLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(MAX_DOWNLOAD_SPEED_LIMIT_TIME, 0);
 	setDefault(TOOLBAR, "0,-1,1,2,-1,3,4,5,-1,6,7,8,9,-1,10,11,12,13,-1,14,15,16,17,-1,18,19,20,21");

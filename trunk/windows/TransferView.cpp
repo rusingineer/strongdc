@@ -883,6 +883,7 @@ void TransferView::on(DownloadManagerListener::Requesting, const Download* d) th
 	
 	ui->setActual(d->getActual());
 	ui->setSize(d->getSize());
+	ui->setStatus(ItemInfo::STATUS_RUNNING);	ui->updateMask &= ~UpdateInfo::MASK_STATUS; // hack to avoid changing item status
 	ui->setStatusString(TSTRING(REQUESTING) + _T(" ") + getFile(d->getType(), Text::toT(Util::getFileName(d->getPath()))) + _T("..."));
 
 	speak(UPDATE_ITEM, ui);
@@ -910,6 +911,7 @@ void TransferView::on(DownloadManagerListener::Tick, const DownloadList& dl) {
 		ui->setSize(d->getSize());
 		ui->setTimeLeft(d->getSecondsLeft());
 		ui->setSpeed(static_cast<int64_t>(d->getAverageSpeed()));
+		ui->setType(d->getType());
 
 		tstring pos = Util::formatBytesW(d->getPos());
 		double percent = (double)d->getPos()*100.0/(double)d->getSize();

@@ -38,7 +38,7 @@ namespace dht
 #define MAX_SEARCH_RESULTS			300								// maximum of allowed search results
 #define SEARCH_PROCESSTIME			3*1000	// 3 seconds			// how often to process done search requests				
 #define SEARCH_STOPTIME				15*1000	// 15 seconds			// how long to wait for delayed search results before deleting the search
-#define SEARCHNODE_LIFETIME			45*1000	// 45 seconds			// how long to try searching for node
+#define SEARCHNODE_LIFETIME			20*1000	// 45 seconds			// how long to try searching for node
 #define SEARCHFILE_LIFETIME			45*1000	// 45 seconds			// how long to try searching for file
 #define SEARCHSTOREFILE_LIFETIME	140*1000	// 140 seconds		// how long to try publishing a file
 #define SELF_LOOKUP_TIMER			4*60*60*1000	// 4 hours		// how often to search for self node

@@ -24,7 +24,7 @@
 #include "AGEmotionSetup.h"
 #include <math.h>
 
-CAGEmotion::CAGEmotion(const tstring& strEmotionText, const string& strEmotionBmpPath) : 
+Emoticon::Emoticon(const tstring& strEmotionText, const string& strEmotionBmpPath) : 
 	m_EmotionText(strEmotionText), m_EmotionBmpPath(strEmotionBmpPath)
 {
 	m_EmotionBmp = (HBITMAP) ::LoadImage(0, Text::toT(strEmotionBmpPath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
@@ -56,7 +56,7 @@ CAGEmotion::CAGEmotion(const tstring& strEmotionText, const string& strEmotionBm
 	}
 }
 
-HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
+HBITMAP Emoticon::getEmotionBmp(const COLORREF &clrBkColor) {
 	if(!m_EmotionBmp)
 		return NULL;
 
@@ -100,7 +100,7 @@ HBITMAP CAGEmotion::getEmotionBmp(const COLORREF &clrBkColor) {
     return DirectBitmap;
 }
 
-void CAGEmotionSetup::Load() {
+void EmoticonSetup::Load() {
 	setUseEmoticons(false);
 
 	if((SETTING(EMOTICONS_FILE) == "Disabled") || !Util::fileExists(Util::getPath(Util::PATH_EMOPACKS) + SETTING(EMOTICONS_FILE) + ".xml" )) {
@@ -131,19 +131,19 @@ void CAGEmotionSetup::Load() {
 					}
 				}
 
-				EmotionsList.push_back(new CAGEmotion(strEmotionText, strEmotionBmpPath));
+				EmotionsList.push_back(new Emoticon(strEmotionText, strEmotionBmpPath));
 			}
 			xml.stepOut();
 		}
 	} catch(const Exception& e) {
-		dcdebug("CAGEmotionSetup::Create: %s\n", e.getError().c_str());
+		dcdebug("EmoticonSetup::Create: %s\n", e.getError().c_str());
 		return;
 	}
 	
 	setUseEmoticons(true);
 }
 
-void CAGEmotionSetup::Unload() {
+void EmoticonSetup::Unload() {
 	for_each(EmotionsList.begin(), EmotionsList.end(), DeleteFunction());
 	EmotionsList.clear();
 }

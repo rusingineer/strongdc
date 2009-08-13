@@ -30,8 +30,7 @@
 #include "CryptoManager.h"
 #include "ZUtils.h"
 
-#include "UploadManager.h"
-#include "DownloadManager.h"
+#include "ThrottleManager.h"
 
 namespace dcpp {
 
@@ -160,21 +159,9 @@ void BufferedSocket::threadRead() throw(Exception) {
 	if(state != RUNNING)
 		return;
 
-	size_t readsize = inbuf.size();
-	if(mode == MODE_DATA)
-	{
-		if (BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_DOWNLOAD_SPEED_LIMIT) > 0)
-		{
-			readsize = DownloadManager::getInstance()->throttle(readsize);
-			if (readsize == 0) {
-				Thread::sleep(20);	// TODO: better sleeping (correct would be "sleep until next bw reset")
-				return;
-			}
-		}
-	}
-	int left = sock->read(&inbuf[0], (int)readsize);
+	int left = (mode == MODE_DATA) ? ThrottleManager::getInstance()->read(sock.get(), &inbuf[0], (int)inbuf.size()) : sock->read(&inbuf[0], (int)inbuf.size());
 	if(left == -1) {
-	// EWOULDBLOCK, no data received...
+		// EWOULDBLOCK, no data received...
 		return;
 	} else if(left == 0) {
 		// This socket has been closed...
@@ -290,7 +277,6 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 
 	bool readDone = false;
 	dcdebug("Starting threadSend\n");
-	UploadManager *um = UploadManager::getInstance();
 	while(!disconnecting) {
 		if(!readDone && readBuf.size() > readPos) {
 			// Fill read buffer
@@ -324,22 +310,15 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 		while(writePos < writeBuf.size()) {
 			if(disconnecting)
 				return;
-				
-			if(written != -1) // limit packet only if the last one was sent (to prevent double limiting)
-			{
-				writeSize = min(sockSize / 2, writeBuf.size() - writePos);
-				if(BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) > 0)
-				{
-					writeSize = um->throttle(writeSize);
-					if(writeSize == 0)
-					{
-						Thread::sleep(20);	// TODO: better sleeping (correct would be "sleep until next bw reset")
-						continue;
-					}
-				}
+			
+			if(written == -1) {
+				// workaround for OpenSSL (crashes when previous write failed and now retrying with different writeSize)
+				written = sock->write(&writeBuf[writePos], writeSize);
+			} else {
+				writeSize = min(sockSize / 2, writeBuf.size() - writePos);	
+				written = ThrottleManager::getInstance()->write(sock.get(), &writeBuf[writePos], writeSize);
 			}
 			
-			written = sock->write(&writeBuf[writePos], writeSize);
 			if(written > 0) {
 				writePos += written;
 
