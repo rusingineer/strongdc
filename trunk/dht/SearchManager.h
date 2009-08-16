@@ -20,13 +20,13 @@
 
 #include "KBucket.h"
 
-#include "..\client\CID.h"
-#include "..\client\CriticalSection.h"
-#include "..\client\FastAlloc.h"
-#include "..\client\MerkleTree.h"
-#include "..\client\Singleton.h"
-#include "..\client\TimerManager.h"
-#include "..\client\User.h"
+#include "../client/CID.h"
+#include "../client/CriticalSection.h"
+#include "../client/FastAlloc.h"
+#include "../client/MerkleTree.h"
+#include "../client/Singleton.h"
+#include "../client/TimerManager.h"
+#include "../client/User.h"
 
 namespace dht
 {

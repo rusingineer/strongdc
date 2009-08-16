@@ -19,7 +19,7 @@
 #include "StdAfx.h"
 #include "Utils.h"
 
-#include <CID.h>
+#include "../client/CID.h"
 
 namespace dht
 {

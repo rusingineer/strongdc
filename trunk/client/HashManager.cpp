@@ -560,6 +560,7 @@ bool HashManager::Hasher::fastHash(const string& fname, uint8_t* buf, TigerTree&
 	over.Offset = hn;
 	size -= hn;
 	while (!stop) {
+		
 		if (size > 0) {
 			// Start a new overlapped read
 			ResetEvent(over.hEvent);
@@ -584,7 +585,13 @@ bool HashManager::Hasher::fastHash(const string& fname, uint8_t* buf, TigerTree&
 		{
 			Lock l(cs);
 			currentSize = max(currentSize - hn, _LL(0));
+			
+			if(paused > 0) {
+				paused++;
+			}			
 		}
+		
+		if(paused) s.wait();
 
 		if (size == 0) {
 			ok = true;
@@ -665,7 +672,13 @@ bool HashManager::Hasher::fastHash(const string& filename, uint8_t* , TigerTree&
 		{
 			Lock l(cs);
 			currentSize = max(static_cast<uint64_t>(currentSize - size_read), static_cast<uint64_t>(0));
+			
+			if(paused > 0) {
+				paused++;
+			}			
 		}
+		
+		if(paused) s.wait();
 
 		if(size_left == 0) {
 			ok = true;
@@ -762,7 +775,14 @@ int HashManager::Hasher::run() {
 						{
 							Lock l(cs);
 							currentSize = max(static_cast<uint64_t>(currentSize - n), static_cast<uint64_t>(0));
+							
+							if(paused > 0) {
+								paused++;
+							}
 						}
+						
+						if(paused) s.wait();
+						
 						sizeLeft -= n;
 					} while (n > 0 && !stop);
 				} else {

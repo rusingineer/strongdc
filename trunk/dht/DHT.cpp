@@ -180,12 +180,11 @@ namespace dht
 	 */
 	Node::Ptr DHT::addUser(const CID& cid, const string& ip, uint16_t port)
 	{
-		Lock l(cs);
-		
 		// create user as offline (only TCP connected users will be online)
 		UserPtr u = ClientManager::getInstance()->getUser(cid);
 		u->setFlag(User::DHT);
 		
+		Lock l(cs);
 		Node::Ptr node = bucket->insert(u);
 		node->getIdentity().setIp(ip);
 		node->getIdentity().setUdpPort(Util::toString(port));
@@ -387,15 +386,15 @@ namespace dht
 			node->getIdentity().setConnection(Util::formatBytes(node->getIdentity().get("US")) + "/s");
 		}
 		
-		// do we wait for any search results from this user?
-		SearchManager::getInstance()->processSearchResults(node->getUser());
-		
 		if(!node->isInList)
 		{
 			// put him online so we can make a connection with him
 			ClientManager::getInstance()->putOnline(node.get());
 			node->isInList = true;
 		}
+		
+		// do we wait for any search results from this user?
+		SearchManager::getInstance()->processSearchResults(node->getUser());		
 		
 		if(it & PING)
 			info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(udpPort)), it & ~PING);	// remove ping flag to avoid ping-pong-ping-pong-ping...
