@@ -18,8 +18,8 @@
 
 #include "stdinc.h"
 
-#if defined(_STLPORT_VERSION) && (_STLPORT_VERSION < 0x520)
-#error I use STLport SVN. Remove this if you know what you're doing.
+#if defined(_STLPORT_VERSION) && (_STLPORT_VERSION < 0x600)
+#error I use STLport GIT. Remove this if you know what you're doing.
 #endif
 
 #ifdef _STLP_NO_IOSTREAMS

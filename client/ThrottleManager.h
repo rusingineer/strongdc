@@ -22,6 +22,7 @@
 #include "DownloadManager.h"
 #include "Singleton.h"
 #include "Socket.h"
+#include "Thread.h"
 #include "TimerManager.h"
 #include "UploadManager.h"
 
@@ -30,6 +31,10 @@ namespace dcpp
 
 	#define POLL_TIMEOUT 250
 	
+	/**
+	 * Manager for limiting traffic flow.
+	 * Inspired by Token Bucket algorithm: http://en.wikipedia.org/wiki/Token_bucket
+	 */
 	class ThrottleManager :
 		public Singleton<ThrottleManager>, private TimerManagerListener
 	{
@@ -57,18 +62,19 @@ namespace dcpp
 					
 					if(readSize > 0)
 						downTokens -= readSize;
-				
+								
 					return readSize;
 				}
 			}
 			
+			// no tokens, wait for them
 			WaitForSingleObject(hEvent, POLL_TIMEOUT);
-			return -1;
+			return -1;	// from BufferedSocket: -1 = retry, 0 = connection close
 		}
 		
 		/*
 		 * Limits a traffic and writes a packet to the network
-		 * We must handle this a little bit differently than downloads, because that stupidity in OpenSSL
+		 * We must handle this a little bit differently than downloads, because of that stupidity in OpenSSL
 		 */		
 		int write(Socket* sock, void* buffer, size_t& len)
 		{
@@ -85,23 +91,24 @@ namespace dcpp
 					len = min(slice, min(len, static_cast<size_t>(upTokens)));
 					upTokens -= len;
 					
-					// write to socket
+					// write to socket			
 					return sock->write(buffer, len);
 				}
 			}
 			
+			// no tokens, wait for them
 			WaitForSingleObject(hEvent, POLL_TIMEOUT);
-			return 0;		
+			return 0;	// from BufferedSocket: -1 = failed, 0 = retry
 		}
 		
 	private:
 		
 		// download limiter
-		CriticalSection downCS;
+		CriticalSection	downCS;
 		int64_t			downTokens;
 		
 		// upload limiter
-		CriticalSection upCS;
+		CriticalSection	upCS;
 		int64_t			upTokens;
 		
 		HANDLE			hEvent;
@@ -130,19 +137,19 @@ namespace dcpp
 			if(!BOOLSETTING(THROTTLE_ENABLE))
 				return;
 				
-			int64_t downLimit	= SETTING(MAX_DOWNLOAD_SPEED_LIMIT);
-			int64_t upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT);
+			int downLimit	= SETTING(MAX_DOWNLOAD_SPEED_LIMIT);
+			int upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT);
 			
-			// limiter restriction
-			if(SETTING(MAX_UPLOAD_SPEED_LIMIT) > 0) 
+			// limiter restrictions: up_limit >= 5 * slots + 4, up_limit >= 7 * down_limit
+			if(upLimit > 0) 
 			{
-				if(SETTING(MAX_UPLOAD_SPEED_LIMIT) < 5 * UploadManager::getInstance()->getSlots() + 4)
+				if(upLimit < 5 * UploadManager::getInstance()->getSlots() + 4)
 				{
 					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT, 5 * UploadManager::getInstance()->getSlots() + 4);
 				}
-				if((SETTING(MAX_DOWNLOAD_SPEED_LIMIT) > 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT)) || (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0))
+				if((downLimit > 7 * upLimit) || (downLimit == 0))
 				{
-					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT));
+					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, 7 * upLimit);
 				}
 			}
 
@@ -172,7 +179,7 @@ namespace dcpp
 				upLimit		= SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME);
 			} 
 			
-			// readd tokens			
+			// readd tokens
 			if(downLimit > 0)
 			{
 				Lock l(downCS);
