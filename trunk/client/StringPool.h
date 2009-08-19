@@ -55,17 +55,49 @@ namespace dcpp
 		{
 		}
 		
-		pooled_string(const pooled_string&);
+		pooled_string(const pooled_string& s) : data(NULL)
+		{
+			if(s.data)
+				put(*s.data);
+		}
 		
-		~pooled_string();
+		~pooled_string()
+		{ 
+			if(data) 
+				pool->removeString(*data); 
+		}		
 		
-		inline pooled_string& operator=(const pooled_string& sp) { data = sp.data; return *this; }
-		pooled_string& operator=(const std::string& s);
-		
-		inline operator const std::string&() const { return get(); }
+		pooled_string& operator=(const std::string& s) 
+		{ 
+			if(data == NULL || s != *data)
+			{
+				if(data) 
+					pool->removeString(*data);
+					
+				put(s); 
+			}
+			return *this;
+		}
 
-		inline void put(const std::string& s) { data = &pool->addString(s); }
-		inline const std::string& get() const { return *data; }
+		pooled_string& operator=(const pooled_string& sp) 
+		{ 
+			return operator=(*sp.data); 
+		}
+		
+		operator const std::string&() const 
+		{ 
+			return get(); 
+		}
+
+		void put(const std::string& s) 
+		{ 
+			data = &pool->addString(s); 
+		}
+		
+		const std::string& get() const 
+		{ 
+			return *data; 
+		}
 
 	};
 	

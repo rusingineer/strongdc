@@ -51,7 +51,7 @@ namespace dcpp {
 FastCriticalSection FastAllocBase::cs;
 #endif
 
-long Util::mUptimeSeconds = 0;
+time_t Util::startTime = time(NULL);
 string Util::emptyString;
 wstring Util::emptyStringW;
 tstring Util::emptyStringT;
@@ -536,8 +536,9 @@ void Util::setAway(bool aAway) {
 		awayTime = time(NULL);
 }
 
-string Util::getAwayMessage() { 
-	return (formatTime(awayMsg.empty() ? SETTING(DEFAULT_AWAY_MESSAGE) : awayMsg, awayTime));
+string Util::getAwayMessage(StringMap& params) { 
+	params["idleTI"] = Text::fromT(formatSeconds(time(NULL) - awayTime));
+	return formatParams(awayMsg.empty() ? SETTING(DEFAULT_AWAY_MESSAGE) : awayMsg, params, false, awayTime);
 }
 
 string Util::formatBytes(int64_t aBytes) {
@@ -806,7 +807,7 @@ string Util::encodeURI(const string& aString, bool reverse) {
  * date/time and then finally written to the log file. If the parameter is not present at all,
  * it is removed from the string completely...
  */
-string Util::formatParams(const string& msg, StringMap& params, bool filter) {
+string Util::formatParams(const string& msg, StringMap& params, bool filter, const time_t t) {
 	string result = msg;
 
 	string::size_type i, j, k;
@@ -845,7 +846,7 @@ string Util::formatParams(const string& msg, StringMap& params, bool filter) {
 		}
 	}
 
-	result = formatTime(result, time(NULL));
+	result = formatTime(result, t);
 	
 	return result;
 }

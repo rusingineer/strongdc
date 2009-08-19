@@ -480,11 +480,12 @@ void MainFrame::startSocket() {
 		} catch(const Exception&) {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}
+		
 		try {
 			DHT::getInstance()->listen();
 		} catch(const Exception&) {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
-		}		
+		}
 //	}
 
 	startUPnP();
@@ -511,15 +512,14 @@ void MainFrame::startUPnP() {
 			UPnP_UDP.reset(new UPnP( Util::getLocalIp(), "UDP", APPNAME " Search Port (" + Util::toString(port) + " UDP)", port));
 			ok &= UPnP_UDP->open();
 		}
-		if(BOOLSETTING(USE_DHT)) {
-			port = DHT::getInstance()->getPort();
-			if(port != 0) {
-				UPnP_DHT.reset(new UPnP( Util::getLocalIp(), "UDP", APPNAME " DHT Port (" + Util::toString(port) + " UDP)", port));
-				if (!UPnP_DHT->open())
-				{
-					LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
-					UPnP_DHT.reset();
-				}
+		
+		port = DHT::getInstance()->getPort();
+		if(port != 0) {
+			UPnP_DHT.reset(new UPnP( Util::getLocalIp(), "UDP", APPNAME " DHT Port (" + Util::toString(port) + " UDP)", port));
+			if (!UPnP_DHT->open())
+			{
+				LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
+				UPnP_DHT.reset();
 			}
 		}
 	
@@ -1292,8 +1292,7 @@ LRESULT MainFrame::onTrayIcon(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, B
 			Util::toStringW(DownloadManager::getInstance()->getDownloadCount()) + _T(")\r\nU: ") +
 			Util::formatBytesW(UploadManager::getInstance()->getRunningAverage()) + _T("/s (") + 
 			Util::toStringW(UploadManager::getInstance()->getUploadCount()) + _T(")")
-			+ _T("\r\nUptime: ") + Util::formatSeconds(Util::getUptime())
-			).c_str(), 64);
+			+ _T("\r\nUptime: ") + Util::formatSeconds(time(NULL) - Util::getStartTime())).c_str(), 64);
 		
 		::Shell_NotifyIcon(NIM_MODIFY, &nid);
 		lastMove = GET_TICK();
@@ -1411,7 +1410,6 @@ LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 }
 
 void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
-	Util::increaseUptime();
 	int64_t diff = (int64_t)((lastUpdate == 0) ? aTick - 1000 : aTick - lastUpdate);
 	int64_t updiff = Socket::getTotalUp() - lastUp;
 	int64_t downdiff = Socket::getTotalDown() - lastDown;

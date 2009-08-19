@@ -742,7 +742,7 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		}
 
 		if(!isFileServer) {
-			if(	(Util::getUptime() > 7200) && // > 2 hours uptime
+			if(	((time(NULL) - Util::getStartTime()) > 7200) && // > 2 hours uptime
 				(Socket::getTotalUp() > 209715200) && // > 200 MB uploaded
 				(ShareManager::getInstance()->getSharedSize() > 2147483648)) { // > 2 GB shared
 					isFileServer = true;

@@ -120,7 +120,7 @@ public:
 
 private:
 	struct AdcSearch;
-	class Directory : public FastAlloc<Directory>, public intrusive_ptr_base<Directory>, boost::noncopyable {
+	class Directory : public FastAlloc<Directory>, public intrusive_ptr_base<Directory>/*, boost::noncopyable*/ {
 	public:
 		typedef boost::intrusive_ptr<Directory> Ptr;
 		typedef unordered_map<string, Ptr, noCaseStringHash, noCaseStringEq> Map;
@@ -141,9 +141,9 @@ private:
 
 			File() : size(0), parent(0) { }
 			File(const string& aName, int64_t aSize, Directory::Ptr aParent, const TTHValue& aRoot) : 
-			name(aName), tth(aRoot), size(aSize), parent(aParent) { }
+				name(aName), tth(aRoot), size(aSize), parent(aParent.get()) { }
 			File(const File& rhs) : 
-			name(rhs.getName()), tth(rhs.getTTH()), size(rhs.getSize()), parent(rhs.getParent()) { }
+				name(rhs.getName()), tth(rhs.getTTH()), size(rhs.getSize()), parent(rhs.getParent()) { }
 
 			~File() { }
 
@@ -163,7 +163,7 @@ private:
 			GETSET(TTHValue, tth, TTH);
 			GETSET(string, name, Name);
 			GETSET(int64_t, size, Size);
-			GETSET(Directory::Ptr, parent, Parent);
+			GETSET(Directory*, parent, Parent);
 		};
 
 		Map directories;
@@ -194,7 +194,7 @@ private:
 		void merge(const Ptr& source);
 		
 		GETSET(string, name, Name);
-		GETSET(Ptr, parent, Parent);
+		GETSET(Directory*, parent, Parent);
 	private:
 		friend void intrusive_ptr_release(intrusive_ptr_base<Directory>*);
 
