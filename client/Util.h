@@ -155,8 +155,7 @@ public:
 
 	static string translateError(int aError);
 
-	static long getUptime() { return mUptimeSeconds; }
-	static void increaseUptime() { mUptimeSeconds++; }
+	static time_t getStartTime() { return startTime; }
 
 	static string getFilePath(const string& path) {
 		string::size_type i = path.rfind(PATH_SEPARATOR);
@@ -227,7 +226,7 @@ public:
 		return buf;
 	}
 
-	static string formatParams(const string& msg, StringMap& params, bool filter);
+	static string formatParams(const string& msg, StringMap& params, bool filter, const time_t t = time(NULL));
 	static string formatTime(const string &msg, const time_t t);
 	static string formatRegExp(const string& msg, StringMap& params);
 
@@ -405,7 +404,7 @@ public:
 
 	static bool getAway() { return away; }
 	static void setAway(bool aAway);
-	static string getAwayMessage();
+	static string getAwayMessage(StringMap& params);
 	static void setAwayMessage(const string& aMsg) { awayMsg = aMsg; }
 
 	static uint64_t getDirSize(const string &sFullPath);
@@ -428,14 +427,12 @@ private:
 	static bool away;
 	static string awayMsg;
 	static time_t awayTime;
+	static time_t startTime;
 	
 	typedef map<uint32_t, uint16_t> CountryList;
 	typedef CountryList::iterator CountryIter;
-
 	static CountryList countries;
-	
-	static long mUptimeSeconds;
-	
+
 	static void loadBootConfig();
 };
 	

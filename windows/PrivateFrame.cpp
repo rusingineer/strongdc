@@ -97,8 +97,12 @@ void PrivateFrame::gotMessage(const Identity& from, const UserPtr& to, const Use
 		p->addLine(from, aMessage);
 
 		if(Util::getAway()) {
-			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->isSet(User::BOT)))
-				p->sendMessage(Text::toT(Util::getAwayMessage()));
+			if(!(BOOLSETTING(NO_AWAYMSG_TO_BOTS) && user->isSet(User::BOT))) 
+			{
+				StringMap params;
+				from.getParams(params, "user", false);
+				p->sendMessage(Text::toT(Util::getAwayMessage(params)));
+			}
 		}
 
 		if(BOOLSETTING(POPUP_NEW_PM)) {

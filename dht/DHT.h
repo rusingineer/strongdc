@@ -42,9 +42,9 @@ namespace dht
 		enum InfType { NONE = 0, PING = 1, MAKE_ONLINE = 2 };
 		
 		/** Socket functions */
-		void listen() { socket.listen(); BootstrapManager::getInstance()->bootstrap(); }
+		void listen();
 		void disconnect() { socket.disconnect(); }
-		uint16_t getPort() const { return socket.getPort(); }
+		uint16_t getPort() const { return BOOLSETTING(USE_DHT) ? socket.getPort() : 0; }
 		
 		/** Process incoming command */
 		void dispatch(const string& aLine, const string& ip, uint16_t port);

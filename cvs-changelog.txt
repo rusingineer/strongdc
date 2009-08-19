@@ -1,3 +1,10 @@
+** svn456
+	implemented %[userXX] and %[idleTI] variables into away messages
+	hopefully fixed memory leak in ShareManager
+	hopefully fixed switching DHT on/off
+	fixed exit when hashing is paused
+	updated OpenSSL
+
 ** svn455
 	download partial filelist for automatch only when filepath is known
 	fixed deadlock in DHT code

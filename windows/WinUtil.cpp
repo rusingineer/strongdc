@@ -940,7 +940,9 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 			Util::setAway(true);
 			MainFrame::setAwayButton(true);
 			Util::setAwayMessage(Text::fromT(param));
-			status = TSTRING(AWAY_MODE_ON) + Text::toT(Util::getAwayMessage());
+			
+			StringMap sm;
+			status = TSTRING(AWAY_MODE_ON) + Text::toT(Util::getAwayMessage(sm));
 		}
 		ClientManager::getInstance()->infoUpdated();
 	} else if(stricmp(cmd.c_str(), _T("g")) == 0) {
@@ -1740,7 +1742,7 @@ string WinUtil::generateStats() {
 		int64_t kernelTime = kernelTimeFT.dwLowDateTime | (((int64_t)kernelTimeFT.dwHighDateTime) << 32);
 		int64_t userTime = userTimeFT.dwLowDateTime | (((int64_t)userTimeFT.dwHighDateTime) << 32);  
 		snprintf(buf, sizeof(buf), "\n-=[ StrongDC++ %s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
-			VERSIONSTRING, formatTime(Util::getUptime()).c_str(), Text::fromT(Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64))).c_str(), 
+			VERSIONSTRING, formatTime(time(NULL) - Util::getStartTime()).c_str(), Text::fromT(Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64))).c_str(), 
 			Util::formatBytes(pmc.WorkingSetSize).c_str(), Util::formatBytes(pmc.PeakWorkingSetSize).c_str(), 
 			Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
 			Util::formatBytes(Socket::getTotalDown()).c_str(), Util::formatBytes(Socket::getTotalUp()).c_str(), 

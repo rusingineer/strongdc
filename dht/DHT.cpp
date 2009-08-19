@@ -40,7 +40,7 @@
 namespace dht
 {
 
-	DHT::DHT(void) : lastPacket(0), dirty(false), requestFWCheck(true)
+	DHT::DHT(void) : bucket(NULL), lastPacket(0), dirty(false), requestFWCheck(true)
 	{
 		// start with global firewalled status
 		firewalled = !ClientManager::getInstance()->isActive(Util::emptyString);
@@ -76,6 +76,20 @@ namespace dht
 		IndexManager::deleteInstance();
 		SearchManager::deleteInstance();
 		BootstrapManager::deleteInstance();
+	}
+	
+	void DHT::listen() 
+	{ 
+		if(!BOOLSETTING(USE_DHT))
+			return;
+			
+		if(!bucket) 
+		{
+			DHT();
+		}
+			
+		socket.listen(); 
+		BootstrapManager::getInstance()->bootstrap(); 
 	}
 	
 	/*

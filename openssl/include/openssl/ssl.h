@@ -1396,6 +1396,14 @@ DECLARE_PEM_rw(SSL_SESSION, SSL_SESSION)
 #define SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB	72
 #endif
 
+#define DTLS_CTRL_GET_TIMEOUT		73
+#define DTLS_CTRL_HANDLE_TIMEOUT	74
+
+#define DTLSv1_get_timeout(ssl, arg) \
+	SSL_ctrl(ssl,DTLS_CTRL_GET_TIMEOUT,0, (void *)arg)
+#define DTLSv1_handle_timeout(ssl) \
+	SSL_ctrl(ssl,DTLS_CTRL_HANDLE_TIMEOUT,0, NULL)
+
 #define SSL_session_reused(ssl) \
 	SSL_ctrl((ssl),SSL_CTRL_GET_SESSION_REUSED,0,NULL)
 #define SSL_num_renegotiations(ssl) \
@@ -1794,6 +1802,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_F_DO_DTLS1_WRITE				 245
 #define SSL_F_DO_SSL3_WRITE				 104
 #define SSL_F_DTLS1_ACCEPT				 246
+#define SSL_F_DTLS1_ADD_CERT_TO_BUF			 295
 #define SSL_F_DTLS1_BUFFER_RECORD			 247
 #define SSL_F_DTLS1_CLIENT_HELLO			 248
 #define SSL_F_DTLS1_CONNECT				 249
@@ -1802,6 +1811,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_F_DTLS1_GET_MESSAGE				 252
 #define SSL_F_DTLS1_GET_MESSAGE_FRAGMENT		 253
 #define SSL_F_DTLS1_GET_RECORD				 254
+#define SSL_F_DTLS1_HANDLE_TIMEOUT			 297
 #define SSL_F_DTLS1_OUTPUT_CERT_CHAIN			 255
 #define SSL_F_DTLS1_PREPROCESS_FRAGMENT			 288
 #define SSL_F_DTLS1_PROCESS_OUT_OF_SEQ_MESSAGE		 256
@@ -1847,6 +1857,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_F_SSL2_SET_CERTIFICATE			 126
 #define SSL_F_SSL2_WRITE				 127
 #define SSL_F_SSL3_ACCEPT				 128
+#define SSL_F_SSL3_ADD_CERT_TO_BUF			 296
 #define SSL_F_SSL3_CALLBACK_CTRL			 233
 #define SSL_F_SSL3_CHANGE_CIPHER_STATE			 129
 #define SSL_F_SSL3_CHECK_CERT_AND_ALGORITHM		 130

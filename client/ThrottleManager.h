@@ -147,6 +147,7 @@ namespace dcpp
 				{
 					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT, 5 * UploadManager::getInstance()->getSlots() + 4);
 				}
+				
 				if((downLimit > 7 * upLimit) || (downLimit == 0))
 				{
 					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, 7 * upLimit);
@@ -159,6 +160,7 @@ namespace dcpp
 				{
 					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, 5 * UploadManager::getInstance()->getSlots() + 4);
 				}
+				
 				if((SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)) || (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0)) 
 				{
 					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME));
