@@ -1421,8 +1421,20 @@ void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	str->push_back(TSTRING(SLOTS) + _T(": ") + Util::toStringW(UploadManager::getInstance()->getFreeSlots()) + _T('/') + Util::toStringW(UploadManager::getInstance()->getSlots()) + _T(" (") + Util::toStringW(UploadManager::getInstance()->getFreeExtraSlots()) + _T('/') + Util::toStringW(SETTING(EXTRA_SLOTS)) + _T(")"));
 	str->push_back(_T("D: ") + Util::formatBytesW(Socket::getTotalDown()));
 	str->push_back(_T("U: ") + Util::formatBytesW(Socket::getTotalUp()));
-	str->push_back(_T("D: [") + Util::toStringW(DownloadManager::getInstance()->getDownloadCount()) + _T("][") + (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0 ? (tstring)_T("N") : Util::toStringW((int)SETTING(MAX_DOWNLOAD_SPEED_LIMIT)) + _T("k")) + _T("] ") + Util::formatBytesW(downdiff*1000I64/diff) + _T("/s"));
-	str->push_back(_T("U: [") + Util::toStringW(UploadManager::getInstance()->getUploadCount()) + _T("][") + (SETTING(MAX_UPLOAD_SPEED_LIMIT) == 0 ? (tstring)_T("N") : Util::toStringW((int)SETTING(MAX_UPLOAD_SPEED_LIMIT)) + _T("k")) + _T("] ") + Util::formatBytesW(updiff*1000I64/diff) + _T("/s"));
+	
+	tstring down = _T("D: [") + Util::toStringW(DownloadManager::getInstance()->getDownloadCount()) + _T("][");
+	tstring up = _T("U: [") + Util::toStringW(UploadManager::getInstance()->getUploadCount()) + _T("][");
+	if(BOOLSETTING(THROTTLE_ENABLE)) {
+		down += Util::formatBytesW(SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024) + _T("/s");
+		up += Util::formatBytesW(SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024) + _T("/s");
+	} else {
+		down += _T("-");
+		up += _T("-");
+	}
+	
+	str->push_back(down + _T("] ") + Util::formatBytesW(downdiff*1000I64/diff) + _T("/s"));
+	str->push_back(up + _T("] ") + Util::formatBytesW(updiff*1000I64/diff) + _T("/s"));
+	
 	PostMessage(WM_SPEAKER, STATS, (LPARAM)str);
 
 	SettingsManager::getInstance()->set(SettingsManager::TOTAL_UPLOAD, SETTING(TOTAL_UPLOAD) + updiff);

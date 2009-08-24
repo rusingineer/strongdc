@@ -226,15 +226,15 @@ namespace dht
 	void IndexManager::processPublishSourceRequest(const Node::Ptr& node, const AdcCommand& cmd)
 	{
 		string tth;
-		if(!cmd.getParam("TR", 0, tth))
+		if(!cmd.getParam("TR", 1, tth))
 			return;	// nothing to identify a file?
 			
 		string size;
-		if(!cmd.getParam("SI", 0, size))
+		if(!cmd.getParam("SI", 1, size))
 			return;	// no file size?
 	
 		string partial;
-		cmd.getParam("PF", 0, partial);
+		cmd.getParam("PF", 1, partial);
 		
 		addSource(TTHValue(tth), node, Util::toInt64(size), partial == "1");
 		

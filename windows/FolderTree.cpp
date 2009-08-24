@@ -1474,20 +1474,20 @@ LRESULT FolderTree::OnUnChecked(HTREEITEM hItem, BOOL& /*bHandled*/)
 bool FolderTree::GetHasSharedChildren(HTREEITEM hItem)
 {
 	StringPairList Dirs = ShareManager::getInstance()->getDirectories();
-	tstring searchStr;
+	string searchStr;
 	int startPos = 0;
 
 	if(hItem == m_hMyComputerRoot)
 	{
 		startPos = 1;
-		searchStr = _T(":\\");
+		searchStr = ":\\";
 	}
 	else if(hItem == m_hNetworkRoot)
-		searchStr = _T("\\\\");
+		searchStr = "\\\\";
 	else if(hItem != NULL)
 	{
 		FolderTreeItemInfo* pItem  = (FolderTreeItemInfo*) GetItemData(hItem);
-		searchStr = pItem->m_sFQPath;
+		searchStr = Text::fromT(pItem->m_sFQPath);
 
 		if(searchStr.empty())
 			return false;
@@ -1498,13 +1498,13 @@ bool FolderTree::GetHasSharedChildren(HTREEITEM hItem)
 
 	for(StringPairIter i = Dirs.begin(); i != Dirs.end(); ++i)
 	{
-		if((i->second).size() > (searchStr.size() + startPos))
+		if(i->second.size() > searchStr.size() + startPos)
 		{
-			if(stricmp((i->second).substr(startPos, searchStr.size()), Text::fromT(searchStr)) == 0) {
+			if(stricmp(i->second.substr(startPos, searchStr.size()), searchStr) == 0) {
 				if(searchStr.size() <= 3) {
-				return Util::fileExists(i->second + PATH_SEPARATOR);
+					return Util::fileExists(i->second + PATH_SEPARATOR);
 				} else {
-					if((i->second).substr(searchStr.size()).substr(0,1) == "\\")
+					if(i->second.substr(searchStr.size()).substr(0,1) == "\\")
 						return Util::fileExists(i->second + PATH_SEPARATOR);
 					else
 						return false;
