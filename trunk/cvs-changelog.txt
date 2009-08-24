@@ -1,3 +1,8 @@
+** svn457
+	fixed bold text of shared folders in Settings
+	merged with DC++ hashing pause code
+	fixed parsing ADC commands in DHT
+
 ** svn456
 	implemented %[userXX] and %[idleTI] variables into away messages
 	hopefully fixed memory leak in ShareManager

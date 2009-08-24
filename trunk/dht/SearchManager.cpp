@@ -202,15 +202,15 @@ namespace dht
 	void SearchManager::processSearchRequest(const Node::Ptr& node, const AdcCommand& cmd)
 	{
 		string token;
-		if(!cmd.getParam("TO", 0, token))
+		if(!cmd.getParam("TO", 1, token))
 			return;	// missing search token?
 		
 		string term;
-		if(!cmd.getParam("TR", 0, term))
+		if(!cmd.getParam("TR", 1, term))
 			return;	// nothing to search?
 			
 		string type;
-		if(!cmd.getParam("TY", 0, type))
+		if(!cmd.getParam("TY", 1, type))
 			return;	// type not specified?			
 			
 		AdcCommand res(AdcCommand::CMD_RES, AdcCommand::TYPE_UDP);
@@ -281,11 +281,11 @@ namespace dht
 	void SearchManager::processSearchResult(const Node::Ptr& node, const AdcCommand& cmd)
 	{
 		string token;
-		if(!cmd.getParam("TO", 0, token))
+		if(!cmd.getParam("TO", 1, token))
 			return;	// missing search token?	
 		
 		string nodes;
-		if(!cmd.getParam("NX", 0, nodes))
+		if(!cmd.getParam("NX", 1, nodes))
 			return;	// missing search token?	
 				
 		Lock l(cs);

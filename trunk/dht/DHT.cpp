@@ -127,7 +127,7 @@ namespace dht
 			
 			// node is requiring FW check
 			string internalUdpPort;
-			if(cmd.getParam("FW", 0, internalUdpPort))
+			if(cmd.getParam("FW", 1, internalUdpPort))
 			{
 				bool firewalled = (Util::toInt(internalUdpPort) != port);
 				if(firewalled)
