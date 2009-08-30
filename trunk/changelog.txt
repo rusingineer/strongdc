@@ -1,4 +1,4 @@
-  -- StrongDC++ --
+  -- StrongDC++ 2.30 --
   
 * opraveny tokeny pro odesílání (extra sloty, fronta odesílání atd.)
 * pøidán øetìzec detekce starých klientù
@@ -12,7 +12,9 @@
 * lepší detekce hubu pøi client-to-client spojeních
 * snad opraveny problémy s extra sloty
 * odeslání pozice ve frontì a šifrování jsou zapnuty, i když je aktivována emulace
-* implementace vyhledávacího nástroje DHT
+* implementace vyhledávacího nástroje DHT (vyžaduje otevøený UDP port 6245)
+* pøepsán omezovaè rychlosti
+* nìjaký další zmìny, opravy, optimalizace pamìti atd.
  
 
 	-- StrongDC++ 2.22 --

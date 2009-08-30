@@ -1,4 +1,4 @@
-  -- StrongDC++ --
+  -- StrongDC++ 2.30 --
   
 * fixed upload connection tokens (grant extra slot, upload queue etc.)
 * added cheating string for old clients
@@ -13,6 +13,8 @@
 * hopefully fixed extra slot issues
 * upload queue position and TLS connections are enabled in spite of stealth mode
 * implemented DHT search engine
+* rewritten bandwidth limiter
+* some other changes, fixes, memory optimizations etc.
 
 
 	-- StrongDC++ 2.22 --

@@ -1,3 +1,6 @@
+** svn458
+	default uploadbar color is more orange than red
+
 ** svn457
 	fixed bold text of shared folders in Settings
 	merged with DC++ hashing pause code
