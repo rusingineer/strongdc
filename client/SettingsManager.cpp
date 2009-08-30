@@ -535,7 +535,7 @@ SettingsManager::SettingsManager()
 	setDefault(PROGRESS_OVERRIDE_COLORS, true);
 	setDefault(PROGRESS_TEXT_COLOR_DOWN, RGB(255, 255, 255));
 	setDefault(PROGRESS_TEXT_COLOR_UP, RGB(255, 255, 255));
-	setDefault(UPLOAD_BAR_COLOR, RGB(205, 60, 55));
+	setDefault(UPLOAD_BAR_COLOR, RGB(255, 64, 0));
 	setDefault(DOWNLOAD_BAR_COLOR, RGB(55, 170, 85));
 	setDefault(PROGRESS_BACK_COLOR, RGB(95, 95, 95));
 	setDefault(PROGRESS_COMPRESS_COLOR, RGB(222, 160, 0));
