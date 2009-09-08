@@ -22,12 +22,13 @@
 #include "NmdcHub.h"
 
 #include "ResourceManager.h"
+#include "ChatMessage.h"
 #include "ClientManager.h"
 #include "SearchManager.h"
 #include "ShareManager.h"
 #include "CryptoManager.h"
 #include "ConnectionManager.h"
-
+#include "version.h"
 
 #include "Socket.h"
 #include "UserCommand.h"
@@ -227,24 +228,23 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			return;
 		}
 
-		bool thirdPerson = false;
-		if(strnicmp(message, "/me ", 4) == 0) {
-			thirdPerson = true;
-			message = message.substr(4);
-		}
-
-		OnlineUserPtr ou = findUser(nick);
-		if(ou) {
-			fire(ClientListener::Message(), this, *ou, unescape(message), thirdPerson);
-		} else {
-			OnlineUser& o = getUser(nick);
+		ChatMessage chatMessage = { unescape(message), findUser(nick) };
+		if(!chatMessage.from) {
+			OnlineUserPtr o = &getUser(nick);
 			// Assume that messages from unknown users come from the hub
-			o.getIdentity().setHub(true);
-			o.getIdentity().setHidden(true);
-			fire(ClientListener::UserUpdated(), this, &o);
+			o->getIdentity().setHub(true);
+			o->getIdentity().setHidden(true);
+			fire(ClientListener::UserUpdated(), this, o);
 
-			fire(ClientListener::Message(), this, o, unescape(message), thirdPerson);
+			chatMessage.from = o;
 		}
+
+		if(strnicmp(chatMessage.text, "/me ", 4) == 0) {
+			chatMessage.thirdPerson = true;
+			chatMessage.text = chatMessage.text.substr(4);
+		}
+
+		fire(ClientListener::Message(), this, chatMessage);
 		return;
     }
 
@@ -602,6 +602,9 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				if(CryptoManager::getInstance()->TLSOk() && !getStealth())
 					feat.push_back("TLS");
 					
+				if(BOOLSETTING(USE_DHT))
+					feat.push_back("DHT0");
+					
 				supports(feat);
 			}
 
@@ -745,39 +748,35 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		if(fromNick.empty() || param.size() < j + 2)
 			return;
 
-        OnlineUserPtr replyTo = findUser(rtNick);
-		OnlineUserPtr from = findUser(fromNick);
+       	ChatMessage message = { unescape(param.substr(j + 2)), findUser(fromNick), &getUser(getMyNick()), findUser(rtNick) };
 
-		string msg = param.substr(j + 2);
-		if(replyTo == NULL || from == NULL) {
-			if(replyTo == 0) {
+		if(!message.replyTo || !message.from) {
+			if(!message.replyTo) {
 				// Assume it's from the hub
-				replyTo = &getUser(rtNick);
+				OnlineUser* replyTo = &getUser(rtNick);
 				replyTo->getIdentity().setHub(true);
 				replyTo->getIdentity().setHidden(true);
 				fire(ClientListener::UserUpdated(), this, replyTo);
 			}
-			if(from == 0) {
+			if(!message.from) {
 				// Assume it's from the hub
-				from = &getUser(fromNick);
+				OnlineUser* from = &getUser(fromNick);
 				from->getIdentity().setHub(true);
 				from->getIdentity().setHidden(true);
 				fire(ClientListener::UserUpdated(), this, from);
 			}
 
 			// Update pointers just in case they've been invalidated
-			replyTo = findUser(rtNick);
-			from = findUser(fromNick);
+			message.replyTo = findUser(rtNick);
+			message.from = findUser(fromNick);
 		}
 
-		bool thirdPerson = false;
-		if(strnicmp(msg, "/me ", 4) == 0) {
-			thirdPerson = true;
-			msg = msg.substr(4);
+		if(strnicmp(message.text, "/me ", 4) == 0) {
+			message.thirdPerson = true;
+			message.text = message.text.substr(4);
 		}
 
-		OnlineUser& to = getUser(getMyNick());
-		fire(ClientListener::PrivateMessage(), this, *from, &to, replyTo, unescape(msg), thirdPerson);
+		fire(ClientListener::Message(), this, message);
 	} else if(cmd == "GetPass") {
 		OnlineUser& ou = getUser(getMyNick());
 		ou.getIdentity().set("RG", "1");
@@ -970,7 +969,8 @@ void NmdcHub::privateMessage(const OnlineUserPtr& aUser, const string& aMessage,
 	// Emulate a returning message...
 	OnlineUserPtr ou = findUser(getMyNick());
 	if(ou) {
-		fire(ClientListener::PrivateMessage(), this, *ou, aUser, ou, aMessage, thirdPerson);
+		ChatMessage message = { aMessage, ou, aUser, ou };
+		fire(ClientListener::Message(), this, message);
 	}
 }
 

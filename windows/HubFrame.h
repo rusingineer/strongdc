@@ -458,9 +458,8 @@ private:
 	void on(Failed, const Client*, const string&) throw();
 	void on(GetPassword, const Client*) throw();
 	void on(HubUpdated, const Client*) throw();
-	void on(Message, const Client*, const OnlineUser&, const string&, bool = false) throw();
+	void on(Message, const Client*, const ChatMessage&) throw();
 	void on(StatusMessage, const Client*, const string&, int = ClientListener::FLAG_NORMAL) throw();
-	void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUserPtr&, const OnlineUserPtr&, const string&, bool = false) throw();
 	void on(NickTaken, const Client*) throw();
 	void on(SearchFlood, const Client*, const string&) throw();
 	void on(CheatMessage, const Client*, const string&) throw();	
@@ -470,7 +469,7 @@ private:
 	void speak(Tasks s, const string& msg, bool inChat = true) { tasks.add(static_cast<uint8_t>(s), new StatusTask(msg, inChat)); PostMessage(WM_SPEAKER); }
 	void speak(Tasks s, const OnlineUserPtr& u) { tasks.add(static_cast<uint8_t>(s), new UserTask(u)); updateUsers = true; }
 	void speak(Tasks s, const Identity& from, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(from, line)); PostMessage(WM_SPEAKER); }
-	void speak(Tasks s, const OnlineUser& from, const OnlineUserPtr& to, const OnlineUserPtr& replyTo, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(from.getIdentity(), to, replyTo, line)); PostMessage(WM_SPEAKER); }
+	void speak(Tasks s, const OnlineUserPtr& from, const OnlineUserPtr& to, const OnlineUserPtr& replyTo, const string& line) { tasks.add(static_cast<uint8_t>(s), new MessageTask(from->getIdentity(), to, replyTo, line)); PostMessage(WM_SPEAKER); }
 };
 
 #endif // !defined(HUB_FRAME_H)

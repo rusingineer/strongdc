@@ -1,3 +1,106 @@
+* [L#263390] Fix main icon format (poy)
+* Help updates (emtee, poy)
+* Handle file lists better in finished windows (emtee, poy)
+* [dwt] Implement Richedit text control (cologic)
+* Update the file list window title bar when the user online status changes (poy)
+* Re-open previous windows - no auto-connect/auto-open setting anymore (poy)
+* Fix own file list not deleted on closure
+* Fix menu title size (poy)
+* [L#239895] Display ISTA
+* "Recent windows" button in the toolbar (poy)
+* Upgraded to OpenSSL 1.0.0-beta3 (poy)
+* [L#350585] Fix sorting issues in finished windows (poy)
+* [L#339872] Fix crash when decompression initialization fails (steven sheehy)
+* Restore check-boxes in the "Context" user command group (poy)
+* CTM protection by domain name instead of ip (thanks poy)
+* [L#362598] Fix share crash (thanks emtee)
+* [L#367186] Fix crash in waiting users (poy)
+* [L#261185] Use standard user menus in PMs, waiting users, file lists (poy)
+* [L#210727] Solve file list refresh & hashing sync issues (thanks ben)
+* [L#264342] Stop hashing on shutdown (thanks steven sheehy)
+* [L#350994] Fix ignored downloads from search (poy)
+* [L#362878] Compilation fix for Mac OS X (thanks ximin luo)
+* Save user nicks (poy)
+* [L#384558] Don't share the temporary download directory (poy)
+* [L#385818] More native menu colors (poy)
+* [L#385821] Apply the font to check-boxes and tabs (poy)
+* [L#213213] Implement bandwidth throttling (cologic)
+* New icon (thanks radox)
+* Fix dialog focus issues (poy)
+* Fix a crash in queue frame
+* Move finished downloads functionality into queue frame
+* [L#351393] Fix memory leak when indexing shared files (steven sheehy)
+* [L#415965] Hashing can be paused (bigmuscle, emtee, poy)
+
+-- 0.75 2009-03-06 --
+* [L#243727] "Merge results for the same file" check-box in search (poy)
+* [L#306209] [ADC] Send only 5 results to passive users (thanks sulan)
+* [L#300993] Status message when a download fails from search (poy)
+* [L#264146] Fix the finished downloads check-box sometimes not appearing (poy)
+* Remove unsightly border below tab headers (poy)
+* Fix wrong mouse cursors (poy)
+* [L#312946] Add possibility to recheck unfinished downloads (emtee, poy)
+* Fixed lists being matched twice
+* [L#206778] Searches and connection attempts go through the correct hub if possible
+* [L#254191] Bzr revision in AboutBox
+* Upgraded to OpenSSL 0.9.8j (poy)
+* [L#256358] Fix multiple instances (poy)
+* Fix encoding issues in translated help files (poy)
+* Help updates (emtee, poy)
+* [L#259100] Fix upload speed reporting
+* [L#275588] Clean up whitespace before sending search
+* [L#302376] Clickable paths in the system log window (thanks poy)
+* [L#195047] Auto-resizable UI (arnetheduck, poy, emtee)
+* Shell menus for multiple selections (poy)
+* [L#256357] Fix painting issues (poy)
+* Add hub closing confirmation dialog (poy)
+* [L#324960] Make sure downloaded chunks are always saved (thanks emtee)
+* [L#264479] Double-click on main status bar stats to open the network stats window (poy)
+* Double-click on the "AWAY" indicator to switch away mode on/off (poy)
+* Add "/dslots <number>" chat command (thanks fusbar)
+* [L#316475] Fix crash on decompression errors
+* [L#317339] Fix round-off issue when segmented downloads are disabled
+* [L#253702] Fix crash on too many connections
+* [L#228582] Fix crash when dirs share virtual name
+* [L#261618] Fix crash when finished transfers lists are too busy (poy)
+* [L#316096] Send base hub address when connecting to other peers
+* Fix errors and warnings when compiling with g++ (steven sheehy)
+* [L#241995] Restore word selection in text-boxes on double-click (poy)
+* [L#220499] Optionally use system paths for queue etc
+* [L#300268] [ADC] Validate utf8 before processing messages
+* Updated Polish, German, Finnish, Romanian, Swedish, Brazilian Portuguese,
+  French, Bosnian, UK English, Hungarian, Korean, Serbian, Russian, Turkish,
+  Portuguese, Latvian, Bulgarian, Norwegian and Estonian translations (thank 
+  you all translators)
+* Added secure connection status to hub frame
+
+-- 0.7091 2008-11-27 --
+* Fix packaging issues with regard to the settings dialog 
+* New GUI translations for Canadian English, Gujarati and Malayalam languages
+* Update existing GUI translations 
+* Help translation system using po4a (thanks poy)
+* Partial Help tanslations for Greek, Norwegian, Brazilian Portugese, Russian,
+  French, Romanian, UK English, Polish, Hungarian, Swedish, Italian, German, 
+  Turkish, Serbian and Galician languages (thanks to the respective translators)
+
+-- 0.709 2008-11-27 --
+* Fix favorite users columns (emtee)
+* [L#249159] Prevent UI freeze when selecting lots of items in list views (poy)
+* [L#261172] Add favorite user & ADLS removal confirmation dialogs (poy)
+* [L#263108] Misc fixes related to search results grouping (poy)
+* [L#263390] Fix tray icon format (poy)
+* Resize finished DL & search spy check-boxes correctly (poy)
+* Help updates (poy, emtee)
+* [L#268353] Fixed TigerHash regression on big-endian architectures (steven sheehy)
+* Upgraded to OpenSSL 0.9.8i (poy)
+* [L#262540] Fix crash when closing a busy window (poy, arnetheduck)
+* Better header arrows for Common Controls < 6 (poy)
+* Fix keys in the "Connections" window (poy)
+* [L#289571] Fix non-responsiveness when the download queue has too many directories on Vista (poy)
+* Disallow fake connections to a few known hub list servers (poy)
+* [L#269098] Fix the users list not clearing itself out (poy)
+
+-- 0.708 2008-08-28 --
 * Added setting for max characters per tab (poy)
 * [L#234458] Added "File size" and "% transferred" columns in finished windows (poy, emtee)
 * Fix absent country code for IPs > 128.0.0.0 in MSVC builds (poy)
@@ -7,7 +110,7 @@
 * [L#234897] Improve error message when file list is too big (thanks steven sheehy)
 * [L#234529] Right-alight sizes
 * [L#243908] Better nick sorting in search results (thanks emtee)
-* [L#231447] Fix file list positioning from search
+* [L#231447] Fix file list positioning from search (arnetheduck, poy)
 * Fix bogus menus when they contain more than 200 dynamic items (poy)
 * Shell menus are now sub-menus, loaded only when requested (poy)
 * [L#243728] Make Shell menus Vista-compliant (poy)
@@ -15,6 +118,42 @@
 * [L#243201] Save excluded search terms correctly in search history (thanks emtee)
 * Search spy tab highlighting (poy)
 * Help updates (emtee, poy)
+* Enable keyboard shortcuts in the help file (poy)
+* [L#242365] Error message when getting version info fails (thanks emtee)
+* [L#203763] Ctrl-A selects all list view items again (thanks poy)
+* [L#245474] Error when adding multiple sources to queue (thanks emtee)
+* [L#234458] "Only show fully downloaded files" check-box in the finished DL status bar (poy)
+* Count transfers that have run then failed in finished windows (poy)
+* [L#247038] Improve SSL connection setup
+* [L#249692] Better magnet error message
+* Fixed UPnP for TLS port
+* [L#242329] Fix SSL assert
+* [L#246080] Users with untrusted cert removed from queue
+* [L#230991] Add fast hash option
+* [L#217082] Remember the positions of transfers and queue splitters (poy)
+* [L#251536] Fix file list columns (poy)
+* [L#234527] Fix possible crash when auto-downloading ADL Search matches (poy)
+* [L#239901] Fix user commands separators (poy)
+* Downloaded file lists show up with their correct extension (poy)
+* [L#251486] Correct $GetZBlock support announcment
+* [L#228283] Sort downloads by % done when sorting by status, resort dynamically
+* Up-down control in the main status bar to change upload slots (poy)
+* Fix crash with the "unable to open ports" message (poy)
+* Add an optional param to the /clear command that specifies the number of lines to keep (poy)
+* Add line history and /ts in private message windows, just like in hub windows (poy)
+* [L#255370] Fix "View as text" in own file list (thanks emtee)
+* Add icons next to tab menu titles (poy)
+* [L#256895] Fix behavior when starting minimized (poy)
+* [L#257225] Automatch of search results always on
+* [L#246596] Partial file list requests visible in download queue
+* Queue frame is not marked dirty when file list finishes
+* Parse %userCID when logging finished transfers (poy)
+* Fix audio file type search filter (emtee)
+* Updated Slovenian, Estonian, Latvian, Australian, Greek, Norwegian,
+  Brazilian, Russian, Lithuanian, French, Portuguese, Traditional Chinese,
+  Turkish, Simplified Chinese, Finnish, Romanian, Telugu, Hebrew, UK English,
+  Bulgarian, Polish, Hungarian, Swedish, Croatian, Italian, German, Dutch,
+  Serbian and Spanish translations.
 
 -- 0.707 2008-06-22 --
 * Fixed crash when pressing F1 twice

@@ -58,11 +58,15 @@ namespace dht
 #define NODE_RESPONSE_TIMEOUT		2*60*1000	// 2 minutes		// node has this time to response else we ignore him/mark him as dead node
 #define NODE_EXPIRATION				2*60*60*1000 // 2 hours			// when node should be marked as possibly dead
 
+#define FLOOD_PROTECTION			60*1000	// 1 minute				// the unit for flood protection
+#define TIME_FOR_RESPONSE			3*60*1000	// 3 minutes		// node has this time to respond to request; after that response will be marked as unwanted
+
 #define CLIENT_PROTOCOL				"ADC/1.0"						// protocol used for file transfers
 #define SECURE_CLIENT_PROTOCOL_TEST	"ADCS/0.10"						// protocol used for secure file transfers
 #define ADCS_FEATURE				"ADC0"							// support for secure protocol
 #define TCP4_FEATURE				"TCP4"							// support for active TCP
 #define UDP4_FEATURE				"UDP4"							// support for active UDP
+#define DHT_FEATURE					"DHT0"
 	
 using namespace dcpp;
 

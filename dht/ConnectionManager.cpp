@@ -60,7 +60,7 @@ namespace dht
 
 		cmd.addParam(token);
 		
-		DHT::getInstance()->send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())));
+		DHT::getInstance()->send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())), ou.getUser()->getCID(), CID()); // TODO: key
 	}
 
 	/*
@@ -87,14 +87,14 @@ namespace dht
 			cmd.addParam("PR", protocol);
 			cmd.addParam("TO", token);
 
-			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
 			return;
 		}
 
 		if(!node->getIdentity().isTcpActive()) 
 		{
 			AdcCommand err(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_GENERIC, "IP unknown", AdcCommand::TYPE_UDP);
-			DHT::getInstance()->send(err, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+			DHT::getInstance()->send(err, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
 			return;
 		}
 
@@ -128,7 +128,7 @@ namespace dht
 			sta.addParam("PR", protocol);
 			sta.addParam("TO", token);
 
-			DHT::getInstance()->send(sta, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+			DHT::getInstance()->send(sta, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
 			return;
 		}
 		

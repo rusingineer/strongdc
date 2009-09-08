@@ -46,7 +46,7 @@ namespace dcpp
 		int read(Socket* sock, void* buffer, size_t len)
 		{
 			size_t downs = DownloadManager::getInstance()->getDownloadCount();
-			if(!BOOLSETTING(THROTTLE_ENABLE) || downs == 0)
+			if(!BOOLSETTING(THROTTLE_ENABLE) || downLimit == 0 || downs == 0)
 				return sock->read(buffer, len);
 			
 			{
@@ -79,7 +79,7 @@ namespace dcpp
 		int write(Socket* sock, void* buffer, size_t& len)
 		{
 			size_t ups = UploadManager::getInstance()->getUploadCount();
-			if(!BOOLSETTING(THROTTLE_ENABLE) || ups == 0)
+			if(!BOOLSETTING(THROTTLE_ENABLE) || upLimit == 0 || ups == 0)
 				return sock->write(buffer, len);
 			
 			{
@@ -106,17 +106,19 @@ namespace dcpp
 		// download limiter
 		CriticalSection	downCS;
 		int64_t			downTokens;
+		int				downLimit;
 		
 		// upload limiter
 		CriticalSection	upCS;
 		int64_t			upTokens;
+		int				upLimit;
 		
 		HANDLE			hEvent;
 		
 		friend class Singleton<ThrottleManager>;
 		
 		// constructor
-		ThrottleManager(void) : downTokens(0), upTokens(0)
+		ThrottleManager(void) : downTokens(0), upTokens(0), downLimit(0), upLimit(0)
 		{
 			hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 			
@@ -137,34 +139,28 @@ namespace dcpp
 			if(!BOOLSETTING(THROTTLE_ENABLE))
 				return;
 				
-			int downLimit	= SETTING(MAX_DOWNLOAD_SPEED_LIMIT);
-			int upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT);
+			downLimit	= SETTING(MAX_DOWNLOAD_SPEED_LIMIT);
+			upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT);
 			
 			// limiter restrictions: up_limit >= 5 * slots + 4, up_limit >= 7 * down_limit
-			if(upLimit > 0) 
+			if(upLimit < 5 * UploadManager::getInstance()->getSlots() + 4)
 			{
-				if(upLimit < 5 * UploadManager::getInstance()->getSlots() + 4)
-				{
-					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT, 5 * UploadManager::getInstance()->getSlots() + 4);
-				}
+				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT, 5 * UploadManager::getInstance()->getSlots() + 4);
+			}
 				
-				if((downLimit > 7 * upLimit) || (downLimit == 0))
-				{
-					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, 7 * upLimit);
-				}
+			if((downLimit > 7 * upLimit) || (downLimit == 0))
+			{
+				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, 7 * upLimit);
 			}
 
-			if(SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) > 0) 
+			if(SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < 5 * UploadManager::getInstance()->getSlots() + 4)
 			{
-				if(SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < 5 * UploadManager::getInstance()->getSlots() + 4)
-				{
-					SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, 5 * UploadManager::getInstance()->getSlots() + 4);
-				}
+				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, 5 * UploadManager::getInstance()->getSlots() + 4);
+			}
 				
-				if((SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)) || (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0)) 
-				{
-					SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME));
-				}
+			if((SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)) || (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0)) 
+			{
+				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME));
 			}
 
 			// alternative limiter

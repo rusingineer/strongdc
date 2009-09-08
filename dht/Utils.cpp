@@ -19,10 +19,20 @@
 #include "StdAfx.h"
 #include "Utils.h"
 
+#include "Constants.h"
+
+#include "../client/AdcCommand.h"
 #include "../client/CID.h"
+#include "../client/MerkleTree.h"
+#include "../client/TimerManager.h"
 
 namespace dht
 {
+
+	uint64_t Utils::lastFloodCleanup = 0;
+	CriticalSection Utils::cs;
+	std::tr1::unordered_map<string, std::tr1::unordered_multiset<uint32_t>> Utils::receivedPackets;
+	std::list<Utils::OutPacket> Utils::sentPackets;
 
 	CID Utils::getDistance(const CID& cid1, const CID& cid2)
 	{
@@ -52,5 +62,115 @@ namespace dht
 		
 		return true;
 	}
+	
+	/*
+	 * General flooding protection 
+	 */
+	bool Utils::checkFlood(const string& ip, const AdcCommand& cmd)
+	{
+		// ignore empty commands
+		if(cmd.getParameters().empty())
+			return false;
+			
+		// there maximum allowed request packets from one IP per minute
+		// response packets are allowed only if request has been sent to the IP address
+		size_t maxAllowedPacketsPerMinute = 0;
+		uint32_t requestCmd = AdcCommand::CMD_SCH;
+		switch(cmd.getCommand())
+		{
+			// request packets
+			case AdcCommand::CMD_SCH: maxAllowedPacketsPerMinute = 15; break;
+			case AdcCommand::CMD_PUB: maxAllowedPacketsPerMinute = 3; break;
+			case AdcCommand::CMD_INF: maxAllowedPacketsPerMinute = 3; break;
+			case AdcCommand::CMD_CTM: maxAllowedPacketsPerMinute = 2; break;
+			case AdcCommand::CMD_GET: maxAllowedPacketsPerMinute = 2; break;
+			case AdcCommand::CMD_PSR: maxAllowedPacketsPerMinute = 3; break;
+			
+			// response packets
+			case AdcCommand::CMD_STA: 
+				return true; // STA can be response for more commands, but since it is for informative purposes only, there shouldn't be no way to abuse it		
+			
+			case AdcCommand::CMD_SND: requestCmd = AdcCommand::CMD_GET;
+			case AdcCommand::CMD_RES: // default value of requestCmd
+				
+				Lock l(cs);
+				for(std::list<OutPacket>::iterator i = sentPackets.begin(); i != sentPackets.end(); i++)
+				{
+					if(i->cmd == requestCmd && i->ip == ip)
+					{
+						sentPackets.erase(i);
+						return true;
+					}
+				}
+			
+				dcdebug("Received unwanted response from %s. Packet dropped.\n", ip.c_str());
+				return false;
+		}
+		
+		if(GET_TICK() - lastFloodCleanup >= FLOOD_PROTECTION)
+		{
+			receivedPackets.clear();
+			lastFloodCleanup = GET_TICK();
+		}
+		
+		std::tr1::unordered_multiset<uint32_t>& packetsPerIp = receivedPackets[ip];
+		packetsPerIp.insert(cmd.getCommand());
+		
+		if(packetsPerIp.count(cmd.getCommand()) > maxAllowedPacketsPerMinute)
+		{
+			dcdebug("Request flood detected (%d) from %s. Packet dropped.\n", packetsPerIp.count(cmd.getCommand()), ip.c_str());
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/*
+	 * Stores outgoing request to avoid receiving invalid responses 
+	 */
+	void Utils::trackOutgoingPacket(const string& ip, const AdcCommand& cmd)
+	{
+		Lock l(cs);
+		
+		uint64_t now = GET_TICK();
+		switch(cmd.getCommand())
+		{
+			// request packets
+			case AdcCommand::CMD_SCH:
+			case AdcCommand::CMD_PUB:
+			case AdcCommand::CMD_INF:
+			case AdcCommand::CMD_CTM:
+			case AdcCommand::CMD_GET:
+			case AdcCommand::CMD_PSR:
+				OutPacket p = { ip, now, cmd.getCommand() };
+				sentPackets.push_back(p);
+				break;
+		}
+		
+		// clean up old items
+		// list is sorted by time, so the first unmatched item can break the loop
+		while(!sentPackets.empty())
+		{
+			uint64_t diff = now - sentPackets.front().time;
+			if(diff >= TIME_FOR_RESPONSE)
+				sentPackets.pop_front();
+			else
+				break;
+		}
+	}
+	
+	/*
+	 * Generates UDP key for specified IP address 
+	 */
+	CID Utils::getUdpKey(const string& targetIp)
+	{
+		int myUdpKey = SETTING(DHT_KEY);
+		
+		TigerTree th;
+		th.update(&myUdpKey, sizeof(int));
+		th.update(targetIp.c_str(), targetIp.size());
+		return CID(th.finalize());
+	}
+
 
 } // namespace dht

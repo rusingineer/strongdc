@@ -734,7 +734,7 @@ std::string dcpp::ResourceManager::strings[] = {
 "<-- Remove", 
 "UDP Port", 
 "Unfinished downloads directory", 
-"Update IP on DHT firewall check (approx. every hour)"	, 
+"Update IP on DHT firewall check (approx. every hour)", 
 "Line speed (upload)", 
 "Sharing", 
 "Open an extra slot if speed is below (0 = disable)", 

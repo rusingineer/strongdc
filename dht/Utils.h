@@ -18,7 +18,9 @@
  
 #pragma once
 
+#include "../client/AdcCommand.h"
 #include "../client/CID.h"
+#include "../client/CriticalSection.h"
 #include "../client/MerkleTree.h"
 
 namespace dht
@@ -40,9 +42,30 @@ public:
 	/** Detect whether it is correct to use IP:port in DHT network */
 	static bool isGoodIPPort(const string& ip, uint16_t port);
 	
+	/** General flooding protection */
+	static bool checkFlood(const string& ip, const AdcCommand& cmd);
+	
+	/** Stores outgoing request to avoid receiving invalid responses */
+	static void trackOutgoingPacket(const string& ip, const AdcCommand& cmd);
+	
+	/** Generates UDP key for specified IP address */
+	static CID getUdpKey(const string& targetIp);
+	
 private:
 	Utils(void) { }
 	~Utils(void) { }
+	
+	struct OutPacket
+	{
+		string		ip;
+		uint64_t	time;
+		uint32_t	cmd;
+	};
+	
+	static uint64_t lastFloodCleanup;
+	static CriticalSection cs;
+	static std::tr1::unordered_map<string, std::tr1::unordered_multiset<uint32_t>> receivedPackets;
+	static std::list<OutPacket> sentPackets;
 };
 
 } // namespace dht

@@ -19,8 +19,10 @@
 #pragma once
 
 #include "../client/AdcCommand.h"
+#include "../client/CID.h"
 #include "../client/CriticalSection.h"
 #include "../client/FastAlloc.h"
+#include "../client/MerkleTree.h"
 #include "../client/Socket.h"
 #include "../client/Thread.h"
 
@@ -66,7 +68,7 @@ namespace dht
 		uint16_t getPort() const { return port;	}
 		
 		/** Sends command to ip and port */
-		void send(const AdcCommand& cmd, const string& ip, uint16_t port);
+		void send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const CID& udpKey);
 				
 	private:
 	

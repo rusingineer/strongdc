@@ -737,7 +737,7 @@ enum Strings { // @DontAdd
 	SETTINGS_TOOLBAR_REMOVE, // "<-- Remove"
 	SETTINGS_UDP_PORT, // "UDP Port"
 	SETTINGS_UNFINISHED_DOWNLOAD_DIRECTORY, // "Unfinished downloads directory"
-	SETTINGS_UPDATE_IP, // "Update IP on DHT firewall check (approx. every hour)"	
+	SETTINGS_UPDATE_IP, // "Update IP on DHT firewall check (approx. every hour)"
 	SETTINGS_UPLOAD_LINE_SPEED, // "Line speed (upload)"
 	SETTINGS_UPLOADS, // "Sharing"
 	SETTINGS_UPLOADS_MIN_SPEED, // "Open an extra slot if speed is below (0 = disable)"

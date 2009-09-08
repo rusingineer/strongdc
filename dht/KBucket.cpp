@@ -44,13 +44,8 @@ namespace dht
 	static DHTClient client;
 	
 	// Set all new nodes' type to 3 to avoid spreading dead nodes..
-	Node::Node() : 
-		OnlineUser(NULL, dht::client, 0), created(GET_TICK()), type(3), expires(0) 
-	{
-	}
-	
 	Node::Node(const UserPtr& u) : 
-		OnlineUser(u, dht::client, 0), created(GET_TICK()), type(3), expires(0) 
+		OnlineUser(u, dht::client, 0), created(GET_TICK()), type(3), expires(0), ipVerified(false)
 	{
 	}
 
@@ -74,6 +69,16 @@ namespace dht
 		}
 	}
 	
+	void Node::setTimeout(uint64_t now) 
+	{ 
+		if(type == 4) 
+			return; 
+		
+		type++; 
+		expires = now + NODE_RESPONSE_TIMEOUT; 
+	}
+	
+	
 	KBucket::KBucket(void)
 	{
 	}
@@ -85,17 +90,32 @@ namespace dht
 	/*
 	 * Inserts node to bucket 
 	 */
-	Node::Ptr KBucket::insert(const UserPtr& u)
+	Node::Ptr KBucket::insert(const UserPtr& u, const string& ip, uint64_t port, bool update, bool isUdpKeyValid)
 	{
 		bool dirty = false;
+		bool isIPsame = false;
+		
 		for(NodeList::iterator it = nodes.begin(); it != nodes.end(); it++)
 		{
-			if(u->getCID() == (*it)->getUser()->getCID())
+			Node::Ptr node = *it;
+			
+			isIPsame = ip == node->getIdentity().getIp() && port == Util::toInt(node->getIdentity().getUdpPort());
+			if(u->getCID() == node->getUser()->getCID())
 			{
 				// node is already here, move it to the end
-				Node::Ptr node = *it;
-				node->setAlive();
-				
+				if(update)
+				{	
+					if(!isIPsame)
+						node->setIpVerified(false);
+						
+					if(!node->isIpVerified())
+						node->setIpVerified(isUdpKeyValid);
+
+					node->setAlive();
+					node->getIdentity().setIp(ip);
+					node->getIdentity().setUdpPort(Util::toString(port));
+				}
+
 				nodes.erase(it);
 				nodes.push_back(node);
 				
@@ -105,7 +125,12 @@ namespace dht
 		}
 		
 		Node::Ptr node(new Node(u));
-		if(nodes.size() < (K * ID_BITS))
+		node->getIdentity().setIp(ip);
+		node->getIdentity().setUdpPort(Util::toString(port));	
+		
+#ifndef _DEBUG		
+		if(!isIPsame && nodes.size() < (K * ID_BITS))
+#endif
 		{
 			// bucket still has room to store new node
 			nodes.push_back(node);
@@ -126,7 +151,7 @@ namespace dht
 		for(NodeList::const_iterator it = nodes.begin(); it != nodes.end(); it++)
 		{
 			const Node::Ptr& node = *it;
-			if(node->getType() <= maxType && !node->getUser()->isSet(User::PASSIVE))
+			if(node->getType() <= maxType && node->isIpVerified() && !node->getUser()->isSet(User::PASSIVE))
 			{
 				CID distance = Utils::getDistance(cid, node->getUser()->getCID());
 
@@ -154,38 +179,50 @@ namespace dht
 	bool KBucket::checkExpiration(uint64_t currentTime)
 	{
 		bool dirty = false;
-		
+
+		// first, remove dead nodes		
 		NodeList::iterator i = nodes.begin();
 		while(i != nodes.end())
 		{
 			Node::Ptr& node = *i;
 			
-			if(node->getType() == 4)
+			if(node->getType() == 4 && node->expires > 0 && node->expires <= currentTime)
 			{
-				if(node->expires > 0 && node->expires <= currentTime)
+				if(node->unique())
 				{
-					if(node->unique())
-					{
-						// node is dead, remove it
-						if(node->isInList)
-							ClientManager::getInstance()->putOffline((*i).get());
+					// node is dead, remove it
+					if(node->isInList)
+						ClientManager::getInstance()->putOffline((*i).get());
 					
-						i = nodes.erase(i);
-						dirty = true;
-						continue;
-					}
-					
-					i++;
-					continue;
+					i = nodes.erase(i);
+					dirty = true;
 				}
+				else
+				{
+					++i;
+				}
+					
+				continue;
 			}
 			if(node->expires == 0)
 				node->expires = currentTime;
 					
-			i++;
+			++i;
 		}
 		
-		dcdebug("DHT Nodes: %d\n", nodes.size());
+#ifdef _DEBUG
+		int verified = 0; int types[5] = { 0 };
+		for(NodeList::const_iterator j = nodes.begin(); j != nodes.end(); j++)
+		{
+			Node::Ptr n = *j;
+			if(n->isIpVerified()) verified++;
+			
+			dcassert(n->getType() >= 0 && n->getType() <= 4);
+			types[n->getType()]++;
+		}
+			
+		dcdebug("DHT Nodes: %d (%d verified)\nTypes: %d/%d/%d/%d/%d\n", nodes.size(), verified, types[0], types[1], types[2], types[3], types[4]);
+#endif
 		
 		if(!nodes.empty())
 		{
@@ -200,9 +237,8 @@ namespace dht
 				return dirty;
 			}
 			
-			oldest->type++;
-			oldest->expires = currentTime + NODE_RESPONSE_TIMEOUT;
-			DHT::getInstance()->info(oldest->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(oldest->getIdentity().getUdpPort())), DHT::PING);
+			oldest->setTimeout(currentTime);
+			DHT::getInstance()->info(oldest->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(oldest->getIdentity().getUdpPort())), DHT::PING, oldest->getUser()->getCID(), oldest->getUdpKey());
 		}
 		
 		return dirty;
@@ -219,13 +255,13 @@ namespace dht
 			xml.stepIn();
 			while(xml.findChild("Node"))
 			{
-				//CID cid		= CID(xml.getChildAttrib("CID"));
+				CID cid		= CID(xml.getChildAttrib("CID"));
 				string i4	= xml.getChildAttrib("I4");
-				uint16_t u4	= static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4")));;
+				uint16_t u4	= static_cast<uint16_t>(xml.getIntChildAttrib("U4"));
 				
 				if(Utils::isGoodIPPort(i4, u4))
 					//addUser(cid, i4, u4);
-					BootstrapManager::getInstance()->addBootstrapNode(i4, u4);
+					BootstrapManager::getInstance()->addBootstrapNode(i4, u4, cid);
 			}
 			xml.stepOut();
 		}	
@@ -239,9 +275,9 @@ namespace dht
 		xml.addTag("Nodes");
 		xml.stepIn();
 
-		// get 50 nodes closest to me to bootstrap from them next time
+		// get 50 random nodes to bootstrap from them next time
 		Node::Map closestToMe;
-		getClosestNodes(ClientManager::getInstance()->getMe()->getCID(), closestToMe, 50, 3);
+		getClosestNodes(CID::generate(), closestToMe, 50, 3);
 		
 		for(Node::Map::const_iterator j = closestToMe.begin(); j != closestToMe.end(); j++)
 		{
@@ -249,7 +285,8 @@ namespace dht
 					
 			xml.addTag("Node");
 			xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());
-			xml.addChildAttrib("type", Util::toString(node->getType()));
+			xml.addChildAttrib("type", node->getType());
+			xml.addChildAttrib("verified", node->isIpVerified());
 
 			StringMap params;
 			node->getIdentity().getParams(params, Util::emptyString, false, true);

@@ -104,7 +104,7 @@ namespace dht
 					string i4	= remoteXml.getChildAttrib("I4");
 					string u4	= remoteXml.getChildAttrib("U4");
 					
-					addBootstrapNode(i4, static_cast<uint16_t>(Util::toInt(u4)));
+					addBootstrapNode(i4, static_cast<uint16_t>(Util::toInt(u4)), cid);
 				}
 
 				remoteXml.stepOut();
@@ -121,9 +121,10 @@ namespace dht
 		LogManager::getInstance()->message("DHT bootstrap error: " + aLine);
 	}
 	
-	void BootstrapManager::addBootstrapNode(const string& ip, uint16_t udpPort)
+	void BootstrapManager::addBootstrapNode(const string& ip, uint16_t udpPort, const CID& targetCID)
 	{
-		bootstrapNodes.push_back(std::make_pair(ip, udpPort));		
+		BootstrapNode node = { ip, udpPort, targetCID };
+		bootstrapNodes.push_back(node);
 	}
 	
 	void BootstrapManager::process()
@@ -136,7 +137,8 @@ namespace dht
 			cmd.addParam("nodes");
 			cmd.addParam("dht.xml");
 			
-			DHT::getInstance()->send(cmd, bootstrapNodes.front().first, bootstrapNodes.front().second);
+			const BootstrapNode& node = bootstrapNodes.front();
+			DHT::getInstance()->send(cmd, node.ip, node.udpPort, node.cid, CID());
 			
 			bootstrapNodes.pop_front();
 		}

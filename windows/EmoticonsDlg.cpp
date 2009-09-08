@@ -38,7 +38,7 @@ LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND h
 
 LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 
-	WNDPROC temp = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(EmoticonsDlg::m_hWnd, GWLP_WNDPROC, reinterpret_cast<LONG>(NewWndProc)));
+	WNDPROC temp = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(EmoticonsDlg::m_hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(NewWndProc)));
 	if (!m_MFCWndProc) m_MFCWndProc = temp;
 	m_pDialog = this;
 	::EnableWindow(WinUtil::mainWnd, true);

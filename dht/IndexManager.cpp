@@ -119,7 +119,7 @@ namespace dht
 			f = publishQueue.front(); // get the first file in queue
 			publishQueue.pop_front(); // and remove it from queue
 		}
-		SearchManager::getInstance()->findStore(f.tth.toBase32(), f.size, false);
+		SearchManager::getInstance()->findStore(f.tth.toBase32(), f.size, f.partial);
 	}
 
 	/*
@@ -170,9 +170,9 @@ namespace dht
 					Source source;
 					source.setCID(CID(xml.getChildAttrib("CID")));
 					source.setIp(xml.getChildAttrib("I4"));
-					source.setUdpPort(static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4"))));
-					source.setSize(Util::toInt64(xml.getChildAttrib("SI")));
-					source.setExpires(Util::toInt64(xml.getChildAttrib("EX")));
+					source.setUdpPort(static_cast<uint16_t>(xml.getIntChildAttrib("U4")));
+					source.setSize(xml.getLongLongChildAttrib("SI"));
+					source.setExpires(xml.getLongLongChildAttrib("EX"));
 					source.setPartial(false);
 					
 					sources.push_back(source);
@@ -242,7 +242,7 @@ namespace dht
 		AdcCommand res(AdcCommand::SEV_SUCCESS, AdcCommand::SUCCESS, "File published", AdcCommand::TYPE_UDP);
 		res.addParam("FC", "PUB");
 		res.addParam("TR", tth);
-		DHT::getInstance()->send(res, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));	
+		DHT::getInstance()->send(res, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());	
 	}
 
 	/*
@@ -286,11 +286,8 @@ namespace dht
 	 */
 	void IndexManager::publishPartialFile(const TTHValue& tth)
 	{
-		if(DHT::getInstance()->isConnected())
-		{
-			Lock l(cs);
-			publishQueue.push_front(File(tth, 0, true));
-		}
+		Lock l(cs);
+		publishQueue.push_front(File(tth, 0, true));
 	}
 	
 

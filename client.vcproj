@@ -373,6 +373,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\ChatMessage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\Client.cpp"
 				>
 			</File>
@@ -631,6 +635,10 @@
 			</File>
 			<File
 				RelativePath=".\client\BZUtils.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\ChatMessage.h"
 				>
 			</File>
 			<File

@@ -22,15 +22,14 @@ public:
 	typedef X<9> HubUpdated;
 	typedef X<11> Message;
 	typedef X<12> StatusMessage;
-	typedef X<13> PrivateMessage;
-	typedef X<14> HubUserCommand;
-	typedef X<15> HubFull;
-	typedef X<16> NickTaken;
-	typedef X<17> SearchFlood;
-	typedef X<18> NmdcSearch;
-	typedef X<19> AdcSearch;
-	typedef X<20> CheatMessage;
-	typedef X<21> HubTopic;
+	typedef X<13> HubUserCommand;
+	typedef X<14> HubFull;
+	typedef X<15> NickTaken;
+	typedef X<16> SearchFlood;
+	typedef X<17> NmdcSearch;
+	typedef X<18> AdcSearch;
+	typedef X<29> CheatMessage;
+	typedef X<20> HubTopic;
 
 	enum StatusFlags {
 		FLAG_NORMAL = 0x00,
@@ -46,9 +45,8 @@ public:
 	virtual void on(Failed, const Client*, const string&) throw() { }
 	virtual void on(GetPassword, const Client*) throw() { }
 	virtual void on(HubUpdated, const Client*) throw() { }
-	virtual void on(Message, const Client*, const OnlineUser&, const string&, bool = false) throw() { }
+	virtual void on(Message, const Client*, const ChatMessage&) throw() { }
 	virtual void on(StatusMessage, const Client*, const string&, int = FLAG_NORMAL) throw() { }
-	virtual void on(PrivateMessage, const Client*, const OnlineUser&, const OnlineUserPtr&, const OnlineUserPtr&, const string&, bool = false) throw() { }
 	virtual void on(HubUserCommand, const Client*, int, int, const string&, const string&) throw() { }
 	virtual void on(HubFull, const Client*) throw() { }
 	virtual void on(NickTaken, const Client*) throw() { }

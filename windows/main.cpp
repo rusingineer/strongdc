@@ -358,7 +358,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 	splash.ReleaseDC(dc);
 	splash.HideCaret();
 	splash.SetWindowPos(NULL, &rc, SWP_SHOWWINDOW);
-	splash.SetWindowLongPtr(GWLP_WNDPROC, (LONG)&splashCallback);
+	splash.SetWindowLongPtr(GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&splashCallback));
 	splash.CenterWindow();
 
 	sTitle = _T(VERSIONSTRING);
