@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,18 +16,26 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define APPNAME "StrongDC++"
-#define VERSIONSTRING "2.30"
-#define VERSIONFLOAT 2.30
+#ifndef DCPLUSPLUS_DCPP_CHAT_MESSAGE_H
+#define DCPLUSPLUS_DCPP_CHAT_MESSAGE_H
 
-#define DCVERSIONSTRING "0.75"
-#define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
+#include "forward.h"
 
-#define SVNVERSION "svn460"
+namespace dcpp {
 
-/* Update the .rc file as well... */
+struct ChatMessage {
+	string text;
 
-/**
- * @file
- * $Id$
- */
+	OnlineUserPtr from;
+	OnlineUserPtr to;
+	OnlineUserPtr replyTo;
+
+	bool thirdPerson;
+	time_t timestamp;
+
+	string format() const;
+};
+
+} // namespace dcpp
+
+#endif // !defined(DCPLUSPLUS_DCPP_CHAT_MESSAGE_H)

@@ -804,8 +804,10 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	unsigned short lastTCP = static_cast<unsigned short>(SETTING(TCP_PORT));
 	unsigned short lastUDP = static_cast<unsigned short>(SETTING(UDP_PORT));
 	unsigned short lastTLS = static_cast<unsigned short>(SETTING(TLS_PORT));
-
+	unsigned short lastDHT = static_cast<unsigned short>(SETTING(DHT_PORT));
+	
 	int lastConn = SETTING(INCOMING_CONNECTIONS);
+	bool lastDHTConn = BOOLSETTING(USE_DHT);
 
 	bool lastSortFavUsersFirst = BOOLSETTING(SORT_FAVUSERS_FIRST);
 
@@ -815,7 +817,9 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		if(missedAutoConnect && !SETTING(NICK).empty()) {
 			PostMessage(WM_SPEAKER, AUTO_CONNECT);
 		}
-		if(SETTING(INCOMING_CONNECTIONS) != lastConn || SETTING(TCP_PORT) != lastTCP || SETTING(UDP_PORT) != lastUDP || SETTING(TLS_PORT) != lastTLS) {
+		if(	SETTING(INCOMING_CONNECTIONS) != lastConn || SETTING(TCP_PORT) != lastTCP || SETTING(UDP_PORT) != lastUDP || SETTING(TLS_PORT) != lastTLS ||
+			SETTING(DHT_PORT) != lastDHT || BOOLSETTING(USE_DHT) != lastDHTConn)
+		{
 			startSocket();
 		}
 		ClientManager::getInstance()->infoUpdated();

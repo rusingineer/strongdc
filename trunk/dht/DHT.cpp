@@ -47,7 +47,10 @@ namespace dht
 		
 		if(!BOOLSETTING(USE_DHT))
 			return;
-			
+	
+		if(BOOLSETTING(UPDATE_IP))
+			SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::emptyString);
+						
 		BootstrapManager::newInstance();
 		SearchManager::newInstance();
 		IndexManager::newInstance();
@@ -57,13 +60,14 @@ namespace dht
 		bucket = new KBucket();
 		
 		loadData();
-		
-		if(BOOLSETTING(UPDATE_IP))
-			SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::emptyString);
 	}
 
 	DHT::~DHT(void)
 	{
+		// when DHT is disabled, we shouldn't try to perform exit cleanup
+		if(bucket == NULL)
+			return;
+			
 		disconnect();
 		
 		dirty = true;
@@ -95,7 +99,7 @@ namespace dht
 	/*
 	 * Process incoming command 
 	 */
-	void DHT::dispatch(const string& aLine, const string& ip, uint16_t port)
+	void DHT::dispatch(const string& aLine, const string& ip, uint16_t port, bool isUdpKeyValid)
 	{
 		// check node's IP address
 		if(!Utils::isGoodIPPort(ip, port))
@@ -103,15 +107,13 @@ namespace dht
 			//socket.send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_BAD_IP, "Your client supplied invalid IP: " + ip, AdcCommand::TYPE_UDP), ip, port);
 			return; // invalid ip/port supplied
 		}
-		
-		lastPacket = GET_TICK();
 
 		try
 		{
 			AdcCommand cmd(aLine);
 			
-			// ignore empty commands
-			if(cmd.getParameters().empty())
+			// flood protection
+			if(!Utils::checkFlood(ip, cmd))
 				return;
 	
 			string cid = cmd.getParam(0);
@@ -119,11 +121,24 @@ namespace dht
 				return;
 	
 			// ignore message from myself
-			if(CID(cid) == ClientManager::getInstance()->getMe()->getCID())
+			if(CID(cid) == ClientManager::getInstance()->getMe()->getCID() || ip == lastExternalIP)
 				return;
 				
+			lastPacket = GET_TICK();	
+				
+			// backward compatibility, it will be removed later
+			if(!isUdpKeyValid && (cmd.getCommand() == AdcCommand::CMD_RES || cmd.getCommand() == AdcCommand::CMD_SND || cmd.getCommand() == AdcCommand::CMD_STA))
+				isUdpKeyValid = true;
+			
 			// add user to routing table
-			Node::Ptr node = addUser(CID(cid), ip, port);
+			Node::Ptr node = addUser(CID(cid), ip, port, true, isUdpKeyValid);
+			
+			// all communication to this node will be encrypted with this key
+			string udpKey;
+			if(cmd.getParam("UK", 1, udpKey))
+			{
+				node->setUdpKey(udpKey);
+			}
 			
 			// node is requiring FW check
 			string internalUdpPort;
@@ -138,7 +153,7 @@ namespace dht
 				cmd.addParam("FC", "FWCHECK");
 				cmd.addParam("I4", ip);
 				cmd.addParam("U4", Util::toString(port));
-				socket.send(cmd, ip, port);
+				send(cmd, ip, port, node->getUser()->getCID(), node->getUdpKey());
 			}							
 		
 #define C(n) case AdcCommand::CMD_##n: handle(AdcCommand::n(), node, cmd); break;
@@ -172,7 +187,7 @@ namespace dht
 	/*
 	 * Sends command to ip and port 
 	 */
-	void DHT::send(AdcCommand& cmd, const string& ip, uint16_t port)
+	void DHT::send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const CID& udpKey)
 	{
 		{
 			// FW check
@@ -186,24 +201,20 @@ namespace dht
 				}
 			}
 		}
-		socket.send(cmd, ip, port);
+		socket.send(cmd, ip, port, targetCID, udpKey);
 	}
 	
 	/*
 	 * Insert (or update) user into routing table 
 	 */
-	Node::Ptr DHT::addUser(const CID& cid, const string& ip, uint16_t port)
+	Node::Ptr DHT::addUser(const CID& cid, const string& ip, uint16_t port, bool update, bool isUdpKeyValid)
 	{
 		// create user as offline (only TCP connected users will be online)
 		UserPtr u = ClientManager::getInstance()->getUser(cid);
 		u->setFlag(User::DHT);
 		
 		Lock l(cs);
-		Node::Ptr node = bucket->insert(u);
-		node->getIdentity().setIp(ip);
-		node->getIdentity().setUdpPort(Util::toString(port));
-		
-		return node;
+		return bucket->insert(u, ip, port, update, isUdpKeyValid);
 	}
 	
 	/*
@@ -239,7 +250,7 @@ namespace dht
 	/*
 	 * Sends our info to specified ip:port 
 	 */
-	void DHT::info(const string& ip, uint16_t port, uint32_t type)
+	void DHT::info(const string& ip, uint16_t port, uint32_t type, const CID& targetCID, const CID& udpKey)
 	{
 		// TODO: what info is needed?
 		AdcCommand cmd(AdcCommand::CMD_INF, AdcCommand::TYPE_UDP);
@@ -279,7 +290,7 @@ namespace dht
 		}
 		cmd.addParam("SU", su);
 			
-		send(cmd, ip, port);
+		send(cmd, ip, port, targetCID, udpKey);
 	}
 	
 	/*
@@ -295,12 +306,12 @@ namespace dht
 	 */
 	void DHT::privateMessage(const OnlineUser& ou, const string& aMessage, bool thirdPerson)
 	{
-		AdcCommand cmd(AdcCommand::CMD_MSG, AdcCommand::TYPE_UDP);
-		cmd.addParam(aMessage);
-		if(thirdPerson)
-			cmd.addParam("ME", "1");
-			
-		send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())));
+		//AdcCommand cmd(AdcCommand::CMD_MSG, AdcCommand::TYPE_UDP);
+		//cmd.addParam(aMessage);
+		//if(thirdPerson)
+		//	cmd.addParam("ME", "1");
+		//	
+		//send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())));
 	}	
 	
 	/*
@@ -411,7 +422,10 @@ namespace dht
 		SearchManager::getInstance()->processSearchResults(node->getUser());		
 		
 		if(it & PING)
-			info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(udpPort)), it & ~PING);	// remove ping flag to avoid ping-pong-ping-pong-ping...
+		{
+			// remove ping flag to avoid ping-pong-ping-pong-ping...
+			info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(udpPort)), it & ~PING, node->getUser()->getCID(), node->getUdpKey());
+		}
 	}
 	
 	// incoming search request
@@ -429,7 +443,8 @@ namespace dht
 	// incoming publish request
 	void DHT::handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) throw()
 	{
-		IndexManager::getInstance()->processPublishSourceRequest(node, c);
+		if(!isFirewalled()) // we should index this entry only if our UDP port is opened
+			IndexManager::getInstance()->processPublishSourceRequest(node, c);
 	}
 	
 	// connection request
@@ -461,22 +476,24 @@ namespace dht
 				
 			if(resTo == "PUB")
 			{
+#ifdef _DEBUG			
 				// don't do anything
-				//string tth;
-				//if(!c.getParam("TR", 1, tth))
-				//	return;
-				//	
-				//try
-				//{
-				//	string fileName = Util::getFileName(ShareManager::getInstance()->toVirtual(TTHValue(tth)));
-				//	LogManager::getInstance()->message("DHT (" + fromIP + "): File published: " + fileName);
-				//}
-				//catch(ShareException&)
-				//{
-				//	// published non-shared file??? Maybe partial file
-				//	LogManager::getInstance()->message("DHT (" + fromIP + "): Partial file published: " + tth);
-				//	
-				//}
+				string tth;
+				if(!c.getParam("TR", 1, tth))
+					return;
+					
+				try
+				{
+					string fileName = Util::getFileName(ShareManager::getInstance()->toVirtual(TTHValue(tth)));
+					LogManager::getInstance()->message("DHT (" + fromIP + "): File published: " + fileName);
+				}
+				catch(ShareException&)
+				{
+					// published non-shared file??? Maybe partial file
+					LogManager::getInstance()->message("DHT (" + fromIP + "): Partial file published: " + tth);
+					
+				}
+#endif
 			}
 			else if(resTo == "FWCHECK")
 			{
@@ -607,7 +624,7 @@ namespace dht
 				
 			cmd.addParam(nodesXML);
 			
-			send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+			send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
 		}
 	}
 	
@@ -632,14 +649,15 @@ namespace dht
 						continue;
 
 					const string& i4	= xml.getChildAttrib("I4");
-					uint16_t u4			= static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4")));
+					uint16_t u4			= static_cast<uint16_t>(xml.getIntChildAttrib("U4"));
 						
 					// don't bother with private IPs
 					if(!Utils::isGoodIPPort(i4, u4))
 						continue;
 
 					// add user to our routing table
-					addUser(CID(cid), i4, u4);
+					Node::Ptr node = addUser(CID(cid), i4, u4, false, false);
+					node->setIpVerified(true);	// assume IP is verified
 				}
 										
 				xml.stepOut();

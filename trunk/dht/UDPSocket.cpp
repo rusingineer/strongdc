@@ -21,6 +21,7 @@
 
 #include "Constants.h"
 #include "DHT.h"
+#include "Utils.h"
 
 #include "../client/AdcCommand.h"
 #include "../client/ClientManager.h"
@@ -30,12 +31,14 @@
 #include "../zlib/zlib.h"
 
 #include <mswsock.h>
+#include <openssl/rc4.h>
 
 namespace dht
 {
 
-	const uint32_t POLL_TIMEOUT = 250;
-	#define BUFSIZE 16384	
+	const uint32_t POLL_TIMEOUT =	250;
+	#define BUFSIZE					16384
+	#define	MAGICVALUE_UDP			91	
 
 	UDPSocket::UDPSocket(void) : stop(false), port(0)
 #ifdef _DEBUG
@@ -109,6 +112,44 @@ namespace dht
 			{
 				uLongf destLen = BUFSIZE; // what size should be reserved?
 				boost::scoped_array<uint8_t> destBuf;
+				bool isUdpKeyValid = false;
+				
+				if(buf[0] != ADC_PACKED_PACKET_HEADER && buf[0] != ADC_PACKET_HEADER)
+				{
+					// it seems to be encrypted packet
+	
+					// the first try decrypts with our UDP key and CID
+					// if it fails, decryption will happen with CID only
+					int tries = 0;
+					
+					do
+					{
+						if(++tries == 3)
+						{
+							// decryption error, it could be malicious packet
+							return;
+						}
+						
+						// generate key
+						TigerHash th;
+						if(tries == 1)
+							th.update(Utils::getUdpKey(inet_ntoa(remoteAddr.sin_addr)).data(), sizeof(CID));
+						th.update(ClientManager::getInstance()->getMe()->getCID().data(), sizeof(CID));
+							
+						RC4_KEY recvKey;
+						RC4_set_key(&recvKey, TigerTree::BYTES, th.finalize());
+									
+						// decrypt data
+						RC4(&recvKey, len, &buf[1], &buf[0]);
+					}
+					while(buf[1] != MAGICVALUE_UDP);
+					
+					len -= 2;
+					
+					// if decryption was successful in first try, it happened via UDP key
+					// it happens only when we sent our UDP key to this node some time ago
+					if(tries == 1) isUdpKeyValid = true;
+				}
 				
 				if(buf[0] == ADC_PACKED_PACKET_HEADER) // is this compressed packet?
 				{
@@ -135,7 +176,7 @@ namespace dht
 					string ip = inet_ntoa(remoteAddr.sin_addr);
 					uint16_t port = ntohs(remoteAddr.sin_port);
 					COMMAND_DEBUG(s.substr(0, s.length() - 1), DebugManager::HUB_IN,  ip + ":" + Util::toString(port));
-					DHT::getInstance()->dispatch(s.substr(0, s.length() - 1), ip, port);
+					DHT::getInstance()->dispatch(s.substr(0, s.length() - 1), ip, port, isUdpKeyValid);
 				}
 			}				
 		}	
@@ -148,7 +189,8 @@ namespace dht
 		{
 			Lock l(cs);
 			uint64_t now = GET_TICK();
-			if(!sendQueue.empty() && (now - timer > 150))
+
+			if(!sendQueue.empty() && (now - timer > 10))
 			{
 				// take the first packet in queue
 				packet.reset(sendQueue.front());
@@ -244,13 +286,18 @@ namespace dht
 	/*
 	 * Sends command to ip and port 
 	 */
-	void UDPSocket::send(const AdcCommand& cmd, const string& ip, uint16_t port)
+	void UDPSocket::send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const CID& udpKey)
 	{
+		// store packet for antiflooding purposes
+		Utils::trackOutgoingPacket(ip, cmd);
+		
+		// pack data
+		cmd.addParam("UK", Utils::getUdpKey(ip).toBase32()); // add our key for the IP address
 		string command = cmd.toString(ClientManager::getInstance()->getMe()->getCID());
 		COMMAND_DEBUG(command, DebugManager::HUB_OUT, ip + ":" + Util::toString(port));
-		
-		// compress data to have at least some kind of "encryption"
-		uLongf destSize = compressBound(command.length()) + 1;
+				
+		// compress packet
+		uLongf destSize = compressBound(command.length()) + 2;
 		
 		uint8_t* srcBuf = (uint8_t*)command.data();
 		uint8_t* destBuf = new uint8_t[destSize];
@@ -266,8 +313,34 @@ namespace dht
 			// compression failed, send uncompressed packet
 			destSize = command.length();
 			memcpy(destBuf, srcBuf, destSize);
-		}
 			
+			dcassert(destBuf[0] == ADC_PACKET_HEADER);
+		}
+		
+		// generate encryption key
+		TigerHash th;
+		if(!udpKey.isZero())
+		{
+			th.update(udpKey.data(), sizeof(udpKey));
+			th.update(targetCID.data(), sizeof(targetCID));
+			
+			RC4_KEY sentKey;
+			RC4_set_key(&sentKey, TigerTree::BYTES, th.finalize());
+					
+			// encrypt data
+			memmove(destBuf + 2, destBuf, destSize);
+			destBuf[0] = 0xe1;	// TODO: some random character except of ADC_PACKET_HEADER or ADC_PACKED_PACKET_HEADER
+			destBuf[1] = MAGICVALUE_UDP;
+			
+			RC4(&sentKey, destSize + 1, destBuf + 1, destBuf + 1);
+			destSize += 2;
+		}
+		else
+		{
+			// TODO: encrypt with CID at least
+			// it will be implemented later, because it would break communication with older clients
+		}
+
 		Lock l(cs);
 		sendQueue.push_back(new Packet(ip, port, destBuf, destSize));
 	}

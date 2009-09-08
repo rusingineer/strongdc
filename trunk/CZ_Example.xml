@@ -163,6 +163,7 @@
 		<String Name="FailedToShutdown">Vypnutí PC selhalo!</String>
 		<String Name="FailedToLoadCertificate">Nepodařilo se načíst soubor s certifikátem</String>
 		<String Name="FailedToLoadPrivateKey">Nepodařilo se načíst privátní klíč</String>
+		<String Name="FastHash">Používat metodu rychlého hashování (vypněte, pokud máte s hashováním problémy)</String>
 		<String Name="FavJoinShowingOff">Zobrazování příchodů oblíbených uživatelů vypnuto</String>
 		<String Name="FavJoinShowingOn">Zobrazování příchodů oblíbených uživatelů zapnuto</String>
 		<String Name="FavoriteDirName">Název</String>
@@ -178,6 +179,7 @@
 		<String Name="FavoriteUsers">Oblíbení uživatelé</String>
 		<String Name="FavuserOnline">Oblíbený uživatel se připojil</String>
 		<String Name="File">Soubor</String>
+		<String Name="FileAlreadyFinished">Soubor je již dokončen</String>
 		<String Name="FileList">Seznam souborů</String>		
 		<String Name="FileListDiff">Porovnat seznam souborů</String>
 		<String Name="FileListRefreshFailed">Obnovení seznamu souborů selhalo: </String>
@@ -202,8 +204,6 @@
 		<String Name="Folder">Složka</String>
 		<String Name="Forbidden">Zakázané</String>
 		<String Name="ForceAttempt">Vynutit připojení</String>
-		<String Name="GarbageIncoming">Odeslat bordel při příchozím spojení</String>
-		<String Name="GarbageOutgoing">Odeslat bordel pri odchozím spojení</String>
 		<String Name="Gb">GiB</String>
 		<String Name="GenerateCertificates">Vygenerovat certifikáty</String>		
 		<String Name="GetFileList">Stáhnout seznam souborů</String>
@@ -456,10 +456,10 @@
 		<String Name="ProfileMessage">Zpráva</String>	
 		<String Name="ProgressBack">Ukazatel přenosů - pozadí</String>
 		<String Name="ProgressCompress">Ukazatel přenosu - dekomprimovaná část</String>
-		<String Name="ProgressDownloaded">Ukazatel ve frontě - stažené bloky</String>
+		<String Name="ProgressDone">Ukazatel ve frontě - hotové bloky</String>
+		<String Name="ProgressDownloaded">Ukazatel ve frontě - stažené bajty</String>
 		<String Name="ProgressRunning">Ukazatel ve frontě - běžící bloky</String>
 		<String Name="ProgressSegment">Ukazatel přenosu - aktuální segment</String>
-		<String Name="ProgressVerified">Ukazatel ve frontě - ověřené bloky</String>
 		<String Name="ProgressbarOdcStyle">Používat schéma oDC v progressbaru</String>
 		<String Name="Properties">&amp;Vlastnosti</String>
 		<String Name="PublicHubs">Veřejné huby</String>
@@ -725,6 +725,7 @@
 		<String Name="SettingsSounds">Zvuky</String>
 		<String Name="SettingsSpeedsNotAccurate">Pozn.: Kvůli kolísání připojení nejsou údaje o rychlosti 100% přesné...</String>
 		<String Name="SettingsStatusInChat">Zobrazovat stavové zprávy na hlavním chatu</String>
+		<String Name="SettingsDhtPort">DHT/UDP</String>
 		<String Name="SettingsTcpPort">TCP</String>
 		<String Name="SettingsTlsPort">TLS/TCP</String>
 		<String Name="SettingsTextStyles">Barvy &amp; písma</String>
@@ -737,6 +738,7 @@
 		<String Name="SettingsToolbarRemove">&lt;-- Odebrat</String>
 		<String Name="SettingsUdpPort">UDP</String>
 		<String Name="SettingsUnfinishedDownloadDirectory">Složka pro nedokončené stahování</String>
+		<String Name="SettingsUpdateIp">Aktualizovat IP při DHT kontrole firewallu (přibl.každou hodinu)</String>
 		<String Name="SettingsUploadLineSpeed">Rychlost uploadu linky</String>
 		<String Name="SettingsUploads">Sdílení</String>
 		<String Name="SettingsUploadsMinSpeed">Otevřít další slot, když je rychlost pod (0 = vyp.)</String>
@@ -865,6 +867,7 @@ Výchozí: %H:%M:%S</String>
 		<String Name="UpnpFailedToCreateMappings">Nezdařilo se dokončit mapování portů. Prosím zvolte NAT sami.</String>
 		<String Name="UpnpFailedToGetExternalIp">Nezdařilo se získat IP přes UPnP. Prosím nastavte ji sami.</String>
 		<String Name="UpnpFailedToRemoveMappings">Nezdařilo se odstranit mapování portů</String>
+		<String Name="UseDht">Používat DHT pro hledání alternativních zdrojů</String>
 		<String Name="User">Uživatel</String>
 		<String Name="UserCmdCommand">Příkaz</String>
 		<String Name="UserCmdContext">Kontext</String>

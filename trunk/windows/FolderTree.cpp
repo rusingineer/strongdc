@@ -1502,11 +1502,13 @@ bool FolderTree::GetHasSharedChildren(HTREEITEM hItem)
 		{
 			if(stricmp(i->second.substr(startPos, searchStr.size()), searchStr) == 0) {
 				if(searchStr.size() <= 3) {
-					return Util::fileExists(i->second + PATH_SEPARATOR);
+					if(Util::fileExists(i->second + PATH_SEPARATOR))
+						return true;
 				} else {
-					if(i->second.substr(searchStr.size()).substr(0,1) == "\\")
-						return Util::fileExists(i->second + PATH_SEPARATOR);
-					else
+					if(i->second.substr(searchStr.size()).substr(0,1) == "\\") {
+						if(Util::fileExists(i->second + PATH_SEPARATOR))
+							return true;
+					} else
 						return false;
 				}
 			}

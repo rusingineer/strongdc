@@ -1,3 +1,22 @@
+** svn460
+	fixed small bug in limiter's settings
+	fixed some problems on x64 platforms
+	[DHT] fixed switching on/off
+	[DHT] faster UDP sending
+	[DHT] faster detection of dead nodes
+	[DHT] fixed publishing partial files
+	[DHT] ignore multiple nodes with same IP:port
+	[ADC] added TS support (DC++ BZR)
+	[DHT] advertising this feature to hubs
+	[DHT] implemented simple IP verification
+	[DHT] don't allow multiple same IPs in search response
+	fixed bold text of shared folders when any subfolder doesn't exist
+	[DHT] implemented general flooding protection
+	[DHT] implemented simple encryption
+
+** svn459
+	released 2.30
+
 ** svn458
 	default uploadbar color is more orange than red
 

@@ -47,13 +47,13 @@ namespace dht
 		uint16_t getPort() const { return BOOLSETTING(USE_DHT) ? socket.getPort() : 0; }
 		
 		/** Process incoming command */
-		void dispatch(const string& aLine, const string& ip, uint16_t port);
+		void dispatch(const string& aLine, const string& ip, uint16_t port, bool isUdpKeyValid);
 		
 		/** Sends command to ip and port */
-		void send(AdcCommand& cmd, const string& ip, uint16_t port);
+		void send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const CID& udpKey);
 		
 		/** Insert (or update) user into routing table */
-		Node::Ptr addUser(const CID& cid, const string& ip, uint16_t port);
+		Node::Ptr addUser(const CID& cid, const string& ip, uint16_t port, bool update, bool isUdpKeyValid);
 		
 		/** Returns counts of nodes available in k-buckets */
 		unsigned int getNodesCount() { Lock l(cs); return bucket->getNodes().size(); }
@@ -65,7 +65,7 @@ namespace dht
 		void findFile(const string& tth, const string& token = Util::toString(Util::rand()));
 		
 		/** Sends our info to specified ip:port */
-		void info(const string& ip, uint16_t port, uint32_t type);
+		void info(const string& ip, uint16_t port, uint32_t type, const CID& targetCID, const CID& udpKey);
 		
 		/** Sends Connect To Me request to online node */
 		void connect(const OnlineUser& ou, const string& token);

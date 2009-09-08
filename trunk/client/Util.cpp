@@ -462,10 +462,9 @@ string Util::cleanPathChars(string aNick) {
 	return aNick;
 }
 
-string Util::getShortTimeString() {
+string Util::getShortTimeString(time_t t) {
 	char buf[255];
-	time_t _tt = time(NULL);
-	tm* _tm = localtime(&_tt);
+	tm* _tm = localtime(&t);
 	if(_tm == NULL) {
 		strcpy(buf, "xx:xx");
 	} else {
@@ -1094,25 +1093,6 @@ string Util::getIpCountry (const string& IP) {
 	}
 
 	return Util::emptyString; //if doesn't returned anything already, something is wrong...
-}
-
-string Util::formatMessage(const string& nick, const string& message, bool thirdPerson) {
-	// let's *not* obey the spec here and add a space after the star. :P
-	string tmp = (thirdPerson ? "* " + nick + " " : "<" + nick + "> ") + message;
-	
-	// Check all '<' and '[' after newlines as they're probably pasts...
-	size_t i = 0;
-	while( (i = tmp.find('\n', i)) != string::npos) {
-		if(i + 1 < tmp.length()) {
-			if(tmp[i+1] == '[' || tmp[i+1] == '<') {
-				tmp.insert(i+1, "- ");
-				i += 2;
-			}
-		}
-		i++;
-	}
-
-	return Text::toDOS(tmp);
 }
 
 string Util::getTimeString() {

@@ -50,7 +50,7 @@ namespace dht
 			return;
 			
 		// no node to search
-		if(possibleNodes.empty() || respondedNodes.size() >= MAX_SEARCH_RESULTS)
+		if(possibleNodes.empty()/* || respondedNodes.size() >= MAX_SEARCH_RESULTS*/)
 		{
 			stopping = true;
 			lifeTime = GET_TICK() + SEARCH_STOPTIME; // wait before deleting not to lose so much delayed results
@@ -75,7 +75,8 @@ namespace dht
 			cmd.addParam("TY", Util::toString(type));
 			cmd.addParam("TO", token);
 			
-			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+			//node->setTimeout();
+			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
 		}
 	}
 		
@@ -272,7 +273,7 @@ namespace dht
 		res.addParam("NX", nodes);
 				
 		// send search result
-		DHT::getInstance()->send(res, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())));
+		DHT::getInstance()->send(res, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
 	}
 	
 	/*
@@ -314,8 +315,8 @@ namespace dht
 				{
 					const CID cid		= CID(xml.getChildAttrib("CID"));
 					const string& i4	= xml.getChildAttrib("I4");
-					uint16_t u4			= static_cast<uint16_t>(Util::toInt(xml.getChildAttrib("U4")));
-					int64_t size		= Util::toInt64(xml.getChildAttrib("SI"));
+					uint16_t u4			= static_cast<uint16_t>(xml.getIntChildAttrib("U4"));
+					int64_t size		= xml.getLongLongChildAttrib("SI");
 					bool partial		= xml.getBoolChildAttrib("PF");
 
 					// don't bother with invalid sources and private IPs
@@ -331,7 +332,7 @@ namespace dht
 						if(!u->isOnline())	// TODO: only node type < 3
 						{
 							// node is not online, try to contact him
-							DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE);				
+							DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE, cid, CID()); // TODO: key
 						}
 						
 						// ask for partial file
@@ -339,7 +340,7 @@ namespace dht
 						cmd.addParam("U4", Util::toString(dcpp::SearchManager::getInstance()->getPort()));
 						cmd.addParam("TR", s->term);
 						
-						DHT::getInstance()->send(cmd, i4, u4);
+						DHT::getInstance()->send(cmd, i4, u4, cid, CID()); // TODO: key
 					}
 					else
 					{
@@ -348,7 +349,7 @@ namespace dht
 						{
 							// node is not online, try to contact him
 							searchResults.insert(std::make_pair(u->getCID(), std::make_pair(GET_TICK(), sr)));
-							DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE);						
+							DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE, cid, CID()); // TODO: key						
 						}
 						else
 						{
@@ -376,18 +377,26 @@ namespace dht
 				}
 
 				const string& i4 = xml.getChildAttrib("I4");
-				const string& u4 = xml.getChildAttrib("U4");	
+				uint16_t u4 = static_cast<uint16_t>(xml.getIntChildAttrib("U4"));	
 					
 				// don't bother with private IPs
-				if(!Utils::isGoodIPPort(i4, static_cast<uint16_t>(Util::toInt(u4))))
+				if(!Utils::isGoodIPPort(i4, u4))
 					continue;
+					
+				// we don't allow multiple CIDs with same IP in a response to avoid possible attack
+				bool moreSameIPs = false;
+				for(Node::Map::const_iterator i = s->possibleNodes.begin(); i != s->possibleNodes.end(); i++)
+					if(i->second->getIdentity().getIp() == i4)
+					{
+						moreSameIPs = true;
+						break;
+					}
 
-				Node::Ptr tmpNode(new Node());
-				tmpNode->getIdentity().setIp(i4);
-				tmpNode->getIdentity().setUdpPort(u4);
-
-				// update our list of possible nodes
-				s->possibleNodes[distance] = tmpNode;
+				if(!moreSameIPs)
+				{
+					// update our list of possible nodes
+					s->possibleNodes[distance] = DHT::getInstance()->addUser(cid, i4, u4, false, false);
+				}
 			}
 									
 			xml.stepOut();
@@ -407,6 +416,8 @@ namespace dht
 		int n = K;
 		for(Node::Map::const_iterator i = nodes.begin(); i != nodes.end() && n > 0; i++, n--)
 		{
+			const Node::Ptr& node = i->second;
+			
 			AdcCommand cmd(AdcCommand::CMD_PUB, AdcCommand::TYPE_UDP);
 			cmd.addParam("TR", tth);
 			cmd.addParam("SI", Util::toString(size));
@@ -414,7 +425,8 @@ namespace dht
 			if(partial)
 				cmd.addParam("PF", "1");
 		
-			DHT::getInstance()->send(cmd, i->second->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(i->second->getIdentity().getUdpPort())));
+			//i->second->setTimeout();
+			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
 		}
 	}
 	

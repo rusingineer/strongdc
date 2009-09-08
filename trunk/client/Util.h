@@ -204,9 +204,8 @@ public:
 	static string formatStatus(int iStatus);
 	
 	static string formatBytes(const string& aString) { return formatBytes(toInt64(aString)); }
-	static string formatMessage(const string& nick, const string& message, bool thirdPerson);
 
-	static string getShortTimeString();
+	static string getShortTimeString(time_t t = time(NULL) );
 
 	static string getTimeString();
 	static string toAdcFile(const string& file);

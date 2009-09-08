@@ -473,8 +473,8 @@ LRESULT WaitingUsersFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHan
 				HFONT oldFont = (HFONT)SelectObject(dc, WinUtil::font);
 				SetBkMode(dc, TRANSPARENT);
 
-				CBarShader statusBar(rc.Height(), rc.Width(), RGB(150, 0, 0), ii->getSize());
-				statusBar.FillRange(0, ii->getPos(), RGB(222, 160, 0));
+				CBarShader statusBar(rc.Height(), rc.Width(), SETTING(UPLOAD_BAR_COLOR), ii->getSize());
+				statusBar.FillRange(0, ii->getPos(), SETTING(COLOR_DONE));
 				statusBar.Draw(cdc, 0, 0, SETTING(PROGRESS_3DDEPTH));
 
 				SetTextColor(dc, SETTING(PROGRESS_TEXT_COLOR_UP));
