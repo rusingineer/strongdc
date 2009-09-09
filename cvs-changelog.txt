@@ -1,3 +1,8 @@
+** svn461
+	updated to Boost 1.40
+	[DHT] fixed parsing encrypted packets
+	removed string pool to see whether it fixes crashes
+
 ** svn460
 	fixed small bug in limiter's settings
 	fixed some problems on x64 platforms

@@ -437,7 +437,7 @@ T expint_imp(unsigned n, T z, const Policy& pol, const Tag& tag)
    if(z < 0)
       return policies::raise_domain_error<T>(function, "Function requires z >= 0 but got %1%.", z, pol);
    if(z == 0)
-      return n == 1 ? policies::raise_overflow_error<T>(function, 0, pol) : 1 / (static_cast<T>(n - 1));
+      return n == 1 ? policies::raise_overflow_error<T>(function, 0, pol) : T(1 / (static_cast<T>(n - 1)));
 
    T result;
 
@@ -505,7 +505,7 @@ T expint_i_imp(T z, const Policy& pol, const Tag& tag)
 {
    static const char* function = "boost::math::expint<%1%>(%1%)";
    if(z < 0)
-      return -expint_imp(1, -z, pol, tag);
+      return -expint_imp(1, T(-z), pol, tag);
    if(z == 0)
       return -policies::raise_overflow_error<T>(function, 0, pol);
    return expint_i_as_series(z, pol);
@@ -551,7 +551,7 @@ T expint_i_imp(T z, const Policy& pol, const mpl::int_<53>& tag)
          -0.138972589601781706598e-4L
       };
 
-      static const T r1 = static_cast<T>(1677624236387711.0L) / 4503599627370496uLL;
+      static const T r1 = static_cast<T>(1677624236387711.0L / 4503599627370496.0L);
       static const T r2 = 0.131401834143860282009280387409357165515556574352422001206362e-16L;
       static const T r = static_cast<T>(0.372507410781366634461991866580119133535689497771654051555657435242200120636201854384926049951548942392L);
       T t = (z / 3) - 1;
@@ -766,7 +766,7 @@ T expint_i_imp(T z, const Policy& pol, const mpl::int_<64>& tag)
          0.131515429329812837701e-5L
       };
 
-      static const T r1 = static_cast<T>(1677624236387711.0L) / 4503599627370496uLL;
+      static const T r1 = static_cast<T>(1677624236387711.0L / 4503599627370496.0L);
       static const T r2 = 0.131401834143860282009280387409357165515556574352422001206362e-16L;
       static const T r = static_cast<T>(0.372507410781366634461991866580119133535689497771654051555657435242200120636201854384926049951548942392L);
       T t = (z / 3) - 1;
@@ -1012,8 +1012,8 @@ T expint_i_imp(T z, const Policy& pol, const mpl::int_<113>& tag)
          0.382742953753485333207877784720070523e-12L
       };
 
-      static const T r1 = static_cast<T>(1677624236387711.0L) / 4503599627370496uLL;
-      static const T r2 = (static_cast<T>(266514582277687.0L) / 4503599627370496uLL) / 4503599627370496uLL;
+      static const T r1 = static_cast<T>(1677624236387711.0L / 4503599627370496.0L);
+      static const T r2 = static_cast<T>(266514582277687.0L / 4503599627370496.0L / 4503599627370496.0L);
       static const T r3 = static_cast<T>(0.283806480836357377069325311780969887585024578164571984232357e-31L);
       static const T r = static_cast<T>(0.372507410781366634461991866580119133535689497771654051555657435242200120636201854384926049951548942392L);
       T t = (z / 3) - 1;
