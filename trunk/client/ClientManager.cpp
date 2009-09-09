@@ -691,7 +691,7 @@ void ClientManager::connectionTimeout(const UserPtr& p) {
 
 void ClientManager::checkCheating(const UserPtr& p, DirectoryListing* dl) {
 	string report = Util::emptyString;
-	OnlineUser* ou = NULL;
+	OnlineUserPtr ou = NULL;
 	{
 		Lock l(cs);
 
@@ -740,7 +740,7 @@ void ClientManager::checkCheating(const UserPtr& p, DirectoryListing* dl) {
 }
 
 void ClientManager::setCheating(const UserPtr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient) {
-	OnlineUser* ou = NULL;
+	OnlineUserPtr ou = NULL;
 	string report = Util::emptyString;
 	{
 		Lock l(cs);

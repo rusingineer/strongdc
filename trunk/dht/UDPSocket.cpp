@@ -36,7 +36,7 @@
 namespace dht
 {
 
-	const uint32_t POLL_TIMEOUT =	250;
+	const uint32_t POLL_TIMEOUT =	10;
 	#define BUFSIZE					16384
 	#define	MAGICVALUE_UDP			91	
 
@@ -121,7 +121,9 @@ namespace dht
 					// the first try decrypts with our UDP key and CID
 					// if it fails, decryption will happen with CID only
 					int tries = 0;
+					len -= 1;
 					
+					destBuf.reset(new uint8_t[len]);
 					do
 					{
 						if(++tries == 3)
@@ -140,11 +142,12 @@ namespace dht
 						RC4_set_key(&recvKey, TigerTree::BYTES, th.finalize());
 									
 						// decrypt data
-						RC4(&recvKey, len, &buf[1], &buf[0]);
+						RC4(&recvKey, len, &buf[1], &destBuf[0]);
 					}
-					while(buf[1] != MAGICVALUE_UDP);
+					while(destBuf[0] != MAGICVALUE_UDP);
 					
-					len -= 2;
+					len -= 1;
+					memcpy(&buf[0], &destBuf[1], len);
 					
 					// if decryption was successful in first try, it happened via UDP key
 					// it happens only when we sent our UDP key to this node some time ago
@@ -190,7 +193,7 @@ namespace dht
 			Lock l(cs);
 			uint64_t now = GET_TICK();
 
-			if(!sendQueue.empty() && (now - timer > 10))
+			if(!sendQueue.empty() && (now - timer > POLL_TIMEOUT))
 			{
 				// take the first packet in queue
 				packet.reset(sendQueue.front());

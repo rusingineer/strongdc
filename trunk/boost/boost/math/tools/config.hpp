@@ -60,6 +60,14 @@
 //
 #  define BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
 #endif
+#if defined(unix) && defined(__INTEL_COMPILER)
+//
+// Intel compiler has sporadic issues compiling std::fpclassify depending on
+// the exact OS version used.  Use our own code for this as we know it works
+// well on Intel processors:
+//
+#define BOOST_MATH_DISABLE_STD_FPCLASSIFY
+#endif
 
 #if defined(BOOST_MSVC) && !defined(_WIN32_WCE)
    // Better safe than sorry, our tests don't support hardware exceptions:
@@ -68,6 +76,24 @@
 
 #ifdef __IBMCPP__
 #  define BOOST_MATH_NO_DEDUCED_FUNCTION_POINTERS
+#endif
+
+#if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901))
+#  define BOOST_MATH_USE_C99
+#endif
+
+#if (defined(__hpux) && !defined(__hppa))
+#  define BOOST_MATH_USE_C99
+#endif
+
+#if defined(__GNUC__) && defined(_GLIBCXX_USE_C99)
+#  define BOOST_MATH_USE_C99
+#endif
+
+#if defined(__CYGWIN__) || defined(__HP_aCC) || defined(BOOST_INTEL) \
+  || defined(BOOST_NO_NATIVE_LONG_DOUBLE_FP_CLASSIFY) \
+  || (defined(__GNUC__) && !defined(BOOST_MATH_USE_C99))
+#  define BOOST_MATH_NO_NATIVE_LONG_DOUBLE_FP_CLASSIFY
 #endif
 
 #if defined(BOOST_NO_EXPLICIT_FUNCTION_TEMPLATE_ARGUMENTS) || BOOST_WORKAROUND(__SUNPRO_CC, <= 0x590)
@@ -106,9 +132,9 @@
 
 #endif // defined BOOST_NO_EXPLICIT_FUNCTION_TEMPLATE_ARGUMENTS
 
-#if BOOST_WORKAROUND(__SUNPRO_CC, <= 0x590) || defined(__hppa)
+#if BOOST_WORKAROUND(__SUNPRO_CC, <= 0x590) || defined(__hppa) || defined(__GNUC__)
 // Sun's compiler emits a hard error if a constant underflows,
-// as does aCC on PA-RISC:
+// as does aCC on PA-RISC, while gcc issues a large number of warnings:
 #  define BOOST_MATH_SMALL_CONSTANT(x) 0
 #else
 #  define BOOST_MATH_SMALL_CONSTANT(x) x
@@ -135,6 +161,12 @@
 #  define BOOST_MATH_POLY_METHOD 3
 #  define BOOST_MATH_RATIONAL_METHOD 3
 #  define BOOST_MATH_INT_TABLE_TYPE(RT, IT) RT
+#  define BOOST_MATH_INT_VALUE_SUFFIX(RV, SUF) RV##.0L
+#endif
+
+#if defined(BOOST_NO_LONG_LONG) && !defined(BOOST_MATH_INT_TABLE_TYPE)
+#  define BOOST_MATH_INT_TABLE_TYPE(RT, IT) RT
+#  define BOOST_MATH_INT_VALUE_SUFFIX(RV, SUF) RV##.0L
 #endif
 
 //
@@ -159,6 +191,10 @@
 #ifndef BOOST_MATH_INT_TABLE_TYPE
 #  define BOOST_MATH_INT_TABLE_TYPE(RT, IT) IT
 #endif
+#ifndef BOOST_MATH_INT_VALUE_SUFFIX
+#  define BOOST_MATH_INT_VALUE_SUFFIX(RV, SUF) RV##SUF
+#endif
+
 //
 // Helper macro for controlling the FP behaviour:
 //
@@ -219,7 +255,7 @@ inline T max BOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c, T d)
 } // namespace tools
 }} // namespace boost namespace math
 
-#ifdef __linux__
+#if (defined(__linux__) && !defined(__UCLIBC__)) || defined(__QNX__) || defined(__IBMCPP__)
 
    #include <fenv.h>
 
@@ -244,9 +280,11 @@ inline T max BOOST_PREVENT_MACRO_SUBSTITUTION(T a, T b, T c, T d)
    } // namespace detail
    }} // namespaces
 
-   #define BOOST_FPU_EXCEPTION_GUARD boost::math::detail::fpu_guard local_guard_object;
+#  define BOOST_FPU_EXCEPTION_GUARD boost::math::detail::fpu_guard local_guard_object;
+#  define BOOST_MATH_INSTRUMENT_FPU do{ fexcept_t cpu_flags; fegetexceptflag(&cpu_flags, FE_ALL_EXCEPT); BOOST_MATH_INSTRUMENT_VARIABLE(cpu_flags); } while(0); 
 #else // All other platforms.
-  #define BOOST_FPU_EXCEPTION_GUARD
+#  define BOOST_FPU_EXCEPTION_GUARD
+#  define BOOST_MATH_INSTRUMENT_FPU
 #endif
 
 #ifdef BOOST_MATH_INSTRUMENT
