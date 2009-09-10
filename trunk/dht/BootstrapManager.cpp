@@ -48,7 +48,7 @@ namespace dht
 			LogManager::getInstance()->message("DHT bootstrapping started");
 			
 			// TODO: make URL settable
-			string url = BOOTSTRAP_URL "?cid=" + ClientManager::getInstance()->getMe()->getCID().toBase32();
+			string url = BOOTSTRAP_URL "?cid=" + ClientManager::getInstance()->getMe()->getCID().toBase32() + "&encryption=1";
 			
 			// store only active nodes to database
 			if(ClientManager::getInstance()->isActive(Util::emptyString))

@@ -1,3 +1,9 @@
+** svn462
+	[DHT] publishing all sharelist (files > 1 MiB) and not only 200 largest files
+	[DHT] fixed encryption when our IP changes
+	[DHT] file publishing takes 40 secs instead of 140 secs
+	[DHT] encrypted packet has random first byte, so it's impossible to detect packet type
+
 ** svn461
 	updated to Boost 1.40
 	[DHT] fixed parsing encrypted packets

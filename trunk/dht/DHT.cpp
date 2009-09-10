@@ -137,7 +137,7 @@ namespace dht
 			string udpKey;
 			if(cmd.getParam("UK", 1, udpKey))
 			{
-				node->setUdpKey(udpKey);
+				node->setUdpKey(CID(udpKey));
 			}
 			
 			// node is requiring FW check
@@ -398,7 +398,7 @@ namespace dht
 			string parameter_name = i->substr(0, 2);
 			if(parameter_name == "TY")
 				it = (InfType)Util::toInt(i->substr(2));
-			else if((parameter_name != "I4") && (parameter_name != "U4")) // avoid IP+port spoofing
+			else if((parameter_name != "I4") && (parameter_name != "U4") && (parameter_name != "UK")) // avoid IP+port spoofing + don't store key into map
 				node->getIdentity().set(i->c_str(), i->substr(2));
 		}
 		

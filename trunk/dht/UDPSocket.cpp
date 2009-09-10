@@ -332,7 +332,10 @@ namespace dht
 					
 			// encrypt data
 			memmove(destBuf + 2, destBuf, destSize);
-			destBuf[0] = 0xe1;	// TODO: some random character except of ADC_PACKET_HEADER or ADC_PACKED_PACKET_HEADER
+			
+			// some random character except of ADC_PACKET_HEADER or ADC_PACKED_PACKET_HEADER
+			uint8_t randomByte = static_cast<uint8_t>(Util::rand(0, 256));
+			destBuf[0] = (randomByte == ADC_PACKET_HEADER || randomByte == ADC_PACKED_PACKET_HEADER) ? (randomByte + 1) : randomByte;
 			destBuf[1] = MAGICVALUE_UDP;
 			
 			RC4(&sentKey, destSize + 1, destBuf + 1, destBuf + 1);

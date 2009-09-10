@@ -45,14 +45,20 @@ namespace dht
 		void setAlive();
 		void setIpVerified(bool verified) { ipVerified = verified; }
 		void setTimeout(uint64_t now = GET_TICK());
-		
-		CID getUdpKey() const { return CID(getIdentity().get("UK")); }
-		void setUdpKey(const string& key) { getIdentity().set("UK", key); }
+
+		CID getUdpKey() const;
+		void setUdpKey(const CID& key);
 		
 	private:
 	
 		friend class KBucket;
-		
+
+		struct
+		{
+			string	ip;
+			CID		key;
+		} UDPKey;
+				
 		uint64_t	created;
 		uint64_t	expires;
 		uint8_t		type;

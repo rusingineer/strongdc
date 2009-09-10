@@ -85,6 +85,9 @@ namespace dht
 		/** Returns if our UDP port is open */
 		bool isFirewalled() const { return firewalled; }
 		
+		/** Returns our IP got from the last firewall check */
+		string getLastExternalIP() const { return lastExternalIP; }
+		
 		void setRequestFWCheck() { Lock l(cs); requestFWCheck = true; firewalledWanted.clear(); firewalledChecks.clear(); }
 				
 	private:

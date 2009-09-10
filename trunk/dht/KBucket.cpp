@@ -49,6 +49,22 @@ namespace dht
 	{
 	}
 
+	CID Node::getUdpKey() const 
+	{ 
+		// if our external IP changed from the last time, we can't encrypt packet with this key
+		if(DHT::getInstance()->getLastExternalIP() == UDPKey.ip)
+			return UDPKey.key;
+		else
+			return CID();
+	}
+	
+	void Node::setUdpKey(const CID& key)
+	{ 
+		// store key with our current IP address
+		UDPKey.ip = DHT::getInstance()->getLastExternalIP();
+		UDPKey.key = key;
+	}
+		
 	void Node::setAlive()
 	{
 		// long existing nodes will probably be there for another long time
