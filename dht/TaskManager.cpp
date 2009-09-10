@@ -14,7 +14,7 @@ namespace dht
 {
 
 	TaskManager::TaskManager(void) :
-		nextPublishTime(GET_TICK()), nextRepublishTime(GET_TICK()), nextSearchTime(GET_TICK()), nextSelfLookup(GET_TICK() + 3*60*1000),
+		nextPublishTime(GET_TICK()), nextSearchTime(GET_TICK()), nextSelfLookup(GET_TICK() + 3*60*1000),
 		nextFirewallCheck(GET_TICK() + FWCHECK_TIME), lastBootstrap(0)
 	{
 		TimerManager::getInstance()->addListener(this);
@@ -69,13 +69,6 @@ namespace dht
 	
 	void TaskManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 	{
-		if(!DHT::getInstance()->isFirewalled() && DHT::getInstance()->isConnected() && IndexManager::getInstance()->getPublish() && aTick >= nextRepublishTime)
-		{
-			// republish all files
-			ShareManager::getInstance()->publish();
-			nextRepublishTime = aTick + REPUBLISH_TIME;
-		}
-		
 		// remove dead nodes
 		DHT::getInstance()->checkExpiration(aTick);
 		IndexManager::getInstance()->checkExpiration(aTick);

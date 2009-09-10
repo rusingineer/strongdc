@@ -111,8 +111,6 @@ public:
 		Lock l(cs);
 		return tthIndex.find(tth) != tthIndex.end();
 	}
-
-	void publish();
 	
 	GETSET(size_t, hits, Hits);
 	GETSET(string, bzXmlFile, BZXmlFile);

@@ -68,9 +68,6 @@ public:
 	/** Try to publish next file in queue */
 	void publishNextFile();
 	
-	/** Create publish queue from local file list */
-	void createPublishQueue(ShareManager::HashFileMap& tthIndex);
-	
 	/** Loads existing indexes from disk */
 	void loadIndexes(SimpleXML& xml);
 	
@@ -91,8 +88,17 @@ public:
 	/** Removes old sources */
 	void checkExpiration(uint64_t aTick);
 	
+	/** Publishes shared file */
+	void publishFile(const TTHValue& tth, int64_t size);
+	
 	/** Publishes partially downloaded file */
 	void publishPartialFile(const TTHValue& tth);
+	
+	/** Set time when our sharelist should be republished */
+	void setNextPublishing() { nextRepublishTime = GET_TICK() + REPUBLISH_TIME; }
+	
+	/** Is time when we should republish our sharelist? */
+	bool isTimeForPublishing() const { return GET_TICK() >= nextRepublishTime; }
 	
 private:
 
@@ -109,6 +115,9 @@ private:
 	
 	/** How many files is currently being published */
 	volatile long publishing;
+	
+	/** Time when our sharelist should be republished */
+	uint64_t nextRepublishTime;	
 	
 	/** Synchronizes access to tthList */
 	mutable CriticalSection cs;
