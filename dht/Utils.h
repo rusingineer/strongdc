@@ -45,6 +45,9 @@ public:
 	/** General flooding protection */
 	static bool checkFlood(const string& ip, const AdcCommand& cmd);
 	
+	/** Removes tracked packets. Called once a minute. */
+	static void cleanFlood();
+	
 	/** Stores outgoing request to avoid receiving invalid responses */
 	static void trackOutgoingPacket(const string& ip, const AdcCommand& cmd);
 	
@@ -62,7 +65,6 @@ private:
 		uint32_t	cmd;
 	};
 	
-	static uint64_t lastFloodCleanup;
 	static CriticalSection cs;
 	static std::tr1::unordered_map<string, std::tr1::unordered_multiset<uint32_t>> receivedPackets;
 	static std::list<OutPacket> sentPackets;

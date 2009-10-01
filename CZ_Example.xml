@@ -861,6 +861,7 @@ Výchozí: %H:%M:%S</String>
 		<String Name="UnknownError">Neznámá chyba: 0x%x</String>
 		<String Name="UpdateCheck">Update kontrola</String>
 		<String Name="UploadFinishedIdle">Odesílání dokončeno, čekám...</String>
+		<String Name="UploadQueue">Fronta odesílání</String>
 		<String Name="UploadStarting">Odesílání zahájeno...</String>
 		<String Name="UploadedBytes">Odesláno %s (%.01f%%) za %s</String>
 		<String Name="UploadedTo"> odesláno </String>
@@ -905,7 +906,6 @@ Výchozí: %H:%M:%S</String>
 		<String Name="WaitingTime">Čas čekání</String>
 		<String Name="WaitingToRetry">Čekám na další pokus...</String>
 		<String Name="WaitingUserOnline">Čekám (Uživatel je připojen)</String>
-		<String Name="WaitingUsers">Fronta odesílání</String>
 		<String Name="WaitingUsersOnline">Čekám (%d z %d uživatelů připojeno)</String>
 		<String Name="Webserver">Webserver</String>
 		<String Name="WhatsThis">Co je &amp;tohle?</String>

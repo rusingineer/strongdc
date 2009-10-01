@@ -29,7 +29,6 @@
 namespace dht
 {
 
-	uint64_t Utils::lastFloodCleanup = 0;
 	CriticalSection Utils::cs;
 	std::tr1::unordered_map<string, std::tr1::unordered_multiset<uint32_t>> Utils::receivedPackets;
 	std::list<Utils::OutPacket> Utils::sentPackets;
@@ -79,7 +78,7 @@ namespace dht
 		switch(cmd.getCommand())
 		{
 			// request packets
-			case AdcCommand::CMD_SCH: maxAllowedPacketsPerMinute = 15; break;
+			case AdcCommand::CMD_SCH: maxAllowedPacketsPerMinute = 20; break;
 			case AdcCommand::CMD_PUB: maxAllowedPacketsPerMinute = 3; break;
 			case AdcCommand::CMD_INF: maxAllowedPacketsPerMinute = 3; break;
 			case AdcCommand::CMD_CTM: maxAllowedPacketsPerMinute = 2; break;
@@ -107,12 +106,7 @@ namespace dht
 				return false;
 		}
 		
-		if(GET_TICK() - lastFloodCleanup >= FLOOD_PROTECTION)
-		{
-			receivedPackets.clear();
-			lastFloodCleanup = GET_TICK();
-		}
-		
+		Lock l(cs);
 		std::tr1::unordered_multiset<uint32_t>& packetsPerIp = receivedPackets[ip];
 		packetsPerIp.insert(cmd.getCommand());
 		
@@ -123,6 +117,15 @@ namespace dht
 		}
 		
 		return true;
+	}
+	
+	/*
+	 * Removes tracked packets. Called once a minute.
+	 */
+	void Utils::cleanFlood()
+	{
+		Lock l(cs);
+		receivedPackets.clear();
 	}
 	
 	/*

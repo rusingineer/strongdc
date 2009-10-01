@@ -73,7 +73,7 @@ PropPage::ListItem AppearancePage::boldItems[] = {
 	{ SettingsManager::BOLD_HUB, ResourceManager::HUB },
 	{ SettingsManager::BOLD_PM, ResourceManager::PRIVATE_MESSAGE },
 	{ SettingsManager::BOLD_SEARCH, ResourceManager::SEARCH },
-	{ SettingsManager::BOLD_WAITING_USERS, ResourceManager::WAITING_USERS },
+	{ SettingsManager::BOLD_UPLOAD_QUEUE, ResourceManager::UPLOAD_QUEUE },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

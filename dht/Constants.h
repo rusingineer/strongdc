@@ -23,7 +23,7 @@ namespace dht
 
 #define BOOTSTRAP_URL				"http://strongdc.sourceforge.net/bootstrap/"
 
-#define DHT_UDPPORT					6245							// default DHT port
+#define DHT_UDPPORT					6250							// default DHT port
 #define DHT_FILE					"dht.xml"						// local file with all information got from the network
 
 #define ID_BITS						192								// size of identificator (in bits)
@@ -40,7 +40,7 @@ namespace dht
 #define SEARCH_STOPTIME				15*1000	// 15 seconds			// how long to wait for delayed search results before deleting the search
 #define SEARCHNODE_LIFETIME			20*1000	// 45 seconds			// how long to try searching for node
 #define SEARCHFILE_LIFETIME			45*1000	// 45 seconds			// how long to try searching for file
-#define SEARCHSTOREFILE_LIFETIME	40*1000	// 40 seconds			// how long to try publishing a file
+#define SEARCHSTOREFILE_LIFETIME	20*1000	// 20 seconds			// how long to try publishing a file
 #define SELF_LOOKUP_TIMER			4*60*60*1000	// 4 hours		// how often to search for self node
 
 #define K							10								// maximum nodes in one bucket
@@ -58,7 +58,6 @@ namespace dht
 #define NODE_RESPONSE_TIMEOUT		2*60*1000	// 2 minutes		// node has this time to response else we ignore him/mark him as dead node
 #define NODE_EXPIRATION				2*60*60*1000 // 2 hours			// when node should be marked as possibly dead
 
-#define FLOOD_PROTECTION			60*1000	// 1 minute				// the unit for flood protection
 #define TIME_FOR_RESPONSE			3*60*1000	// 3 minutes		// node has this time to respond to request; after that response will be marked as unwanted
 
 #define CLIENT_PROTOCOL				"ADC/1.0"						// protocol used for file transfers

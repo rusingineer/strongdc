@@ -617,6 +617,10 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			addStatus(TSTRING(CONNECTED), WinUtil::m_ChatTextServer);
 			setTabColor(RGB(0, 255, 0));
 			unsetIconState();
+			
+			tstring text = Text::toT(client->getCipherName());
+			ctrlStatus.SetText(1, text.c_str());
+			statusSizes[0] = WinUtil::getTextWidth(text, ctrlStatus.m_hWnd);
 
 			if(BOOLSETTING(POPUP_HUB_CONNECTED)) {
 				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(client->getAddress()), TSTRING(CONNECTED));
@@ -649,17 +653,30 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 		} else if(i->first == STATS) {
 			size_t AllUsers = client->getUserCount();
 			size_t ShownUsers = ctrlUsers.GetItemCount();
+			
+			tstring text2, text3, text4;
+			
 			if(AllUsers != ShownUsers) {
-				ctrlStatus.SetText(1, (Util::toStringW(ShownUsers) + _T("/") + Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS)).c_str());
+				text2 = Util::toStringW(ShownUsers) + _T("/") + Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS);
 			} else {
-				ctrlStatus.SetText(1, (Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS)).c_str());
+				text2 = Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS);
 			}
+			
 			int64_t available = client->getAvailable();
-			ctrlStatus.SetText(2, Util::formatBytesW(available).c_str());
+			text3 = Util::formatBytesW(available);
+			
 			if(AllUsers > 0)
-				ctrlStatus.SetText(3, (Util::formatBytesW(available / AllUsers) + _T("/") + TSTRING(USER)).c_str());
-			else
-				ctrlStatus.SetText(3, Util::emptyStringT.c_str());
+				text4 = Util::formatBytesW(available / AllUsers) + _T("/") + TSTRING(USER);
+
+			ctrlStatus.SetText(2, text2.c_str());
+			ctrlStatus.SetText(3, text3.c_str());
+			ctrlStatus.SetText(4, text4.c_str());
+				
+			statusSizes[1] = WinUtil::getTextWidth(text2, ctrlStatus.m_hWnd);
+			statusSizes[2] = WinUtil::getTextWidth(text3, ctrlStatus.m_hWnd);
+			statusSizes[3] = WinUtil::getTextWidth(text4, ctrlStatus.m_hWnd);
+			
+			UpdateLayout();
 		} else if(i->first == GET_PASSWORD) {
 			if(client->getPassword().size() > 0) {
 				client->password(client->getPassword());
@@ -758,23 +775,22 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 	
 	if(ctrlStatus.IsWindow()) {
 		CRect sr;
-		int w[5];
+		int w[6];
 		ctrlStatus.GetClientRect(sr);
 
-		int tmp = (sr.Width()) > 332 ? 232 : ((sr.Width() > 132) ? sr.Width()-100 : 32);
+		w[0] = sr.right - statusSizes[0] - statusSizes[1] - statusSizes[2] - statusSizes[3] - 16;
+		w[1] = w[0] + statusSizes[0];
+		w[2] = w[1] + statusSizes[1];
+		w[3] = w[2] + statusSizes[2];
+		w[4] = w[3] + statusSizes[3];
+		w[5] = w[4] + 16;
 		
-		w[0] = sr.right - tmp - 55;
-		w[1] = w[0] + (tmp-30)/2;
-		w[2] = w[0] + (tmp-65);
-		w[3] = w[2] + 100;
-		w[4] = w[3] + 16;
-		
-		ctrlStatus.SetParts(5, w);
+		ctrlStatus.SetParts(6, w);
 
 		ctrlLastLines.SetMaxTipWidth(w[0]);
 
 		// Strange, can't get the correct width of the last field...
-		ctrlStatus.GetRect(3, sr);
+		ctrlStatus.GetRect(4, sr);
 		sr.left = sr.right + 2;
 		sr.right = sr.left + 16;
 		ctrlShowUsers.MoveWindow(sr);
@@ -1610,8 +1626,15 @@ void HubFrame::on(Failed, const Client*, const string& line) throw() {
 void HubFrame::on(GetPassword, const Client*) throw() { 
 	speak(GET_PASSWORD);
 }
-void HubFrame::on(HubUpdated, const Client*) throw() { 
-	string hubName = client->getHubName();
+void HubFrame::on(HubUpdated, const Client*) throw() {
+	string hubName;
+	if(client->isTrusted()) {
+		hubName = "[S] ";
+	} else if(client->isSecure()) {
+		hubName = "[U] ";
+	}
+	
+	hubName += client->getHubName();
 	if(!client->getHubDescription().empty()) {
 		hubName += " - " + client->getHubDescription();
 	}

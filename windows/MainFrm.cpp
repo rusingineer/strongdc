@@ -39,7 +39,7 @@
 #include "TextFrame.h"
 #include "UpdateDlg.h"
 #include "StatsFrame.h"
-#include "WaitingUsersFrame.h"
+#include "UploadQueueFrame.h"
 #include "LineDlg.h"
 #include "HashProgressDlg.h"
 #include "UPnP.h"
@@ -232,7 +232,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	ctrlStatus.SetSimple(FALSE);
 	int w[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	ctrlStatus.SetParts(10, w);
-	statusSizes[0] = WinUtil::getTextWidth(TSTRING(AWAY), ::GetDC(ctrlStatus.m_hWnd)); // for "AWAY" segment
+	statusSizes[0] = WinUtil::getTextWidth(TSTRING(AWAY), ctrlStatus.m_hWnd); // for "AWAY" segment
 
 	CToolInfo ti(TTF_SUBCLASS, ctrlStatus.m_hWnd);
 
@@ -288,7 +288,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	if(BOOLSETTING(OPEN_RECENT_HUBS)) PostMessage(WM_COMMAND, IDC_RECENTS);	
 	if(BOOLSETTING(OPEN_QUEUE)) PostMessage(WM_COMMAND, IDC_QUEUE);
 	if(BOOLSETTING(OPEN_FINISHED_DOWNLOADS)) PostMessage(WM_COMMAND, IDC_FINISHED);
-	if(BOOLSETTING(OPEN_WAITING_USERS)) PostMessage(WM_COMMAND, IDC_UPLOAD_QUEUE);
+	if(BOOLSETTING(OPEN_UPLOAD_QUEUE)) PostMessage(WM_COMMAND, IDC_UPLOAD_QUEUE);
 	if(BOOLSETTING(OPEN_FINISHED_UPLOADS)) PostMessage(WM_COMMAND, IDC_FINISHED_UL);
 	if(BOOLSETTING(OPEN_SEARCH_SPY)) PostMessage(WM_COMMAND, IDC_SEARCH_SPY);
 	if(BOOLSETTING(OPEN_NETWORK_STATISTICS)) PostMessage(WM_COMMAND, IDC_NET_STATS);
@@ -644,11 +644,10 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		auto_ptr<TStringList> pstr(reinterpret_cast<TStringList*>(lParam));
 		const TStringList& str = *pstr;
 		if(ctrlStatus.IsWindow()) {
-			HDC dc = ::GetDC(ctrlStatus.m_hWnd);
 			bool u = false;
 			ctrlStatus.SetText(1, str[0].c_str());
 			for(int i = 1; i < 8; i++) {
-				int w = WinUtil::getTextWidth(str[i], dc);
+				int w = WinUtil::getTextWidth(str[i], ctrlStatus.m_hWnd);
 				
 				if(statusSizes[i] < w) {
 					statusSizes[i] = w;
@@ -656,7 +655,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				}
 				ctrlStatus.SetText(i+1, str[i].c_str());
 			}
-			::ReleaseDC(ctrlStatus.m_hWnd, dc);
+
 			if(u)
 				UpdateLayout(TRUE);
 
@@ -789,7 +788,7 @@ LRESULT MainFrame::onOpenWindows(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 		case IDC_NET_STATS: StatsFrame::openWindow(); break; 
 		case IDC_FINISHED: FinishedFrame::openWindow(); break;
 		case IDC_FINISHED_UL: FinishedULFrame::openWindow(); break;
-		case IDC_UPLOAD_QUEUE: WaitingUsersFrame::openWindow(); break;
+		case IDC_UPLOAD_QUEUE: UploadQueueFrame::openWindow(); break;
 		case IDC_CDMDEBUG_WINDOW: CDMDebugFrame::openWindow(); break;
 		case IDC_RECENTS: RecentHubsFrame::openWindow(); break;
 		default: dcassert(0); break;

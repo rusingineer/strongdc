@@ -53,7 +53,7 @@ public:
 
 	bool TLSOk() const throw();
 
-#ifndef YASSL_VERSION	
+#ifdef HEADER_OPENSSLV_H	
 	static void __cdecl locking_function(int mode, int n, const char *file, int line);
 #endif
 
@@ -69,15 +69,17 @@ private:
 	ssl::SSL_CTX clientVerContext;
 	ssl::SSL_CTX serverContext;
 	ssl::SSL_CTX serverVerContext;
-	
+
+#ifdef HEADER_OPENSSLV_H	
 	ssl::DH dh;
+#endif
 	
 	bool certsLoaded;
 
 	const string lock;
 	const string pk;
 	
-#ifndef YASSL_VERSION
+#ifdef HEADER_OPENSSLV_H
 	static CriticalSection* cs;
 #endif
 

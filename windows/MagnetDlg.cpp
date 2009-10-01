@@ -43,6 +43,14 @@ LRESULT MagnetDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 
 	// file details
 	SetDlgItemText(IDC_MAGNET_DISP_HASH, mHash.c_str());
+
+	// handling UTF8 input text
+	{
+	string strFileName = Text::wideToAcp(mFileName);
+	if (Text::validateUtf8(strFileName))
+		mFileName = Text::toT(strFileName);
+	}
+
 	SetDlgItemText(IDC_MAGNET_DISP_NAME, mFileName.length() > 0 ? mFileName.c_str() : _T("N/A"));
 	char buf[32];
 	SetDlgItemText(IDC_MAGNET_DISP_SIZE, mSize > 0 ? Text::toT(_i64toa(mSize, buf, 10)).c_str() : _T("N/A"));

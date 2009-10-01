@@ -195,7 +195,9 @@ namespace dht
 	bool KBucket::checkExpiration(uint64_t currentTime)
 	{
 		bool dirty = false;
-
+		
+		Node::Ptr oldest = NULL;
+		
 		// first, remove dead nodes		
 		NodeList::iterator i = nodes.begin();
 		while(i != nodes.end())
@@ -220,8 +222,10 @@ namespace dht
 					
 				continue;
 			}
-			if(node->expires == 0)
-				node->expires = currentTime;
+				
+			// select the oldest expired node
+			if(oldest == NULL && node->getType() < 4 && node->expires <= currentTime)
+				oldest = node;
 					
 			++i;
 		}
@@ -240,19 +244,9 @@ namespace dht
 		dcdebug("DHT Nodes: %d (%d verified)\nTypes: %d/%d/%d/%d/%d\n", nodes.size(), verified, types[0], types[1], types[2], types[3], types[4]);
 #endif
 		
-		if(!nodes.empty())
+		if(oldest != NULL)
 		{
-			// ping the oldest (expiring) node
-			Node::Ptr oldest = nodes.front();
-			if(oldest->expires > currentTime || oldest->getType() == 4)
-			{
-				// cycle nodes
-				nodes.pop_front();
-				nodes.push_back(oldest);
-				
-				return dirty;
-			}
-			
+			// ping the oldest (expired) node
 			oldest->setTimeout(currentTime);
 			DHT::getInstance()->info(oldest->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(oldest->getIdentity().getUdpPort())), DHT::PING, oldest->getUser()->getCID(), oldest->getUdpKey());
 		}

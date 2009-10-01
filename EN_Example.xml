@@ -861,13 +861,14 @@ Default: %H:%M:%S</String>
 		<String Name="UnknownError">Unknown error: 0x%x</String>
 		<String Name="UpdateCheck">Update check</String>
 		<String Name="UploadFinishedIdle">Upload finished, idle...</String>
+		<String Name="UploadQueue">Upload queue</String>
 		<String Name="UploadStarting">Upload starting...</String>
 		<String Name="UploadedBytes">Uploaded %s (%.01f%%) in %s</String>
 		<String Name="UploadedTo"> uploaded to </String>
 		<String Name="UpnpFailedToCreateMappings">Failed to create port mappings. Please set up your NAT yourself.</String>
 		<String Name="UpnpFailedToGetExternalIp">Failed to get external IP via  UPnP. Please set it yourself.</String>
 		<String Name="UpnpFailedToRemoveMappings">Failed to remove port mappings</String>
-		<String Name="UseDht">Use DHT for searching alternate sources</String>
+		<String Name="UseDht">Publish shared files on DHT and use it for searching alternate sources</String>
 		<String Name="User">User</String>
 		<String Name="UserCmdCommand">Command</String>
 		<String Name="UserCmdContext">Context</String>
@@ -905,7 +906,6 @@ Default: %H:%M:%S</String>
 		<String Name="WaitingTime">Waiting time</String>
 		<String Name="WaitingToRetry">Waiting to retry...</String>
 		<String Name="WaitingUserOnline">Waiting (User online)</String>
-		<String Name="WaitingUsers">Waiting Users</String>
 		<String Name="WaitingUsersOnline">Waiting (%d of %d users online)</String>
 		<String Name="Webserver">Webserver</String>
 		<String Name="WhatsThis">What's &amp;this?</String>

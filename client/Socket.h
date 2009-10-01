@@ -176,8 +176,8 @@ public:
 	void setSocketOpt(int option, int value) throw(SocketException);
 
 	virtual bool isSecure() const throw() { return false; }
-	virtual bool isTrusted() const throw() { return false; }
-	virtual std::string getCipherName() const throw() { return Util::emptyString; }
+	virtual bool isTrusted() throw() { return false; }
+	virtual std::string getCipherName() throw() { return Util::emptyString; }
 
 	/** When socks settings are updated, this has to be called... */
 	static void socksUpdated();

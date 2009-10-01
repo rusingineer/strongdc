@@ -49,6 +49,14 @@ namespace dht
 		
 		/** Data's length */
 		size_t length;
+		
+#ifdef _DEBUG
+		union
+		{
+			char cmdChar[4];
+			uint32_t cmdInt;
+		};
+#endif		
 	};
 	
 	class UDPSocket :
@@ -82,6 +90,9 @@ namespace dht
 		
 		/** Queue for sending packets through UDP socket */
 		std::deque<Packet*> sendQueue;
+		
+		/** Antiflooding protection */
+		uint64_t delay;
 
 		/** Locks access to sending queue */
 		// TODO: 

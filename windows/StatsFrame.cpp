@@ -110,7 +110,7 @@ LRESULT StatsFrame::onPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 				if(height == 0)
 					height = 1;
 				tstring txt = Util::formatBytesW(max * (height-ypos) / height) + _T("/s");
-				int tw = WinUtil::getTextWidth(txt, dc);
+				int tw = WinUtil::getTextWidth(txt, m_hWnd);
 				if(tw + 2 > twidth)
 					twidth = tw + 2;
 				dc.TextOut(1, ypos, txt.c_str());
@@ -119,7 +119,7 @@ LRESULT StatsFrame::onPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 		if(rc.left < twidth) {
 			tstring txt = Util::formatBytesW(max) + _T("/s");
-			int tw = WinUtil::getTextWidth(txt, dc);
+			int tw = WinUtil::getTextWidth(txt, m_hWnd);
 			if(tw + 2 > twidth)
 				twidth = tw + 2;
 			dc.TextOut(1, 1, txt.c_str());

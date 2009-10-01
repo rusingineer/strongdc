@@ -49,8 +49,8 @@ public:
 	void close() throw();
 
 	bool isSecure() const throw() { return true; }
-	bool isTrusted() const throw();
-	std::string getCipherName() const throw();
+	bool isTrusted() throw();
+	std::string getCipherName() throw();
 	std::string getDigest() const throw();
 
 	bool waitConnected(uint64_t millis);
@@ -67,6 +67,10 @@ private:
 	SSL_CTX* ctx;
 	ssl::SSL ssl;
 
+#ifndef HEADER_OPENSSLV_H
+	bool finished;
+#endif
+	
 	int checkSSL(int ret) throw(SocketException);
 	bool waitWant(int ret, uint64_t millis);
 };

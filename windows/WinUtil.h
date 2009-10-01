@@ -218,7 +218,7 @@ static const toolbarButton ToolbarButtons[] = {
 	{IDC_RECENTS, 5, true, ResourceManager::MENU_FILE_RECENT_HUBS},
 	{IDC_QUEUE, 6, true, ResourceManager::MENU_DOWNLOAD_QUEUE},
 	{IDC_FINISHED, 7, true, ResourceManager::FINISHED_DOWNLOADS},
-	{IDC_UPLOAD_QUEUE, 8, true, ResourceManager::WAITING_USERS},
+	{IDC_UPLOAD_QUEUE, 8, true, ResourceManager::UPLOAD_QUEUE},
 	{IDC_FINISHED_UL, 9, true, ResourceManager::FINISHED_UPLOADS},
 	{ID_FILE_SEARCH, 10, false, ResourceManager::MENU_SEARCH},
 	{IDC_FILE_ADL_SEARCH, 11, true, ResourceManager::MENU_ADL_SEARCH},
@@ -313,27 +313,23 @@ public:
 
 	static int getTextWidth(const tstring& str, HWND hWnd) {
 		HDC dc = ::GetDC(hWnd);
-		int sz = getTextWidth(str, dc);
-		::ReleaseDC(mainWnd, dc);
-		return sz;
-	}
-	static int getTextWidth(const tstring& str, HDC dc) {
+		HFONT hFont = (HFONT)SendMessage(hWnd, WM_GETFONT, 0, 0);
+		HGDIOBJ old = ::SelectObject(dc, hFont);
+		
 		SIZE sz = { 0, 0 };
 		::GetTextExtentPoint32(dc, str.c_str(), str.length(), &sz);
-		return sz.cx;		
+		::SelectObject(dc, old);
+		::ReleaseDC(mainWnd, dc);
+		
+		return sz.cx + 10;
 	}
 
 	static int getTextHeight(HWND wnd, HFONT fnt) {
 		HDC dc = ::GetDC(wnd);
-		int h = getTextHeight(dc, fnt);
-		::ReleaseDC(wnd, dc);
-		return h;
-	}
-
-	static int getTextHeight(HDC dc, HFONT fnt) {
 		HGDIOBJ old = ::SelectObject(dc, fnt);
 		int h = getTextHeight(dc);
 		::SelectObject(dc, old);
+		::ReleaseDC(wnd, dc);
 		return h;
 	}
 
@@ -458,7 +454,7 @@ public:
 	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
 	static void RunPreviewCommand(unsigned int index, const string& target);
 	static string formatTime(uint64_t rest);
-	static uint8_t getFlagImage(const char* country, bool fullname = false);
+	static uint8_t getFlagIndex(const char* countryIdentifier, bool useCode = true);
 	static string generateStats();
 	static const tstring& disableCzChars(tstring& message);
 	static bool shutDown(int action);

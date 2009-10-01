@@ -347,9 +347,11 @@ namespace dht
 						SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, Util::emptyString, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
 						if(!u->isOnline())	// TODO: only node type < 3
 						{
-							// node is not online, try to contact him
+							// node is not online, try to contact him if we didn't contact him recently
+							if(searchResults.find(u->getCID()) != searchResults.end())
+								DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE, cid, CID()); // TODO: key
+								
 							searchResults.insert(std::make_pair(u->getCID(), std::make_pair(GET_TICK(), sr)));
-							DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE, cid, CID()); // TODO: key						
 						}
 						else
 						{
