@@ -335,6 +335,8 @@ private:
 		} else {
 			showUsers = BOOLSETTING(GET_USER_INFO);
 		}
+		
+		memset(statusSizes, 0, sizeof(statusSizes));
 	}
 
 	~HubFrame() {
@@ -393,6 +395,8 @@ private:
 	typedef TypedListViewCtrl<OnlineUser, IDC_USERS> CtrlUsers;
 	CtrlUsers ctrlUsers;
 	CStatusBarCtrl ctrlStatus;
+	
+	int statusSizes[4];
 	
 	tstring filter;
 

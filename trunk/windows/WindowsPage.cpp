@@ -42,7 +42,7 @@ WindowsPage::ListItem WindowsPage::listItems[] = {
 	{ SettingsManager::OPEN_RECENT_HUBS, ResourceManager::RECENT_HUBS },	
 	{ SettingsManager::OPEN_QUEUE, ResourceManager::DOWNLOAD_QUEUE },
 	{ SettingsManager::OPEN_FINISHED_DOWNLOADS, ResourceManager::FINISHED_DOWNLOADS },
-	{ SettingsManager::OPEN_WAITING_USERS, ResourceManager::WAITING_USERS },
+	{ SettingsManager::OPEN_UPLOAD_QUEUE, ResourceManager::UPLOAD_QUEUE },
 	{ SettingsManager::OPEN_FINISHED_UPLOADS, ResourceManager::FINISHED_UPLOADS },
 	{ SettingsManager::OPEN_SEARCH_SPY, ResourceManager::SEARCH_SPY },
 	{ SettingsManager::OPEN_NETWORK_STATISTICS, ResourceManager::NETWORK_STATISTICS },

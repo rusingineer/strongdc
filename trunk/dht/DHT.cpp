@@ -48,18 +48,7 @@ namespace dht
 		if(!BOOLSETTING(USE_DHT))
 			return;
 	
-		if(BOOLSETTING(UPDATE_IP))
-			SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::emptyString);
-						
-		BootstrapManager::newInstance();
-		SearchManager::newInstance();
-		IndexManager::newInstance();
-		TaskManager::newInstance();
-		ConnectionManager::newInstance();
-		
-		bucket = new KBucket();
-		
-		loadData();
+		create();
 	}
 
 	DHT::~DHT(void)
@@ -82,6 +71,22 @@ namespace dht
 		BootstrapManager::deleteInstance();
 	}
 	
+	void DHT::create()
+	{
+		if(BOOLSETTING(UPDATE_IP))
+			SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::emptyString);
+				
+		bucket = new KBucket();	
+			
+		BootstrapManager::newInstance();
+		SearchManager::newInstance();
+		IndexManager::newInstance();
+		TaskManager::newInstance();
+		ConnectionManager::newInstance();
+				
+		loadData();	
+	}
+	
 	void DHT::listen() 
 	{ 
 		if(!BOOLSETTING(USE_DHT))
@@ -89,7 +94,7 @@ namespace dht
 			
 		if(!bucket) 
 		{
-			DHT();
+			create();
 		}
 			
 		socket.listen(); 

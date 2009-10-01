@@ -121,7 +121,7 @@ static const char* CountryNames[] = { "ANDORRA", "UNITED ARAB EMIRATES", "AFGHAN
 "TANZANIA", "UKRAINE", "UGANDA", "UNITED STATES MINOR OUTLYING ISLANDS", "UNITED STATES", "URUGUAY", "UZBEKISTAN", 
 "VATICAN", "SAINT VINCENT AND THE GRENADINES", "VENEZUELA", "BRITISH VIRGIN ISLANDS", "U.S. VIRGIN ISLANDS", 
 "VIET NAM", "VANUATU", "WALLIS AND FUTUNA", "SAMOA", "YEMEN", "MAYOTTE", "YUGOSLAVIA", "SOUTH AFRICA", "ZAMBIA", 
-"ZIMBABWE", "EUROPEAN UNION" };
+"ZIMBABWE", "EUROPEAN UNION", "SERBIA", "MONTENEGRO", "GUERNSEY", "ISLE OF MAN", "JERSEY" };
 
 static const char* CountryCodes[] = { "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AN", "AO", "AQ", "AR", "AS", 
 "AT", "AU", "AW", "AX", "AZ", "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BM", "BN", "BO", "BR", 
@@ -136,7 +136,8 @@ static const char* CountryCodes[] = { "AD", "AE", "AF", "AG", "AI", "AL", "AM", 
 "PN", "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RU", "RW", "SA", "SB", "SC", "SD", "SE", "SG", "SH", 
 "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "ST", "SV", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", 
 "TK", "TL", "TM", "TN", "TO", "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", 
-"VE", "VG", "VI", "VN", "VU", "WF", "WS", "YE", "YT", "YU", "ZA", "ZM", "ZW", "EU" };
+"VE", "VG", "VI", "VN", "VU", "WF", "WS", "YE", "YT", "YU", "ZA", "ZM", "ZW", "EU", "RS", "ME", "GG", "IM", 
+"JE" };
 	
 HLSCOLOR RGB2HLS (COLORREF rgb) {
 	unsigned char minval = min(GetRValue(rgb), min(GetGValue(rgb), GetBValue(rgb)));
@@ -407,7 +408,7 @@ void WinUtil::init(HWND hWnd) {
 	transfers.AppendMenu(MF_STRING, IDC_QUEUE, CTSTRING(MENU_DOWNLOAD_QUEUE));
 	transfers.AppendMenu(MF_STRING, IDC_FINISHED, CTSTRING(FINISHED_DOWNLOADS));
 	transfers.AppendMenu(MF_SEPARATOR);
-	transfers.AppendMenu(MF_STRING, IDC_UPLOAD_QUEUE, CTSTRING(WAITING_USERS));
+	transfers.AppendMenu(MF_STRING, IDC_UPLOAD_QUEUE, CTSTRING(UPLOAD_QUEUE));
 	transfers.AppendMenu(MF_STRING, IDC_FINISHED_UL, CTSTRING(FINISHED_UPLOADS));
 	transfers.AppendMenu(MF_SEPARATOR);
 	transfers.AppendMenu(MF_STRING, IDC_NET_STATS, CTSTRING(MENU_NETWORK_STATISTICS));
@@ -1645,72 +1646,17 @@ string WinUtil::formatTime(uint64_t rest) {
 	return formatedTime;
 }
 
-uint8_t WinUtil::getFlagImage(const char* country, bool fullname) {
-	if(fullname) {
-		for(uint8_t i = 1; i <= (sizeof(CountryNames) / sizeof(CountryNames[0])); i++) {
-			if(_stricmp(country, CountryNames[i-1]) == 0) {
-				return i;
-			}
-		}
+uint8_t WinUtil::getFlagIndex(const char* countryIdentifier, bool useCode) {
+	if(useCode) {
+		for(uint8_t i = 0; i < (sizeof(CountryCodes) / sizeof(CountryCodes[0])); i++)
+			if(*(const uint16_t*)countryIdentifier == *(const uint16_t*)CountryCodes[i])
+				return i + 1;
 	} else {
-		for(uint8_t i = 1; i <= (sizeof(CountryCodes) / sizeof(CountryCodes[0])); i++) {
-			if(_stricmp(country,CountryCodes[i-1]) == 0) {
-				return i;
-			}
-		}
+		for(uint8_t i = 0; i < (sizeof(CountryNames) / sizeof(CountryNames[0])); i++)
+			if(_stricmp(countryIdentifier, CountryNames[i]) == 0)
+				return i + 1;
 	}
 	return 0;
-}
-
-float ProcSpeedCalc() {
-#ifndef _WIN64
-#define RdTSC __asm _emit 0x0f __asm _emit 0x31
-__int64 cyclesStart = 0, cyclesStop = 0;
-unsigned __int64 nCtr = 0, nFreq = 0, nCtrStop = 0;
-    if(!QueryPerformanceFrequency((LARGE_INTEGER *) &nFreq)) return 0;
-    QueryPerformanceCounter((LARGE_INTEGER *) &nCtrStop);
-    nCtrStop += nFreq;
-    _asm {
-		RdTSC
-        mov DWORD PTR cyclesStart, eax
-        mov DWORD PTR [cyclesStart + 4], edx
-    } do {
-		QueryPerformanceCounter((LARGE_INTEGER *) &nCtr);
-    } while (nCtr < nCtrStop);
-    _asm {
-		RdTSC
-        mov DWORD PTR cyclesStop, eax
-        mov DWORD PTR [cyclesStop + 4], edx
-    }
-	return ((float)cyclesStop-(float)cyclesStart) / 1000000;
-#else
-	HKEY hKey;
-	DWORD dwSpeed;
-
-	// Get the key name
-	wchar_t szKey[256];
-	_snwprintf(szKey, sizeof(szKey)/sizeof(wchar_t),
-		L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%d\\", 0);
-
-	// Open the key
-	if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,szKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
-	{
-		return 0;
-	}
-
-	// Read the value
-	DWORD dwLen = 4;
-	if(RegQueryValueEx(hKey, L"~MHz", NULL, NULL, (LPBYTE)&dwSpeed, &dwLen) != ERROR_SUCCESS)
-	{
-		RegCloseKey(hKey);
-		return 0;
-	}
-
-	// Cleanup and return
-	RegCloseKey(hKey);
-	
-	return dwSpeed;
-#endif
 }
 
 wchar_t arrayutf[42] = { L'Á', L'È', L'Ï', L'É', L'Ì', L'Í', L'¼', L'Ò', L'Ó', L'Ø', L'Š', L'', L'Ú', L'Ù', L'Ý', L'Ž', L'á', L'è', L'ï', L'é', L'ì', L'í', L'¾', L'ò', L'ó', L'ø', L'š', L'', L'ú', L'ù', L'ý', L'ž', L'Ä', L'Ë', L'Ö', L'Ü', L'ä', L'ë', L'ö', L'ü', L'£', L'³' };
@@ -1741,13 +1687,13 @@ string WinUtil::generateStats() {
 		GetProcessTimes(GetCurrentProcess(), &tmpa, &tmpb, &kernelTimeFT, &userTimeFT);
 		int64_t kernelTime = kernelTimeFT.dwLowDateTime | (((int64_t)kernelTimeFT.dwHighDateTime) << 32);
 		int64_t userTime = userTimeFT.dwLowDateTime | (((int64_t)userTimeFT.dwHighDateTime) << 32);  
-		snprintf(buf, sizeof(buf), "\n-=[ StrongDC++ %s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-\r\n-=[ CPU Clock: %f MHz ]=-", 
+		snprintf(buf, sizeof(buf), "\n-=[ StrongDC++ %s ]=-\r\n-=[ Uptime: %s][ Cpu time: %s ]=-\r\n-=[ Memory usage (peak): %s (%s) ]=-\r\n-=[ Virtual memory usage (peak): %s (%s) ]=-\r\n-=[ Downloaded: %s ][ Uploaded: %s ]=-\r\n-=[ Total download: %s ][ Total upload: %s ]=-\r\n-=[ System Uptime: %s]=-", 
 			VERSIONSTRING, formatTime(time(NULL) - Util::getStartTime()).c_str(), Text::fromT(Util::formatSeconds((kernelTime + userTime) / (10I64 * 1000I64 * 1000I64))).c_str(), 
 			Util::formatBytes(pmc.WorkingSetSize).c_str(), Util::formatBytes(pmc.PeakWorkingSetSize).c_str(), 
 			Util::formatBytes(pmc.PagefileUsage).c_str(), Util::formatBytes(pmc.PeakPagefileUsage).c_str(), 
 			Util::formatBytes(Socket::getTotalDown()).c_str(), Util::formatBytes(Socket::getTotalUp()).c_str(), 
 			Util::formatBytes(SETTING(TOTAL_DOWNLOAD)).c_str(), Util::formatBytes(SETTING(TOTAL_UPLOAD)).c_str(), 
-			formatTime(GET_TICK()/1000).c_str(), ProcSpeedCalc());
+			formatTime(GET_TICK()/1000).c_str());
 		return buf;
 	} else {
 		return "Not supported by OS";

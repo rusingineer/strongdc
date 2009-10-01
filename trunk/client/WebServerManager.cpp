@@ -440,7 +440,7 @@ string WebServerManager::getULQueue(){
 	ret += "			<td>User</td>";
 	ret += "			<td>Filename</td>";
 	ret += "		</tr>";
-	UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getWaitingUsers();
+	UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getUploadQueue();
 	for(UploadQueueItem::SlotQueue::const_iterator ii = users.begin(); ii != users.end(); ++ii) {
 		for(UploadQueueItem::List::const_iterator i = ii->second.begin(); i != ii->second.end(); ++i) {
 			ret+="<tr><td>" + ClientManager::getInstance()->getNicks((*i)->getUser()->getCID())[0] + "</td>";

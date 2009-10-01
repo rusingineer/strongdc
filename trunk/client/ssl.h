@@ -1,7 +1,12 @@
 #ifndef SSL_H_
 #define SSL_H_
 
-#include <openssl/ssl.h>
+// enable this 2 lines for compiling with GnuTLS
+#define ssize_t size_t // this is needed for MSVC, maybe other compilers doesn't need it
+#include <gnutls/openssl.h>
+
+// enable this for compiling with OpenSSL
+//#include <openssl/ssl.h>
 
 namespace dcpp {
 
@@ -11,13 +16,15 @@ namespace ssl {
 using namespace yaSSL;
 
 #define SSL_is_init_finished(a)		(a->getStates().getHandShake() == handShakeReady)
+#elif !defined HEADER_OPENSSLV_H
+#define SSL_is_init_finished(a)		finished
 #endif
 
 template<typename T, void (__cdecl *Release)(T*)>
 class scoped_handle {
 public:
 	explicit scoped_handle(T* t_ = 0) : t(t_) { }
-	~scoped_handle() { Release(t); }
+	~scoped_handle() { if(t) Release(t); }
 	
 	operator T*() { return t; }
 	operator const T*() const { return t; }
@@ -33,11 +40,11 @@ private:
 	T* t;
 };
 
-typedef scoped_handle<DH, DH_free> DH;
 typedef scoped_handle<SSL, SSL_free> SSL;
 typedef scoped_handle<SSL_CTX, SSL_CTX_free> SSL_CTX;
 
-#ifndef YASSL_VERSION
+#ifdef HEADER_OPENSSLV_H
+typedef scoped_handle<DH, DH_free> DH;
 typedef scoped_handle<BIGNUM, BN_free> BIGNUM;
 
 typedef scoped_handle<DSA, DSA_free> DSA;

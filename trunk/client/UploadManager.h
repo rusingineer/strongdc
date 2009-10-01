@@ -114,7 +114,7 @@ public:
 	void reserveSlot(const UserPtr& aUser, uint64_t aTime, const string& hubHint);
 	void unreserveSlot(const UserPtr& aUser);
 	void clearUserFiles(const UserPtr&);
-	const UploadQueueItem::SlotQueue getWaitingUsers();
+	const UploadQueueItem::SlotQueue getUploadQueue();
 	bool hasReservedSlot(const UserPtr& aUser) { Lock l(cs); return reservedSlots.find(aUser) != reservedSlots.end(); }
 	bool isConnecting(const UserPtr& aUser) const { return connectingUsers.find(aUser) != connectingUsers.end(); }
 
@@ -149,7 +149,7 @@ private:
 	typedef SlotMap::iterator SlotIter;
 	SlotMap reservedSlots;
 	SlotMap connectingUsers;
-	UploadQueueItem::SlotQueue waitingUsers;
+	UploadQueueItem::SlotQueue uploadQueue;
 
 	size_t addFailedUpload(const UserPtr& aUser, const string& token, const string& file, int64_t pos, int64_t size);
 	void notifyQueuedUsers();

@@ -430,7 +430,7 @@ void PublicHubsFrame::updateList() {
 			l[COLUMN_MAXUSERS] = Util::toStringW(i->getMaxUsers());
 			l[COLUMN_RELIABILITY] = Util::toStringW(i->getReliability());
 			l[COLUMN_RATING] = Text::toT(i->getRating());
-			ctrlHubs.insert(ctrlHubs.GetItemCount(), l, WinUtil::getFlagImage(i->getCountry().c_str(), true));
+			ctrlHubs.insert(ctrlHubs.GetItemCount(), l, WinUtil::getFlagIndex(i->getCountry().c_str(), false));
 			visibleHubs++;
 			users += i->getUsers();
 		}

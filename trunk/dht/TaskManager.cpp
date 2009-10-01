@@ -5,6 +5,7 @@
 #include "IndexManager.h"
 #include "SearchManager.h"
 #include "TaskManager.h"
+#include "Utils.h"
 
 #include "../client/SettingsManager.h"
 #include "../client/ShareManager.h"
@@ -69,6 +70,8 @@ namespace dht
 	
 	void TaskManager::on(TimerManagerListener::Minute, uint64_t aTick) throw()
 	{
+		Utils::cleanFlood();
+		
 		// remove dead nodes
 		DHT::getInstance()->checkExpiration(aTick);
 		IndexManager::getInstance()->checkExpiration(aTick);

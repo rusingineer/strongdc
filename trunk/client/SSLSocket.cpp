@@ -23,7 +23,7 @@
 #include "LogManager.h"
 #include "SettingsManager.h"
 
-#include <openssl/err.h>
+//#include <openssl/err.h>
 
 #ifdef YASSL_VERSION
 # include <yassl_int.hpp>
@@ -31,7 +31,12 @@
 
 namespace dcpp {
 
-SSLSocket::SSLSocket(SSL_CTX* context) throw(SocketException) : ctx(context), ssl(0) {
+SSLSocket::SSLSocket(SSL_CTX* context) throw(SocketException) : ctx(context), ssl(0)
+#ifndef HEADER_OPENSSLV_H
+, finished(false) 
+#endif
+
+{
 
 }
 
@@ -61,7 +66,9 @@ bool SSLSocket::waitConnected(uint64_t millis) {
 		int ret = SSL_connect(ssl);
 		if(ret == 1) {
 			dcdebug("Connected to SSL server using %s\n", SSL_get_cipher(ssl));
-			//SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER|SSL_MODE_ENABLE_PARTIAL_WRITE);
+#ifndef HEADER_OPENSSLV_H			
+			finished = true;
+#endif
 			return true;
 		}
 		if(!waitWant(ret, millis)) {
@@ -96,7 +103,9 @@ bool SSLSocket::waitAccepted(uint64_t millis) {
 		int ret = SSL_accept(ssl);
 		if(ret == 1) {
 			dcdebug("Connected to SSL client using %s\n", SSL_get_cipher(ssl));
-			//SSL_set_mode(ssl, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER|SSL_MODE_ENABLE_PARTIAL_WRITE);
+#ifndef HEADER_OPENSSLV_H
+			finished = true;
+#endif
 			return true;
 		}
 		if(!waitWant(ret, millis)) {
@@ -106,12 +115,23 @@ bool SSLSocket::waitAccepted(uint64_t millis) {
 }
 
 bool SSLSocket::waitWant(int ret, uint64_t millis) {
+#ifdef HEADER_OPENSSLV_H
 	int err = SSL_get_error(ssl, ret);
 	switch(err) {
 	case SSL_ERROR_WANT_READ:
 		return wait(millis, Socket::WAIT_READ) == WAIT_READ;
 	case SSL_ERROR_WANT_WRITE:
 		return wait(millis, Socket::WAIT_WRITE) == WAIT_WRITE;
+#else
+	int err = ssl->last_error;
+	switch(err) {
+	case GNUTLS_E_INTERRUPTED:
+	case GNUTLS_E_AGAIN: 
+	{
+		int waitFor = wait(millis, Socket::WAIT_READ | Socket::WAIT_WRITE);
+		return (waitFor & Socket::WAIT_READ) || (waitFor & Socket::WAIT_WRITE);
+	}
+#endif
 	// Check if this is a fatal error...
 	default: checkSSL(ret);
 	}
@@ -157,6 +177,10 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 			case SSL_ERROR_WANT_WRITE:
 				return -1;
 			case SSL_ERROR_ZERO_RETURN:
+#ifndef HEADER_OPENSSLV_H
+				if(ssl->last_error == GNUTLS_E_INTERRUPTED || ssl->last_error == GNUTLS_E_AGAIN)
+					return -1;
+#endif				
 				throw SocketException(STRING(CONNECTION_CLOSED));
 			case SSL_ERROR_SYSCALL:
 				if(ret == 0)
@@ -174,7 +198,7 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 }
 
 int SSLSocket::wait(uint64_t millis, int waitFor) throw(SocketException) {
-#ifndef YASSL_VERSION
+#ifdef HEADER_OPENSSLV_H
 	if(ssl && (waitFor & Socket::WAIT_READ)) {
 		/** @todo Take writing into account as well if reading is possible? */
 		char c;
@@ -185,14 +209,20 @@ int SSLSocket::wait(uint64_t millis, int waitFor) throw(SocketException) {
 	return Socket::wait(millis, waitFor);
 }
 
-bool SSLSocket::isTrusted() const throw() {
+bool SSLSocket::isTrusted() throw() {
 	if(!ssl) {
 		return false;
 	}
 
+#ifdef HEADER_OPENSSLV_H
 	if(SSL_get_verify_result(ssl) != SSL_ERROR_NONE) {
 		return false;
 	}
+#else
+	if(gnutls_certificate_verify_peers(((SSL*)ssl)->gnutls_state) != 0) {
+		return false;
+	}
+#endif
 
 	if(!SSL_get_peer_certificate(ssl)) {
 		return false;
@@ -201,7 +231,7 @@ bool SSLSocket::isTrusted() const throw() {
 	return true;
 }
 
-std::string SSLSocket::getCipherName() const throw() {
+std::string SSLSocket::getCipherName() throw() {
 	if(!ssl)
 		return Util::emptyString;
 	
@@ -209,7 +239,7 @@ std::string SSLSocket::getCipherName() const throw() {
 }
 
 std::string SSLSocket::getDigest() const throw() {
-#ifndef YASSL_VERSION
+#ifdef HEADER_OPENSSLV_H
 	if(!ssl)
 		return Util::emptyString;
 	X509* x509 = SSL_get_peer_certificate(ssl);

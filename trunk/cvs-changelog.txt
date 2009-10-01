@@ -1,3 +1,14 @@
+** svn463
+	[DHT] better pinging old nodes
+	[DHT] file publishing takes 20 secs only
+	[DHT] default UDP port is 6250
+	[DHT] improved UDP sending speed
+	added some missing country flags (THX RadoX)
+	hopefully fixed UTF-8 in magnet links (FlyLinkDC++)
+	added possibility to compile with GnuTLS
+	fixed getting text width (for statusbars texts)
+	added secure status to hubname + cipher into statusbar (DC++)
+
 ** svn462
 	[DHT] publishing all sharelist (files > 1 MiB) and not only 200 largest files
 	[DHT] fixed encryption when our IP changes

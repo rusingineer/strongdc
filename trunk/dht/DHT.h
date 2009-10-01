@@ -46,6 +46,8 @@ namespace dht
 		void disconnect() { socket.disconnect(); }
 		uint16_t getPort() const { return BOOLSETTING(USE_DHT) ? socket.getPort() : 0; }
 		
+		void create();
+		
 		/** Process incoming command */
 		void dispatch(const string& aLine, const string& ip, uint16_t port, bool isUdpKeyValid);
 		

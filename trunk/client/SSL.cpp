@@ -4,7 +4,7 @@
 #include "SSL.h"
 #include "Util.h"
 
-#ifndef YASSL_VERSION
+#ifdef HEADER_OPENSSLV_H
 
 namespace dcpp {
 namespace ssl {

@@ -46,7 +46,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\client&quot;;&quot;$(SolutionDir)\boost&quot;;&quot;$(SolutionDir)\openssl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\client&quot;;&quot;$(SolutionDir)\boost&quot;;&quot;$(SolutionDir)\gnutls\include&quot;"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="1"

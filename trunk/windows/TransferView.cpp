@@ -462,7 +462,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 					top = rc.top + 1;
 
 				POINT p = { rc.left, top };
-				WinUtil::flagImages.Draw(cd->nmcd.hdc, ii->flagImage, p, LVSIL_SMALL);
+				WinUtil::flagImages.Draw(cd->nmcd.hdc, ii->flagIndex, p, LVSIL_SMALL);
 				top = rc.top + (rc.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
 				::ExtTextOut(cd->nmcd.hdc, rc.left + 30, top + 1, ETO_CLIPPED, rc, buf, _tcslen(buf), NULL);
 				return CDRF_SKIPDEFAULT;
@@ -687,7 +687,7 @@ LRESULT TransferView::onSearchAlternates(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 	
 TransferView::ItemInfo::ItemInfo(const UserPtr& u, bool aDownload) : user(u), download(aDownload), transferFailed(false),
 	status(STATUS_WAITING), pos(0), size(0), actual(0), speed(0), timeLeft(0), ip(Util::emptyStringT), target(Util::emptyStringT),
-	flagImage(0), collapsed(true), parent(NULL), hits(-1), statusString(Util::emptyStringT), running(0) { }
+	flagIndex(0), collapsed(true), parent(NULL), hits(-1), statusString(Util::emptyStringT), running(0) { }
 
 void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 	if(ui.type != Transfer::TYPE_LAST)
@@ -721,7 +721,7 @@ void TransferView::ItemInfo::update(const UpdateInfo& ui) {
 		timeLeft = ui.timeLeft;
 	}
 	if(ui.updateMask & UpdateInfo::MASK_IP) {
-		flagImage = ui.flagImage;
+		flagIndex = ui.flagIndex;
 		ip = ui.IP;
 	}
 	if(ui.updateMask & UpdateInfo::MASK_CIPHER) {
@@ -867,12 +867,12 @@ void TransferView::starting(UpdateInfo* ui, const Transfer* t) {
 	ui->setType(t->getType());
 	const UserConnection& uc = t->getUserConnection();
 	ui->setCipher(Text::toT(uc.getCipherName()));
-	string ip = uc.getRemoteIp();
-	string country = Util::getIpCountry(ip);
+	const string& ip = uc.getRemoteIp();
+	const string& country = Util::getIpCountry(ip);
 	if(country.empty()) {
 		ui->setIP(Text::toT(ip), 0);
 	} else {
-		ui->setIP(Text::toT(country + " (" + ip + ")"), WinUtil::getFlagImage(country.c_str()));
+		ui->setIP(Text::toT(country + " (" + ip + ")"), WinUtil::getFlagIndex(country.c_str()));
 	}
 }
 
