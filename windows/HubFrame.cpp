@@ -654,29 +654,32 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			size_t AllUsers = client->getUserCount();
 			size_t ShownUsers = ctrlUsers.GetItemCount();
 			
-			tstring text2, text3, text4;
+			tstring text[3];
 			
 			if(AllUsers != ShownUsers) {
-				text2 = Util::toStringW(ShownUsers) + _T("/") + Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS);
+				text[0] = Util::toStringW(ShownUsers) + _T("/") + Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS);
 			} else {
-				text2 = Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS);
+				text[0] = Util::toStringW(AllUsers) + _T(" ") + TSTRING(HUB_USERS);
 			}
 			
 			int64_t available = client->getAvailable();
-			text3 = Util::formatBytesW(available);
+			text[1] = Util::formatBytesW(available);
 			
 			if(AllUsers > 0)
-				text4 = Util::formatBytesW(available / AllUsers) + _T("/") + TSTRING(USER);
+				text[2] = Util::formatBytesW(available / AllUsers) + _T("/") + TSTRING(USER);
 
-			ctrlStatus.SetText(2, text2.c_str());
-			ctrlStatus.SetText(3, text3.c_str());
-			ctrlStatus.SetText(4, text4.c_str());
-				
-			statusSizes[1] = WinUtil::getTextWidth(text2, ctrlStatus.m_hWnd);
-			statusSizes[2] = WinUtil::getTextWidth(text3, ctrlStatus.m_hWnd);
-			statusSizes[3] = WinUtil::getTextWidth(text4, ctrlStatus.m_hWnd);
+			bool update = false;
+			for(int i = 0; i < 3; i++) {
+				int size = WinUtil::getTextWidth(text[i], ctrlStatus.m_hWnd);
+				if(size != statusSizes[i + 1]) {
+					statusSizes[i + 1] = size;
+					update = true;
+				}
+				ctrlStatus.SetText(i + 2, text[i].c_str());
+			}
 			
-			UpdateLayout();
+			if(update)
+				UpdateLayout();
 		} else if(i->first == GET_PASSWORD) {
 			if(client->getPassword().size() > 0) {
 				client->password(client->getPassword());
@@ -795,6 +798,7 @@ void HubFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */) {
 		sr.right = sr.left + 16;
 		ctrlShowUsers.MoveWindow(sr);
 	}
+		
 	int h = WinUtil::fontHeight + 4;
 
 	CRect rc = rect;

@@ -321,7 +321,7 @@ public:
 		::SelectObject(dc, old);
 		::ReleaseDC(mainWnd, dc);
 		
-		return sz.cx + 10;
+		return (sz.cx == 0) ? 0 : (sz.cx + 10);
 	}
 
 	static int getTextHeight(HWND wnd, HFONT fnt) {

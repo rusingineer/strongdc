@@ -60,12 +60,8 @@ public:
 
 	bool startDownload(QueueItem::Priority prio);
 
-	// Download throttling
-	size_t throttle(size_t readSize);
-	
 private:
 	
-	int64_t bandwidthAvailable;
 	CriticalSection cs;
 	DownloadList downloads;
 	UserConnectionList idlers;

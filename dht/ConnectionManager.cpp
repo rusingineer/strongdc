@@ -46,6 +46,10 @@ namespace dht
 	
 	void ConnectionManager::connect(const OnlineUser& ou, const string& token, bool secure)
 	{
+		// don't allow connection if we didn't proceed a handshake
+		if(!ou.getUser()->isOnline())
+			return;
+		
 		bool active = ClientManager::getInstance()->isActive();
 
 		// if I am not active, send reverse connect to me request
@@ -68,6 +72,10 @@ namespace dht
 	 */
 	void ConnectionManager::connectToMe(const Node::Ptr& node, const AdcCommand& cmd)
 	{
+		// don't allow connection if we didn't proceed a handshake
+		if(!node->getUser()->isOnline())
+			return;
+	
 		const string& protocol = cmd.getParam(1);
 		const string& port = cmd.getParam(2);
 		const string& token = cmd.getParam(3);
@@ -106,6 +114,10 @@ namespace dht
 	 */
 	void ConnectionManager::revConnectToMe(const Node::Ptr& node, const AdcCommand& cmd)
 	{
+		// don't allow connection if we didn't proceed a handshake
+		if(!node->getUser()->isOnline())
+			return;
+
 		// this is valid for active-passive connections only
 		if(!ClientManager::getInstance()->isActive())
 			return;

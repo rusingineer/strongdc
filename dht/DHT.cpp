@@ -216,7 +216,6 @@ namespace dht
 	{
 		// create user as offline (only TCP connected users will be online)
 		UserPtr u = ClientManager::getInstance()->getUser(cid);
-		u->setFlag(User::DHT);
 		
 		Lock l(cs);
 		return bucket->insert(u, ip, port, update, isUdpKeyValid);

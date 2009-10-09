@@ -31,7 +31,7 @@
 #include "../zlib/zlib.h"
 
 #include <mswsock.h>
-//#include <openssl/rc4.h>
+#include <openssl/rc4.h>
 
 namespace dht
 {
@@ -113,47 +113,49 @@ namespace dht
 				boost::scoped_array<uint8_t> destBuf;
 				bool isUdpKeyValid = false;
 				
-				//if(buf[0] != ADC_PACKED_PACKET_HEADER && buf[0] != ADC_PACKET_HEADER)
-				//{
-				//	// it seems to be encrypted packet
+#ifdef HEADER_RC4_H				
+				if(buf[0] != ADC_PACKED_PACKET_HEADER && buf[0] != ADC_PACKET_HEADER)
+				{
+					// it seems to be encrypted packet
 	
-				//	// the first try decrypts with our UDP key and CID
-				//	// if it fails, decryption will happen with CID only
-				//	int tries = 0;
-				//	len -= 1;
-				//	
-				//	destBuf.reset(new uint8_t[len]);
-				//	do
-				//	{
-				//		if(++tries == 3)
-				//		{
-				//			// decryption error, it could be malicious packet
-				//			return;
-				//		}
-				//		
-				//		// generate key
-				//		TigerHash th;
-				//		if(tries == 1)
-				//			th.update(Utils::getUdpKey(inet_ntoa(remoteAddr.sin_addr)).data(), sizeof(CID));
-				//		th.update(ClientManager::getInstance()->getMe()->getCID().data(), sizeof(CID));
-				//			
-				//		RC4_KEY recvKey;
-				//		RC4_set_key(&recvKey, TigerTree::BYTES, th.finalize());
-				//					
-				//		// decrypt data
-				//		RC4(&recvKey, len, &buf[1], &destBuf[0]);
-				//	}
-				//	while(destBuf[0] != MAGICVALUE_UDP);
-				//	
-				//	len -= 1;
-				//	memcpy(&buf[0], &destBuf[1], len);
-				//	
-				//	// if decryption was successful in first try, it happened via UDP key
-				//	// it happens only when we sent our UDP key to this node some time ago
-				//	if(tries == 1) isUdpKeyValid = true;
-				//}
+					// the first try decrypts with our UDP key and CID
+					// if it fails, decryption will happen with CID only
+					int tries = 0;
+					len -= 1;
+					
+					destBuf.reset(new uint8_t[len]);
+					do
+					{
+						if(++tries == 3)
+						{
+							// decryption error, it could be malicious packet
+							return;
+						}
+						
+						// generate key
+						TigerHash th;
+						if(tries == 1)
+							th.update(Utils::getUdpKey(inet_ntoa(remoteAddr.sin_addr)).data(), sizeof(CID));
+						th.update(ClientManager::getInstance()->getMe()->getCID().data(), sizeof(CID));
+							
+						RC4_KEY recvKey;
+						RC4_set_key(&recvKey, TigerTree::BYTES, th.finalize());
+									
+						// decrypt data
+						RC4(&recvKey, len, &buf[1], &destBuf[0]);
+					}
+					while(destBuf[0] != MAGICVALUE_UDP);
+					
+					len -= 1;
+					memcpy(&buf[0], &destBuf[1], len);
+					
+					// if decryption was successful in first try, it happened via UDP key
+					// it happens only when we sent our UDP key to this node some time ago
+					if(tries == 1) isUdpKeyValid = true;
+				}
 				//else
 				//	return; // non-encrypted packets are forbidden
+#endif
 				
 				if(buf[0] == ADC_PACKED_PACKET_HEADER) // is this compressed packet?
 				{
@@ -182,6 +184,8 @@ namespace dht
 					COMMAND_DEBUG(s.substr(0, s.length() - 1), DebugManager::HUB_IN,  ip + ":" + Util::toString(port));
 					DHT::getInstance()->dispatch(s.substr(0, s.length() - 1), ip, port, isUdpKeyValid);
 				}
+				
+				Thread::sleep(20);
 			}				
 		}	
 	}
@@ -236,7 +240,7 @@ namespace dht
 		
 		// antiflood variables
 		uint64_t timer = GET_TICK();
-						
+
 		while(!stop)
 		{
 			try
@@ -324,27 +328,29 @@ namespace dht
 			dcassert(destBuf[0] == ADC_PACKET_HEADER);
 		}
 		
+#ifdef HEADER_RC4_H		
 		// generate encryption key
-		//TigerHash th;
-		//if(!udpKey.isZero())
-		//{
-		//	th.update(udpKey.data(), sizeof(udpKey));
-		//	th.update(targetCID.data(), sizeof(targetCID));
-		//		
-		//	RC4_KEY sentKey;
-		//	RC4_set_key(&sentKey, TigerTree::BYTES, th.finalize());
-		//			
-		//	// encrypt data
-		//	memmove(destBuf + 2, destBuf, destSize);
-		//	
-		//	// some random character except of ADC_PACKET_HEADER or ADC_PACKED_PACKET_HEADER
-		//	uint8_t randomByte = static_cast<uint8_t>(Util::rand(0, 256));
-		//	destBuf[0] = (randomByte == ADC_PACKET_HEADER || randomByte == ADC_PACKED_PACKET_HEADER) ? (randomByte + 1) : randomByte;
-		//	destBuf[1] = MAGICVALUE_UDP;
-		//	
-		//	RC4(&sentKey, destSize + 1, destBuf + 1, destBuf + 1);
-		//	destSize += 2;
-		//}
+		TigerHash th;
+		if(!udpKey.isZero())
+		{
+			th.update(udpKey.data(), sizeof(udpKey));
+			th.update(targetCID.data(), sizeof(targetCID));
+				
+			RC4_KEY sentKey;
+			RC4_set_key(&sentKey, TigerTree::BYTES, th.finalize());
+					
+			// encrypt data
+			memmove(destBuf + 2, destBuf, destSize);
+			
+			// some random character except of ADC_PACKET_HEADER or ADC_PACKED_PACKET_HEADER
+			uint8_t randomByte = static_cast<uint8_t>(Util::rand(0, 256));
+			destBuf[0] = (randomByte == ADC_PACKET_HEADER || randomByte == ADC_PACKED_PACKET_HEADER) ? (randomByte + 1) : randomByte;
+			destBuf[1] = MAGICVALUE_UDP;
+			
+			RC4(&sentKey, destSize + 1, destBuf + 1, destBuf + 1);
+			destSize += 2;
+		}
+#endif
 		
 		Packet* p = new Packet(ip, port, destBuf, destSize);
 #ifdef _DEBUG

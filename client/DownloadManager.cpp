@@ -69,9 +69,6 @@ void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 
 		DownloadList tickList;
 
-		if(BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_DOWNLOAD_SPEED_LIMIT) > 0)
-			bandwidthAvailable = SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024;
-			
 		// Tick each ongoing download
 		for(DownloadList::const_iterator i = downloads.begin(); i != downloads.end(); ++i) {
 			Download* d = *i;
@@ -518,28 +515,6 @@ void DownloadManager::on(UserConnectionListener::Updated, UserConnection* aSourc
 	}
 	
 	checkDownloads(aSource);
-}
-
-// Download throttling
-size_t DownloadManager::throttle(size_t readSize) {
-	Lock l(cs);
-	
-	if(downloads.size() == 0)
-		return readSize;
-
-	if(bandwidthAvailable > 0)
-	{
-		size_t slice = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024) / downloads.size();
-		
-		readSize = min(slice, min(readSize, static_cast<size_t>(bandwidthAvailable)));
-		bandwidthAvailable -= readSize;
-	}
-	else
-	{
-		readSize = 0;
-	}
-	
-	return readSize;
 }
 
 void DownloadManager::fileNotAvailable(UserConnection* aSource) {

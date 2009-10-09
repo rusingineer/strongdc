@@ -130,15 +130,11 @@ public:
 	GETSET(uint8_t, extra, Extra);
 	GETSET(uint64_t, lastGrant, LastGrant);
 
-	// Upload throttling
-	size_t throttle(size_t writeSize);
-	
 private:
 	bool isFireball;
 	bool isFileServer;
 	uint8_t running;
 	
-	int64_t bandwidthAvailable;
 	uint64_t m_iHighSpeedStartTick;
 
 	UploadList uploads;

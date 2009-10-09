@@ -23,7 +23,9 @@
 #include "LogManager.h"
 #include "SettingsManager.h"
 
-//#include <openssl/err.h>
+#ifdef HEADER_OPENSSLV_H
+# include <openssl/err.h>
+#endif
 
 #ifdef YASSL_VERSION
 # include <yassl_int.hpp>
@@ -240,6 +242,7 @@ std::string SSLSocket::getCipherName() throw() {
 
 std::string SSLSocket::getDigest() const throw() {
 #ifdef HEADER_OPENSSLV_H
+
 	if(!ssl)
 		return Util::emptyString;
 	X509* x509 = SSL_get_peer_certificate(ssl);

@@ -43,7 +43,7 @@ namespace dcpp {
 
 static const string UPLOAD_AREA = "Uploads";
 
-UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), bandwidthAvailable(0),
+UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0),
 	m_iHighSpeedStartTick(0), isFireball(false), isFileServer(false), extraPartial(0) {	
 	ClientManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
@@ -695,9 +695,6 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		Lock l(cs);
 		UploadList ticks;
 		
-		if(BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) > 0)
-			bandwidthAvailable = SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
-
 		for(UploadList::iterator i = delayUploads.begin(); i != delayUploads.end();) {
 			Upload* u = *i;
 			
@@ -725,6 +722,7 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 		notifyQueuedUsers();
 		fire(UploadManagerListener::QueueUpdate());
 	}
+	
 	if(!isFireball) {
 		if(getRunningAverage() >= 102400) {
 			if (m_iHighSpeedStartTick > 0) {
@@ -770,28 +768,6 @@ void UploadManager::removeDelayUpload(const UserPtr& aUser) {
 	}		
 }
 
-// Upload throttling
-size_t UploadManager::throttle(size_t writeSize) {
-	Lock l(cs);
-
-	if(uploads.size() == 0)
-		return writeSize;
-		
-	if(bandwidthAvailable > 0)
-	{
-		size_t slice = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024) / uploads.size();
-		
-		writeSize = min(slice, min(writeSize, static_cast<size_t>(bandwidthAvailable)));
-		bandwidthAvailable -= writeSize;
-	}
-	else
-	{
-		writeSize = 0;
-	}
-	
-	return writeSize;
-}
-	
 /**
  * Abort upload of specific file
  */
