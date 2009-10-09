@@ -2,11 +2,11 @@
 #define SSL_H_
 
 // enable this 2 lines for compiling with GnuTLS
-#define ssize_t size_t // this is needed for MSVC, maybe other compilers doesn't need it
-#include <gnutls/openssl.h>
+//#define ssize_t size_t // this is needed for MSVC, maybe other compilers doesn't need it
+//#include <gnutls/openssl.h>
 
 // enable this for compiling with OpenSSL
-//#include <openssl/ssl.h>
+#include <openssl/ssl.h>
 
 namespace dcpp {
 

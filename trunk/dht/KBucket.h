@@ -96,6 +96,9 @@ namespace dht
 		/** List of nodes in this bucket */	
 		NodeList nodes;
 		
+		/** List of known IPs in this bucket */
+		StringSet ipMap;
+		
 	};
 	
 }

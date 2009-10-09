@@ -49,7 +49,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\boost&quot;;&quot;$(SolutionDir)\gnutls\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\boost&quot;;&quot;$(SolutionDir)\openssl\include&quot;"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="1"
@@ -83,7 +83,7 @@
 				AdditionalDependencies="unicows.lib SHFolder.lib ws2_32.lib winmm.lib powrprof.lib msimg32.lib"
 				OutputFile="$(SolutionDir)compiled/$(ProjectName).exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)gnutls/lib&quot;;&quot;$(SolutionDir)openssl/lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)openssl/lib&quot;"
 				AdditionalManifestDependencies="type=&apos;win32&apos; name=&apos;Microsoft.Windows.Common-Controls&apos; version=&apos;6.0.0.0&apos; processorArchitecture=&apos;*&apos; publicKeyToken=&apos;6595b64144ccf1df&apos; language=&apos;*&apos;"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcmt.lib kernel32.lib advapi32.lib user32.lib gdi32.lib shell32.lib comdlg32.lib version.lib mpr.lib rasapi32.lib winmm.lib winspool.lib vfw32.lib secur32.lib oleacc.lib oledlg.lib sensapi.lib"

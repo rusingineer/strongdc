@@ -87,7 +87,7 @@ public:
 		}
 	}
 	void leave() {
-		Thread::safeDec(state);
+		Thread::safeExchange(state, 0);
 	}
 private:
 	volatile long state;

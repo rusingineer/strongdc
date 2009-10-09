@@ -183,7 +183,8 @@ void NetworkPage::fixControls() {
 	::EnableWindow(GetDlgItem(IDC_PORT_TCP), upnp || nat);
 	::EnableWindow(GetDlgItem(IDC_PORT_UDP), upnp || nat);
 	::EnableWindow(GetDlgItem(IDC_PORT_TLS), upnp || nat);
-	::EnableWindow(GetDlgItem(IDC_PORT_DHT), upnp || nat);	
+	// DHT port should be always settable
+	//::EnableWindow(GetDlgItem(IDC_PORT_DHT), upnp || nat);	
 
 	BOOL socks = IsDlgButtonChecked(IDC_SOCKS5);
 	::EnableWindow(GetDlgItem(IDC_SOCKS_SERVER), socks);

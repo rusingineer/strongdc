@@ -40,6 +40,8 @@
 # pragma comment(lib, "taocrypt.lib")
 # pragma comment(lib, "yassl.lib")
 #else
+# define pid_t int
+# include <gcrypt.h>
 # pragma comment(lib, "libgnutls-26.lib")
 # pragma comment(lib, "libgnutls-openssl-26.lib")
 #endif
@@ -54,6 +56,13 @@ namespace dcpp {
 
 #ifdef HEADER_OPENSSLV_H
 CriticalSection* CryptoManager::cs = NULL;
+#else
+static int mutex_init(void **priv) { *priv = new CriticalSection(); return 0; }
+static int mutex_destroy(void **priv) { delete *priv; *priv = NULL; return 0; }
+static int mutex_lock(void **priv) { ((CriticalSection*)(*priv))->enter(); return 0; }
+static int mutex_unlock(void **priv) { ((CriticalSection*)(*priv))->leave(); return 0; }
+  
+static struct gcry_thread_cbs gcry_threads_other = { 0, NULL, mutex_init, mutex_destroy, mutex_lock, mutex_unlock, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 #endif
 
 CryptoManager::CryptoManager() 
@@ -65,6 +74,10 @@ CryptoManager::CryptoManager()
 #ifdef HEADER_OPENSSLV_H
 	cs = new CriticalSection[CRYPTO_num_locks()];
 	CRYPTO_set_locking_callback(locking_function);
+#else
+	typedef gcry_error_t (CALLBACK* LPFUNC)(enum gcry_ctl_cmds CMD, ...);
+	LPFUNC _d_gcry_control = (LPFUNC)GetProcAddress(LoadLibrary(_T("libgcrypt-11")), "gcry_control");
+	_d_gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_other);
 #endif
 	
 	SSL_library_init();
