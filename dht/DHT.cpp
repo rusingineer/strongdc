@@ -418,8 +418,9 @@ namespace dht
 		if(!node->isInList)
 		{
 			// put him online so we can make a connection with him
-			ClientManager::getInstance()->putOnline(node.get());
+			node->inc();
 			node->isInList = true;
+			ClientManager::getInstance()->putOnline(node.get());
 		}
 		
 		// do we wait for any search results from this user?

@@ -93,6 +93,7 @@ private:
 	static const string TIGR_SUPPORT;
 	static const string UCM0_SUPPORT;
 	static const string BLO0_SUPPORT;
+	static const string DHT0_SUPPORT;
 
 	string checkNick(const string& nick);
 
