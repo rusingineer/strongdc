@@ -1,3 +1,7 @@
+** svn465
+	[ADC] fixed IP settings
+	partial fix for OnlineUser/Identity crash
+
 ** svn464
 	[DHT] optimized adding new nodes to routing table
 	cleanup of old limiter code

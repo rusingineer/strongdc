@@ -48,6 +48,7 @@ const string AdcHub::BAS0_SUPPORT("ADBAS0");
 const string AdcHub::TIGR_SUPPORT("ADTIGR");
 const string AdcHub::UCM0_SUPPORT("ADUCM0");
 const string AdcHub::BLO0_SUPPORT("ADBLO0");
+const string AdcHub::DHT0_SUPPORT("ADDHT0");
 
 AdcHub::AdcHub(const string& aHubURL, bool secure) : Client(aHubURL, '\n', secure), oldPassword(false), sid(0) {
 	TimerManager::getInstance()->addListener(this);
@@ -755,8 +756,10 @@ void AdcHub::info(bool /*alwaysSend*/) {
 	}
 
 	if(isActive()) {
-		if(!getLocalIp().empty()/*BOOLSETTING(NO_IP_OVERRIDE) && !SETTING(EXTERNAL_IP).empty()*/) {
-			addParam(lastInfoMap, c, "I4", getLocalIp());
+		if(!getFavIp().empty()) {
+			addParam(lastInfoMap, c, "I4", getFavIp());
+		} else if(BOOLSETTING(NO_IP_OVERRIDE) && !SETTING(EXTERNAL_IP).empty()) {
+			addParam(lastInfoMap, c, "I4", Socket::resolve(SETTING(EXTERNAL_IP)));
 		} else {
 			addParam(lastInfoMap, c, "I4", "0.0.0.0");
 		}
@@ -822,7 +825,7 @@ void AdcHub::on(Connected c) throw() {
 		cmd.addParam(BLO0_SUPPORT);
 	}
 	if(BOOLSETTING(USE_DHT))
-		cmd.addParam("DHT0");
+		cmd.addParam(DHT0_SUPPORT);
 	send(cmd);
 }
 
