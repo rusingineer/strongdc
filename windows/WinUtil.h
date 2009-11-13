@@ -401,13 +401,17 @@ public:
 	
 	static bool getUCParams(HWND parent, const UserCommand& cmd, StringMap& sm) throw();
 
-	static tstring getNicks(const CID& cid) throw();
-	static tstring getNicks(const UserPtr& u) { return getNicks(u->getCID()); }
-	
-	/** @return Pair of hubnames as a string and a bool representing the user's online status */
-	static pair<tstring, bool> getHubNames(const CID& cid) throw();
-	static pair<tstring, bool> getHubNames(const UserPtr& u) { return getHubNames(u->getCID()); }
+	static tstring getNicks(const CID& cid, const string& hintUrl);
+	static tstring getNicks(const UserPtr& u, const string& hintUrl);
+	static tstring getNicks(const CID& cid, const string& hintUrl, bool priv);
+	static tstring getNicks(const HintedUser& user) { return getNicks(user.user->getCID(), user.hint); }
 
+	/** @return Pair of hubnames as a string and a bool representing the user's online status */
+	static pair<tstring, bool> getHubNames(const CID& cid, const string& hintUrl);
+	static pair<tstring, bool> getHubNames(const UserPtr& u, const string& hintUrl);
+	static pair<tstring, bool> getHubNames(const CID& cid, const string& hintUrl, bool priv);
+	static pair<tstring, bool> getHubNames(const HintedUser& user) { return getHubNames(user.user->getCID(), user.hint); }
+	
 	static void splitTokens(int* array, const string& tokens, int maxItems = -1) throw();
 	static void saveHeaderOrder(CListViewCtrl& ctrl, SettingsManager::StrSetting order, 
 		SettingsManager::StrSetting widths, int n, int* indexes, int* sizes) throw();

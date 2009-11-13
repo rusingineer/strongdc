@@ -217,7 +217,7 @@ COLORREF HLS_TRANSFORM (COLORREF rgb, int percent_L, int percent_S) {
 void UserInfoBase::matchQueue(const string& hubHint) {
 	if(getUser()) {
 		try {
-			QueueManager::getInstance()->addList(getUser(), hubHint, QueueItem::FLAG_MATCH_QUEUE);
+			QueueManager::getInstance()->addList(HintedUser(getUser(), hubHint), QueueItem::FLAG_MATCH_QUEUE);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());
 		}
@@ -227,7 +227,7 @@ void UserInfoBase::matchQueue(const string& hubHint) {
 void UserInfoBase::getUserResponses(const string& hubHint) {
 	if(getUser()) {
 		try {
-			QueueManager::getInstance()->addTestSUR(getUser(), hubHint, false);
+			QueueManager::getInstance()->addTestSUR(HintedUser(getUser(), hubHint), false);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}
@@ -236,14 +236,14 @@ void UserInfoBase::getUserResponses(const string& hubHint) {
 
 void UserInfoBase::doReport(const string& hubHint) {
 	if(getUser()) {
-		ClientManager::getInstance()->reportUser(getUser(), hubHint);
+		ClientManager::getInstance()->reportUser(HintedUser(getUser(), hubHint));
 	}
 }
 
 void UserInfoBase::getList(const string& hubHint) {
 	if(getUser()) {
 		try {
-			QueueManager::getInstance()->addList(getUser(), hubHint, QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList(HintedUser(getUser(), hubHint), QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}
@@ -253,7 +253,7 @@ void UserInfoBase::browseList(const string& hubHint) {
 	if(!getUser() || getUser()->getCID().isZero())
 		return;
 	try {
-		QueueManager::getInstance()->addList(getUser(), hubHint, QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_PARTIAL_LIST);
+		QueueManager::getInstance()->addList(HintedUser(getUser(), hubHint), QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_PARTIAL_LIST);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}
@@ -261,7 +261,7 @@ void UserInfoBase::browseList(const string& hubHint) {
 void UserInfoBase::checkList(const string& hubHint) {
 	if(getUser()) {
 		try {
-			QueueManager::getInstance()->addList(getUser(), hubHint, QueueItem::FLAG_CHECK_FILE_LIST);
+			QueueManager::getInstance()->addList(HintedUser(getUser(), hubHint), QueueItem::FLAG_CHECK_FILE_LIST);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}
@@ -288,7 +288,7 @@ void UserInfoBase::connectFav() {
 }
 void UserInfoBase::grant(const string& hubHint) {
 	if(getUser()) {
-		UploadManager::getInstance()->reserveSlot(getUser(), 600, hubHint);
+		UploadManager::getInstance()->reserveSlot(HintedUser(getUser(), hubHint), 600);
 	}
 }
 void UserInfoBase::removeAll() {
@@ -298,17 +298,17 @@ void UserInfoBase::removeAll() {
 }
 void UserInfoBase::grantHour(const string& hubHint) {
 	if(getUser()) {
-		UploadManager::getInstance()->reserveSlot(getUser(), 3600, hubHint);
+		UploadManager::getInstance()->reserveSlot(HintedUser(getUser(), hubHint), 3600);
 	}
 }
 void UserInfoBase::grantDay(const string& hubHint) {
 	if(getUser()) {
-		UploadManager::getInstance()->reserveSlot(getUser(), 24*3600, hubHint);
+		UploadManager::getInstance()->reserveSlot(HintedUser(getUser(), hubHint), 24*3600);
 	}
 }
 void UserInfoBase::grantWeek(const string& hubHint) {
 	if(getUser()) {
-		UploadManager::getInstance()->reserveSlot(getUser(), 7*24*3600, hubHint);
+		UploadManager::getInstance()->reserveSlot(HintedUser(getUser(), hubHint), 7*24*3600);
 	}
 }
 void UserInfoBase::ungrant() {
@@ -1261,7 +1261,7 @@ void WinUtil::parseDchubUrl(const tstring& aUrl, bool secure) {
 			if(!file.empty()) {
 				UserPtr user = ClientManager::getInstance()->findLegacyUser(file);
 				if(user)
-					QueueManager::getInstance()->addList(user, url, QueueItem::FLAG_CLIENT_VIEW);
+					QueueManager::getInstance()->addList(HintedUser(user, url), QueueItem::FLAG_CLIENT_VIEW);
 			}
 			// @todo else report error
 		} catch(const Exception&) {
@@ -1334,7 +1334,7 @@ void WinUtil::parseMagnetUri(const tstring& aUrl, bool /*aOverride*/) {
 				switch(SETTING(MAGNET_ACTION)) {
 					case SettingsManager::MAGNET_AUTO_DOWNLOAD:
 						try {
-							QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(fname), fsize, TTHValue(Text::fromT(fhash)), UserPtr(), Util::emptyString);
+							QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(fname), fsize, TTHValue(Text::fromT(fhash)), HintedUser(UserPtr(), Util::emptyString));
 						} catch(const Exception& e) {
 							LogManager::getInstance()->message(e.getError());
 						}
@@ -1497,17 +1497,36 @@ int WinUtil::getOsMinor()
 	return ver.dwMinorVersion;
 }
 
-tstring WinUtil::getNicks(const CID& cid) throw() {
-	return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(cid)));
+tstring WinUtil::getNicks(const CID& cid, const string& hintUrl) {
+	return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(cid, hintUrl)));
 }
 
-pair<tstring, bool> WinUtil::getHubNames(const CID& cid) throw() {
-	StringList hubs = ClientManager::getInstance()->getHubNames(cid);
+tstring WinUtil::getNicks(const UserPtr& u, const string& hintUrl) {
+	return getNicks(u->getCID(), hintUrl);
+}
+
+tstring WinUtil::getNicks(const CID& cid, const string& hintUrl, bool priv) {
+	return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(cid, hintUrl, priv)));
+}
+
+static pair<tstring, bool> formatHubNames(const StringList& hubs) {
 	if(hubs.empty()) {
-		return make_pair(TSTRING(OFFLINE), false);
+		return make_pair(_T("Offline"), false);
 	} else {
 		return make_pair(Text::toT(Util::toString(hubs)), true);
 	}
+}
+
+pair<tstring, bool> WinUtil::getHubNames(const CID& cid, const string& hintUrl) {
+	return formatHubNames(ClientManager::getInstance()->getHubNames(cid, hintUrl));
+}
+
+pair<tstring, bool> WinUtil::getHubNames(const UserPtr& u, const string& hintUrl) {
+	return getHubNames(u->getCID(), hintUrl);
+}
+
+pair<tstring, bool> WinUtil::getHubNames(const CID& cid, const string& hintUrl, bool priv) {
+	return formatHubNames(ClientManager::getInstance()->getHubNames(cid, hintUrl, priv));
 }
 
 void WinUtil::getContextMenuPos(CListViewCtrl& aList, POINT& aPt) {

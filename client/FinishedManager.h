@@ -48,11 +48,8 @@ public:
 		COLUMN_LAST
 	};
 
-	FinishedItem(string const& aTarget, const UserPtr& aUser, string const& aHub, 
-		int64_t aSize, int64_t aSpeed, time_t aTime,
-		const string& aTTH = Util::emptyString) : 
-		target(aTarget), user(aUser), hub(aHub), size(aSize), avgSpeed(aSpeed),
-		time(aTime), tth(aTTH)
+	FinishedItem(string const& aTarget, const HintedUser& aUser,  int64_t aSize, int64_t aSpeed, time_t aTime, const string& aTTH = Util::emptyString) : 
+		target(aTarget), user(aUser), size(aSize), avgSpeed(aSpeed), time(aTime), tth(aTTH)
 	{
 	}
 
@@ -62,8 +59,8 @@ public:
 			case COLUMN_FILE: return Text::toT(Util::getFileName(getTarget()));
 			case COLUMN_DONE: return Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", getTime()));
 			case COLUMN_PATH: return Text::toT(Util::getFilePath(getTarget()));
-			case COLUMN_NICK: return getUser() ? Text::toT(Util::toString(ClientManager::getInstance()->getNicks(getUser()->getCID()))) : Util::emptyStringT;
-			case COLUMN_HUB: return Text::toT(getHub());
+			case COLUMN_NICK: return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(getUser())));
+			case COLUMN_HUB: return Text::toT(getUser().hint);
 			case COLUMN_SIZE: return Util::formatBytesW(getSize());
 			case COLUMN_SPEED: return Util::formatBytesW(getAvgSpeed()) + _T("/s");
 			default: return Util::emptyStringT;
@@ -80,13 +77,12 @@ public:
 	int imageIndex() const;
 
 	GETSET(string, target, Target);
-	GETSET(string, hub, Hub);
 	GETSET(string, tth, TTH);
 
 	GETSET(int64_t, size, Size);
 	GETSET(int64_t, avgSpeed, AvgSpeed);
 	GETSET(time_t, time, Time);
-	GETSET(UserPtr, user, User);
+	GETSET(HintedUser, user, User);
 
 private:
 	friend class FinishedManager;

@@ -317,13 +317,13 @@ void UploadQueueFrame::AddFile(UploadQueueItem* aUQI) {
 	}
 
 	if(add) {
-		userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (WinUtil::getNicks(aUQI->getUser()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str(), 
+		userNode = ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (WinUtil::getNicks(aUQI->getHintedUser()) + _T(" - ") + WinUtil::getHubNames(aUQI->getHintedUser()).first).c_str(), 
 			0, 0, 0, 0, (LPARAM)(new UserItem(aUQI->getUser())), rootItem, TVI_LAST);
 	}	
 	if(selNode && selNode != rootItem) {
 		TCHAR selBuf[256];
 		ctrlQueued.GetItemText(selNode, selBuf, 255);
-		if(_tcscmp(selBuf, (WinUtil::getNicks(aUQI->getUser()) + _T(" - ") + WinUtil::getHubNames(aUQI->getUser()).first).c_str()) != 0) {
+		if(_tcscmp(selBuf, (WinUtil::getNicks(aUQI->getHintedUser()) + _T(" - ") + WinUtil::getHubNames(aUQI->getHintedUser()).first).c_str()) != 0) {
 			return;
 		}
 	}

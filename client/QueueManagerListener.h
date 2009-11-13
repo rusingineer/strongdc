@@ -50,7 +50,7 @@ public:
 	virtual void on(Moved, const QueueItem*, const string&) throw() { }
 	virtual void on(SourcesUpdated, const QueueItem*) throw() { }
 	virtual void on(StatusUpdated, const QueueItem*) throw() { }
-	virtual void on(PartialList, const UserPtr&, const string&) throw() { }
+	virtual void on(PartialList, const HintedUser&, const string&) throw() { }
 	
 	virtual void on(RecheckStarted, const QueueItem*) throw() { }
 	virtual void on(RecheckNoFile, const QueueItem*) throw() { }

@@ -1,3 +1,6 @@
+** svn466
+	hubhints (DC++ BZR; needs cleaning up)
+
 ** svn465
 	[ADC] fixed IP settings
 	partial fix for OnlineUser/Identity crash

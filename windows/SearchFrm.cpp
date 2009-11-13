@@ -584,7 +584,7 @@ void SearchFrame::SearchInfo::view() {
 	try {
 		if(sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->add(Util::getTempPath() + sr->getFileName(),
-				sr->getSize(), sr->getTTH(), sr->getUser(), sr->getHubURL(),
+				sr->getSize(), sr->getTTH(), HintedUser(sr->getUser(), sr->getHubURL()),
 				QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_TEXT);
 		}
 	} catch(const Exception&) {
@@ -596,20 +596,20 @@ void SearchFrame::SearchInfo::Download::operator()(SearchInfo* si) {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			string target = Text::fromT(tgt + si->getText(COLUMN_FILENAME));
 			QueueManager::getInstance()->add(target, si->sr->getSize(), 
-				si->sr->getTTH(), si->sr->getUser(), si->sr->getHubURL());
+				si->sr->getTTH(), HintedUser(si->sr->getUser(), si->sr->getHubURL()));
 			
 			const vector<SearchInfo*>& children = sf->getUserList().findChildren(si->getGroupCond());
 			for(SearchInfo::Iter i = children.begin(); i != children.end(); i++) {
 				SearchInfo* j = *i;
 				try {
-					QueueManager::getInstance()->add(Text::fromT(tgt + si->getText(COLUMN_FILENAME)), j->sr->getSize(), j->sr->getTTH(), j->getUser(), j->sr->getHubURL());
+					QueueManager::getInstance()->add(Text::fromT(tgt + si->getText(COLUMN_FILENAME)), j->sr->getSize(), j->sr->getTTH(), HintedUser(j->getUser(), j->sr->getHubURL()));
 				} catch(const Exception&) {
 				}
 			}
 			if(WinUtil::isShift())
 				QueueManager::getInstance()->setPriority(target, QueueItem::HIGHEST);
 		} else {
-			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), si->sr->getHubURL(), Text::fromT(tgt),
+			QueueManager::getInstance()->addDirectory(si->sr->getFile(), HintedUser(si->sr->getUser(), si->sr->getHubURL()), Text::fromT(tgt),
 				WinUtil::isShift() ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		}
 	} catch(const Exception&) {
@@ -621,9 +621,9 @@ void SearchFrame::SearchInfo::DownloadWhole::operator()(SearchInfo* si) {
 		QueueItem::Priority prio = WinUtil::isShift() ? QueueItem::HIGHEST : QueueItem::DEFAULT;
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			QueueManager::getInstance()->addDirectory(Text::fromT(si->getText(COLUMN_PATH)),
-				si->sr->getUser(), si->sr->getHubURL(), Text::fromT(tgt), prio);
+				HintedUser(si->sr->getUser(), si->sr->getHubURL()), Text::fromT(tgt), prio);
 		} else {
-			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), si->sr->getHubURL(), 
+			QueueManager::getInstance()->addDirectory(si->sr->getFile(), HintedUser(si->sr->getUser(), si->sr->getHubURL()), 
 				Text::fromT(tgt), prio);
 		}
 	} catch(const Exception&) {
@@ -635,12 +635,12 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 		if(si->sr->getType() == SearchResult::TYPE_FILE) {
 			string target = Text::fromT(tgt);
 			QueueManager::getInstance()->add(target, si->sr->getSize(), 
-				si->sr->getTTH(), si->sr->getUser(), si->sr->getHubURL());
+				si->sr->getTTH(), HintedUser(si->sr->getUser(), si->sr->getHubURL()));
 
 			if(WinUtil::isShift())
 				QueueManager::getInstance()->setPriority(target, QueueItem::HIGHEST);
 		} else {
-			QueueManager::getInstance()->addDirectory(si->sr->getFile(), si->sr->getUser(), si->sr->getHubURL(), Text::fromT(tgt),
+			QueueManager::getInstance()->addDirectory(si->sr->getFile(), HintedUser(si->sr->getUser(), si->sr->getHubURL()), Text::fromT(tgt),
 				WinUtil::isShift() ? QueueItem::HIGHEST : QueueItem::DEFAULT);
 		}
 	} catch(const Exception&) {
@@ -649,7 +649,7 @@ void SearchFrame::SearchInfo::DownloadTarget::operator()(SearchInfo* si) {
 
 void SearchFrame::SearchInfo::getList() {
 	try {
-		QueueManager::getInstance()->addList(sr->getUser(), sr->getHubURL(), QueueItem::FLAG_CLIENT_VIEW, Text::fromT(getText(COLUMN_PATH)));
+		QueueManager::getInstance()->addList(HintedUser(sr->getUser(), sr->getHubURL()), QueueItem::FLAG_CLIENT_VIEW, Text::fromT(getText(COLUMN_PATH)));
 	} catch(const Exception&) {
 		// Ignore for now...
 	}
@@ -657,7 +657,7 @@ void SearchFrame::SearchInfo::getList() {
 
 void SearchFrame::SearchInfo::browseList() {
 	try {
-		QueueManager::getInstance()->addList(sr->getUser(), sr->getHubURL(), QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_PARTIAL_LIST, Text::fromT(getText(COLUMN_PATH)));
+		QueueManager::getInstance()->addList(HintedUser(sr->getUser(), sr->getHubURL()), QueueItem::FLAG_CLIENT_VIEW | QueueItem::FLAG_PARTIAL_LIST, Text::fromT(getText(COLUMN_PATH)));
 	} catch(const Exception&) {
 		// Ignore for now...
 	}
@@ -675,11 +675,11 @@ void SearchFrame::SearchInfo::CheckTTH::operator()(SearchInfo* si) {
 	} 
 
 	if(firstHubs && hubs.empty()) {
-		hubs = ClientManager::getInstance()->getHubs(si->sr->getUser()->getCID());
+		hubs = ClientManager::getInstance()->getHubs(si->sr->getUser()->getCID(), si->sr->getHubURL());
 		firstHubs = false;
 	} else if(!hubs.empty()) {
 		// we will merge hubs of all users to ensure we can use OP commands in all hubs
-		StringList sl = ClientManager::getInstance()->getHubs(si->sr->getUser()->getCID());
+		StringList sl = ClientManager::getInstance()->getHubs(si->sr->getUser()->getCID(), si->sr->getHubURL());
 		hubs.insert( hubs.end(), sl.begin(), sl.end() );
 		//Util::intersect(hubs, ClientManager::getInstance()->getHubs(si->sr->getUser()->getCID()));
 	}
@@ -1409,7 +1409,7 @@ LRESULT SearchFrame::onCopy(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 		const SearchResultPtr& sr = ctrlResults.getItemData(pos)->sr;
 		switch (wID) {
 			case IDC_COPY_NICK:
-				sCopy = WinUtil::getNicks(sr->getUser());
+				sCopy = WinUtil::getNicks(sr->getUser(), sr->getHubURL());
 				break;
 			case IDC_COPY_FILENAME:
 				sCopy = Util::getFileName(Text::toT(sr->getFile()));

@@ -123,7 +123,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 			int online = 0;
 			QueueItem::SourceList sources = QueueManager::getInstance()->getSources(qi);
 			for(QueueItem::SourceConstIter j = sources.begin(); j != sources.end(); ++j) {
-				if(j->getUser()->isOnline())
+				if(j->getUser().user->isOnline())
 					online++;
 			}
 
@@ -795,7 +795,7 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 						removeMenu.InsertMenuItem(menuItems + 2, TRUE, &mi); // "All" and separator come first
 						mi.wID = IDC_REMOVE_SOURCES + menuItems;
 						removeAllMenu.InsertMenuItem(menuItems, TRUE, &mi);
-						if(i->getUser()->isOnline()) {
+						if(i->getUser().user->isOnline()) {
 							mi.wID = IDC_PM + menuItems;
 							pmMenu.InsertMenuItem(menuItems, TRUE, &mi);
 							pmItems++;
@@ -958,7 +958,7 @@ LRESULT QueueFrame::onBrowseList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 		OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 		QueueItem::Source* s = (QueueItem::Source*)omi->data;
 		try {
-			QueueManager::getInstance()->addList(s->getUser(), Util::emptyString, QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList(s->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception&) {
 		}
 	}
@@ -979,13 +979,13 @@ LRESULT QueueFrame::onReadd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BO
 			// re-add all sources
 			QueueItem::SourceList badSources = QueueManager::getInstance()->getBadSources(ii->getQueueItem());
 			for(QueueItem::SourceConstIter s = badSources.begin(); s != badSources.end(); s++) {
-				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser(), Util::emptyString);
+				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
 			}
 		} else {
 			OMenuItem* omi = (OMenuItem*)mi.dwItemData;
 			QueueItem::Source* s = (QueueItem::Source*)omi->data;
 			try {
-				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser(), Util::emptyString);
+				QueueManager::getInstance()->readd(ii->getTarget(), s->getUser());
 			} catch(const Exception& e) {
 				ctrlStatus.SetText(1, Text::toT(e.getError()).c_str());
 			}
@@ -1460,8 +1460,8 @@ LRESULT QueueFrame::onRemoveOffline(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 
 		QueueItem::SourceList sources = QueueManager::getInstance()->getSources(ii->getQueueItem());
 		for(QueueItem::SourceConstIter i =	sources.begin(); i != sources.end(); i++) {
-			if(!i->getUser()->isOnline()) {
-				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser(), QueueItem::Source::FLAG_REMOVED);
+			if(!i->getUser().user->isOnline()) {
+				QueueManager::getInstance()->removeSource(ii->getTarget(), i->getUser().user, QueueItem::Source::FLAG_REMOVED);
 			}
 		}
 	}

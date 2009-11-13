@@ -242,7 +242,7 @@ int SearchManager::UdpQueue::run() {
 			string tth;
 			if(hubName.compare(0, 4, "TTH:") == 0) {
 				tth = hubName.substr(4);
-				StringList names = ClientManager::getInstance()->getHubNames(user->getCID());
+				StringList names = ClientManager::getInstance()->getHubNames(user->getCID(), Util::emptyString);
 				hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
 			}
 
@@ -329,9 +329,10 @@ void SearchManager::onRES(const AdcCommand& cmd, const UserPtr& from, const stri
 
 	if(!file.empty() && freeSlots != -1 && size != -1) {
 
-		StringList names = ClientManager::getInstance()->getHubNames(from->getCID());
+		/// @todo get the hub this was sent from, to be passed as a hint? (eg by using the token?)
+		StringList names = ClientManager::getInstance()->getHubNames(from->getCID(), Util::emptyString);
 		string hubName = names.empty() ? STRING(OFFLINE) : Util::toString(names);
-		StringList hubs = ClientManager::getInstance()->getHubs(from->getCID());
+		StringList hubs = ClientManager::getInstance()->getHubs(from->getCID(), Util::emptyString);
 		string hub = hubs.empty() ? STRING(OFFLINE) : Util::toString(hubs);
 
 		SearchResult::Types type = (file[file.length() - 1] == '\\' ? SearchResult::TYPE_DIRECTORY : SearchResult::TYPE_FILE);
@@ -404,7 +405,7 @@ void SearchManager::onPSR(const AdcCommand& cmd, UserPtr from, const string& rem
 	QueueItem::PartialSource ps(from->isNMDC() ? ClientManager::getInstance()->getMyNick(url) : Util::emptyString, hubIpPort, remoteIp, udpPort);
 	ps.setPartialInfo(partialInfo);
 
-	QueueManager::getInstance()->handlePartialResult(from, url, TTHValue(tth), ps, outPartialInfo);
+	QueueManager::getInstance()->handlePartialResult(HintedUser(from, url), TTHValue(tth), ps, outPartialInfo);
 	
 	if((udpPort > 0) && !outPartialInfo.empty()) {
 		try {

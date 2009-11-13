@@ -837,7 +837,7 @@ LRESULT ChatCtrl::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 		}
 		
 		if(time > 0)
-			UploadManager::getInstance()->reserveSlot(ou->getUser(), time, client->getHubUrl());
+			UploadManager::getInstance()->reserveSlot(HintedUser(ou->getUser(), client->getHubUrl()), time);
 		else
 			UploadManager::getInstance()->unreserveSlot(ou->getUser());
 	}
@@ -895,7 +895,7 @@ LRESULT ChatCtrl::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		try {
-			QueueManager::getInstance()->addTestSUR(ou->getUser(), client->getHubUrl(), false);
+			QueueManager::getInstance()->addTestSUR(HintedUser(ou->getUser(), client->getHubUrl()), false);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}
@@ -908,7 +908,7 @@ LRESULT ChatCtrl::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		try {
-			QueueManager::getInstance()->addList(ou->getUser(), client->getHubUrl(), QueueItem::FLAG_CHECK_FILE_LIST, client->getHubUrl());
+			QueueManager::getInstance()->addList(HintedUser(ou->getUser(), client->getHubUrl()), QueueItem::FLAG_CHECK_FILE_LIST, client->getHubUrl());
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}

@@ -363,16 +363,16 @@ private:
 
 	class DirectoryListInfo {
 	public:
-		DirectoryListInfo(const UserPtr& aUser, const tstring& aFile, const tstring& aDir, int64_t aSpeed) : user(aUser), file(aFile), dir(aDir), speed(aSpeed) { }
-		UserPtr user;
+		DirectoryListInfo(const HintedUser& aUser, const tstring& aFile, const tstring& aDir, int64_t aSpeed) : user(aUser), file(aFile), dir(aDir), speed(aSpeed) { }
+		HintedUser user;
 		tstring file;
 		tstring dir;
 		int64_t speed;
 	};
 	class DirectoryBrowseInfo {
 	public:
-		DirectoryBrowseInfo(const UserPtr& ptr, string aText) : user(ptr), text(aText) { }
-		UserPtr user;
+		DirectoryBrowseInfo(const HintedUser& ptr, string aText) : user(ptr), text(aText) { }
+		HintedUser user;
 		string text;
 	};
 	class FileListQueue: public Thread {
@@ -482,7 +482,7 @@ private:
 
 	// QueueManagerListener
 	void on(QueueManagerListener::Finished, const QueueItem* qi, const string& dir, const Download*) throw();
-	void on(PartialList, const UserPtr&, const string& text) throw();
+	void on(PartialList, const HintedUser&, const string& text) throw();
 
 	// UPnP connectors
 	std::auto_ptr<UPnP> UPnP_TCP;

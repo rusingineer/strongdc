@@ -274,10 +274,9 @@ public:
 		int i;
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 			FinishedItem *ii = ctrlList.getItemData(i);
-			if(ii->getUser() && ii->getUser()->isOnline()) {
+			if(ii->getUser().user->isOnline()) {
 				try {
-					// TODO hubHint
-					QueueManager::getInstance()->addList(ii->getUser(), Util::emptyString, QueueItem::FLAG_CLIENT_VIEW);
+					QueueManager::getInstance()->addList(ii->getUser(), QueueItem::FLAG_CLIENT_VIEW);
 				} catch(const Exception&) {
 				}
 			} else {
@@ -291,9 +290,8 @@ public:
 		int i;
 		if((i = ctrlList.GetNextItem(-1, LVNI_SELECTED)) != -1) {
 			FinishedItem *ii = ctrlList.getItemData(i);
-			if(ii->getUser() && ii->getUser()->isOnline()) {
-				// TODO hubHint
-				UploadManager::getInstance()->reserveSlot(ii->getUser(), 600, Util::emptyString);
+			if(ii->getUser().user->isOnline()) {
+				UploadManager::getInstance()->reserveSlot(ii->getUser(), 600);
 			} else {
 				addStatusLine(TSTRING(USER_OFFLINE));
 			}
