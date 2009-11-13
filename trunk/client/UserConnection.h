@@ -158,6 +158,8 @@ public:
 
 	const UserPtr& getUser() const { return user; }
 	UserPtr& getUser() { return user; }
+	const HintedUser getHintedUser() const { return HintedUser(user, hubUrl); }
+
 	bool isSecure() const { return socket && socket->isSecure(); }
 	bool isTrusted() const { return socket && socket->isTrusted(); }
 	std::string getCipherName() const { return socket ? socket->getCipherName() : Util::emptyString; }

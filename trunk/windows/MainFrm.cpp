@@ -114,13 +114,15 @@ public:
 			UserPtr u = DirectoryListing::getUserFromFilename(*i);
 			if(!u)
 				continue;
-			DirectoryListing dl(u);
+				
+			HintedUser user(u, Util::emptyString);
+			DirectoryListing dl(user);
 			try {
 				dl.loadFile(*i);
 				string tmp;
 				tmp.resize(STRING(MATCHED_FILES).size() + 16);
 				tmp.resize(snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl, Util::emptyString)));
-				LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(u->getCID())) + ": " + tmp);
+				LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(user)) + ": " + tmp);
 			} catch(const Exception&) {
 
 			}
@@ -1255,7 +1257,7 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	
 	if(wID == IDC_OPEN_MY_LIST){
 		if(!ShareManager::getInstance()->getOwnListFile().empty()){
-			DirectoryListingFrame::openWindow(Text::toT(ShareManager::getInstance()->getOwnListFile()), Text::toT(Util::emptyString), ClientManager::getInstance()->getMe(), 0);
+			DirectoryListingFrame::openWindow(Text::toT(ShareManager::getInstance()->getOwnListFile()), Text::toT(Util::emptyString), HintedUser(ClientManager::getInstance()->getMe(), Util::emptyString), 0);
 		}
 		return 0;
 	}
@@ -1263,7 +1265,7 @@ LRESULT MainFrame::onOpenFileList(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	if(WinUtil::browseFile(file, m_hWnd, false, Text::toT(Util::getListPath()), types)) {
 		UserPtr u = DirectoryListing::getUserFromFilename(Text::fromT(file));
 		if(u) {
-			DirectoryListingFrame::openWindow(file, Text::toT(Util::emptyString), u, 0);
+			DirectoryListingFrame::openWindow(file, Text::toT(Util::emptyString), HintedUser(u, Util::emptyString), 0);
 		} else {
 			MessageBox(CTSTRING(INVALID_LISTNAME), _T(APPNAME) _T(" ") _T(VERSIONSTRING));
 		}
@@ -1455,7 +1457,7 @@ void MainFrame::on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const
 	versionInfo += string((const char*)buf, len);
 }
 
-void MainFrame::on(PartialList, const UserPtr& aUser, const string& text) throw() {
+void MainFrame::on(PartialList, const HintedUser& aUser, const string& text) throw() {
 	PostMessage(WM_SPEAKER, BROWSE_LISTING, (LPARAM)new DirectoryBrowseInfo(aUser, text));
 }
 
@@ -1463,14 +1465,14 @@ void MainFrame::on(QueueManagerListener::Finished, const QueueItem* qi, const st
 	if(qi->isSet(QueueItem::FLAG_CLIENT_VIEW)) {
 		if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 			// This is a file listing, show it...
-			DirectoryListInfo* i = new DirectoryListInfo(qi->getDownloads()[0]->getUser(), Text::toT(qi->getListName()), Text::toT(dir), static_cast<int64_t>(download->getAverageSpeed()));
+			DirectoryListInfo* i = new DirectoryListInfo(qi->getDownloads()[0]->getHintedUser(), Text::toT(qi->getListName()), Text::toT(dir), static_cast<int64_t>(download->getAverageSpeed()));
 
 			PostMessage(WM_SPEAKER, DOWNLOAD_LISTING, (LPARAM)i);
 		} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
 			PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new tstring(Text::toT(qi->getTarget())));
 		}
 	} else if(qi->isSet(QueueItem::FLAG_USER_LIST) && qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)) {
-		DirectoryListInfo* i = new DirectoryListInfo(qi->getDownloads()[0]->getUser(), Text::toT(qi->getListName()), Text::toT(dir), static_cast<int64_t>(download->getAverageSpeed()));
+		DirectoryListInfo* i = new DirectoryListInfo(qi->getDownloads()[0]->getHintedUser(), Text::toT(qi->getListName()), Text::toT(dir), static_cast<int64_t>(download->getAverageSpeed()));
 		
 		if(listQueue.stop) {
 			listQueue.stop = false;

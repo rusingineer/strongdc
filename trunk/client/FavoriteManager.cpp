@@ -148,8 +148,8 @@ void FavoriteManager::removeHubUserCommands(int ctx, const string& hub) {
 void FavoriteManager::addFavoriteUser(const UserPtr& aUser) { 
 	Lock l(cs);
 	if(users.find(aUser->getCID()) == users.end()) {
-		StringList urls = ClientManager::getInstance()->getHubs(aUser->getCID());
-		StringList nicks = ClientManager::getInstance()->getNicks(aUser->getCID());
+		StringList urls = ClientManager::getInstance()->getHubs(aUser->getCID(), Util::emptyString);
+		StringList nicks = ClientManager::getInstance()->getNicks(aUser->getCID(), Util::emptyString);
         
 		/// @todo make this an error probably...
 		if(urls.empty())

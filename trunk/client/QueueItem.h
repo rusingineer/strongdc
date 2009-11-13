@@ -121,14 +121,13 @@ public:
 				| FLAG_NO_TREE | FLAG_TTH_INCONSISTENCY | FLAG_UNTRUSTED
 		};
 
-		Source(const UserPtr& aUser) : user(aUser), partialSource(NULL) { }
+		Source(const HintedUser& aUser) : user(aUser), partialSource(NULL) { }
 		Source(const Source& aSource) : Flags(aSource), user(aSource.user), partialSource(aSource.partialSource) { }
 
 		bool operator==(const UserPtr& aUser) const { return user == aUser; }
-		UserPtr& getUser() { return user; }
 		PartialSource::Ptr& getPartialSource() { return partialSource; }
 
-		GETSET(UserPtr, user, User);
+		GETSET(HintedUser, user, User);
 		GETSET(PartialSource::Ptr, partialSource, PartialSource);
 	};
 
@@ -161,17 +160,12 @@ public:
 	~QueueItem() { }
 
 	size_t countOnlineUsers() const;
+	void getOnlineUsers(HintedUserList& l) const;
 
 	SourceList& getSources() { return sources; }
 	const SourceList& getSources() const { return sources; }
 	SourceList& getBadSources() { return badSources; }
 	const SourceList& getBadSources() const { return badSources; }
-
-	void getOnlineUsers(UserList& l) const {
-		for(SourceConstIter i = sources.begin(); i != sources.end(); ++i)
-			if(i->getUser()->isOnline())
-				l.push_back(i->getUser());
-	}
 
 	string getTargetFileName() const { return Util::getFileName(getTarget()); }
 
@@ -304,7 +298,7 @@ private:
 	SourceList badSources;
 	string tempTarget;
 
-	void addSource(const UserPtr& aUser);
+	void addSource(const HintedUser& aUser);
 	void removeSource(const UserPtr& aUser, Flags::MaskType reason);
 };
 

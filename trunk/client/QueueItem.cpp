@@ -39,16 +39,21 @@ namespace {
 
 size_t QueueItem::countOnlineUsers() const {
 	size_t n = 0;
-	SourceConstIter i = sources.begin();
-	for(; i != sources.end(); ++i) {
-		if(i->getUser()->isOnline())
+	for(SourceConstIter i = sources.begin(), iend = sources.end(); i != iend; ++i) {
+		if(i->getUser().user->isOnline())
 			n++;
 	}
 	return n;
 }
 
-void QueueItem::addSource(const UserPtr& aUser) {
-	dcassert(!isSource(aUser));
+void QueueItem::getOnlineUsers(HintedUserList& l) const {
+	for(SourceConstIter i = sources.begin(), iend = sources.end(); i != iend; ++i)
+		if(i->getUser().user->isOnline())
+			l.push_back(i->getUser());
+}
+
+void QueueItem::addSource(const HintedUser& aUser) {
+	dcassert(!isSource(aUser.user));
 	SourceIter i = getBadSource(aUser);
 	if(i != badSources.end()) {
 		sources.push_back(*i);

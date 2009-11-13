@@ -332,7 +332,7 @@ void HubFrame::onEnter() {
 			} else if(stricmp(cmd.c_str(), _T("ignorelist"))==0) {
 				tstring ignorelist = _T("Ignored users:");
 				for(IgnoreMap::const_iterator i = ignoreList.begin(); i != ignoreList.end(); ++i)
-					ignorelist += _T(" ") + Text::toT(ClientManager::getInstance()->getNicks((*i)->getCID())[0]);
+					ignorelist += _T(" ") + Text::toT(ClientManager::getInstance()->getNicks((*i)->getCID(), Util::emptyString)[0]); // ignore user isn't hub dependent
 				addLine(ignorelist, WinUtil::m_ChatTextSystem);
 			} else if(stricmp(cmd.c_str(), _T("log")) == 0) {
 				StringMap params;
@@ -599,7 +599,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					if(BOOLSETTING(CHECK_NEW_USERS)) {
 						if(u.onlineUser->getIdentity().isTcpActive(client) || client->isActive()) {
 							try {
-								QueueManager::getInstance()->addTestSUR(u.onlineUser->getUser(), client->getHubUrl(), true);
+								QueueManager::getInstance()->addTestSUR(HintedUser(u.onlineUser->getUser(), client->getHubUrl()), true);
 							} catch(const Exception&) {
 							}
 						}
@@ -994,7 +994,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 					PrivateFrame::openWindow(ui->getUser(), Util::emptyStringT, client);
 				} else if (wParam & MK_SHIFT) {
 					try {
-						QueueManager::getInstance()->addList(ui->getUser(), client->getHubUrl(), QueueItem::FLAG_CLIENT_VIEW);
+						QueueManager::getInstance()->addList(HintedUser(ui->getUser(), client->getHubUrl()), QueueItem::FLAG_CLIENT_VIEW);
 					} catch(const Exception& e) {
 						addStatus(Text::toT(e.getError()), WinUtil::m_ChatTextSystem);
 					}
@@ -1498,7 +1498,7 @@ LRESULT HubFrame::onEnterUsers(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL& /*bHand
 	int item = ctrlUsers.GetNextItem(-1, LVNI_FOCUSED);
 	if(item != -1) {
 		try {
-			QueueManager::getInstance()->addList((ctrlUsers.getItemData(item))->getUser(), client->getHubUrl(), QueueItem::FLAG_CLIENT_VIEW);
+			QueueManager::getInstance()->addList(HintedUser((ctrlUsers.getItemData(item))->getUser(), client->getHubUrl()), QueueItem::FLAG_CLIENT_VIEW);
 		} catch(const Exception& e) {
 			addStatus(Text::toT(e.getError()));
 		}

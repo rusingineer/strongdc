@@ -83,7 +83,7 @@ LRESULT MagnetDlg::onCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 		} else if(IsDlgButtonChecked(IDC_MAGNET_QUEUE)) {
 			try {
 				string target = SETTING(DOWNLOAD_DIRECTORY) + Text::fromT(mFileName);
-				QueueManager::getInstance()->add(target, mSize, TTHValue(Text::fromT(mHash)), UserPtr(), Util::emptyString);
+				QueueManager::getInstance()->add(target, mSize, TTHValue(Text::fromT(mHash)), HintedUser(UserPtr(), Util::emptyString));
 			} catch(const Exception& e) {
 				LogManager::getInstance()->message(e.getError());
 			}

@@ -32,15 +32,17 @@
 namespace dcpp {
 
 struct WaitingUser {
-	UserPtr user;
+	HintedUser user;
 	string token;
 	
-	operator const UserPtr&() const { return user; }
+	WaitingUser(const HintedUser& _user, const std::string& _token) : user(_user), token(_token) { }
+	
+	operator const UserPtr&() const { return user.user; }
 };
 
 class UploadQueueItem : public FastAlloc<UploadQueueItem>, public intrusive_ptr_base<UploadQueueItem>, public UserInfoBase {
 public:
-	UploadQueueItem(UserPtr u, const string& _file, int64_t p, int64_t sz, uint64_t itime) :
+	UploadQueueItem(const HintedUser& u, const string& _file, int64_t p, int64_t sz, uint64_t itime) :
 		user(u), file(_file), pos(p), size(sz), time(itime) { inc(); }
 	
 	typedef vector<UploadQueueItem*> List;
@@ -74,7 +76,8 @@ public:
 	int imageIndex() const;
 
 	const string& getFile() const { return file; }
-	const UserPtr& getUser() const { return user; }
+	const UserPtr& getUser() const { return user.user; }
+	const HintedUser& getHintedUser() const { return user; }
 	int64_t getSize() const { return size; }
 	uint64_t getTime() const { return time; }
 
@@ -85,7 +88,7 @@ private:
 	int64_t size;
 	uint64_t time;
 	
-	UserPtr user;	
+	HintedUser user;	
 };
 
 class UploadManager : private ClientManagerListener, private UserConnectionListener, public Speaker<UploadManagerListener>, private TimerManagerListener, public Singleton<UploadManager>
@@ -111,7 +114,7 @@ public:
 	int getFreeExtraSlots() const { return max(SETTING(EXTRA_SLOTS) - getExtra(), 0); }
 	
 	/** @param aUser Reserve an upload slot for this user and connect. */
-	void reserveSlot(const UserPtr& aUser, uint64_t aTime, const string& hubHint);
+	void reserveSlot(const HintedUser& aUser, uint64_t aTime);
 	void unreserveSlot(const UserPtr& aUser);
 	void clearUserFiles(const UserPtr&);
 	const UploadQueueItem::SlotQueue getUploadQueue();
@@ -147,7 +150,7 @@ private:
 	SlotMap connectingUsers;
 	UploadQueueItem::SlotQueue uploadQueue;
 
-	size_t addFailedUpload(const UserPtr& aUser, const string& token, const string& file, int64_t pos, int64_t size);
+	size_t addFailedUpload(const UserConnection& source, const string& file, int64_t pos, int64_t size);
 	void notifyQueuedUsers();
 
 	friend class Singleton<UploadManager>;

@@ -230,7 +230,7 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 			if(is->isAutoQueue) {
 				try {
 					QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + currentFile->getName(),
-						currentFile->getSize(), currentFile->getTTH(), getUser(), Util::emptyString);
+						currentFile->getSize(), currentFile->getTTH(), getUser());
 				} catch(const Exception&) {	}
 			}
 
@@ -319,10 +319,10 @@ void ADLSearchManager::PrepareDestinationDirectories(DestDirList& destDirVector,
 
 void ADLSearchManager::matchListing(DirectoryListing& aDirList) throw() {
 	StringMap params;
-	params["userNI"] = ClientManager::getInstance()->getNicks(aDirList.getUser()->getCID())[0];
+	params["userNI"] = ClientManager::getInstance()->getNicks(aDirList.getHintedUser())[0];
 	params["userCID"] = aDirList.getUser()->getCID().toBase32();
 
-	setUser(aDirList.getUser());
+	setUser(aDirList.getHintedUser());
 	setSentRaw(false);
 
 	DestDirList destDirs;

@@ -443,7 +443,7 @@ string WebServerManager::getULQueue(){
 	UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getUploadQueue();
 	for(UploadQueueItem::SlotQueue::const_iterator ii = users.begin(); ii != users.end(); ++ii) {
 		for(UploadQueueItem::List::const_iterator i = ii->second.begin(); i != ii->second.end(); ++i) {
-			ret+="<tr><td>" + ClientManager::getInstance()->getNicks((*i)->getUser()->getCID())[0] + "</td>";
+			ret+="<tr><td>" + ClientManager::getInstance()->getNicks(ii->first.user)[0] + "</td>";
 			ret+="<td>" + Util::getFileName((*i)->getFile()) + "</td></tr>";
 		}
 	}
@@ -520,8 +520,7 @@ int WebServerSocket::run(){
 				}
 				if(m["name"] != Util::emptyString) {
 					try {
-						// TODO hubHint
-						QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Util::encodeURI(m["name"], true), Util::toInt64(m["size"]), TTHValue(m["tth"]), UserPtr(), Util::emptyString);
+						QueueManager::getInstance()->add(SETTING(DOWNLOAD_DIRECTORY) + Util::encodeURI(m["name"], true), Util::toInt64(m["size"]), TTHValue(m["tth"]), HintedUser(UserPtr(), Util::emptyString));
 					} catch(const Exception&) {
 						// ...
 					}
@@ -566,7 +565,7 @@ void WebServerManager::on(SearchManagerListener::SR, const SearchResultPtr& aRes
 			results += "<input type='hidden' name='tth' value='" + aResult->getTTH().toBase32() + "'>";
 			results += "<input type='hidden' name='type' value='" + Util::toString(aResult->getType()) + "'>";
 			results += "<tr onmouseover=\"this.style.backgroundColor='#CC0099'; this.style.cursor='hand';\" onmouseout=\"this.style.backgroundColor='#EEEEEE'; this.style.cursor='hand';\" onclick=\"form" + Util::toString(row) + ".submit();\">";
-			results += "<td>" + ClientManager::getInstance()->getNicks(aResult->getUser()->getCID())[0] + "</td><td>" + aResult->getFileName() + "</td><td>" + Util::formatBytes(aResult->getSize()) + "</td><td>" + aResult->getTTH().toBase32() + "</td></form></tr>";
+			results += "<td>" + ClientManager::getInstance()->getNicks(HintedUser(aResult->getUser(), aResult->getHubURL()))[0] + "</td><td>" + aResult->getFileName() + "</td><td>" + Util::formatBytes(aResult->getSize()) + "</td><td>" + aResult->getTTH().toBase32() + "</td></form></tr>";
 			row++;
 		}
 	}

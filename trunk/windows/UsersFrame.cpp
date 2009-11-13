@@ -91,7 +91,7 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 		
 		tstring x;
 		if (ctrlUsers.GetSelectedCount() == 1) {
-			x = Text::toT(ClientManager::getInstance()->getNicks(ctrlUsers.getItemData(WinUtil::getFirstSelectedIndex(ctrlUsers))->user->getCID())[0]);
+			x = Text::toT(ClientManager::getInstance()->getNicks(ctrlUsers.getItemData(WinUtil::getFirstSelectedIndex(ctrlUsers))->user->getCID(), Util::emptyString)[0]);
 		} else {
 			x = _T("");
 		}
@@ -249,7 +249,7 @@ LRESULT UsersFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 void UsersFrame::UserInfo::update(const FavoriteUser& u) {
 	columns[COLUMN_NICK] = Text::toT(u.getNick());
-	columns[COLUMN_HUB] = user->isOnline() ? WinUtil::getHubNames(u.getUser()).first : Text::toT(u.getUrl());
+	columns[COLUMN_HUB] = user->isOnline() ? WinUtil::getHubNames(u.getUser(), Util::emptyString).first : Text::toT(u.getUrl());
 	columns[COLUMN_SEEN] = user->isOnline() ? TSTRING(ONLINE) : Text::toT(Util::formatTime("%Y-%m-%d %H:%M", u.getLastSeen()));
 	columns[COLUMN_DESCRIPTION] = Text::toT(u.getDescription());
 }
@@ -268,10 +268,10 @@ LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		dcassert(i != -1);
 
 		StringMap params;
-		params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(ui->getUser()->getCID()));
-		params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(ui->getUser()->getCID()));
+		params["hubNI"] = Util::toString(ClientManager::getInstance()->getHubNames(ui->getUser()->getCID(), Util::emptyString));
+		params["hubURL"] = Util::toString(ClientManager::getInstance()->getHubs(ui->getUser()->getCID(), Util::emptyString));
 		params["userCID"] = ui->getUser()->getCID().toBase32(); 
-		params["userNI"] = Util::toString(ClientManager::getInstance()->getNicks(ui->getUser()->getCID()))[0];
+		params["userNI"] = Util::toString(ClientManager::getInstance()->getNicks(ui->getUser()->getCID(), Util::emptyString))[0];
 		params["myCID"] = ClientManager::getInstance()->getMe()->getCID().toBase32();
 
 		string file = Util::validateFileName(SETTING(LOG_DIRECTORY) + Util::formatParams(SETTING(LOG_FILE_PRIVATE_CHAT), params, false));

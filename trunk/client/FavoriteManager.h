@@ -199,6 +199,8 @@ public:
 	bool isFavoriteHub(const std::string& aUrl);
 	FavoriteHubEntry* getFavoriteHubEntry(const string& aServer) const;
 
+	bool isPrivate(const string& url) const { return false; }
+
 // Favorite Directories
 	bool addFavoriteDir(const string& aDirectory, const string& aName);
 	bool removeFavoriteDir(const string& aName);

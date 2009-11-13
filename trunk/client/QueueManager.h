@@ -75,24 +75,24 @@ class QueueManager : public Singleton<QueueManager>, public Speaker<QueueManager
 {
 public:
 	/** Add a file to the queue. */
-	void add(const string& aTarget, int64_t aSize, const TTHValue& root, const UserPtr& aUser, const string& hubHint,
+	void add(const string& aTarget, int64_t aSize, const TTHValue& root, const HintedUser& aUser,
 		Flags::MaskType aFlags = 0, bool addBad = true) throw(QueueException, FileException);
 		/** Add a user's filelist to the queue. */
-	void addList(const UserPtr& aUser, const string& hubHint, Flags::MaskType aFlags, const string& aInitialDir = Util::emptyString) throw(QueueException, FileException);
+	void addList(const HintedUser& HintedUser, Flags::MaskType aFlags, const string& aInitialDir = Util::emptyString) throw(QueueException, FileException);
 
-	void addTestSUR(UserPtr aUser, const string& hubHint, bool checkList) throw(QueueException, FileException) {
-		StringList nicks = ClientManager::getInstance()->getNicks(*aUser);
+	void addTestSUR(const HintedUser& aUser, bool checkList) throw(QueueException, FileException) {
+		StringList nicks = ClientManager::getInstance()->getNicks(aUser);
 		string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
-		string target = Util::getPath(Util::PATH_USER_CONFIG) + "TestSURs\\TestSUR" + nick + aUser->getCID().toBase32();
+		string target = Util::getPath(Util::PATH_USER_CONFIG) + "TestSURs\\TestSUR" + nick + aUser.user->getCID().toBase32();
 
-		add(target, -1, TTHValue(), aUser, hubHint, (Flags::MaskType)((checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR));
+		add(target, -1, TTHValue(), aUser, (Flags::MaskType)((checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR));
 	}
 
-	void removeTestSUR(UserPtr aUser) {
+	void removeTestSUR(const HintedUser& aUser) {
 		try {
-			StringList nicks = ClientManager::getInstance()->getNicks(*aUser);
+			StringList nicks = ClientManager::getInstance()->getNicks(aUser);
 			string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
-			string target = Util::getPath(Util::PATH_USER_CONFIG) + "TestSURs\\TestSUR" + nick + aUser->getCID().toBase32();
+			string target = Util::getPath(Util::PATH_USER_CONFIG) + "TestSURs\\TestSUR" + nick + aUser.user->getCID().toBase32();
 
 			remove(target);
 		} catch(...) {
@@ -102,9 +102,10 @@ public:
 	}
 
 	/** Readd a source that was removed */
-	void readd(const string& target, const UserPtr& aUser, const string& hubHint) throw(QueueException);
+	void readd(const string& target, const HintedUser& aUser) throw(QueueException);
 	/** Add a directory to the queue (downloads filelist and matches the directory). */
-	void addDirectory(const string& aDir, const UserPtr& aUser, const string& hubHint, const string& aTarget, QueueItem::Priority p = QueueItem::DEFAULT) throw();
+	void addDirectory(const string& aDir, const HintedUser& aUser, const string& aTarget, 
+		QueueItem::Priority p = QueueItem::DEFAULT) throw();
 	
 	int matchListing(const DirectoryListing& dl, const string& hubHint) throw();
 
@@ -145,7 +146,7 @@ public:
 	void noDeleteFileList(const string& path);
 	
 	bool handlePartialSearch(const TTHValue& tth, PartsInfo& _outPartsInfo);
-	bool handlePartialResult(const UserPtr& aUser, const string& hubHint, const TTHValue& tth, const QueueItem::PartialSource& partialSource, PartsInfo& outPartialInfo);
+	bool handlePartialResult(const HintedUser& aUser, const TTHValue& tth, const QueueItem::PartialSource& partialSource, PartsInfo& outPartialInfo);
 	
 	bool dropSource(Download* d);
 
@@ -322,11 +323,11 @@ private:
 	/** File lists not to delete */
 	StringList protectedFileLists;
 	/** Sanity check for the target filename */
-	static string checkTarget(const string& aTarget, int64_t aSize) throw(QueueException, FileException);
+	static string checkTarget(const string& aTarget, bool checkExsistence) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
-	bool addSource(QueueItem* qi, const UserPtr& aUser, const string& hubHint, Flags::MaskType addBad) throw(QueueException, FileException);
+	bool addSource(QueueItem* qi, const HintedUser& aUser, Flags::MaskType addBad) throw(QueueException, FileException);
 
-	void processList(const string& name, UserPtr& user, int flags);
+	void processList(const string& name, const HintedUser& user, int flags);
 
 	void load(const SimpleXML& aXml);
 	void moveFile(const string& source, const string& target);
@@ -335,7 +336,7 @@ private:
 
 	void setDirty();
 
-	string getListPath(const UserPtr& user);
+	string getListPath(const HintedUser& user);
 
 	// TimerManagerListener
 	void on(TimerManagerListener::Second, uint64_t aTick) throw();
