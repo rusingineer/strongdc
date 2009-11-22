@@ -796,7 +796,7 @@ string QueueManager::checkTarget(const string& aTarget, bool checkExistence) thr
 
 	// Check that the file doesn't already exist...
 	if(checkExistence && File::getSize(target) != -1) {
-		throw FileException(STRING(LARGER_TARGET_FILE_EXISTS));
+		throw FileException(STRING(TARGET_FILE_EXISTS));
 	}
 	return target;
 }

@@ -550,10 +550,21 @@ void AdcHub::handle(AdcCommand::PSR, AdcCommand& c) throw() {
 
 void AdcHub::handle(AdcCommand::GET, AdcCommand& c) throw() {
 	if(c.getParameters().size() < 5) {
-		dcdebug("Get with few parameters");
-		// TODO return STA?
+		if(c.getParameters().size() > 0) {
+			if(c.getParam(0) == "blom") {
+				send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_GENERIC,
+					"Too few parameters for blom", AdcCommand::TYPE_HUB));
+			} else {
+				send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_TRANSFER_GENERIC,
+					"Unknown transfer type", AdcCommand::TYPE_HUB));
+			}
+		} else {
+			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_GENERIC,
+				"Too few parameters for GET", AdcCommand::TYPE_HUB));
+		}
 		return;
 	}
+
 	const string& type = c.getParam(0);
 	string sk, sh;
 	if(type == "blom" && c.getParam("BK", 4, sk) && c.getParam("BH", 4, sh))  {
@@ -563,18 +574,22 @@ void AdcHub::handle(AdcCommand::GET, AdcCommand& c) throw() {
 		size_t h = Util::toUInt32(sh);
 				
 		if(k > 8 || k < 1) {
-			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_TRANSFER_GENERIC, "Unsupported k"));
+			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_TRANSFER_GENERIC, 
+				"Unsupported k", AdcCommand::TYPE_HUB));
 			return;
 		}
 		if(h > 64 || h < 1) {
-			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_TRANSFER_GENERIC, "Unsupported h"));
+			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_TRANSFER_GENERIC, 
+				"Unsupported h", AdcCommand::TYPE_HUB));
 			return;
 		}
+
 		size_t n = ShareManager::getInstance()->getSharedFiles();
 		
 		// Ideal size for m is n * k / ln(2), but we allow some slack
-		if(m > (5 * n * k / log(2.)) || m > static_cast<size_t>(1 << h)) {
-			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_TRANSFER_GENERIC, "Unsupported m"));
+		if(m > (5 * Util::roundUp((int64_t)(n * k / log(2.)), (int64_t)64)) || m > static_cast<size_t>(1 << h)) {
+			send(AdcCommand(AdcCommand::SEV_FATAL, AdcCommand::ERROR_TRANSFER_GENERIC,
+				"Unsupported m", AdcCommand::TYPE_HUB));
 			return;
 		}
 		

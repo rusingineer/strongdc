@@ -23,6 +23,7 @@
 #include "HashManager.h"
 #include "Download.h"
 #include "File.h"
+#include "Util.h"
 
 namespace dcpp {
 
@@ -99,17 +100,6 @@ uint64_t QueueItem::getAverageSpeed() const {
 	return totalSpeed;
 }
 
-namespace {
-
-inline int64_t roundDown(int64_t size, int64_t blockSize) {
-	return ((size + blockSize / 2) / blockSize) * blockSize;
-}
-inline int64_t roundUp(int64_t size, int64_t blockSize) {
-	return ((size + blockSize - 1) / blockSize) * blockSize;
-}
-
-}
-
 Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_t lastSpeed, const PartialSource::Ptr partialSource) const {
 	if(getSize() == -1 || blockSize == 0) {
 		return Segment(0, -1);
@@ -127,13 +117,13 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 			const Segment& first = *done.begin();
 
 			if(first.getStart() > 0) {
-				end = roundUp(first.getStart(), blockSize);
+				end = Util::roundUp(first.getStart(), blockSize);
 			} else {
-				start = roundDown(first.getEnd(), blockSize);
+				start = Util::roundDown(first.getEnd(), blockSize);
 
 				if(done.size() > 1) {
 					const Segment& second = *(++done.begin());
-					end = roundUp(second.getStart(), blockSize);
+					end = Util::roundUp(second.getStart(), blockSize);
 				}
 			}
 		}
@@ -169,7 +159,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 		
 	if(targetSize > blockSize) {
 		// Round off to nearest block size
-	targetSize = roundDown(targetSize, blockSize);
+	targetSize = Util::roundDown(targetSize, blockSize);
 	} else {
 		targetSize = blockSize;
 	}		
