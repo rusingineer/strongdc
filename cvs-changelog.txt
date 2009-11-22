@@ -1,3 +1,8 @@
+** svn467
+	added check for filelist size, 256 MB is allowed maximum (THX eMTee)
+	[DHT] duplicite IPs depends on IP:port
+	bloom fixes (DC++ BZR)
+
 ** svn466
 	hubhints (DC++ BZR; needs cleaning up)
 

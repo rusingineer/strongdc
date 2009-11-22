@@ -95,10 +95,14 @@ void DirectoryListing::loadFile(const string& name) throw(Exception) {
 		const size_t BUF_SIZE = 64*1024;
 		boost::scoped_array<char> buf(new char[BUF_SIZE]);
 		size_t len;
+		size_t bytesRead = 0;
 		for(;;) {
 			size_t n = BUF_SIZE;
 			len = f.read(&buf[0], n);
 			txt.append(&buf[0], len);
+			bytesRead += len;
+			if(bytesRead > (size_t)256 * 1024 * 1024)
+				throw FileException(STRING(TOO_LARGE_LIST));			
 			if(len < BUF_SIZE)
 				break;
 		}
