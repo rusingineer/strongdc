@@ -441,6 +441,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\client\SimpleXMLReader.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\StdAfx.cpp"
 				>
 			</File>

@@ -23,7 +23,7 @@
 #include "SearchManager.h"
 #include "SettingsManager.h"
 #include "HashManager.h"
-#include "DownloadManager.h"
+#include "QueueManagerListener.h"
 
 #include "Exception.h"
 #include "CriticalSection.h"
@@ -51,7 +51,7 @@ class MemoryInputStream;
 
 struct ShareLoader;
 class ShareManager : public Singleton<ShareManager>, private SettingsManagerListener, private Thread, private TimerManagerListener,
-	private HashManagerListener, private DownloadManagerListener
+	private HashManagerListener, private QueueManagerListener
 {
 public:
 	/**
@@ -287,6 +287,7 @@ private:
 	Directory::File::Set::const_iterator findFile(const string& virtualFile) const throw(ShareException);
 
 	Directory::Ptr buildTree(const string& aName, const Directory::Ptr& aParent);
+	bool checkHidden(const string& aName) const;
 
 	void rebuildIndices();
 
@@ -306,8 +307,8 @@ private:
 
 	int run();
 
-	// DownloadManagerListener
-	void on(DownloadManagerListener::Complete, const Download* d, bool) throw();
+	// QueueManagerListener
+	virtual void on(QueueManagerListener::Finished, QueueItem* qi, const string& dir, int64_t speed) throw();
 
 	// HashManagerListener
 	void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();

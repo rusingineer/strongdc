@@ -524,6 +524,7 @@ typedef struct ssl_session_st
 #define SSL_OP_SSLEAY_080_CLIENT_DH_BUG			0x00000080L
 #define SSL_OP_TLS_D5_BUG				0x00000100L
 #define SSL_OP_TLS_BLOCK_PADDING_BUG			0x00000200L
+#define SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION	0x00000400L
 
 /* Disable SSL 3.0/TLS 1.0 CBC vulnerability workaround that was added
  * in OpenSSL 0.9.6d.  Usually (depending on the application protocol)
@@ -1398,11 +1399,14 @@ DECLARE_PEM_rw(SSL_SESSION, SSL_SESSION)
 
 #define DTLS_CTRL_GET_TIMEOUT		73
 #define DTLS_CTRL_HANDLE_TIMEOUT	74
+#define DTLS_CTRL_LISTEN			75
 
 #define DTLSv1_get_timeout(ssl, arg) \
 	SSL_ctrl(ssl,DTLS_CTRL_GET_TIMEOUT,0, (void *)arg)
 #define DTLSv1_handle_timeout(ssl) \
 	SSL_ctrl(ssl,DTLS_CTRL_HANDLE_TIMEOUT,0, NULL)
+#define DTLSv1_listen(ssl, peer) \
+	SSL_ctrl(ssl,DTLS_CTRL_LISTEN,0, (void *)peer)
 
 #define SSL_session_reused(ssl) \
 	SSL_ctrl((ssl),SSL_CTRL_GET_SESSION_REUSED,0,NULL)
@@ -1658,7 +1662,7 @@ long SSL_get_default_timeout(const SSL *s);
 
 int SSL_library_init(void );
 
-char *SSL_CIPHER_description(SSL_CIPHER *,char *buf,int size);
+char *SSL_CIPHER_description(const SSL_CIPHER *,char *buf,int size);
 STACK_OF(X509_NAME) *SSL_dup_CA_list(STACK_OF(X509_NAME) *sk);
 
 SSL *SSL_dup(SSL *ssl);
@@ -1901,9 +1905,11 @@ void ERR_load_SSL_strings(void);
 #define SSL_F_SSL3_SETUP_WRITE_BUFFER			 291
 #define SSL_F_SSL3_WRITE_BYTES				 158
 #define SSL_F_SSL3_WRITE_PENDING			 159
+#define SSL_F_SSL_ADD_CLIENTHELLO_RENEGOTIATE_EXT	 298
 #define SSL_F_SSL_ADD_CLIENTHELLO_TLSEXT		 277
 #define SSL_F_SSL_ADD_DIR_CERT_SUBJECTS_TO_STACK	 215
 #define SSL_F_SSL_ADD_FILE_CERT_SUBJECTS_TO_STACK	 216
+#define SSL_F_SSL_ADD_SERVERHELLO_RENEGOTIATE_EXT	 299
 #define SSL_F_SSL_ADD_SERVERHELLO_TLSEXT		 278
 #define SSL_F_SSL_BAD_METHOD				 160
 #define SSL_F_SSL_BYTES_TO_CIPHER_LIST			 161
@@ -1947,6 +1953,8 @@ void ERR_load_SSL_strings(void);
 #define SSL_F_SSL_INIT_WBIO_BUFFER			 184
 #define SSL_F_SSL_LOAD_CLIENT_CA_FILE			 185
 #define SSL_F_SSL_NEW					 186
+#define SSL_F_SSL_PARSE_CLIENTHELLO_RENEGOTIATE_EXT	 300
+#define SSL_F_SSL_PARSE_SERVERHELLO_RENEGOTIATE_EXT	 301
 #define SSL_F_SSL_PEEK					 270
 #define SSL_F_SSL_PREPARE_CLIENTHELLO_TLSEXT		 281
 #define SSL_F_SSL_PREPARE_SERVERHELLO_TLSEXT		 282
@@ -2056,6 +2064,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_R_DECRYPTION_FAILED_OR_BAD_RECORD_MAC	 281
 #define SSL_R_DH_PUBLIC_VALUE_LENGTH_IS_WRONG		 148
 #define SSL_R_DIGEST_CHECK_FAILED			 149
+#define SSL_R_DTLS_MESSAGE_TOO_BIG			 334
 #define SSL_R_DUPLICATE_COMPRESSION_ID			 309
 #define SSL_R_ECC_CERT_NOT_FOR_KEY_AGREEMENT		 317
 #define SSL_R_ECC_CERT_NOT_FOR_SIGNING			 318
@@ -2160,6 +2169,9 @@ void ERR_load_SSL_strings(void);
 #define SSL_R_RECORD_LENGTH_MISMATCH			 213
 #define SSL_R_RECORD_TOO_LARGE				 214
 #define SSL_R_RECORD_TOO_SMALL				 298
+#define SSL_R_RENEGOTIATE_EXT_TOO_LONG			 335
+#define SSL_R_RENEGOTIATION_ENCODING_ERR		 336
+#define SSL_R_RENEGOTIATION_MISMATCH			 337
 #define SSL_R_REQUIRED_CIPHER_MISSING			 215
 #define SSL_R_REUSE_CERT_LENGTH_NOT_ZERO		 216
 #define SSL_R_REUSE_CERT_TYPE_NOT_ZERO			 217

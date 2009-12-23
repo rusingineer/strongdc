@@ -1,3 +1,10 @@
+** svn468
+	DC++ BZR merge (known bug: trailing spaces are not loaded from language files)
+	added hub address into queue context menu
+	fixed memory leak in DHT
+	added configuration type into main window title
+	updated OpenSSL
+
 ** svn467
 	added check for filelist size, 256 MB is allowed maximum (THX eMTee)
 	[DHT] duplicite IPs depends on IP:port

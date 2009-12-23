@@ -36,8 +36,8 @@ public:
 		intrusive_ptr_release(this);
 	}
 
-	bool unique() const throw() {
-		return (ref == 1);
+	bool unique(int val = 1) const throw() {
+		return (ref <= val);
 	}
 	
 protected:

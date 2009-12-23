@@ -62,6 +62,10 @@
 
 #include <openssl/buffer.h>
 #include <openssl/pqueue.h>
+#ifdef OPENSSL_SYS_VMS
+#include <resource.h>
+#include <sys/timeb.h>
+#endif
 #ifdef OPENSSL_SYS_WIN32
 /* Needed for struct timeval */
 #include <winsock.h>
@@ -84,7 +88,7 @@ extern "C" {
 #endif
 
 /* lengths of messages */
-#define DTLS1_COOKIE_LENGTH                     32
+#define DTLS1_COOKIE_LENGTH                     256
 
 #define DTLS1_RT_HEADER_LENGTH                  13
 
@@ -211,6 +215,9 @@ typedef struct dtls1_state_st
 	 * unnecessary message loss.
 	 */
 	record_pqueue buffered_app_data;
+
+	/* Is set when listening for new connections with dtls1_listen() */
+	unsigned int listen;
 
 	unsigned int mtu; /* max DTLS packet size */
 

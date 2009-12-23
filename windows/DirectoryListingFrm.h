@@ -420,7 +420,7 @@ private:
 				ADLSearchManager::getInstance()->matchListing(*mWindow->dl);
 				mWindow->refreshTree(mDir);
 			} else {
-				mWindow->refreshTree(Text::toT(Util::toNmdcFile(mWindow->dl->loadXML(mTxt, true))));
+				mWindow->refreshTree(Text::toT(Util::toNmdcFile(mWindow->dl->updateXML(mTxt))));
 			}
 
 			mWindow->PostMessage(WM_SPEAKER, DirectoryListingFrame::FINISHED);

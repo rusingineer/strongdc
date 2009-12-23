@@ -228,7 +228,7 @@ namespace dht
 			
 			if(node->getType() == 4 && node->expires > 0 && node->expires <= currentTime)
 			{
-				if(node->unique())
+				if(node->unique(2))
 				{
 					// node is dead, remove it
 					if(node->isInList)

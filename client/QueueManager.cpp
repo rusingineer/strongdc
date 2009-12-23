@@ -44,6 +44,10 @@
 
 #include <limits>
 
+#if !defined(_WIN32) && !defined(PATH_MAX) // Extra PATH_MAX check for Mac OS X
+#include <sys/syslimits.h>
+#endif
+
 #ifdef ff
 #undef ff
 #endif
@@ -138,6 +142,9 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 
 		// We prefer to search for things that are not running...
 		if((cand != NULL) && q->getNextSegment(0, 0, 0, NULL).getSize() == 0) 
+			continue;
+		// No finished files
+		if(q->isFinished())
 			continue;
 		// No user lists
 		if(q->isSet(QueueItem::FLAG_USER_LIST) || q->isSet(QueueItem::FLAG_TESTSUR) || q->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
@@ -818,6 +825,8 @@ bool QueueManager::addSource(QueueItem* qi, const HintedUser& aUser, Flags::Mask
 	if(aUser.user->isSet(User::PASSIVE) && !ClientManager::getInstance()->isActive(aUser.hint)) {
 		qi->removeSource(aUser, QueueItem::Source::FLAG_PASSIVE);
 		wantConnection = false;
+	} else if(qi->isFinished()) {
+		wantConnection = false;
 	} else {
 		if ((!SETTING(SOURCEFILE).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
 			PlaySound(Text::toT(SETTING(SOURCEFILE)).c_str(), NULL, SND_FILENAME | SND_ASYNC);
@@ -1387,7 +1396,8 @@ void QueueManager::processList(const string& name, const HintedUser& user, int f
 	DirectoryListing dirList(user);
 	try {
 		if(flags & QueueItem::FLAG_TEXT) {
-			dirList.loadXML(name, true);
+			MemoryInputStream mis(name);
+			dirList.loadXML(mis, true);
 		} else {
 			dirList.loadFile(name);
 		}
@@ -1652,6 +1662,7 @@ void QueueManager::saveQueue(bool force) throw() {
 					f.write(Util::toString(i->getSize()));
 					f.write(LIT("\"/>\r\n"));
 				}
+
 				for(QueueItem::SourceConstIter j = qi->sources.begin(); j != qi->sources.end(); ++j) {
 					if(j->isSet(QueueItem::Source::FLAG_PARTIAL)) continue;
 					
@@ -1707,7 +1718,9 @@ void QueueManager::loadQueue() throw() {
 	try {
 		QueueLoader l;
 		Util::migrate(getQueueFile());
-		SimpleXMLReader(&l).fromXML(File(getQueueFile(), File::READ, File::OPEN).read());
+
+		File f(getQueueFile(), File::READ, File::OPEN);
+		SimpleXMLReader(&l).parse(f);
 		dirty = false;
 	} catch(const Exception&) {
 		// ...

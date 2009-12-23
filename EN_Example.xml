@@ -110,6 +110,7 @@
 		<String Name="Destination">Destination</String>
 		<String Name="Directory">Directory</String>
 		<String Name="DirectoryAddError">Directory or directory name already exists</String>
+		<String Name="DirectoryIsHidden">Directory is hidden</String>
 		<String Name="DisableSounds">Disable sounds</String>
 		<String Name="Disabled">Disabled</String>
 		<String Name="DisconnectAll">Disconnect all users</String>

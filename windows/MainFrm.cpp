@@ -166,13 +166,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	TimerManager::getInstance()->start();
 
 	// Set window name
-
-	SetWindowText(_T(APPNAME) _T(" ") _T(VERSIONSTRING) 
-#ifdef SVNVERSION
-		_T(SVNVERSION)
-#endif
-		);
-
+	SetWindowText(COMPLETEVERSIONSTRING);
 
 	// Load images
 	// create command bar window
