@@ -23,7 +23,19 @@
 #define DCVERSIONSTRING "0.75"
 #define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
 
-#define SVNVERSION "svn467"
+#define SVNVERSION "svn468"
+
+#ifdef _WIN64
+# define CONFIGURATION_TYPE "x86-64"
+#else
+# define CONFIGURATION_TYPE "x86-32"
+#endif
+
+#ifdef SVNVERSION
+# define COMPLETEVERSIONSTRING	_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(" ") _T(CONFIGURATION_TYPE) _T(" ") _T(SVNVERSION) _T(" / ") _T(DCVERSIONSTRING)
+#else
+# define COMPLETEVERSIONSTRING	_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(" ") _T(CONFIGURATION_TYPE)
+#endif
 
 /* Update the .rc file as well... */
 

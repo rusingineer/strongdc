@@ -211,7 +211,7 @@ public:
 	 */
 	void getPartialInfo(PartsInfo& partialInfo, int64_t blockSize) const;
 
-	int64_t getDownloadedBytes() const;
+	uint64_t getDownloadedBytes() const;
 	double getDownloadedFraction() const { return static_cast<double>(getDownloadedBytes()) / getSize(); }
 	
 	DownloadList& getDownloads() { return downloads; }

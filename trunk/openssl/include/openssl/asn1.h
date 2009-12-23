@@ -230,6 +230,10 @@ typedef struct asn1_object_st
  */
 
 #define ASN1_STRING_FLAG_CONT 0x020 
+/* This flag is used by ASN1 code to indicate an ASN1_STRING is an MSTRING
+ * type.
+ */
+#define ASN1_STRING_FLAG_MSTRING 0x040 
 /* This is the base type that holds just about everything :-) */
 typedef struct asn1_string_st
 	{
@@ -948,7 +952,7 @@ int ASN1_put_eoc(unsigned char **pp);
 int ASN1_object_size(int constructed, int length, int tag);
 
 /* Used to implement other functions */
-void *ASN1_dup(i2d_of_void *i2d, d2i_of_void *d2i, char *x);
+void *ASN1_dup(i2d_of_void *i2d, d2i_of_void *d2i, void *x);
 
 #define ASN1_dup_of(type,i2d,d2i,x) \
     ((type*)ASN1_dup(CHECKED_I2D_OF(type, i2d), \

@@ -26,7 +26,7 @@
 #include "ClientManager.h"
 #include "LogManager.h"
 #include "HashManager.h"
-#include "DownloadManager.h"
+#include "QueueManager.h"
 
 #include "SimpleXML.h"
 #include "StringTokenizer.h"
@@ -59,14 +59,14 @@ ShareManager::ShareManager() : hits(0), xmlListLen(0), bzXmlListLen(0),
 { 
 	SettingsManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
-	DownloadManager::getInstance()->addListener(this);
+	QueueManager::getInstance()->addListener(this);
 	HashManager::getInstance()->addListener(this);
 }
 
 ShareManager::~ShareManager() {
 	SettingsManager::getInstance()->removeListener(this);
 	TimerManager::getInstance()->removeListener(this);
-	DownloadManager::getInstance()->removeListener(this);
+	QueueManager::getInstance()->removeListener(this);
 	HashManager::getInstance()->removeListener(this);
 
 	join();
@@ -379,21 +379,12 @@ private:
 bool ShareManager::loadCache() throw() {
 	try {
 		ShareLoader loader(directories);
-		string txt;
+		SimpleXMLReader xml(&loader);
+
 		dcpp::File ff(Util::getPath(Util::PATH_USER_CONFIG) + "files.xml.bz2", dcpp::File::READ, dcpp::File::OPEN);
 		FilteredInputStream<UnBZFilter, false> f(&ff);
-		const size_t BUF_SIZE = 64*1024;
-		boost::scoped_array<char> buf(new char[BUF_SIZE]);
-		size_t len;
-		for(;;) {
-			size_t n = BUF_SIZE;
-			len = f.read(&buf[0], n);
-			txt.append(&buf[0], len);
-			if(len < BUF_SIZE)
-				break;
-		}
 
-		SimpleXMLReader(&loader).fromXML(txt);
+		xml.parse(f);
 
 		for(DirList::const_iterator i = directories.begin(); i != directories.end(); ++i) {
 			const Directory::Ptr& d = *i;
@@ -431,6 +422,10 @@ void ShareManager::addDirectory(const string& realPath, const string& virtualNam
 
 	if(realPath.empty() || virtualName.empty()) {
 		throw ShareException(STRING(NO_DIRECTORY_SPECIFIED));
+	}
+
+	if (!checkHidden(realPath)) {
+		throw ShareException(STRING(DIRECTORY_IS_HIDDEN));
 	}
 
 	if(stricmp(SETTING(TEMP_DOWNLOAD_DIRECTORY), realPath) == 0) {
@@ -559,7 +554,7 @@ void ShareManager::removeDirectory(const string& realPath) {
 
 	// Readd all directories with the same vName
 	for(i = shares.begin(); i != shares.end(); ++i) {
-		if(stricmp(i->second, vName) == 0) {
+		if(stricmp(i->second, vName) == 0 && checkHidden(i->first)) {
 			Directory::Ptr dp = buildTree(i->first, 0);
 			dp->setName(i->second);
 			merge(dp);
@@ -835,6 +830,10 @@ ShareManager::Directory::Ptr ShareManager::buildTree(const string& aName, const 
 	return dir;
 }
 
+bool ShareManager::checkHidden(const string& aName) const {
+	return (BOOLSETTING(SHARE_HIDDEN) || !FileFindIter(aName.substr(0, aName.size() - 1))->isHidden());
+}
+
 void ShareManager::updateIndices(Directory& dir) {
 	bloom.add(Text::toLower(dir.getName()));
 
@@ -929,9 +928,11 @@ int ShareManager::run() {
 
 		DirList newDirs;
 		for(StringPairIter i = dirs.begin(); i != dirs.end(); ++i) {
-			Directory::Ptr dp = buildTree(i->second, Directory::Ptr());
-			dp->setName(i->first);
-			newDirs.push_back(dp);
+			if (checkHidden(i->second)) {
+				Directory::Ptr dp = buildTree(i->second, Directory::Ptr());
+				dp->setName(i->first);
+				newDirs.push_back(dp);
+			}
 		}
 
 		{
@@ -1523,17 +1524,16 @@ ShareManager::Directory::Ptr ShareManager::getDirectory(const string& fname) {
 	return Directory::Ptr();
 }
 
-void ShareManager::on(DownloadManagerListener::Complete, const Download* d, bool) throw() {
+void ShareManager::on(QueueManagerListener::Finished, QueueItem* qi, const string& dir, int64_t speed) throw() {
 	if(BOOLSETTING(ADD_FINISHED_INSTANTLY)) {
 		// Check if finished download is supposed to be shared
 		Lock l(cs);
-		const string& n = d->getPath();
+		const string& n = qi->getTarget();
 		for(StringMapIter i = shares.begin(); i != shares.end(); i++) {
-			if(strnicmp(i->first, n, i->first.size()) == 0 && n[i->first.size()] == PATH_SEPARATOR) {
-				string s = n.substr(i->first.size()+1);
+			if(strnicmp(i->first, n, i->first.size()) == 0 && n[i->first.size() - 1] == PATH_SEPARATOR) {
 				try {
 					// Schedule for hashing, it'll be added automatically later on...
-					HashManager::getInstance()->checkTTH(n, d->getSize(), 0);
+					HashManager::getInstance()->checkTTH(n, qi->getSize(), 0);
 				} catch(const Exception&) {
 					// Not a vital feature...
 				}

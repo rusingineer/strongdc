@@ -81,9 +81,9 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	DownloadManager::newInstance();
 	UploadManager::newInstance();
 	ThrottleManager::newInstance();
+	QueueManager::newInstance();
 	ShareManager::newInstance();
 	FavoriteManager::newInstance();
-	QueueManager::newInstance();
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
 	DebugManager::newInstance();

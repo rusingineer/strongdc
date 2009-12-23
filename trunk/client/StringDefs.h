@@ -109,6 +109,7 @@ enum Strings { // @DontAdd
 	DESTINATION, // "Destination"
 	DIRECTORY, // "Directory"
 	DIRECTORY_ADD_ERROR, // "Directory or directory name already exists"
+	DIRECTORY_IS_HIDDEN, // "Directory is hidden"
 	DISABLE_SOUNDS, // "Disable sounds"
 	DISABLED, // "Disabled"
 	DISCONNECT_ALL, // "Disconnect all users"

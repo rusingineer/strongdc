@@ -489,6 +489,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\SimpleXMLReader.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\Socket.cpp"
 				>
 			</File>
@@ -847,6 +851,10 @@
 			</File>
 			<File
 				RelativePath=".\client\SimpleXML.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\SimpleXMLReader.h"
 				>
 			</File>
 			<File

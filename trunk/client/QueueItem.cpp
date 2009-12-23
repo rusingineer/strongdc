@@ -272,8 +272,8 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 	return Segment(0, 0);
 }
 
-int64_t QueueItem::getDownloadedBytes() const {
-	int64_t total = 0;
+uint64_t QueueItem::getDownloadedBytes() const {
+	uint64_t total = 0;
 
 	// count done segments
 	for(SegmentSet::const_iterator i = done.begin(); i != done.end(); ++i) {

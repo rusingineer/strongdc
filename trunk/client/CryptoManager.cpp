@@ -154,15 +154,10 @@ CryptoManager::CryptoManager()
 				SSL_CTX_set_tmp_dh(serverVerContext, (DH*)dh);
 			}
 		}
-#endif
-		/// @todo remove when hubs accept this
-#ifdef HEADER_OPENSSLV_H
-		SSL_CTX_set_options(clientContext, SSL_OP_NO_TICKET);
-		SSL_CTX_set_options(clientVerContext, SSL_OP_NO_TICKET);
 #else
-	#define SSL_VERIFY_PEER			0x01
-	#define SSL_VERIFY_FAIL_IF_NO_PEER_CERT	0x02
-	#define SSL_VERIFY_CLIENT_ONCE		0x04
+# define SSL_VERIFY_PEER			0x01
+# define SSL_VERIFY_FAIL_IF_NO_PEER_CERT	0x02
+# define SSL_VERIFY_CLIENT_ONCE		0x04
 #endif
 
 		SSL_CTX_set_verify(serverContext, SSL_VERIFY_NONE, 0);

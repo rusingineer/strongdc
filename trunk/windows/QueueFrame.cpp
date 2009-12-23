@@ -785,6 +785,10 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 					sources = QueueManager::getInstance()->getSources(ii->getQueueItem());
 					for(QueueItem::SourceConstIter i = sources.begin(); i != sources.end(); ++i) {
 						tstring nick = WinUtil::escapeMenu(WinUtil::getNicks(i->getUser()));
+						// add hub hint to menu
+						if(!i->getUser().hint.empty())
+							nick += _T(" (") + Text::toT(i->getUser().hint) + _T(")");
+
 						mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 						mi.fType = MFT_STRING;
 						mi.dwTypeData = (LPTSTR)nick.c_str();
@@ -822,6 +826,11 @@ LRESULT QueueFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 						} else if(i->isSet(QueueItem::Source::FLAG_UNTRUSTED)) {
 							nick += _T(" (") + TSTRING(CERTIFICATE_NOT_TRUSTED) + _T(")");
 						}
+
+						// add hub hint to menu
+						if(!i->getUser().hint.empty())
+							nick += _T(" (") + Text::toT(i->getUser().hint) + _T(")");
+
 						mi.fMask = MIIM_ID | MIIM_TYPE | MIIM_DATA;
 						mi.fType = MFT_STRING;
 						mi.dwTypeData = (LPTSTR)nick.c_str();
