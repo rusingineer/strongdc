@@ -241,7 +241,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 		aSource.fileNotAvail(e.getError());
 		return false;
 	} catch(const Exception& e) {
-		LogManager::getInstance()->message(STRING(UNABLE_TO_SEND_FILE) + sourceFile + ": " + e.getError());
+		LogManager::getInstance()->message(STRING(UNABLE_TO_SEND_FILE) + " " + sourceFile + ": " + e.getError());
 		aSource.fileNotAvail();
 		return false;
 	}
@@ -648,7 +648,7 @@ void UploadManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	}
 		
 	for(UserList::const_iterator i = disconnects.begin(); i != disconnects.end(); ++i) {
-		LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + Util::toString(ClientManager::getInstance()->getNicks((*i)->getCID(), Util::emptyString)));
+		LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + " " + Util::toString(ClientManager::getInstance()->getNicks((*i)->getCID(), Util::emptyString)));
 		ConnectionManager::getInstance()->disconnect(*i, false);
 	}
 }

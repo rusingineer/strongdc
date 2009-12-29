@@ -770,7 +770,7 @@ void ClientManager::checkCheating(const UserPtr& p, DirectoryListing* dl) {
 
 		if(isFakeSharing) {
 			ou->getIdentity().set("BF", "1");
-			detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE);
+			detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE) + " ";
 			if(realSize == 0) {
 				detectString += STRING(CHECK_0BYTE_SHARE);
 			} else {

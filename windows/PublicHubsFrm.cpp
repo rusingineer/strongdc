@@ -460,7 +460,7 @@ LRESULT PublicHubsFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, 
 		delete x;
 	} else if(wParam == FAILED) {
 		tstring* x = (tstring*)lParam;
-		ctrlStatus.SetText(0, (TSTRING(DOWNLOAD_FAILED) + (*x) ).c_str());
+		ctrlStatus.SetText(0, (TSTRING(DOWNLOAD_FAILED) + _T(" ") + (*x)).c_str());
 		delete x;
 	}
 	return 0;
@@ -631,6 +631,14 @@ bool PublicHubsFrame::matchFilter(const HubEntry& entry, const int& sel, bool do
 	return insert;
 }
 
+void PublicHubsFrame::on(Corrupted, const string& l) throw() {
+	if (l.empty()) {
+		speak(FINISHED, STRING(HUBLIST_CACHE_CORRUPTED));
+	} else {	
+		speak(FINISHED, STRING(HUBLIST_DOWNLOAD_CORRUPTED) + " (" + l + ")");
+	}
+}
+
 void PublicHubsFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
 	bool refresh = false;
 	if(ctrlHubs.GetBkColor() != WinUtil::bgColor) {
@@ -647,6 +655,8 @@ void PublicHubsFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) thro
 	}
 	updateDropDown();
 }
+
+
 
 /**
  * @file

@@ -36,10 +36,11 @@ public:
 	typedef X<5> UserAdded;
 	typedef X<6> UserRemoved;
 	typedef X<7> StatusChanged;
-	typedef X<8> LoadedFromCache;	
-	typedef X<9> RecentAdded;
-	typedef X<10> RecentRemoved;
-	typedef X<11> RecentUpdated;
+	typedef X<8> LoadedFromCache;
+	typedef X<9> Corrupted;	
+	typedef X<10> RecentAdded;
+	typedef X<11> RecentRemoved;
+	typedef X<12> RecentUpdated;
 
 	virtual void on(DownloadStarting, const string&) throw() { }
 	virtual void on(DownloadFailed, const string&) throw() { }
@@ -50,6 +51,7 @@ public:
 	virtual void on(UserRemoved, const FavoriteUser&) throw() { }
 	virtual void on(StatusChanged, const UserPtr&) throw() { }
 	virtual void on(LoadedFromCache, const string&) throw() { }
+	virtual void on(Corrupted, const string&) throw() { }
 	virtual void on(RecentAdded, const RecentHubEntry*) throw() { }
 	virtual void on(RecentRemoved, const RecentHubEntry*) throw() { }
 	virtual void on(RecentUpdated, const RecentHubEntry*) throw() { }

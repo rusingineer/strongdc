@@ -517,6 +517,8 @@ typedef struct ssl_session_st
 
 #define SSL_OP_MICROSOFT_SESS_ID_BUG			0x00000001L
 #define SSL_OP_NETSCAPE_CHALLENGE_BUG			0x00000002L
+/* Allow initial connection to servers that don't support RI */
+#define SSL_OP_LEGACY_SERVER_CONNECT			0x00000004L
 #define SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG		0x00000008L
 #define SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG		0x00000010L
 #define SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER		0x00000020L
@@ -524,7 +526,6 @@ typedef struct ssl_session_st
 #define SSL_OP_SSLEAY_080_CLIENT_DH_BUG			0x00000080L
 #define SSL_OP_TLS_D5_BUG				0x00000100L
 #define SSL_OP_TLS_BLOCK_PADDING_BUG			0x00000200L
-#define SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION	0x00000400L
 
 /* Disable SSL 3.0/TLS 1.0 CBC vulnerability workaround that was added
  * in OpenSSL 0.9.6d.  Usually (depending on the application protocol)
@@ -550,6 +551,8 @@ typedef struct ssl_session_st
 #define SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION	0x00010000L
 /* Don't use compression even if supported */
 #define SSL_OP_NO_COMPRESSION				0x00020000L
+/* Permit unsafe legacy renegotiation */
+#define SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION	0x00040000L
 /* If set, always create a new key when using tmp_ecdh parameters */
 #define SSL_OP_SINGLE_ECDH_USE				0x00080000L
 /* If set, always create a new key when using tmp_dh parameters */
@@ -605,17 +608,25 @@ typedef struct ssl_session_st
 
 #define SSL_CTX_set_options(ctx,op) \
 	SSL_CTX_ctrl((ctx),SSL_CTRL_OPTIONS,(op),NULL)
+#define SSL_CTX_clear_options(ctx,op) \
+	SSL_CTX_ctrl((ctx),SSL_CTRL_CLEAR_OPTIONS,(op),NULL)
 #define SSL_CTX_get_options(ctx) \
 	SSL_CTX_ctrl((ctx),SSL_CTRL_OPTIONS,0,NULL)
 #define SSL_set_options(ssl,op) \
 	SSL_ctrl((ssl),SSL_CTRL_OPTIONS,(op),NULL)
+#define SSL_clear_options(ssl,op) \
+	SSL_ctrl((ssl),SSL_CTRL_CLEAR_OPTIONS,(op),NULL)
 #define SSL_get_options(ssl) \
         SSL_ctrl((ssl),SSL_CTRL_OPTIONS,0,NULL)
 
 #define SSL_CTX_set_mode(ctx,op) \
 	SSL_CTX_ctrl((ctx),SSL_CTRL_MODE,(op),NULL)
+#define SSL_CTX_clear_mode(ctx,op) \
+	SSL_CTX_ctrl((ctx),SSL_CTRL_CLEAR_MODE,(op),NULL)
 #define SSL_CTX_get_mode(ctx) \
 	SSL_CTX_ctrl((ctx),SSL_CTRL_MODE,0,NULL)
+#define SSL_clear_mode(ssl,op) \
+	SSL_ctrl((ssl),SSL_CTRL_CLEAR_MODE,(op),NULL)
 #define SSL_set_mode(ssl,op) \
 	SSL_ctrl((ssl),SSL_CTRL_MODE,(op),NULL)
 #define SSL_get_mode(ssl) \
@@ -623,6 +634,8 @@ typedef struct ssl_session_st
 #define SSL_set_mtu(ssl, mtu) \
         SSL_ctrl((ssl),SSL_CTRL_SET_MTU,(mtu),NULL)
 
+#define SSL_get_secure_renegotiation_support(ssl) \
+	SSL_ctrl((ssl), SSL_CTRL_GET_RI_SUPPORT, 0, NULL)
 
 void SSL_CTX_set_msg_callback(SSL_CTX *ctx, void (*cb)(int write_p, int version, int content_type, const void *buf, size_t len, SSL *ssl, void *arg));
 void SSL_set_msg_callback(SSL *ssl, void (*cb)(int write_p, int version, int content_type, const void *buf, size_t len, SSL *ssl, void *arg));
@@ -1401,6 +1414,10 @@ DECLARE_PEM_rw(SSL_SESSION, SSL_SESSION)
 #define DTLS_CTRL_HANDLE_TIMEOUT	74
 #define DTLS_CTRL_LISTEN			75
 
+#define SSL_CTRL_GET_RI_SUPPORT			76
+#define SSL_CTRL_CLEAR_OPTIONS			77
+#define SSL_CTRL_CLEAR_MODE			78
+
 #define DTLSv1_get_timeout(ssl, arg) \
 	SSL_ctrl(ssl,DTLS_CTRL_GET_TIMEOUT,0, (void *)arg)
 #define DTLSv1_handle_timeout(ssl) \
@@ -1954,7 +1971,9 @@ void ERR_load_SSL_strings(void);
 #define SSL_F_SSL_LOAD_CLIENT_CA_FILE			 185
 #define SSL_F_SSL_NEW					 186
 #define SSL_F_SSL_PARSE_CLIENTHELLO_RENEGOTIATE_EXT	 300
+#define SSL_F_SSL_PARSE_CLIENTHELLO_TLSEXT		 302
 #define SSL_F_SSL_PARSE_SERVERHELLO_RENEGOTIATE_EXT	 301
+#define SSL_F_SSL_PARSE_SERVERHELLO_TLSEXT		 303
 #define SSL_F_SSL_PEEK					 270
 #define SSL_F_SSL_PREPARE_CLIENTHELLO_TLSEXT		 281
 #define SSL_F_SSL_PREPARE_SERVERHELLO_TLSEXT		 282
@@ -2137,6 +2156,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_R_NO_PRIVATE_KEY_ASSIGNED			 190
 #define SSL_R_NO_PROTOCOLS_AVAILABLE			 191
 #define SSL_R_NO_PUBLICKEY				 192
+#define SSL_R_NO_RENEGOTIATION				 339
 #define SSL_R_NO_REQUIRED_DIGEST			 324
 #define SSL_R_NO_SHARED_CIPHER				 193
 #define SSL_R_NO_VERIFY_CALLBACK			 194
@@ -2251,6 +2271,7 @@ void ERR_load_SSL_strings(void);
 #define SSL_R_UNKNOWN_REMOTE_ERROR_TYPE			 253
 #define SSL_R_UNKNOWN_SSL_VERSION			 254
 #define SSL_R_UNKNOWN_STATE				 255
+#define SSL_R_UNSAFE_LEGACY_RENEGOTIATION_DISABLED	 338
 #define SSL_R_UNSUPPORTED_CIPHER			 256
 #define SSL_R_UNSUPPORTED_COMPRESSION_ALGORITHM		 257
 #define SSL_R_UNSUPPORTED_DIGEST_TYPE			 326

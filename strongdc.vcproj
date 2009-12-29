@@ -225,7 +225,7 @@
 			UseOfATL="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
-			WholeProgramOptimization="2"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -342,7 +342,7 @@
 			UseOfATL="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
-			WholeProgramOptimization="2"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -968,6 +968,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\windows\UPnP_COM.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\windows\UserListColours.cpp"
 				>
 			</File>
@@ -1306,6 +1310,10 @@
 			</File>
 			<File
 				RelativePath=".\windows\upnp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\windows\UPnP_COM.h"
 				>
 			</File>
 			<File

@@ -505,6 +505,7 @@ void ShareManager::Directory::merge(const Directory::Ptr& source) {
 				dcdebug("File named the same as directory");
 			} else {
 				directories.insert(std::make_pair(subSource->getName(), subSource));
+				subSource->parent = this;
 			}
 		} else {
 			Directory::Ptr subTarget = ti->second;
@@ -520,7 +521,10 @@ void ShareManager::Directory::merge(const Directory::Ptr& source) {
 			if(directories.find(i->getName()) != directories.end()) {
 				dcdebug("Directory named the same as file");
 			} else {
-				files.insert(*i);
+				std::pair<File::Set::iterator, bool> added = files.insert(*i);
+				if(added.second) {
+					const_cast<File&>(*added.first).setParent(this);
+				}
 			}
 		}
 	}
@@ -899,7 +903,7 @@ void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, b
 			setThreadPriority(Thread::LOW);
 		}
 	} catch(const ThreadException& e) {
-		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FAILED) + e.getError());
+		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_FAILED) + " " + e.getError());
 	}
 }
 

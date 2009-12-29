@@ -235,6 +235,7 @@ public:
 	void parseCommandLine(const tstring& cmdLine);
 
 	void startUPnP();
+	bool initUPnP();
 	void stopUPnP();
 
 	LRESULT onWhereAreYou(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
@@ -484,11 +485,7 @@ private:
 	void on(QueueManagerListener::Finished, const QueueItem* qi, const string& dir, const Download*) throw();
 	void on(PartialList, const HintedUser&, const string& text) throw();
 
-	// UPnP connectors
-	std::auto_ptr<UPnP> UPnP_TCP;
-	std::auto_ptr<UPnP> UPnP_TLS;
-	std::auto_ptr<UPnP> UPnP_UDP;
-	std::auto_ptr<UPnP> UPnP_DHT;
+	std::auto_ptr<UPnP> pUPnP;
 };
 
 #endif // !defined(MAIN_FRM_H)
