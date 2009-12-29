@@ -1,3 +1,9 @@
+** svn469
+	some UPnP stuff (DC++ BZR)
+	changed default hublists + some hublists stuff (THX eMTee)
+	fixed trailing spaces in translations
+	updated OpenSSL
+
 ** svn468
 	DC++ BZR merge (known bug: trailing spaces are not loaded from language files)
 	added hub address into queue context menu

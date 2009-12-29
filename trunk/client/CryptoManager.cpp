@@ -266,7 +266,7 @@ void CryptoManager::loadCertificates() throw() {
 			generateCertificate();
 			LogManager::getInstance()->message(STRING(CERTIFICATE_GENERATED));
 		} catch(const CryptoException& e) {
-			LogManager::getInstance()->message(STRING(CERTIFICATE_GENERATION_FAILED) + e.getError());
+			LogManager::getInstance()->message(STRING(CERTIFICATE_GENERATION_FAILED) + " " + e.getError());
 		}
 	}
 

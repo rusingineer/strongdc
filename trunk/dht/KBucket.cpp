@@ -174,8 +174,22 @@ namespace dht
 		}
 		else
 		{
+#ifdef _DEBUG
+			CID oldCID;
+			for(NodeList::iterator it = nodes.begin(); it != nodes.end(); ++it)
+			{
+				if(	(*it)->getIdentity().getIp() == ip &&
+					(*it)->getIdentity().getUdpPort() == Util::toString(port))
+				{
+					oldCID = (*it)->getUser()->getCID();
+					break;
+				}
+			}
+
+			dcassert(!oldCID.isZero());
 			// when user isn't added to routing table, this line will be processed with every packet got from that user (that' why debugger window can be spammed with a lot of messages)
-			dcdebug("DHT node NOT added to our routing table - IP %s exists: %d, table size: %d\n", ip.c_str(), (int)ipExists, nodes.size());
+			dcdebug("DHT node NOT added to our routing table - IP %s exists: %d, old CID: %s, new CID: %s\n", ip.c_str(), (int)ipExists, oldCID.toBase32().c_str(), u->getCID().toBase32().c_str());
+#endif
 		}
 		
 		return node;

@@ -164,11 +164,7 @@ private:
 	static int columnIndexes[];
 	static int columnSizes[];
 	
-	void on(DownloadStarting, const string& l) throw() { speak(STARTING, l); }
-	void on(DownloadFailed, const string& l) throw() { speak(FAILED, l); }
-	void on(DownloadFinished, const string& l) throw() { speak(FINISHED, l); }
-	void on(LoadedFromCache, const string& l) throw() { speak(LOADED_FROM_CACHE, l); }
-	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+
 
 	void speak(int x, const string& l) {
 		PostMessage(WM_SPEAKER, x, (LPARAM)new tstring(Text::toT(l)));
@@ -180,6 +176,15 @@ private:
 
 	bool parseFilter(FilterModes& mode, double& size);
 	bool matchFilter(const HubEntry& entry, const int& sel, bool doSizeCompare, const FilterModes& mode, const double& size);
+
+	void on(DownloadStarting, const string& l) throw() { speak(STARTING, l); }
+	void on(DownloadFailed, const string& l) throw() { speak(FAILED, l); }
+	void on(DownloadFinished, const string& l) throw() { speak(FINISHED, l); }
+	void on(LoadedFromCache, const string& l) throw() { speak(LOADED_FROM_CACHE, l); }
+	void on(Corrupted, const string& l) throw();
+
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+
 };
 
 #endif // !defined(PUBLIC_HUBS_FRM_H)

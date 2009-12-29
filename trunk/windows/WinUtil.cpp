@@ -943,7 +943,7 @@ bool WinUtil::checkCommand(tstring& cmd, tstring& param, tstring& message, tstri
 			Util::setAwayMessage(Text::fromT(param));
 			
 			StringMap sm;
-			status = TSTRING(AWAY_MODE_ON) + Text::toT(Util::getAwayMessage(sm));
+			status = TSTRING(AWAY_MODE_ON) + _T(" ") + Text::toT(Util::getAwayMessage(sm));
 		}
 		ClientManager::getInstance()->infoUpdated();
 	} else if(stricmp(cmd.c_str(), _T("g")) == 0) {

@@ -316,7 +316,7 @@ LRESULT SearchFrame::onDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 			uint64_t percent = (now - searchStartTime) * 100 / (searchEndTime - searchStartTime);
 			tstring progress = percent >= 100 ? TSTRING(DONE) : Text::toT(Util::toString(percent) + "%");
-			tstring buf = TSTRING(SEARCHING_FOR) + target + _T(" ... ") + progress;
+			tstring buf = TSTRING(SEARCHING_FOR) + _T(" ") + target + _T(" ... ") + progress;
 
 			int textHeight = WinUtil::getTextHeight(dc);
 			LONG top = rc.top + (rc.bottom - rc.top - textHeight) / 2;

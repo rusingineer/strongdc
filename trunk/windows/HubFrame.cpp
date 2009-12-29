@@ -277,8 +277,8 @@ void HubFrame::onEnter() {
 			} else if(stricmp(cmd.c_str(), _T("userlist")) == 0) {
 				ctrlShowUsers.SetCheck(showUsers ? BST_UNCHECKED : BST_CHECKED);
 			} else if(stricmp(cmd.c_str(), _T("connection")) == 0) {
-				addStatus(Text::toT((STRING(IP) + client->getLocalIp() + ", " + 
-					STRING(PORT) + 
+				addStatus(Text::toT((STRING(IP) + " " + client->getLocalIp() + ", " + 
+					STRING(PORT) + " " +
 					Util::toString(ConnectionManager::getInstance()->getPort()) + "/" + 
 					Util::toString(SearchManager::getInstance()->getPort()) + "/" +
 					Util::toString(ConnectionManager::getInstance()->getSecurePort())))
@@ -373,7 +373,7 @@ void HubFrame::onEnter() {
 				if (BOOLSETTING(SEND_UNKNOWN_COMMANDS)) {
 					client->hubMessage(Text::fromT(s));
 				} else {
-					addStatus(TSTRING(UNKNOWN_COMMAND) + cmd);
+					addStatus(TSTRING(UNKNOWN_COMMAND) + _T(" ") + cmd);
 				}
 			}
 			ctrlMessage.SetWindowText(Util::emptyStringT.c_str());
@@ -592,7 +592,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				}
 
 				if (showJoins || (favShowJoins && isFavorite)) {
-				 	addLine(_T("*** ") + TSTRING(JOINS) + Text::toT(u.onlineUser->getIdentity().getNick()), WinUtil::m_ChatTextSystem);
+				 	addLine(_T("*** ") + TSTRING(JOINS) + _T(" ") + Text::toT(u.onlineUser->getIdentity().getNick()), WinUtil::m_ChatTextSystem);
 				}	
 
 				if(client->isOp() && !u.onlineUser->getIdentity().isBot() && !u.onlineUser->getIdentity().isHub()) {			
@@ -611,7 +611,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			removeUser(u.onlineUser);
 
 			if (showJoins || (favShowJoins && FavoriteManager::getInstance()->isFavoriteUser(u.onlineUser->getUser()))) {
-				addLine(Text::toT("*** " + STRING(PARTS) + u.onlineUser->getIdentity().getNick()), WinUtil::m_ChatTextSystem);
+				addLine(Text::toT("*** " + STRING(PARTS) + " " + u.onlineUser->getIdentity().getNick()), WinUtil::m_ChatTextSystem);
 			}
 		} else if(i->first == CONNECTED) {
 			addStatus(TSTRING(CONNECTED), WinUtil::m_ChatTextServer);
@@ -713,25 +713,25 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				const UserPtr& user = myPM ? pm.to : pm.replyTo;
 				if(pm.hub) {
 					if(BOOLSETTING(IGNORE_HUB_PMS)) {
-						addStatus(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), WinUtil::m_ChatTextSystem, false);
+						addStatus(TSTRING(IGNORED_MESSAGE) + _T(" ") + Text::toT(pm.str), WinUtil::m_ChatTextSystem, false);
 					} else if(BOOLSETTING(POPUP_HUB_PMS) || PrivateFrame::isOpen(user)) {
 						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str), client);
 					} else {
-						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
+						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + _T(" ") + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 				} else if(pm.bot) {
 					if(BOOLSETTING(IGNORE_BOT_PMS)) {
-						addStatus(TSTRING(IGNORED_MESSAGE) + Text::toT(pm.str), WinUtil::m_ChatTextPrivate, false);
+						addStatus(TSTRING(IGNORED_MESSAGE) + _T(" ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate, false);
 					} else if(BOOLSETTING(POPUP_BOT_PMS) || PrivateFrame::isOpen(user)) {
 						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str), client);
 					} else {
-						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
+						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + _T(" ") + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 				} else {
 					if(BOOLSETTING(POPUP_PMS) || PrivateFrame::isOpen(user)) {
 						PrivateFrame::gotMessage(pm.from, pm.to, pm.replyTo, Text::toT(pm.str), client);
 					} else {
-						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
+						addLine(TSTRING(PRIVATE_MESSAGE_FROM) + _T(" ") + nick + _T(": ") + Text::toT(pm.str), WinUtil::m_ChatTextPrivate);
 					}
 					if(BOOLSETTING(MINIMIZE_TRAY)) {
 						HWND hMainWnd = MainFrame::getMainFrame()->m_hWnd;//GetTopLevelWindow();
@@ -933,7 +933,7 @@ void HubFrame::findText(tstring const& needle) throw() {
 		ctrlClient.SetFocus();
 		ctrlClient.SendMessage(EM_EXSETSEL, 0, (LPARAM)&ft);
 	} else {
-		addStatus(CTSTRING(STRING_NOT_FOUND) + needle);
+		addStatus(TSTRING(STRING_NOT_FOUND) + _T(" ") + needle);
 		currentNeedle = Util::emptyStringT;
 	}
 }
@@ -1590,7 +1590,7 @@ void HubFrame::on(Connecting, const Client*) throw() {
 	if(BOOLSETTING(SEARCH_PASSIVE) && ClientManager::getInstance()->isActive(client->getHubUrl())) {
 		addLine(TSTRING(ANTI_PASSIVE_SEARCH), WinUtil::m_ChatTextSystem);
 	}
-	speak(ADD_STATUS_LINE, STRING(CONNECTING_TO) + client->getHubUrl() + "...");
+	speak(ADD_STATUS_LINE, STRING(CONNECTING_TO) + " " + client->getHubUrl() + "...");
 	speak(SET_WINDOW_TITLE, client->getHubUrl());
 }
 void HubFrame::on(Connected, const Client*) throw() { 
@@ -1620,7 +1620,7 @@ void HubFrame::on(Redirect, const Client*, const string& line) throw() {
 	if(BOOLSETTING(AUTO_FOLLOW)) {
 		PostMessage(WM_COMMAND, IDC_FOLLOW, 0);
 	} else {
-		speak(ADD_STATUS_LINE, STRING(PRESS_FOLLOW) + line);
+		speak(ADD_STATUS_LINE, STRING(PRESS_FOLLOW) + " " + line);
 	}
 }
 void HubFrame::on(Failed, const Client*, const string& line) throw() { 
@@ -1665,7 +1665,7 @@ void HubFrame::on(NickTaken, const Client*) throw() {
 	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));
 }
 void HubFrame::on(SearchFlood, const Client*, const string& line) throw() {
-	speak(ADD_STATUS_LINE, STRING(SEARCH_SPAM_FROM) + line);
+	speak(ADD_STATUS_LINE, STRING(SEARCH_SPAM_FROM) + " " + line);
 }
 void HubFrame::on(CheatMessage, const Client*, const string& line) throw() {
 	speak(CHEATING_USER, line);

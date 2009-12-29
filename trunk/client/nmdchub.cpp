@@ -313,7 +313,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 					if(bPassive)
 						fire(ClientListener::SearchFlood(), this, seeker.substr(4));
 					else
-						fire(ClientListener::SearchFlood(), this, seeker + STRING(NICK_UNKNOWN));
+						fire(ClientListener::SearchFlood(), this, seeker + " " + STRING(NICK_UNKNOWN));
 				}
 				
 				flooders.push_back(make_pair(seeker, tick));
@@ -715,8 +715,8 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				v.push_back(&ou);
 			}
 
-			fire(ClientListener::UsersUpdated(), this, v);
 			updateCounts(false);
+			fire(ClientListener::UsersUpdated(), this, v);
 
 			// Special...to avoid op's complaining that their count is not correctly
 			// updated when they log in (they'll be counted as registered first...)
@@ -833,6 +833,8 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	
 	reloadSettings(false);
 	
+	lastCounts = counts;
+
 	char StatusMode = Identity::NORMAL;
 
 	char modeChar = '?';

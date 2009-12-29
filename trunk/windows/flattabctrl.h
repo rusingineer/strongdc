@@ -84,7 +84,7 @@ public:
 			active = NULL;
 		if(moving == ti)
 			moving = NULL;
-		delete ti;
+
 		tabs.erase(i);
 		viewOrder.remove(aWnd);
 		nextTab = viewOrder.end();
@@ -93,6 +93,8 @@ public:
 
 		calcRows(false);
 		Invalidate();
+
+		delete ti;
 	}
 
 	void startSwitch() {

@@ -404,6 +404,36 @@ bool SimpleXMLReader::entref(string& d) {
 			d.append(1, '\'');
 			advancePos(6);
 			return true;
+			
+		// Ignore &#00000 decimal and &#x0000 hex values to avoid error, they wouldn't be parsed anyway
+		} else if(charAt(1) == '#' && isdigit(charAt(2)) && charAt(3) == ';') {
+			advancePos(4);
+			return true;
+		} else if(charAt(1) == '#' && isdigit(charAt(2)) && isdigit(charAt(3)) && charAt(4) == ';') {
+			advancePos(5);
+			return true;
+		} else if(charAt(1) == '#' && isdigit(charAt(2)) && isdigit(charAt(3)) && isdigit(charAt(4)) && charAt(5) == ';') {
+			advancePos(6);
+			return true;
+		} else if(charAt(1) == '#' && isdigit(charAt(2)) && isdigit(charAt(3)) && isdigit(charAt(4)) && isdigit(charAt(5)) && charAt(6) == ';') {
+			advancePos(7);
+			return true;
+		} else if(charAt(1) == '#' && isdigit(charAt(2)) && isdigit(charAt(3)) && isdigit(charAt(4)) && isdigit(charAt(5)) && isdigit(charAt(6)) && charAt(7) == ';') {
+			advancePos(8);
+			return true;
+			
+		} else if(charAt(1) == '#' && (charAt(2) == 'x' ||  charAt(2) == 'X') && isxdigit(charAt(3)) && charAt(4) == ';') {
+			advancePos(5);
+			return true;
+		} else if(charAt(1) == '#' && (charAt(2) == 'x' ||  charAt(2) == 'X') && isxdigit(charAt(3)) && isxdigit(charAt(4)) && charAt(5) == ';') {
+			advancePos(6);
+			return true;
+		} else if(charAt(1) == '#' && (charAt(2) == 'x' ||  charAt(2) == 'X') && isxdigit(charAt(3)) && isxdigit(charAt(4)) && isxdigit(charAt(5)) && charAt(6) == ';') {
+			advancePos(7);
+			return true;
+		} else if(charAt(1) == '#' && (charAt(2) == 'x' ||  charAt(2) == 'X') && isxdigit(charAt(3)) && isxdigit(charAt(4)) && isxdigit(charAt(5)) && isxdigit(charAt(6)) && charAt(7) == ';') {
+			advancePos(8);
+			return true;
 		}
 	} else {
 		return true;

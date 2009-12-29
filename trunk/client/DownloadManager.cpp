@@ -241,7 +241,7 @@ void DownloadManager::startData(UserConnection* aSource, int64_t start, int64_t 
 	try {
 		QueueManager::getInstance()->setFile(d);
 	} catch(const FileException& e) {
-		failDownload(aSource, STRING(COULD_NOT_OPEN_TARGET_FILE) + e.getError());
+		failDownload(aSource, STRING(COULD_NOT_OPEN_TARGET_FILE) + " " + e.getError());
 		return;
 	} catch(const Exception& e) {
 		failDownload(aSource, e.getError());
@@ -384,7 +384,7 @@ void DownloadManager::noSlots(UserConnection* aSource, string param) {
 		return;
 	}
 
-	string extra = param.empty() ? Util::emptyString : " - " + STRING(QUEUED) + param;
+	string extra = param.empty() ? Util::emptyString : " - " + STRING(QUEUED) + " " + param;
 	failDownload(aSource, STRING(NO_SLOTS_AVAILABLE) + extra);
 }
 

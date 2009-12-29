@@ -318,8 +318,7 @@ void QueueManager::UserQueue::remove(QueueItem* qi, bool removeRunning) {
 }
 
 void QueueManager::UserQueue::remove(QueueItem* qi, const UserPtr& aUser, bool removeRunning) {
-	QueueItem* q = getRunning(aUser);
-	if(removeRunning && q == qi) {
+	if(removeRunning && qi == getRunning(aUser)) {
 		removeDownload(qi, aUser);
 	}
 
@@ -365,9 +364,9 @@ int QueueManager::FileMover::run() {
 				// Try to just rename it to the correct name  at least
 				string newTarget = Util::getFilePath(next.first) + Util::getFileName(next.second);
 				File::renameFile(next.first, newTarget);
-				LogManager::getInstance()->message(next.first + STRING(RENAMED_TO) + newTarget);
+				LogManager::getInstance()->message(next.first + " " + STRING(RENAMED_TO) + " " + newTarget);
 			} catch(const FileException& e) {
-				LogManager::getInstance()->message(STRING(UNABLE_TO_RENAME) + next.first + ": " + e.getError());
+				LogManager::getInstance()->message(STRING(UNABLE_TO_RENAME) + " " + next.first + ": " + e.getError());
 			}
 		}
 	}
@@ -634,7 +633,7 @@ void QueueManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 				recent.push_back(qi->getTarget());
 				nextSearch = aTick + (SETTING(SEARCH_TIME) * 60000);
 				if(BOOLSETTING(REPORT_ALTERNATES))
-					LogManager::getInstance()->message(CSTRING(ALTERNATES_SEND) + Util::getFileName(qi->getTargetFileName()));		
+					LogManager::getInstance()->message(STRING(ALTERNATES_SEND) + " " + Util::getFileName(qi->getTargetFileName()));		
 			}
 		}
 	}
@@ -1202,7 +1201,9 @@ void QueueManager::moveStuckFile(QueueItem* qi) {
 
 	fire(QueueManagerListener::Removed(), qi);
 
-	userQueue.remove(qi);
+	if(qi->isFinished()) {
+		userQueue.remove(qi);
+	}
 	fileQueue.remove(qi);
 
 	fire(QueueManagerListener::RecheckAlreadyFinished(), qi);
@@ -1317,9 +1318,9 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 							}
 							
 							fire(QueueManagerListener::Finished(), q, dir, aDownload);
-							fire(QueueManagerListener::Removed(), q);
-	
 							userQueue.remove(q);
+							
+							fire(QueueManagerListener::Removed(), q);						
 							fileQueue.remove(q);
 						} else {
 							userQueue.removeDownload(q, aDownload->getUser());
@@ -1402,7 +1403,7 @@ void QueueManager::processList(const string& name, const HintedUser& user, int f
 			dirList.loadFile(name);
 		}
 	} catch(const Exception&) {
-		LogManager::getInstance()->message(STRING(UNABLE_TO_OPEN_FILELIST) + name);
+		LogManager::getInstance()->message(STRING(UNABLE_TO_OPEN_FILELIST) + " " + name);
 		return;
 	}
 
@@ -1438,7 +1439,6 @@ void QueueManager::recheck(const string& aTarget) {
 
 void QueueManager::remove(const string& aTarget) throw() {
 	UserList x;
-
 	{
 		Lock l(cs);
 
@@ -1468,7 +1468,9 @@ void QueueManager::remove(const string& aTarget) throw() {
 
 		fire(QueueManagerListener::Removed(), q);
 
-		userQueue.remove(q);
+		if(!q->isFinished()) {
+			userQueue.remove(q);
+		}
 		fileQueue.remove(q);
 
 		setDirty();

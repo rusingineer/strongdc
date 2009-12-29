@@ -330,7 +330,7 @@ void PrivateFrame::onEnter()
 					if (BOOLSETTING(SEND_UNKNOWN_COMMANDS)) {
 						sendMessage(tstring(m));
 					} else {
-						addClientLine(TSTRING(UNKNOWN_COMMAND) + m);
+						addClientLine(TSTRING(UNKNOWN_COMMAND) + _T(" ") + m);
 					}
 				} else {
 					ctrlStatus.SetText(0, CTSTRING(USER_WENT_OFFLINE));
@@ -413,7 +413,7 @@ void PrivateFrame::addLine(const Identity& from, const tstring& aLine, CHARFORMA
 	} else {
 		ctrlClient.AppendText(from, Text::toT(SETTING(NICK)), _T(""), aLine + _T('\n'), cf);
 	}
-	addClientLine(CTSTRING(LAST_CHANGE) +  Text::toT(Util::getTimeString()));
+	addClientLine(TSTRING(LAST_CHANGE) + _T(" ") + Text::toT(Util::getTimeString()));
 
 	if (BOOLSETTING(BOLD_PM)) {
 		setDirty();

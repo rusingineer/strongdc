@@ -19,29 +19,34 @@
 #ifndef DCPLUSPLUS_WIN32_UPNP_H
 #define DCPLUSPLUS_WIN32_UPNP_H
 
-#include <natupnp.h>
-
 class UPnP
 {
 public:
-	UPnP( const string, const string, const string, const unsigned short );
-	~UPnP();
-	bool open();
+	UPnP() { }
+	virtual ~UPnP() { }
+
+	virtual bool init() = 0;
+
+	enum Protocol {
+		PROTOCOL_TCP,
+		PROTOCOL_UDP,
+		PROTOCOL_LAST
+	};
+
+	virtual bool open(const unsigned short port, const Protocol protocol, const string& description) = 0;
 	bool close();
-	string GetExternalIP();
+
+	virtual string getExternalIP() = 0;
+
+protected:
+	static const char* protocols[PROTOCOL_LAST];
+
+	void open(const unsigned short port, const Protocol protocol);
+	virtual bool close(const unsigned short port, const Protocol protocol) = 0;
+
 private:
-	bool PortsAreOpen;
-	int PortNumber;				// The Port number required to be opened
-	BSTR bstrInternalClient;	// Local IP Address
-	BSTR bstrDescription;		// name shown in UPnP interface details
-	BSTR bstrProtocol;			// protocol (TCP or UDP)
-	BSTR bstrExternalIP;		// external IP address
-	IUPnPNAT* pUN;				// pointer to the UPnPNAT interface
+	typedef std::pair<unsigned short, Protocol> rule;
+	std::vector<rule> rules;
 };
 
-#endif // UPNP_H
-
-/**
- * @file
- * $Id$
- */
+#endif

@@ -299,17 +299,8 @@ private:
 	FavoriteManager();
 	~FavoriteManager() throw();
 	
-	FavoriteHubEntryList::const_iterator getFavoriteHub(const string& aServer);
-	void loadXmlList(const string& xml);
-
-	RecentHubEntry::Iter getRecentHub(const string& aServer) const {
-		for(RecentHubEntry::Iter i = recentHubs.begin(); i != recentHubs.end(); ++i) {
-			if(stricmp((*i)->getServer(), aServer) == 0) {
-				return i;
-			}
-		}
-		return recentHubs.end();
-	}
+	FavoriteHubEntryList::const_iterator getFavoriteHub(const string& aServer) const;
+	RecentHubEntry::Iter getRecentHub(const string& aServer) const;
 
 	// ClientManagerListener
 	void on(UserUpdated, const OnlineUser& user) throw();
@@ -324,7 +315,7 @@ private:
 	void on(TypeNormal, HttpConnection*) throw();
 	void on(TypeBZ2, HttpConnection*) throw();
 
-	void onHttpFinished(bool fromHttp) throw();
+	bool onHttpFinished(bool fromHttp) throw();
 
 	// SettingsManagerListener
 	void on(SettingsManagerListener::Load, SimpleXML& xml) throw() {
