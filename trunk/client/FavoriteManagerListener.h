@@ -44,13 +44,13 @@ public:
 
 	virtual void on(DownloadStarting, const string&) throw() { }
 	virtual void on(DownloadFailed, const string&) throw() { }
-	virtual void on(DownloadFinished, const string&) throw() { }
+	virtual void on(DownloadFinished, const string&, bool) throw() { }
 	virtual void on(FavoriteAdded, const FavoriteHubEntry*) throw() { }
 	virtual void on(FavoriteRemoved, const FavoriteHubEntry*) throw() { }
 	virtual void on(UserAdded, const FavoriteUser&) throw() { }
 	virtual void on(UserRemoved, const FavoriteUser&) throw() { }
 	virtual void on(StatusChanged, const UserPtr&) throw() { }
-	virtual void on(LoadedFromCache, const string&) throw() { }
+	virtual void on(LoadedFromCache, const string&, const string&) throw() { }
 	virtual void on(Corrupted, const string&) throw() { }
 	virtual void on(RecentAdded, const RecentHubEntry*) throw() { }
 	virtual void on(RecentRemoved, const RecentHubEntry*) throw() { }

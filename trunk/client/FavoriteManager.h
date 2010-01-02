@@ -30,110 +30,11 @@
 #include "ClientManagerListener.h"
 #include "FavoriteManagerListener.h"
 #include "ClientManager.h"
+#include "HubEntry.h"
+#include "FavHubGroup.h"
 
 namespace dcpp {
 	
-class HubEntry {
-public:
-	typedef vector<HubEntry> List;
-	
-	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers) throw() : 
-	name(aName), server(aServer), description(aDescription), country(Util::emptyString), 
-	rating(Util::emptyString), reliability(0.0), shared(0), minShare(0), users(Util::toInt(aUsers)), minSlots(0), maxHubs(0), maxUsers(0) { }
-
-	HubEntry(const string& aName, const string& aServer, const string& aDescription, const string& aUsers, const string& aCountry,
-		const string& aShared, const string& aMinShare, const string& aMinSlots, const string& aMaxHubs, const string& aMaxUsers,
-		const string& aReliability, const string& aRating) : name(aName), server(aServer), description(aDescription), country(aCountry), 
-		rating(aRating), reliability((float)(Util::toFloat(aReliability) / 100.0)), shared(Util::toInt64(aShared)), minShare(Util::toInt64(aMinShare)),
-		users(Util::toInt(aUsers)), minSlots(Util::toInt(aMinSlots)), maxHubs(Util::toInt(aMaxHubs)), maxUsers(Util::toInt(aMaxUsers)) 
-	{
-
-	}
-
-	HubEntry() throw() { }
-	HubEntry(const HubEntry& rhs) throw() : name(rhs.name), server(rhs.server), description(rhs.description), country(rhs.country), 
-		rating(rhs.rating), reliability(rhs.reliability), shared(rhs.shared), minShare(rhs.minShare), users(rhs.users), minSlots(rhs.minSlots),
-		maxHubs(rhs.maxHubs), maxUsers(rhs.maxUsers) { }
-
-	~HubEntry() throw() { }
-
-	GETSET(string, name, Name);
-	GETSET(string, server, Server);
-	GETSET(string, description, Description);
-	GETSET(string, country, Country);
-	GETSET(string, rating, Rating);
-	GETSET(float, reliability, Reliability);
-	GETSET(int64_t, shared, Shared);
-	GETSET(int64_t, minShare, MinShare);
-	GETSET(int, users, Users);
-	GETSET(int, minSlots, MinSlots);
-	GETSET(int, maxHubs, MaxHubs)
-	GETSET(int, maxUsers, MaxUsers);
-};
-
-class FavoriteHubEntry {
-public:
-	typedef FavoriteHubEntry* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::const_iterator Iter;
-
-	FavoriteHubEntry() throw() : connect(false), encoding(Text::systemCharset), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString), searchInterval(SETTING(MINIMUM_SEARCH_INTERVAL)) { }
-	FavoriteHubEntry(const HubEntry& rhs) throw() : name(rhs.getName()), server(rhs.getServer()), encoding(Text::systemCharset), searchInterval(SETTING(MINIMUM_SEARCH_INTERVAL)),
-		description(rhs.getDescription()), connect(false), chatusersplit(0), stealth(false), userliststate(true), mode(0), ip(Util::emptyString) { }
-	FavoriteHubEntry(const FavoriteHubEntry& rhs) throw() : userdescription(rhs.userdescription), name(rhs.getName()), 
-		server(rhs.getServer()), description(rhs.getDescription()), password(rhs.getPassword()), connect(rhs.getConnect()), 
-		nick(rhs.nick), chatusersplit(rhs.chatusersplit), stealth(rhs.stealth), searchInterval(rhs.searchInterval),
-		userliststate(rhs.userliststate), mode(rhs.mode), ip(rhs.ip), encoding(rhs.getEncoding()),
-		rawOne(rhs.rawOne), rawTwo(rhs.rawTwo), rawThree(rhs.rawThree), rawFour(rhs.rawFour), rawFive(rhs.rawFive) { }
-	~FavoriteHubEntry() throw() { }
-	
-	const string& getNick(bool useDefault = true) const { 
-		return (!nick.empty() || !useDefault) ? nick : SETTING(NICK);
-	}
-
-	void setNick(const string& aNick) { nick = aNick; }
-
-	GETSET(string, userdescription, UserDescription);
-	GETSET(string, name, Name);
-	GETSET(string, server, Server);
-	GETSET(string, description, Description);
-	GETSET(string, password, Password);
-	GETSET(string, headerOrder, HeaderOrder);
-	GETSET(string, headerWidths, HeaderWidths);
-	GETSET(string, headerVisible, HeaderVisible);
-	GETSET(string, encoding, Encoding);
-	GETSET(string, rawOne, RawOne);
-	GETSET(string, rawTwo, RawTwo);
-	GETSET(string, rawThree, RawThree);
-	GETSET(string, rawFour, RawFour);
-	GETSET(string, rawFive, RawFive);
-	GETSET(string, ip, IP);
-	GETSET(uint32_t, searchInterval, SearchInterval);
-	GETSET(int, mode, Mode); // 0 = default, 1 = active, 2 = passive	
-	GETSET(int, chatusersplit, ChatUserSplit);
-	GETSET(bool, connect, Connect);	
-	GETSET(bool, stealth, Stealth);
-	GETSET(bool, userliststate, UserListState);		
-	
-private:
-	string nick;
-};
-
-class RecentHubEntry {
-public:
-	typedef RecentHubEntry* Ptr;
-	typedef vector<Ptr> List;
-	typedef List::const_iterator Iter;
-
-	~RecentHubEntry() throw() { }	
-	
-	GETSET(string, name, Name);
-	GETSET(string, server, Server);
-	GETSET(string, description, Description);
-	GETSET(string, users, Users);
-	GETSET(string, shared, Shared);	
-};
-
 class PreviewApplication {
 public:
 	typedef PreviewApplication* Ptr;
@@ -199,7 +100,12 @@ public:
 	bool isFavoriteHub(const std::string& aUrl);
 	FavoriteHubEntry* getFavoriteHubEntry(const string& aServer) const;
 
-	bool isPrivate(const string& url) const { return false; }
+// Favorite hub groups
+	const FavHubGroups& getFavHubGroups() const { return favHubGroups; }
+	void setFavHubGroups(const FavHubGroups& favHubGroups_) { favHubGroups = favHubGroups_; }
+
+	FavoriteHubEntryList getFavoriteHubs(const string& group) const;
+	bool isPrivate(const string& url) const;
 
 // Favorite Directories
 	bool addFavoriteDir(const string& aDirectory, const string& aName);
@@ -271,6 +177,7 @@ public:
 	
 private:
 	FavoriteHubEntryList favoriteHubs;
+	FavHubGroups favHubGroups;
 	StringPairList favoriteDirs;
 	RecentHubEntry::List recentHubs;
 	PreviewApplication::List previewApplications;
@@ -310,7 +217,7 @@ private:
 	// HttpConnectionListener
 	void on(Data, HttpConnection*, const uint8_t*, size_t) throw();
 	void on(Failed, HttpConnection*, const string&) throw();
-	void on(Complete, HttpConnection*, const string&) throw();
+	void on(Complete, HttpConnection*, const string&, bool) throw();
 	void on(Redirected, HttpConnection*, const string&) throw();
 	void on(TypeNormal, HttpConnection*) throw();
 	void on(TypeBZ2, HttpConnection*) throw();

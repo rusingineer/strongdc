@@ -103,7 +103,7 @@ void UpdateDlg::on(HttpConnectionListener::Failed, HttpConnection* /*conn*/, con
 	PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new tstring(TSTRING(CONNECTION_ERROR) + _T(": ") + Text::toT(aLine) + _T("!")));
 }
 
-void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, string const& /*aLine*/) throw() {
+void UpdateDlg::on(HttpConnectionListener::Complete, HttpConnection* /*conn*/, string const& /*aLine*/, bool /*fromCoral*/) throw() {
 			PostMessage(WM_SPEAKER, UPDATE_STATUS, (LPARAM)new tstring(TSTRING(DATA_RETRIEVED) + _T("!")));
 			string sText;
 			try {

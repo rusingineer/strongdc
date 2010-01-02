@@ -475,7 +475,7 @@ private:
 	void on(TimerManagerListener::Second, uint64_t aTick) throw();
 	
 	// HttpConnectionListener
-	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw();
+	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/, bool /*fromCoral*/) throw();
 	void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw();	
 	// WebServerListener
 	void on(WebServerListener::Setup);

@@ -325,7 +325,7 @@ private:
 	/** Sanity check for the target filename */
 	static string checkTarget(const string& aTarget, bool checkExsistence) throw(QueueException, FileException);
 	/** Add a source to an existing queue item */
-	bool addSource(QueueItem* qi, const HintedUser& aUser, Flags::MaskType addBad) throw(QueueException, FileException);
+	bool addSource(QueueItem* qi, const HintedUser& aUser, Flags::MaskType addBad, bool wasFinished) throw(QueueException, FileException);
 
 	void processList(const string& name, const HintedUser& user, int flags);
 

@@ -30,6 +30,8 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 {
 	// Translate dialog
 	SetWindowText(CTSTRING(FAVORITE_HUB_PROPERTIES));
+	SetDlgItemText(IDOK, CTSTRING(OK));
+	SetDlgItemText(IDCANCEL, CTSTRING(CANCEL));
 	SetDlgItemText(IDC_FH_HUB, CTSTRING(HUB));
 	SetDlgItemText(IDC_FH_IDENT, CTSTRING(FAVORITE_HUB_IDENTITY));
 	SetDlgItemText(IDC_FH_NAME, CTSTRING(HUB_NAME));
@@ -43,6 +45,7 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_PASSIVE, CTSTRING(SETTINGS_FIREWALL_PASSIVE));
 	SetDlgItemText(IDC_STEALTH, CTSTRING(STEALTH_MODE));
 	SetDlgItemText(IDC_FAV_SEARCH_INTERVAL, CTSTRING(MINIMUM_SEARCH_INTERVAL));
+	SetDlgItemText(IDC_FAVGROUP, CTSTRING(GROUP));
 
 	// Fill in values
 	SetDlgItemText(IDC_HUBNAME, Text::toT(entry->getName()).c_str());
@@ -59,6 +62,22 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	SetDlgItemText(IDC_RAW_FIVE, Text::toT(entry->getRawFive()).c_str());
 	SetDlgItemText(IDC_SERVER, Text::toT(entry->getIP()).c_str());
 	SetDlgItemText(IDC_FAV_SEARCH_INTERVAL_BOX, Util::toStringW(entry->getSearchInterval()).c_str());
+
+	CComboBox combo;
+	combo.Attach(GetDlgItem(IDC_FAVGROUP_BOX));
+	combo.AddString(_T("---"));
+	combo.SetCurSel(0);
+
+	const FavHubGroups& favHubGroups = FavoriteManager::getInstance()->getFavHubGroups();
+	for(FavHubGroups::const_iterator i = favHubGroups.begin(); i != favHubGroups.end(); ++i) {
+		const string& name = i->first;
+		int pos = combo.AddString(Text::toT(name).c_str());
+		
+		if(name == entry->getGroup())
+			combo.SetCurSel(pos);
+	}
+
+	combo.Detach();
 
 	if(entry->getMode() == 0)
 		CheckRadioButton(IDC_ACTIVE, IDC_DEFAULT, IDC_DEFAULT);
@@ -127,6 +146,22 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 		entry->setIP(Text::fromT(buf));
 		GetDlgItemText(IDC_FAV_SEARCH_INTERVAL_BOX, buf, 512);
 		entry->setSearchInterval(Util::toUInt32(Text::fromT(buf)));
+		
+		CComboBox combo;
+		combo.Attach(GetDlgItem(IDC_FAV_DLG_GROUP));
+	
+		if(combo.GetCurSel() == 0)
+		{
+			entry->setGroup(Util::emptyString);
+		}
+		else
+		{
+			tstring text(combo.GetWindowTextLength() + 1, _T('\0'));
+			combo.GetWindowText(&text[0], text.size());
+			text.resize(text.size()-1);
+			entry->setGroup(Text::fromT(text));
+		}
+		combo.Detach();
 
 		int	ct = -1;
 		if(IsDlgButtonChecked(IDC_DEFAULT))

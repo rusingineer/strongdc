@@ -215,6 +215,7 @@
 		<String Name="GrantExtraSlotHour">Grant extra slot (hour)</String>
 		<String Name="GrantExtraSlotWeek">Grant extra slot (week)</String>
 		<String Name="GrantSlotsMenu">Extra Slots</String>
+		<String Name="Group">Group</String>
 		<String Name="GroupSearchResults">Group search results by TTH</String>
 		<String Name="HashDatabase">Hash database</String>
 		<String Name="HashProgress">Creating file index...</String>

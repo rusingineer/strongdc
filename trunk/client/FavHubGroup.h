@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,30 +16,25 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define APPNAME "StrongDC++"
-#define VERSIONSTRING "2.31"
-#define VERSIONFLOAT 2.31
+#ifndef DCPLUSPLUS_DCPP_FAVHUBGROUP_H
+#define DCPLUSPLUS_DCPP_FAVHUBGROUP_H
 
-#define DCVERSIONSTRING "0.75"
-#define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
+namespace dcpp {
 
-#define SVNVERSION "svn470"
+struct FavHubGroupProperties {
+	/**
+	* Designates a private group; hubs in a private group don't share their users with any other
+	* hub when trying to match an online user, and are not shared with any peer.
+	*/
+	bool priv;
 
-#ifdef _WIN64
-# define CONFIGURATION_TYPE "x86-64"
-#else
-# define CONFIGURATION_TYPE "x86-32"
+	/** Connect to all hubs in this group when the program starts. */
+	bool connect;
+};
+
+typedef std::tr1::unordered_map<string, FavHubGroupProperties> FavHubGroups;
+typedef FavHubGroups::value_type FavHubGroup;
+
+} // namespace dcpp
+
 #endif
-
-#ifdef SVNVERSION
-# define COMPLETEVERSIONSTRING	_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(" ") _T(CONFIGURATION_TYPE) _T(" ") _T(SVNVERSION) _T(" / ") _T(DCVERSIONSTRING)
-#else
-# define COMPLETEVERSIONSTRING	_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(" ") _T(CONFIGURATION_TYPE)
-#endif
-
-/* Update the .rc file as well... */
-
-/**
- * @file
- * $Id$
- */

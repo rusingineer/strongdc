@@ -51,7 +51,7 @@ public:
 	END_MSG_MAP()
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(" (c) Copyright 2004-2009 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2009 Jacek Sieka\n\nhttp://strongdc.sf.net"));
+		SetDlgItemText(IDC_VERSION, _T("StrongDC++ v") _T(VERSIONSTRING) _T(" (c) Copyright 2004-2010 Big Muscle\nBased on: DC++ ") _T(DCVERSIONSTRING) _T(" (c) Copyright 2001-2010 Jacek Sieka\n\nhttp://strongdc.sf.net"));
 		CEdit ctrlThanks(GetDlgItem(IDC_THANKS));
 		ctrlThanks.FmtLines(TRUE);
 		ctrlThanks.AppendText(thanks, TRUE);
@@ -96,7 +96,7 @@ private:
 		downBuf.append((char*)buf, len);
 	}
 
-	void on(HttpConnectionListener::Complete, HttpConnection* conn, const string&) throw() {
+	void on(HttpConnectionListener::Complete, HttpConnection* conn, const string&, bool /*fromCoral*/) throw() {
 		if(!downBuf.empty()) {
 			try {
 				SimpleXML xml;

@@ -850,7 +850,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	return 0;
 }
 
-void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, const string&) throw() {
+void MainFrame::on(HttpConnectionListener::Complete, HttpConnection* /*aConn*/, const string&, bool /*fromCoral*/) throw() {
 	try {
 		SimpleXML xml;
 		xml.fromXML(versionInfo);

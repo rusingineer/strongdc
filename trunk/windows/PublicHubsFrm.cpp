@@ -448,19 +448,15 @@ void PublicHubsFrame::updateStatus() {
 }
 
 LRESULT PublicHubsFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
-	if((wParam == FINISHED) || (wParam == LOADED_FROM_CACHE)) {
+	if(wParam == FINISHED) {
 		hubs = FavoriteManager::getInstance()->getPublicHubs();
 		updateList();
 		tstring* x = (tstring*)lParam;
-		ctrlStatus.SetText(0, (((wParam == LOADED_FROM_CACHE) ? TSTRING(HUB_LIST_LOADED_FROM_CACHE) : TSTRING(HUB_LIST_DOWNLOADED)) + _T(" (") + (*x) + _T(")")).c_str());
+		ctrlStatus.SetText(0, (*x).c_str());
 		delete x;
-	} else if(wParam == STARTING) {
+	} else if(wParam == SET_TEXT) {
 		tstring* x = (tstring*)lParam;
-		ctrlStatus.SetText(0, (TSTRING(DOWNLOADING_HUB_LIST) + _T(" (") + (*x) + _T(")")).c_str());
-		delete x;
-	} else if(wParam == FAILED) {
-		tstring* x = (tstring*)lParam;
-		ctrlStatus.SetText(0, (TSTRING(DOWNLOAD_FAILED) + _T(" ") + (*x)).c_str());
+		ctrlStatus.SetText(0, (*x).c_str());
 		delete x;
 	}
 	return 0;
@@ -631,11 +627,27 @@ bool PublicHubsFrame::matchFilter(const HubEntry& entry, const int& sel, bool do
 	return insert;
 }
 
+void PublicHubsFrame::on(DownloadStarting, const string& l) throw() { 
+	speak(SET_TEXT, TSTRING(DOWNLOADING_HUB_LIST) + _T(" (") + Text::toT(l) + _T(")")); 
+}
+
+void PublicHubsFrame::on(DownloadFailed, const string& l) throw() { 
+	speak(SET_TEXT, TSTRING(DOWNLOAD_FAILED) + _T(" ") + Text::toT(l)); 
+}
+
+void PublicHubsFrame::on(DownloadFinished, const string& l, bool fromCoral) throw() { 
+	speak(FINISHED, TSTRING(HUB_LIST_DOWNLOADED) + _T(" (") + Text::toT(l) + _T(")"));
+}
+
+void PublicHubsFrame::on(LoadedFromCache, const string& l, const string& d) throw() { 
+	speak(FINISHED, TSTRING(HUB_LIST_LOADED_FROM_CACHE) + _T(" (") + Text::toT(l) + _T(")")); 
+}
+
 void PublicHubsFrame::on(Corrupted, const string& l) throw() {
 	if (l.empty()) {
-		speak(FINISHED, STRING(HUBLIST_CACHE_CORRUPTED));
+		speak(FINISHED, TSTRING(HUBLIST_CACHE_CORRUPTED));
 	} else {	
-		speak(FINISHED, STRING(HUBLIST_DOWNLOAD_CORRUPTED) + " (" + l + ")");
+		speak(FINISHED, TSTRING(HUBLIST_DOWNLOAD_CORRUPTED) + _T(" (") + Text::toT(l) + _T(")"));
 	}
 }
 
