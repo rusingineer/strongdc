@@ -214,6 +214,7 @@ enum Strings { // @DontAdd
 	GRANT_EXTRA_SLOT_HOUR, // "Grant extra slot (hour)"
 	GRANT_EXTRA_SLOT_WEEK, // "Grant extra slot (week)"
 	GRANT_SLOTS_MENU, // "Extra Slots"
+	GROUP, // "Group"
 	GROUP_SEARCH_RESULTS, // "Group search results by TTH"
 	HASH_DATABASE, // "Hash database"
 	HASH_PROGRESS, // "Creating file index..."

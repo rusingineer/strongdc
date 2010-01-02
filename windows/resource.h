@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by c:\Documents and Settings\Big Muscle\Dokumenty\Projekty\StrongDC++\trunk\StrongDC.rc
+// Used by d:\Projekty\StrongDC++\trunk\StrongDC.rc
 //
 #define IDD_ABOUTBOX                    100
 #define IDC_FILETYPES                   101
@@ -551,6 +551,8 @@
 #define IDC_CHECK1                      1316
 #define IDC_UPDATE_IP                   1316
 #define IDC_SOCKET_IN_BUFFER            1317
+#define IDC_GROUP                       1317
+#define IDC_FAVGROUP                    1317
 #define IDC_SOCKET_OUT_BUFFER           1318
 #define IDC_TLS_CERTIFICATE_FILE        1318
 #define IDC_PORT_TLS                    1318
@@ -601,6 +603,8 @@
 #define IDC_HISTORY_STATUS              1451
 #define IDC_UPDATE_DOWNLOAD             1452
 #define IDC_UPDATE                      1453
+#define IDC_FAV_DLG_GROUP               1454
+#define IDC_FAVGROUP_BOX                1454
 #define IDC_PARAMS                      1491
 #define IDC_DETECT_ID                   1499
 #define IDC_PERCENT_FAKE_SHARE_TOLERATED 1504
@@ -817,7 +821,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        307
 #define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         1317
+#define _APS_NEXT_CONTROL_VALUE         1318
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

@@ -80,7 +80,7 @@ private:
 	void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
 		downBuf.append((char*)buf, len);
 	}
-	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/) throw() {
+	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/, bool /*fromCoral*/) throw() {
 		conn->removeListener(this);
 		if(!downBuf.empty()) {
 			string fname = Util::getPath(Util::PATH_USER_CONFIG) + "Profiles.xml";

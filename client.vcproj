@@ -722,6 +722,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\FavHubGroup.h"
+				>
+			</File>
+			<File
 				RelativePath=".\client\FavoriteManager.h"
 				>
 			</File>
@@ -771,6 +775,10 @@
 			</File>
 			<File
 				RelativePath=".\client\HttpConnection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\HubEntry.h"
 				>
 			</File>
 			<File

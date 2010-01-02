@@ -1,3 +1,7 @@
+** svn470
+	begun work on favorite hub groups
+	some other DC++ BZR merge
+
 ** svn469
 	some UPnP stuff (DC++ BZR)
 	changed default hublists + some hublists stuff (THX eMTee)
