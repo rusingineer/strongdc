@@ -350,7 +350,11 @@ public:
 		}
 		lastDirs.push_back(dir);
 	}
-	
+
+	static uint32_t percent(int32_t x, uint8_t percent) {
+		return x*percent/100;
+	}
+
 	static tstring encodeFont(LOGFONT const& font);
 	
 	static bool browseFile(tstring& target, HWND owner = NULL, bool save = true, const tstring& initialDir = Util::emptyStringW, const TCHAR* types = NULL, const TCHAR* defExt = NULL);

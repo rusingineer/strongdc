@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="boost-regex"
+	Name="boost"
 	ProjectGUID="{D1095E8A-63A5-4592-AE93-2D638F20F66A}"
 	RootNamespace="boostregex"
 	TargetFrameworkVersion="131072"
@@ -46,7 +46,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)boost&quot;"
-				PreprocessorDefinitions="BOOST_REGEX_NO_LIB"
+				PreprocessorDefinitions="BOOST_ALL_NO_LIB"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="1"
@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)boost&quot;"
-				PreprocessorDefinitions="BOOST_REGEX_NO_LIB"
+				PreprocessorDefinitions="BOOST_ALL_NO_LIB"
 				StringPooling="true"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -187,7 +187,7 @@
 				FavorSizeOrSpeed="1"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)boost&quot;"
-				PreprocessorDefinitions="BOOST_REGEX_NO_LIB"
+				PreprocessorDefinitions="BOOST_ALL_NO_LIB"
 				StringPooling="true"
 				MinimalRebuild="true"
 				RuntimeLibrary="0"
@@ -259,7 +259,7 @@
 				FavorSizeOrSpeed="1"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)boost&quot;"
-				PreprocessorDefinitions="BOOST_REGEX_NO_LIB"
+				PreprocessorDefinitions="BOOST_ALL_NO_LIB"
 				StringPooling="true"
 				MinimalRebuild="true"
 				RuntimeLibrary="0"
@@ -357,6 +357,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\boost\libs\thread\win32\thread.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\boost\libs\thread\win32\tss_dll.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\boost\libs\thread\tss_null.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\boost\libs\thread\win32\tss_pe.cpp"
+				>
+			</File>
+			<File
 				RelativePath="boost\libs\regex\src\usinstances.cpp"
 				>
 			</File>
@@ -382,6 +398,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\boost\libs\thread\win32\timeconv.inl"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

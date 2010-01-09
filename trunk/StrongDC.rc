@@ -792,6 +792,23 @@ BEGIN
     RTEXT           "Protocol Type:",IDC_STATIC,185,143,103,8
 END
 
+IDD_FAVHUBGROUPS DIALOGEX 0, 0, 310, 250
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Manage Groups"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Close",IDCANCEL,255,231,50,14
+    CONTROL         "",IDC_GROUPS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,5,5,300,100
+    PUSHBUTTON      "&Add",IDC_ADD,5,115,50,14
+    PUSHBUTTON      "&Update",IDC_UPDATE,115,115,50,14
+    PUSHBUTTON      "&Remove",IDC_REMOVE,60,115,50,14
+    LTEXT           "Name",IDC_NAME_STATIC,10,163,19,8
+    EDITTEXT        IDC_NAME,10,175,290,14,ES_AUTOHSCROLL
+    CONTROL         "Mark all hubs in this group as private hubs",IDC_PRIVATE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,197,290,10
+    GROUPBOX        "Group Properties",IDC_GROUP_PROPERTIES,5,147,300,80
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -822,6 +839,22 @@ BEGIN
         RIGHTMARGIN, 363
         TOPMARGIN, 7
         BOTTOMMARGIN, 328
+    END
+
+    IDD_FAVHUBGROUPS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 305
+        VERTGUIDE, 10
+        VERTGUIDE, 300
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 245
+        HORZGUIDE, 122
+        HORZGUIDE, 147
+        HORZGUIDE, 167
+        HORZGUIDE, 182
+        HORZGUIDE, 202
+        HORZGUIDE, 212
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -23,6 +23,7 @@
 #include "FavoritesFrm.h"
 #include "HubFrame.h"
 #include "FavHubProperties.h"
+#include "FavHubGroupsDlg.h"
 
 #include "../client/ClientManager.h"
 #include "../client/StringTokenizer.h"
@@ -82,6 +83,11 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 		BS_PUSHBUTTON , 0, IDC_MOVE_DOWN);
 	ctrlDown.SetWindowText(CTSTRING(MOVE_DOWN));
 	ctrlDown.SetFont(WinUtil::font);
+
+	ctrlManageGroups.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+		BS_PUSHBUTTON , 0, IDC_MANAGE_GROUPS);
+	ctrlManageGroups.SetWindowText(_T("Manage Groups"));
+	ctrlManageGroups.SetFont(WinUtil::font);
 
 	FavoriteManager::getInstance()->addListener(this);
 	SettingsManager::getInstance()->addListener(this);
@@ -393,6 +399,8 @@ void FavoriteHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	rc.OffsetRect(bspace + bwidth +2, 0);
 	ctrlConnect.MoveWindow(rc);
 
+	rc.OffsetRect(bspace + bwidth +2, 0);
+	ctrlManageGroups.MoveWindow(rc);
 }
 
 LRESULT FavoriteHubsFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -410,6 +418,12 @@ LRESULT FavoriteHubsFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 			MessageBox(CTSTRING(NO_LOG_FOR_HUB), CTSTRING(NO_LOG_FOR_HUB), MB_OK );	  
 		}
 	}
+	return 0;
+}
+
+LRESULT FavoriteHubsFrame::onManageGroups(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	FavHubGroupsDlg dlg;
+	dlg.DoModal();
 	return 0;
 }
 

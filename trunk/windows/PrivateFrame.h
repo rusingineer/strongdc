@@ -166,6 +166,7 @@ public:
 
 private:
 	PrivateFrame(const UserPtr& replyTo_, Client* c) : replyTo(replyTo_),
+		priv(FavoriteManager::getInstance()->isPrivate(c->getHubUrl())),
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
 		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP),
 		ctrlClientContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0)
@@ -189,6 +190,7 @@ private:
 	HBITMAP hEmoticonBmp;
 
 	UserPtr replyTo;
+	const bool priv;
 	
 	CContainedWindow ctrlMessageContainer;
 	CContainedWindow ctrlClientContainer;

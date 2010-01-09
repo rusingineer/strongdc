@@ -27,9 +27,6 @@ struct FavHubGroupProperties {
 	* hub when trying to match an online user, and are not shared with any peer.
 	*/
 	bool priv;
-
-	/** Connect to all hubs in this group when the program starts. */
-	bool connect;
 };
 
 typedef std::tr1::unordered_map<string, FavHubGroupProperties> FavHubGroups;

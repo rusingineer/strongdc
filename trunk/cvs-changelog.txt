@@ -1,3 +1,10 @@
+** svn471
+	added favorite hub groups settings (adrian_007)
+	limiter's PulseEvent replaced with boost's conditional variables
+	small fix in hubhints
+	ThrottleManager divided into .h/.cpp files
+	updated Boost library to 1.41
+
 ** svn470
 	begun work on favorite hub groups
 	some other DC++ BZR merge

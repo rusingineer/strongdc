@@ -132,8 +132,8 @@ namespace dht
 			lastPacket = GET_TICK();	
 				
 			// backward compatibility, it will be removed later
-			if(!isUdpKeyValid && (cmd.getCommand() == AdcCommand::CMD_RES || cmd.getCommand() == AdcCommand::CMD_SND || cmd.getCommand() == AdcCommand::CMD_STA))
-				isUdpKeyValid = true;
+			//if(!isUdpKeyValid && (cmd.getCommand() == AdcCommand::CMD_RES || cmd.getCommand() == AdcCommand::CMD_SND || cmd.getCommand() == AdcCommand::CMD_STA))
+			//	isUdpKeyValid = true;
 			
 			// add user to routing table
 			Node::Ptr node = addUser(CID(cid), ip, port, true, isUdpKeyValid);
@@ -287,7 +287,6 @@ namespace dht
 		// UDP status according to UDP status check
 		if(!isFirewalled())
 			su += UDP4_FEATURE ",";
-			
 			
 		if(!su.empty()) {
 			su.erase(su.size() - 1);
