@@ -109,6 +109,7 @@
 #define IDD_QUEUEPAGE                   298
 #define IDD_PARAM_DLG                   302
 #define IDD_UPLOADPAGE                  306
+#define IDD_FAVHUBGROUPS                307
 #define IDD_DETECTION_LIST_PAGE         327
 #define IDD_DETECTION_ENTRY             328
 #define IDC_REFRESH                     1000
@@ -550,19 +551,25 @@
 #define IDC_CONFIRM_OPTIONS             1316
 #define IDC_CHECK1                      1316
 #define IDC_UPDATE_IP                   1316
+#define IDC_PRIVATE                     1316
 #define IDC_SOCKET_IN_BUFFER            1317
 #define IDC_GROUP                       1317
 #define IDC_FAVGROUP                    1317
 #define IDC_SOCKET_OUT_BUFFER           1318
 #define IDC_TLS_CERTIFICATE_FILE        1318
 #define IDC_PORT_TLS                    1318
+#define IDC_GROUPS                      1318
 #define IDC_SETTINGS_SOCKET_OUT_BUFFER  1319
 #define IDC_PROFILE_COUNT               1319
 #define IDC_PORT_DHT                    1319
 #define IDC_SETTINGS_SOCKET_IN_BUFFER   1320
 #define IDC_PROFILE_VERSION             1320
 #define IDC_RAW                         1322
+#define IDC_CHECK2                      1322
+#define IDC_AUTOCONNECT                 1322
+#define IDC_GROUP_PROPERTIES            1323
 #define IDC_BW_SIMPLE                   1324
+#define IDC_NAME_STATIC                 1324
 #define IDC_BW_BOTH                     1325
 #define IDC_SETTINGS_NOMINALBW          1326
 #define IDC_HELP_TRANSLATIONS           1327
@@ -699,6 +706,7 @@
 #define IDC_H_DOWN_SPEED                10034
 #define IDC_SETTINGS_KBPS5              10035
 #define IDC_SETTINGS_KBPS7              10036
+#define IDC_MANAGE_GROUPS               10037
 #define IDC_UPLOADSPEEDSPIN             10038
 #define IDC_DOWNLOADSPEEDSPIN           10039
 #define IDC_NONE                        10041
@@ -819,9 +827,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        307
+#define _APS_NEXT_RESOURCE_VALUE        308
 #define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         1318
+#define _APS_NEXT_CONTROL_VALUE         1325
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

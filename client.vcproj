@@ -553,6 +553,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ThrottleManager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\TigerHash.cpp"
 				>
 			</File>

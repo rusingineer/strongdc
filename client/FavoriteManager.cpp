@@ -379,7 +379,6 @@ void FavoriteManager::save() {
 			xml.addTag("Group");
 			xml.addChildAttrib("Name", i->first);
 			xml.addChildAttrib("Private", i->second.priv);
-			xml.addChildAttrib("Connect", i->second.connect);
 		}
 
 		for(FavoriteHubEntryList::const_iterator i = favoriteHubs.begin(), iend = favoriteHubs.end(); i != iend; ++i) {
@@ -557,7 +556,7 @@ void FavoriteManager::load(SimpleXML& aXml) {
 			string name = aXml.getChildAttrib("Name");
 			if(name.empty())
 				continue;
-			FavHubGroupProperties props = { aXml.getBoolChildAttrib("Private"), aXml.getBoolChildAttrib("Connect") };
+			FavHubGroupProperties props = { aXml.getBoolChildAttrib("Private") };
 			favHubGroups[name] = props;
 		}
 
@@ -588,18 +587,6 @@ void FavoriteManager::load(SimpleXML& aXml) {
 			e->setSearchInterval(Util::toUInt32(aXml.getChildAttrib("SearchInterval")));
 			e->setGroup(aXml.getChildAttrib("Group"));
 			favoriteHubs.push_back(e);
-/*
-			if(aXml.getBoolChildAttrib("Connect")) {
-				// this entry dates from before the window manager & fav hub groups; convert it.
-				const string name = _("Auto-connect group (converted)");
-				if(favHubGroups.find(name) == favHubGroups.end()) {
-					FavHubGroupProperties props = { false, true };
-					favHubGroups[name] = props;
-				}
-				e->setGroup(name);
-				needSave = true;
-			}
-*/
 		}
 
 		aXml.stepOut();

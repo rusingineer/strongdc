@@ -19,20 +19,17 @@
 #ifndef _THROTTLEMANAGER_H
 #define _THROTTLEMANAGER_H
 
-#include "DownloadManager.h"
 #include "Singleton.h"
 #include "Socket.h"
-#include "Thread.h"
 #include "TimerManager.h"
-#include "UploadManager.h"
+
+#include <boost/thread/condition_variable.hpp>
 
 namespace dcpp
 {
-
-	#define POLL_TIMEOUT 250
 	
 	/**
-	 * Manager for limiting traffic flow.
+	 * Manager for throttling traffic flow speed.
 	 * Inspired by Token Bucket algorithm: http://en.wikipedia.org/wiki/Token_bucket
 	 */
 	class ThrottleManager :
@@ -43,157 +40,41 @@ namespace dcpp
 		/*
 		 * Limits a traffic and reads a packet from the network
 		 */
-		int read(Socket* sock, void* buffer, size_t len)
-		{
-			size_t downs = DownloadManager::getInstance()->getDownloadCount();
-			if(!BOOLSETTING(THROTTLE_ENABLE) || downLimit == 0 || downs == 0)
-				return sock->read(buffer, len);
-			
-			{
-				Lock l(downCS);
-				
-				if(downTokens > 0)
-				{
-					size_t slice = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024) / downs;
-					size_t readSize = min(slice, min(len, static_cast<size_t>(downTokens)));
-					
-					// read from socket
-					readSize = sock->read(buffer, readSize);
-					
-					if(readSize > 0)
-						downTokens -= readSize;
-								
-					return readSize;
-				}
-			}
-			
-			// no tokens, wait for them
-			WaitForSingleObject(hEvent, POLL_TIMEOUT);
-			return -1;	// from BufferedSocket: -1 = retry, 0 = connection close
-		}
+		int read(Socket* sock, void* buffer, size_t len);
 		
 		/*
 		 * Limits a traffic and writes a packet to the network
 		 * We must handle this a little bit differently than downloads, because of that stupidity in OpenSSL
 		 */		
-		int write(Socket* sock, void* buffer, size_t& len)
-		{
-			size_t ups = UploadManager::getInstance()->getUploadCount();
-			if(!BOOLSETTING(THROTTLE_ENABLE) || upLimit == 0 || ups == 0)
-				return sock->write(buffer, len);
-			
-			{
-				Lock l(upCS);
-				
-				if(upTokens > 0)
-				{
-					size_t slice = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024) / ups;
-					len = min(slice, min(len, static_cast<size_t>(upTokens)));
-					upTokens -= len;
-					
-					// write to socket			
-					return sock->write(buffer, len);
-				}
-			}
-			
-			// no tokens, wait for them
-			WaitForSingleObject(hEvent, POLL_TIMEOUT);
-			return 0;	// from BufferedSocket: -1 = failed, 0 = retry
-		}
+		int write(Socket* sock, void* buffer, size_t& len);
 		
 	private:
 		
 		// download limiter
-		CriticalSection	downCS;
-		int64_t			downTokens;
-		int				downLimit;
+		int							downLimit;
+		int64_t						downTokens;
+		boost::condition_variable	downCond;
+		boost::mutex				downMutex;
 		
 		// upload limiter
-		CriticalSection	upCS;
-		int64_t			upTokens;
-		int				upLimit;
-		
-		HANDLE			hEvent;
-		
+		int							upLimit;
+		int64_t						upTokens;
+		boost::condition_variable	upCond;
+		boost::mutex				upMutex;
+			
 		friend class Singleton<ThrottleManager>;
 		
 		// constructor
-		ThrottleManager(void) : downTokens(0), upTokens(0), downLimit(0), upLimit(0)
-		{
-			hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-			
-			TimerManager::getInstance()->addListener(this);
-		}
+		ThrottleManager(void);
 
 		// destructor
-		~ThrottleManager(void)
-		{
-			TimerManager::getInstance()->removeListener(this);
-			
-			CloseHandle(hEvent);
-		}		
+		~ThrottleManager(void);
 		
 		// TimerManagerListener
-		void on(TimerManagerListener::Second, uint64_t aTick) throw()
-		{
-			if(!BOOLSETTING(THROTTLE_ENABLE))
-				return;
-				
-			downLimit	= SETTING(MAX_DOWNLOAD_SPEED_LIMIT);
-			upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT);
-			
-			// limiter restrictions: up_limit >= 5 * slots + 4, up_limit >= 7 * down_limit
-			if(upLimit < 5 * UploadManager::getInstance()->getSlots() + 4)
-			{
-				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT, 5 * UploadManager::getInstance()->getSlots() + 4);
-			}
-				
-			if((downLimit > 7 * upLimit) || (downLimit == 0))
-			{
-				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, 7 * upLimit);
-			}
-
-			if(SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < 5 * UploadManager::getInstance()->getSlots() + 4)
-			{
-				SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT_TIME, 5 * UploadManager::getInstance()->getSlots() + 4);
-			}
-				
-			if((SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) > 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME)) || (SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) == 0)) 
-			{
-				SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, 7 * SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME));
-			}
-
-			// alternative limiter
-			time_t currentTime;
-			time(&currentTime);
-			int currentHour = localtime(&currentTime)->tm_hour;
-			if (SETTING(TIME_DEPENDENT_THROTTLE) &&
-				((SETTING(BANDWIDTH_LIMIT_START) < SETTING(BANDWIDTH_LIMIT_END) &&
-					currentHour >= SETTING(BANDWIDTH_LIMIT_START) && currentHour < SETTING(BANDWIDTH_LIMIT_END)) ||
-				(SETTING(BANDWIDTH_LIMIT_START) > SETTING(BANDWIDTH_LIMIT_END) &&
-					(currentHour >= SETTING(BANDWIDTH_LIMIT_START) || currentHour < SETTING(BANDWIDTH_LIMIT_END)))))
-			{
-				downLimit	= SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME);
-				upLimit		= SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME);
-			} 
-			
-			// readd tokens
-			if(downLimit > 0)
-			{
-				Lock l(downCS);
-				downTokens = downLimit * 1024;
-			}
-				
-			if(upLimit > 0)
-			{
-				Lock l(upCS);
-				upTokens = upLimit * 1024;
-			}
-			
-			PulseEvent(hEvent);
-		}
+		void on(TimerManagerListener::Second, uint64_t aTick) throw();
 				
 	};
 
 }	// namespace dcpp
+
 #endif	// _THROTTLEMANAGER_H

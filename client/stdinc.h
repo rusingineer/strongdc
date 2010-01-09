@@ -141,7 +141,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 
-#define BOOST_REGEX_NO_LIB 1
+//#define BOOST_REGEX_NO_LIB 1
+//#define BOOST_THREAD_NO_LIB 1
+#define BOOST_ALL_NO_LIB 1
 #include <boost/regex.hpp>
 //#include <regex>
 
@@ -159,7 +161,7 @@
 #error "Unknown STL, please configure accordingly"
 #endif
 
-#if !defined(_STLPORT_VERSION)	// current STLPort GIT implements this
+#if (!defined(_STLPORT_VERSION)) || (_STLPORT_VERSION < 0x600)	// current STLPort GIT implements this
 	typedef signed __int8 int8_t;
 	typedef signed __int16 int16_t;
 	typedef signed __int32 int32_t;

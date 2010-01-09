@@ -748,7 +748,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 			q->setFlag(aFlags);
 		}
 
-		wantConnection = addSource(q, aUser, (Flags::MaskType)(addBad ? QueueItem::Source::FLAG_MASK : 0), wasFinished);
+		wantConnection = aUser.user && addSource(q, aUser, (Flags::MaskType)(addBad ? QueueItem::Source::FLAG_MASK : 0), wasFinished);
 		setDirty();
 	}
 
