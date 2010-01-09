@@ -1,3 +1,6 @@
+** svn472
+	fixed building
+
 ** svn471
 	added favorite hub groups settings (adrian_007)
 	limiter's PulseEvent replaced with boost's conditional variables

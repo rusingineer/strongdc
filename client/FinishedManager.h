@@ -59,7 +59,7 @@ public:
 			case COLUMN_FILE: return Text::toT(Util::getFileName(getTarget()));
 			case COLUMN_DONE: return Text::toT(Util::formatTime("%Y-%m-%d %H:%M:%S", getTime()));
 			case COLUMN_PATH: return Text::toT(Util::getFilePath(getTarget()));
-			case COLUMN_NICK: return WinUtil::getNicks(getUser());
+			case COLUMN_NICK: return Text::toT(Util::toString(ClientManager::getInstance()->getNicks(getUser())));
 			case COLUMN_HUB: return Text::toT(Util::toString(ClientManager::getInstance()->getHubNames(getUser()))); 
 			case COLUMN_SIZE: return Util::formatBytesW(getSize());
 			case COLUMN_SPEED: return Util::formatBytesW(getAvgSpeed()) + _T("/s");
