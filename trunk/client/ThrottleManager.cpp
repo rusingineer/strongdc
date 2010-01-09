@@ -17,10 +17,11 @@
  */
 
 #include "stdinc.h"
-#include "ThrottleManager.h"
+#include "DCPlusPlus.h"
 
 #include "DownloadManager.h"
 #include "Socket.h"
+#include "ThrottleManager.h"
 #include "TimerManager.h"
 #include "UploadManager.h"
 
@@ -181,5 +182,6 @@ namespace dcpp
 			upCond.notify_all();
 		}
 	}
+
 
 }	// namespace dcpp
