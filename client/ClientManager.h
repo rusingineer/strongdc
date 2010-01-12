@@ -120,8 +120,8 @@ public:
 	int getMode(const string& aHubUrl) const;
 	bool isActive(const string& aHubUrl = Util::emptyString) const { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
 
-	void lock() throw() { cs.enter(); }
-	void unlock() throw() { cs.leave(); }
+	void lock() throw() { cs.lock(); }
+	void unlock() throw() { cs.unlock(); }
 
 	const Client::List& getClients() const { return clients; }
 
@@ -141,7 +141,6 @@ public:
 	
 	void setGenerator(const UserPtr& p, const string& aGenerator);
 	void setUnknownCommand(const UserPtr& p, const string& aUnknownCommand);
-
 
 private:
 

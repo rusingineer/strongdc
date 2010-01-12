@@ -26,7 +26,6 @@
 #include "QueueManagerListener.h"
 
 #include "Exception.h"
-#include "CriticalSection.h"
 #include "StringSearch.h"
 #include "Singleton.h"
 #include "BloomFilter.h"

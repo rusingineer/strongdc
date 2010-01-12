@@ -20,7 +20,6 @@
 
 #include "../client/AdcCommand.h"
 #include "../client/CID.h"
-#include "../client/CriticalSection.h"
 #include "../client/FastAlloc.h"
 #include "../client/MerkleTree.h"
 #include "../client/Socket.h"

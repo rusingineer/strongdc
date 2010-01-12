@@ -535,7 +535,7 @@ bool Socket::waitConnected(uint64_t millis) {
 	return wait(millis, Socket::WAIT_CONNECT) == WAIT_CONNECT;
 }
 
-bool Socket::waitAccepted(uint64_t millis) {
+bool Socket::waitAccepted(uint64_t /*millis*/) {
 	// Normal sockets are always connected after a call to accept
 	return true;
 }

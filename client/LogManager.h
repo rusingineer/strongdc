@@ -20,7 +20,6 @@
 #define DCPLUSPLUS_DCPP_LOG_MANAGER_H
 
 #include "File.h"
-#include "CriticalSection.h"
 #include "Singleton.h"
 #include "TimerManager.h"
 

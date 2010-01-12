@@ -543,8 +543,7 @@ LRESULT DirectoryListingFrame::onSearchByTTH(WORD /*wNotifyCode*/, WORD /*wID*/,
 }
 
 LRESULT DirectoryListingFrame::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	// TODO provide hubHint?
-	int x = QueueManager::getInstance()->matchListing(*dl, Util::emptyString);
+	int x = QueueManager::getInstance()->matchListing(*dl);
 
 	tstring buf;
 	buf.resize(STRING(MATCHED_FILES).length() + 32);

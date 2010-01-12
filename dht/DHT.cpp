@@ -301,13 +301,14 @@ namespace dht
 	 */
 	void DHT::connect(const OnlineUser& ou, const string& token)
 	{
-		ConnectionManager::getInstance()->connect(ou, token);
+		// this is DHT's node, so we can cast ou to Node
+		ConnectionManager::getInstance()->connect((Node*)&ou, token);
 	}
 	
 	/*
 	 * Sends private message to online node 
 	 */
-	void DHT::privateMessage(const OnlineUser& ou, const string& aMessage, bool thirdPerson)
+	void DHT::privateMessage(const OnlineUser& /*ou*/, const string& /*aMessage*/, bool /*thirdPerson*/)
 	{
 		//AdcCommand cmd(AdcCommand::CMD_MSG, AdcCommand::TYPE_UDP);
 		//cmd.addParam(aMessage);
@@ -586,7 +587,7 @@ namespace dht
 	}
 
 	// private message
-	void DHT::handle(AdcCommand::MSG, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::MSG, const Node::Ptr& /*node*/, AdcCommand& /*c*/) throw()
 	{
 		// not implemented yet
 		//fire(ClientListener::PrivateMessage(), this, *node, to, node, c.getParam(0), c.hasFlag("ME", 1));
@@ -632,7 +633,7 @@ namespace dht
 		}
 	}
 	
-	void DHT::handle(AdcCommand::SND, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::SND, const Node::Ptr& /*node*/, AdcCommand& c) throw()
 	{
 		if(c.getParam(1) == "nodes" && c.getParam(2) == "dht.xml")
 		{

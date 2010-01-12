@@ -39,16 +39,21 @@ namespace dht
 	/*
 	 * Sends Connect To Me request to online node 
 	 */
-	void ConnectionManager::connect(const OnlineUser& ou, const string& token)
+	void ConnectionManager::connect(const Node::Ptr& node, const string& token)
 	{
-		connect(ou, token, CryptoManager::getInstance()->TLSOk() && ou.getUser()->isSet(User::TLS));
+		connect(node, token, CryptoManager::getInstance()->TLSOk() && node->getUser()->isSet(User::TLS));
 	}
 	
-	void ConnectionManager::connect(const OnlineUser& ou, const string& token, bool secure)
+	void ConnectionManager::connect(const Node::Ptr& node, const string& token, bool secure)
 	{
 		// don't allow connection if we didn't proceed a handshake
-		if(!ou.getUser()->isOnline())
+		if(!node->getUser()->isOnline())
+		{
+			// do handshake at first
+			DHT::getInstance()->info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), 
+				DHT::PING | DHT::MAKE_ONLINE, node->getUser()->getCID(), node->getUdpKey());
 			return;
+		}
 		
 		bool active = ClientManager::getInstance()->isActive();
 
@@ -64,7 +69,8 @@ namespace dht
 
 		cmd.addParam(token);
 		
-		DHT::getInstance()->send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())), ou.getUser()->getCID(), CID()); // TODO: key
+		DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), 
+			node->getUser()->getCID(), node->getUdpKey());
 	}
 
 	/*
@@ -74,7 +80,12 @@ namespace dht
 	{
 		// don't allow connection if we didn't proceed a handshake
 		if(!node->getUser()->isOnline())
+		{
+			// do handshake at first
+			DHT::getInstance()->info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())),
+				DHT::PING | DHT::MAKE_ONLINE, node->getUser()->getCID(), node->getUdpKey());
 			return;
+		}
 	
 		const string& protocol = cmd.getParam(1);
 		const string& port = cmd.getParam(2);
@@ -95,14 +106,16 @@ namespace dht
 			cmd.addParam("PR", protocol);
 			cmd.addParam("TO", token);
 
-			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
+			DHT::getInstance()->send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), 
+				node->getUser()->getCID(), node->getUdpKey());
 			return;
 		}
 
 		if(!node->getIdentity().isTcpActive()) 
 		{
 			AdcCommand err(AdcCommand::SEV_FATAL, AdcCommand::ERROR_PROTOCOL_GENERIC, "IP unknown", AdcCommand::TYPE_UDP);
-			DHT::getInstance()->send(err, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
+			DHT::getInstance()->send(err, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), 
+				node->getUser()->getCID(), node->getUdpKey());
 			return;
 		}
 
@@ -115,15 +128,15 @@ namespace dht
 	void ConnectionManager::revConnectToMe(const Node::Ptr& node, const AdcCommand& cmd)
 	{
 		// don't allow connection if we didn't proceed a handshake
-		if(!node->getUser()->isOnline())
-			return;
+		//if(!node->getUser()->isOnline())
+		//	return;
 
 		// this is valid for active-passive connections only
 		if(!ClientManager::getInstance()->isActive())
 			return;
 			
-		const string& protocol = cmd.getParam(0);
-		const string& token = cmd.getParam(1);
+		const string& protocol = cmd.getParam(1);
+		const string& token = cmd.getParam(2);
 
 		bool secure;
 		if(protocol == CLIENT_PROTOCOL)
@@ -140,11 +153,12 @@ namespace dht
 			sta.addParam("PR", protocol);
 			sta.addParam("TO", token);
 
-			DHT::getInstance()->send(sta, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
+			DHT::getInstance()->send(sta, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), 
+				node->getUser()->getCID(), node->getUdpKey());
 			return;
 		}
 		
-		connect(*node, token, secure);
+		connect(node, token, secure);
 	}
 	
 }

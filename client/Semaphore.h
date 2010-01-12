@@ -20,7 +20,6 @@
 #define SEMAPHORE_H
 
 #ifndef _WIN32
-#include "CriticalSection.h"
 #include <sys/time.h>
 #endif
 

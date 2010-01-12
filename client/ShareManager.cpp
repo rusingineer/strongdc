@@ -1528,7 +1528,7 @@ ShareManager::Directory::Ptr ShareManager::getDirectory(const string& fname) {
 	return Directory::Ptr();
 }
 
-void ShareManager::on(QueueManagerListener::Finished, QueueItem* qi, const string& dir, int64_t speed) throw() {
+void ShareManager::on(QueueManagerListener::Finished, QueueItem* qi, const string& /*dir*/, int64_t /*speed*/) throw() {
 	if(BOOLSETTING(ADD_FINISHED_INSTANTLY)) {
 		// Check if finished download is supposed to be shared
 		Lock l(cs);

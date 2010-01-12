@@ -23,20 +23,14 @@
 #include "ChatCtrl.h"
 #include "AGEmotionSetup.h"
 #include "PrivateFrame.h"
-#include "atlstr.h"
 
 EmoticonSetup* g_pEmotionsSetup = NULL;
 
 #define MAX_EMOTICONS 48
 
-tstring ChatCtrl::sSelectedLine = Util::emptyStringT;
-tstring ChatCtrl::sSelectedIP = Util::emptyStringT;
-tstring ChatCtrl::sSelectedUser = Util::emptyStringT;
-tstring ChatCtrl::sSelectedURL = Util::emptyStringT;
-
-static const TCHAR* Links[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
+static const tstring protocols[] = { _T("http://"), _T("https://"), _T("www."), _T("ftp://"), 
 	_T("magnet:?"), _T("dchub://"), _T("irc://"), _T("ed2k://"), _T("mms://"), _T("file://"),
-	_T("adc://"), _T("adcs://"), _T("nmdcs://") };
+	_T("adc://"), _T("adcs://"), _T("nmdcs://"), _T("svn://") };
 
 ChatCtrl::ChatCtrl() : ccw(_T("edit"), this), client(NULL), m_bPopupMenu(false) {
 	if(g_pEmotionsSetup == NULL) {
@@ -55,19 +49,7 @@ ChatCtrl::~ChatCtrl() {
 	}
 }
 	
-void ChatCtrl::AdjustTextSize() {
-	if(GetWindowTextLength() > 25000) {
-		// We want to limit the buffer to 25000 characters...after that, w95 becomes sad...
-		SetRedraw(FALSE);
-		SetSel(0, LineIndex(LineFromChar(2000)));
-		ReplaceSel(_T(""));
-		SetRedraw(TRUE);
-
-		scrollToEnd();
-	}
-}
-
-void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, const tstring& sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
+void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, tstring sMsg, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
 	SetRedraw(FALSE);
 
 	SCROLLINFO si = { 0 };
@@ -78,16 +60,54 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	GetScrollInfo(SB_VERT, &si);
 	GetScrollPos(&pt);
 
-	LONG lSelBegin = 0, lSelEnd = 0;
+	LONG lSelBegin = 0, lSelEnd = 0, lTextLimit = 0, lNewTextLen = 0;
 	LONG lSelBeginSaved, lSelEndSaved;
-	GetSel(lSelBeginSaved, lSelEndSaved);
 
-	// Insert TimeStamp and format with default style
+	// Unify line endings
+	tstring::size_type j = 0; 
+	while((j = sMsg.find(_T("\r"), j)) != tstring::npos)
+		sMsg.erase(j, 1);
+
+	GetSel(lSelBeginSaved, lSelEndSaved);
+	lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
+
+	bool isMyMessage = i.getUser() == ClientManager::getInstance()->getMe();
+	tstring sLine = sTime + sMsg;
+
+	// Remove old chat if size exceeds
+	lNewTextLen = sLine.size();
+	lTextLimit = GetLimitText();
+
+	if(lSelEnd + lNewTextLen > lTextLimit) {
+		LONG lRemoveChars = 0;
+		int multiplier = 1;
+
+		if(lNewTextLen >= lTextLimit) {
+			lRemoveChars = lSelEnd;
+		} else {
+			while(lRemoveChars < lNewTextLen)
+				lRemoveChars = LineIndex(LineFromChar(multiplier++ * lTextLimit / 10));
+		}
+
+		// Update selection ranges
+		lSelEnd = lSelBegin -= lRemoveChars;
+		lSelEndSaved -= lRemoveChars;
+		lSelBeginSaved -= lRemoveChars;
+
+		// ...and the scroll position
+		pt.y -= PosFromChar(lRemoveChars).y;
+
+		SetSel(0, lRemoveChars);
+		ReplaceSel(_T(""));
+	}
+
+	// Add to the end
+	SetSel(lSelBegin, lSelEnd);
+	setText(sLine);
+
+	// Format TimeStamp
 	if(!sTime.empty()) {
-		lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
-		SetSel(lSelEnd, lSelEnd);
-		ReplaceSel(sTime.c_str(), false);
-		lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
+		lSelEnd += sTime.size();
 		SetSel(lSelBegin, lSelEnd - 1);
 		SetSelectionCharFormat(WinUtil::m_TextStyleTimestamp);
 
@@ -98,18 +118,15 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 		SetParaFormat(pf);
 	}
 
-	TCHAR* sText = (TCHAR*)sMsg.c_str();
+	// Authors nick
 	tstring sAuthor = Text::toT(i.getNick());
-	bool isMyMessage = i.getUser() == ClientManager::getInstance()->getMe();
-	
 	if(!sAuthor.empty()) {
 		LONG iLen = (sMsg[0] == _T('*')) ? 1 : 0;
-		LONG iAuthorLen = (LONG)_tcslen(sAuthor.c_str()) + 1;
-   		sText += iAuthorLen + iLen;
+		LONG iAuthorLen = sAuthor.size() + 1;
+		sMsg.erase(0, iAuthorLen + iLen);
    		
-		lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
-		SetSel(lSelEnd, lSelEnd);
-		ReplaceSel(sMsg.substr(0, iAuthorLen + iLen).c_str(), false);
+		lSelBegin = lSelEnd;
+		lSelEnd += iAuthorLen + iLen;
 		
 		if(isMyMessage) {
 			SetSel(lSelBegin, lSelBegin + iLen + 1);
@@ -122,7 +139,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isFavorite || i.isOp()) {
 				SetSel(lSelBegin, lSelBegin + iLen + 1);
 				SetSelectionCharFormat(cf);
-				SetSel(lSelBegin + iLen + 1, lSelBegin + iLen + iAuthorLen);
+				SetSel(lSelBegin + iLen + 1, lSelEnd);
 				if(isFavorite){
 					SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);
 				} else if(i.isOp()) {
@@ -131,7 +148,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 					SetSelectionCharFormat(WinUtil::m_TextStyleBold);
 				}
 			} else {
-				SetSel(lSelBegin, lSelBegin + iLen + iAuthorLen);
+				SetSel(lSelBegin, lSelEnd);
 				SetSelectionCharFormat(cf);
             }
 		}
@@ -142,11 +159,10 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 				if(sMsg[1] != _T(' ')) break;
 				thirdPerson = true;
             case _T('<'):
-				sText = _tcschr(sText + 1 + (int)thirdPerson, thirdPerson ? _T(' ') : _T('>'));
-                if(sText != NULL) {
-                    LONG iAuthorLen = (LONG)(sText - sMsg.c_str());
-                    
+				tstring::size_type iAuthorLen = sMsg.find(thirdPerson ? _T(' ') : _T('>'), thirdPerson ? 2 : 1);
+				if(iAuthorLen != tstring::npos) {
                     bool isOp = false, isFavorite = false;
+
                     if(client != NULL) {
 						tstring nick(sMsg.c_str() + 1);
 						nick.erase(iAuthorLen - 1);
@@ -158,13 +174,14 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 						}
                     }
                     
-		            lSelEnd = lSelBegin = GetTextLengthEx(GTL_NUMCHARS);
-		            SetSel(lSelEnd, lSelEnd);
-            		ReplaceSel(sMsg.substr(0, iAuthorLen).c_str(), false);
+					lSelBegin = lSelEnd;
+					lSelEnd += iAuthorLen;
+					sMsg.erase(0, iAuthorLen);
+
         			if(BOOLSETTING(BOLD_AUTHOR_MESS) || isFavorite || isOp) {
         				SetSel(lSelBegin, lSelBegin + 1);
         				SetSelectionCharFormat(cf);
-                        SetSel(lSelBegin + 1, lSelBegin + iAuthorLen);
+						SetSel(lSelBegin + 1, lSelEnd);
 						if(isFavorite){
 							SetSelectionCharFormat(WinUtil::m_TextStyleFavUsers);
 						} else if(isOp) {
@@ -173,69 +190,17 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 							SetSelectionCharFormat(WinUtil::m_TextStyleBold);
 						}
         			} else {
-        				SetSel(lSelBegin, lSelBegin + iAuthorLen);
+        				SetSel(lSelBegin, lSelEnd);
         				SetSelectionCharFormat(cf);
                     }
-				} else {
-					sText = (TCHAR*)sMsg.c_str();
 				}
         }
 	}
-				   			
-	{
-		 TCHAR *fsrc, *fdst;
-		 fsrc = fdst = sText;
-		 while(*fsrc) {
-			  if (*fsrc != '\r') {
-				   *fdst = *fsrc;
-				   fdst++;
-			  }
-			  fsrc++;
-		 }
-		 *fdst = _T('\0');
-	}
 
-	// Insert emoticons
-	if(bUseEmo && g_pEmotionsSetup->getUseEmoticons()) {
-		const Emoticon::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
-		uint8_t smiles = 0; int nIdxFound = -1;
-		while(true) {
-			TCHAR *rpl = NULL;
-			Emoticon* pFoundEmotion = NULL;
-			int64_t len = _tcslen(sText);
-			for(Emoticon::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
-				nIdxFound = -1;
-				TCHAR *txt = Util::strstr(sText, (*pEmotion)->getEmotionText().c_str(), &nIdxFound);
-				if((txt < rpl && txt) || !rpl && txt) {
-					if(len > nIdxFound) {
-						rpl = txt;
-						pFoundEmotion = (*pEmotion);
-						len = nIdxFound;
-					}
-				}
-			}
+	// Format the message part
+	FormatChatLine(sMyNick, sMsg, cf, isMyMessage, sAuthor, lSelEnd, bUseEmo);
 
-			if(rpl && (smiles < MAX_EMOTICONS)) {
-				AppendTextOnly(sMyNick, tstring(sText, rpl - sText).c_str(), cf, isMyMessage, sAuthor);
-				lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
-				SetSel(lSelEnd, lSelEnd);
-				CImageDataObject::InsertBitmap(GetOleInterface(), 
-					pFoundEmotion->getEmotionBmp(isMyMessage ? WinUtil::m_ChatTextMyOwn.crBackColor : WinUtil::m_ChatTextGeneral.crBackColor));
-
-				sText = rpl + pFoundEmotion->getEmotionText().size();
-				smiles++;
-			} else {
-				if(_tcslen(sText) > 0) {
-					AppendTextOnly(sMyNick, sText, cf, isMyMessage, sAuthor);
-				}
-				break;
-			}
-		}
-	} else {
-		AppendTextOnly(sMyNick, sText, cf, isMyMessage, sAuthor);
-	}
 	SetSel(lSelBeginSaved, lSelEndSaved);
-	
 	if(	isMyMessage || ((si.nPage == 0 || (size_t)si.nPos >= (size_t)si.nMax - si.nPage - 5) &&
 		(lSelBeginSaved == lSelEndSaved || !sSelectedUser.empty() || !sSelectedIP.empty() || !sSelectedURL.empty())))
 	{
@@ -249,56 +214,20 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	InvalidateRect(NULL);
 }
 
-void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFORMAT2& cf, bool isMyMessage, const tstring& sAuthor) {
-	// Insert text at the end
-	long lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
-	long lSelBegin = lSelEnd;
-	SetSel(lSelBegin, lSelEnd);
-	ReplaceSel(sText, false);
-
+void ChatCtrl::FormatChatLine(const tstring& sMyNick, const tstring& sText, CHARFORMAT2& cf, bool isMyMessage, const tstring& sAuthor, LONG lSelBegin, bool bUseEmo) {
 	// Set text format
-	tstring sMsgLower = sText;
-	std::transform(sMsgLower.begin(), sMsgLower.end(), sMsgLower.begin(), _totlower);
+	tstring sMsgLower(sText.length(), NULL);
+	std::transform(sText.begin(), sText.end(), sMsgLower.begin(), _totlower);
 
-	lSelEnd = GetTextLengthEx(GTL_NUMCHARS);
+	LONG lSelEnd = lSelBegin + sText.size();
 	SetSel(lSelBegin, lSelEnd);
 	SetSelectionCharFormat(isMyMessage ? WinUtil::m_ChatTextMyOwn : cf);
 	
-	// Zvyrazneni vsech URL a nastaveni "klikatelnosti"
-	for(size_t i = 0; i < (sizeof(Links) / sizeof(Links[0])); i++) {
-		size_t linkStart = sMsgLower.find(Links[i]);
-		bool isMagnet = _tcscmp(Links[i], _T("magnet:?")) == 0;
-		while(linkStart != tstring::npos) {
-			size_t linkEnd = linkStart + _tcslen(Links[i]);
-			
-			try {
-				boost::match_results<tstring::const_iterator> result;
-				// TODO: complete regexp for URLs
-				boost::wregex reg;
-				if(isMagnet) // magnet links have totally indeferent structure than classic URL // -/?%&=~#'\\w\\.\\+\\*\\(\\)
-					reg =       _T("^(\\w)+=[:\\w]+(&(\\w)+=[\\S]*)*[^\\s<>.,;!(){}\"']+");
-				else
-					reg = _T("^([@\\w-]+(\\.)*)+(:[\\d]+)?(/[\\S]*)*[^\\s<>.,;!(){}\"']+");
-					
-				if(boost::regex_search(sMsgLower.c_str() + linkEnd, result, reg)) {
-					dcassert(!result.empty());
-					
-					linkEnd += ((tstring)(result[0])).size();
-					SetSel(lSelBegin + linkStart, lSelBegin + linkEnd);
-					SetSelectionCharFormat(WinUtil::m_TextStyleURL);
-				}
-			} catch(...) {
-			}
-			
-			linkStart = sMsgLower.find(Links[i], linkEnd);			
-		}
-	}
-
-	// Zvyrazneni vsech vyskytu vlastniho nicku
+	// highlight all occurences of my nick
 	long lMyNickStart = -1, lMyNickEnd = -1;
 	size_t lSearchFrom = 0;	
-	tstring sNick = sMyNick.c_str();
-	std::transform(sNick.begin(), sNick.end(), sNick.begin(), _totlower);
+	tstring sNick(sMyNick.length(), NULL);
+	std::transform(sMyNick.begin(), sMyNick.end(), sNick.begin(), _totlower);
 
 	bool found = false;
 	while((lMyNickStart = (long)sMsgLower.find(sNick, lSearchFrom)) != tstring::npos) {
@@ -316,13 +245,13 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
         }	
 	}
 
-	// Zvyrazneni vsech vyskytu nicku Favorite useru
+	// highlight all occurences of favourite users' nicks
 	FavoriteManager::FavoriteMap ul = FavoriteManager::getInstance()->getFavoriteUsers();
 	for(FavoriteManager::FavoriteMap::const_iterator i = ul.begin(); i != ul.end(); ++i) {
 		const FavoriteUser& pUser = i->second;
 
 		lSearchFrom = 0;
-		sNick = Text::toT(pUser.getNick()).c_str();
+		sNick = Text::toT(pUser.getNick());
 		std::transform(sNick.begin(), sNick.end(), sNick.begin(), _totlower);
 
 		while((lMyNickStart = (long)sMsgLower.find(sNick, lSearchFrom)) != tstring::npos) {
@@ -332,6 +261,86 @@ void ChatCtrl::AppendTextOnly(const tstring& sMyNick, const TCHAR* sText, CHARFO
 			lSearchFrom = lMyNickEnd;
 		}
 	}
+
+	// Links and smilies
+	FormatEmoticonsAndLinks(sText, sMsgLower, lSelBegin, bUseEmo);
+}
+
+void ChatCtrl::FormatEmoticonsAndLinks(const tstring& sMsg, const tstring& sMsgLower, LONG lSelBegin, bool bUseEmo) {
+	LONG lSelEnd = lSelBegin + sMsg.size();
+
+	// hightlight all URLs and make them clickable
+	for(size_t i = 0; i < (sizeof(protocols) / sizeof(protocols[0])); ++i) {
+		size_t linkStart = sMsgLower.find(protocols[i]);
+		bool isMagnet = (protocols[i] == _T("magnet:?"));
+		while(linkStart != tstring::npos) {
+			size_t linkEnd = linkStart + protocols[i].size();
+			
+			try {
+				// TODO: complete regexp for URLs
+				boost::wregex reg;
+				if(isMagnet) // magnet links have totally indifferent structure than classic URL // -/?%&=~#'\\w\\.\\+\\*\\(\\)
+					reg.assign(_T("^(\\w)+=[:\\w]+(&(\\w)+=[\\S]*)*[^\\s<>.,;!(){}\"']+"), boost::regex_constants::icase);
+				else
+					reg.assign(_T("^([@\\w-]+(\\.)*)+(:[\\d]+)?(/[\\S]*)*[^\\s<>.,;!(){}\"']+"), boost::regex_constants::icase);
+					
+				tstring::const_iterator start = sMsg.begin();
+				tstring::const_iterator end = sMsg.end();
+				boost::match_results<tstring::const_iterator> result;
+
+				if(boost::regex_search(start + linkEnd, end, result, reg, boost::match_default)) {
+					dcassert(!result.empty());
+					
+					linkEnd += result.length(0);
+					SetSel(lSelBegin + linkStart, lSelBegin + linkEnd);
+					SetSelectionCharFormat(WinUtil::m_TextStyleURL);
+				}
+			} catch(...) {
+			}
+			
+			linkStart = sMsgLower.find(protocols[i], linkEnd);			
+		}
+	}
+
+	// insert emoticons
+	if(bUseEmo && g_pEmotionsSetup->getUseEmoticons()) {
+		const Emoticon::List& emoticonsList = g_pEmotionsSetup->getEmoticonsList();
+		tstring::size_type lastReplace = 0;
+		uint8_t smiles = 0;
+
+		while(true) {
+			tstring::size_type curReplace = tstring::npos;
+			Emoticon* foundEmoticon = NULL;
+
+			for(Emoticon::Iter emoticon = emoticonsList.begin(); emoticon != emoticonsList.end(); ++emoticon) {
+				tstring::size_type idxFound = sMsg.find((*emoticon)->getEmotionText(), lastReplace);
+				if(idxFound < curReplace || curReplace == tstring::npos) {
+					curReplace = idxFound;
+					foundEmoticon = (*emoticon);
+				}
+			}
+
+			if(curReplace != tstring::npos && smiles < MAX_EMOTICONS) {
+				CHARFORMAT2 cfSel;
+				cfSel.cbSize = sizeof(cfSel);
+
+				lSelBegin += (curReplace - lastReplace);
+				lSelEnd = lSelBegin + foundEmoticon->getEmotionText().size();
+				SetSel(lSelBegin, lSelEnd);
+
+				GetSelectionCharFormat(cfSel);
+				if(!(cfSel.dwEffects & CFE_LINK)) {
+					CImageDataObject::InsertBitmap(GetOleInterface(), 
+						foundEmoticon->getEmotionBmp(cfSel.crBackColor));
+
+					++smiles;
+					++lSelBegin;
+				} else lSelBegin = lSelEnd;
+				lastReplace = curReplace + foundEmoticon->getEmotionText().size();
+			} else break;
+		}
+	}
+
 }
 
 bool ChatCtrl::HitNick(const POINT& p, tstring& sNick, int& iBegin, int& iEnd) {
@@ -803,7 +812,7 @@ LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
-		PrivateFrame::openWindow(ou->getUser(), Util::emptyStringT, client);
+		PrivateFrame::openWindow(HintedUser(ou->getUser(), client->getHubUrl()), Util::emptyStringT, client);
 
 	return 0;
 }
@@ -933,6 +942,33 @@ void ChatCtrl::runUserCommand(UserCommand& uc) {
 		client->escapeParams(tmp);
 		client->sendUserCmd(Util::formatParams(uc.getCommand(), tmp, false));
 	}
+}
+
+string ChatCtrl::escapeUnicode(tstring str) {
+	TCHAR buf[8];
+	memzero(buf, sizeof(buf));
+
+	int dist = 0;
+	tstring::iterator i;
+	while((i = std::find_if(str.begin() + dist, str.end(), std::bind2nd(std::greater<TCHAR>(), 0x7f))) != str.end()) {
+		dist = (i+1) - str.begin(); // Random Acess iterators FTW
+		snwprintf(buf, sizeof(buf), _T("%hd"), int(*i));
+		str.replace(i, i+1, _T("\\ud\\u") + tstring(buf) + _T("?"));
+		memzero(buf, sizeof(buf));
+	}
+	return Text::fromT(str);
+}
+
+tstring ChatCtrl::rtfEscape(tstring str) {
+	tstring::size_type i = 0;
+	while((i = str.find_first_of(_T("{}\\\n"), i)) != tstring::npos) {
+		switch(str[i]) {
+			// no need to process \r handled elsewhere
+			case '\n': str.replace(i, 1, _T("\\line\n")); i+=6; break;
+			default: str.insert(i, _T("\\")); i+=2;
+		}
+	}
+	return str;
 }
 
 void ChatCtrl::scrollToEnd() {

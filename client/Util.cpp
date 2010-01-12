@@ -1167,30 +1167,6 @@ string Util::translateError(int aError) {
 #endif // _WIN32
 }
 	
-TCHAR* Util::strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound) {
-	TCHAR *s1, *s2;
-	TCHAR *cp = const_cast<TCHAR*>(str1);
-	if (!*str2)
-		return const_cast<TCHAR*>(str1);
-	int nIdx = 0;
-	while (*cp) {
-		s1 = cp;
-		s2 = (TCHAR *) str2;
-                while(*s1 && *s2 && !(*s1-*s2))
-                        s1++, s2++;
-		if (!*s2) {
-			if (pnIdxFound != NULL)
-				*pnIdxFound = nIdx;
-			return cp;
-		}
-		cp++;
-		nIdx++;
-	}
-	if (pnIdxFound != NULL)
-		*pnIdxFound = -1;
-	return NULL;
-}
-
 string Util::formatStatus(int iStatus) {
 	string status;
 

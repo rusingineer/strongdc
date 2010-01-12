@@ -19,7 +19,7 @@
 #if !defined(FAST_ALLOC_H)
 #define FAST_ALLOC_H
 
-#include "CriticalSection.h"
+#include "Thread.h"
 
 namespace dcpp {
 

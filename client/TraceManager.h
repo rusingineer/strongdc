@@ -23,7 +23,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "CriticalSection.h"
+#include "Thread.h"
 #include "File.h"
 
 namespace dcpp {

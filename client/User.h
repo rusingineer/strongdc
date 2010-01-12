@@ -23,7 +23,6 @@
 #include "Pointer.h"
 #include "CID.h"
 #include "FastAlloc.h"
-#include "CriticalSection.h"
 #include "Flags.h"
 #include "forward.h"
 

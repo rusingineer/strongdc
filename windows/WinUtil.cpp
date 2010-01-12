@@ -274,8 +274,7 @@ void UserInfoBase::addFav() {
 }
 void UserInfoBase::pm(const string& hubHint) {
 	if(getUser()) {
-		// TODO provide client
-		PrivateFrame::openWindow(getUser(), Util::emptyStringT, NULL);
+		PrivateFrame::openWindow(HintedUser(getUser(), hubHint), Util::emptyStringT, NULL);
 	}
 }
 void UserInfoBase::connectFav() {

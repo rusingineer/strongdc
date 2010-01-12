@@ -23,7 +23,6 @@
 #include "SettingsManager.h"
 
 #include "forward.h"
-#include "CriticalSection.h"
 #include "Text.h"
 #include "Client.h"
 #include "ConnectionManager.h"

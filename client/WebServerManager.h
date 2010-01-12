@@ -24,7 +24,6 @@
 #include "Singleton.h"
 #include "Thread.h"
 #include "Speaker.h"
-#include "CriticalSection.h"
 
 namespace dcpp {
 

@@ -22,7 +22,6 @@
 #include "TimerManager.h"
 #include "ClientManager.h"
 
-#include "CriticalSection.h"
 #include "Exception.h"
 #include "User.h"
 #include "File.h"
@@ -107,7 +106,7 @@ public:
 	void addDirectory(const string& aDir, const HintedUser& aUser, const string& aTarget, 
 		QueueItem::Priority p = QueueItem::DEFAULT) throw();
 	
-	int matchListing(const DirectoryListing& dl, const string& hubHint) throw();
+	int matchListing(const DirectoryListing& dl) throw();
 
 	bool getTTH(const string& name, TTHValue& tth) const throw();
 
@@ -124,8 +123,8 @@ public:
 	void setAutoPriority(const string& aTarget, bool ap) throw();
 
 	void getTargets(const TTHValue& tth, StringList& sl);
-	const QueueItem::StringMap& lockQueue() throw() { cs.enter(); return fileQueue.getQueue(); } ;
-	void unlockQueue() throw() { cs.leave(); }
+	const QueueItem::StringMap& lockQueue() throw() { cs.lock(); return fileQueue.getQueue(); } ;
+	void unlockQueue() throw() { cs.unlock(); }
 
 	QueueItem::SourceList getSources(const QueueItem* qi) const { Lock l(cs); return qi->getSources(); }
 	QueueItem::SourceList getBadSources(const QueueItem* qi) const { Lock l(cs); return qi->getBadSources(); }

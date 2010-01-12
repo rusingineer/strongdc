@@ -121,7 +121,7 @@ public:
 				dl.loadFile(*i);
 				string tmp;
 				tmp.resize(STRING(MATCHED_FILES).size() + 16);
-				tmp.resize(snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl, Util::emptyString)));
+				tmp.resize(snprintf(&tmp[0], tmp.size(), CSTRING(MATCHED_FILES), QueueManager::getInstance()->matchListing(dl)));
 				LogManager::getInstance()->message(Util::toString(ClientManager::getInstance()->getNicks(user)) + ": " + tmp);
 			} catch(const Exception&) {
 
