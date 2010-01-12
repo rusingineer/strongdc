@@ -27,11 +27,13 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/thread.hpp>
+#include <boost/detail/lightweight_mutex.hpp>
 
 namespace dcpp
 {
 
-	#define POLL_TIMEOUT			250
+	#define CONDWAIT_TIMEOUT		250
 	#define MIN_UPLOAD_SPEED_LIMIT	5 * UploadManager::getInstance()->getSlots() + 4
 	#define MAX_LIMIT_RATIO			7
 
@@ -82,7 +84,7 @@ namespace dcpp
 		}
 
 		// no tokens, wait for them
-		downCond.timed_wait(lock, boost::posix_time::millisec(POLL_TIMEOUT));
+		downCond.timed_wait(lock, boost::posix_time::millisec(CONDWAIT_TIMEOUT));
 		return -1;	// from BufferedSocket: -1 = retry, 0 = connection close
 	}
 	
@@ -116,12 +118,12 @@ namespace dcpp
 		}
 		
 		// no tokens, wait for them
-		upCond.timed_wait(lock, boost::posix_time::millisec(POLL_TIMEOUT));
+		upCond.timed_wait(lock, boost::posix_time::millisec(CONDWAIT_TIMEOUT));
 		return 0;	// from BufferedSocket: -1 = failed, 0 = retry
 	}
 	
 	// TimerManagerListener
-	void ThrottleManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
+	void ThrottleManager::on(TimerManagerListener::Second, uint64_t /*aTick*/) throw()
 	{
 		if(!BOOLSETTING(THROTTLE_ENABLE))
 			return;

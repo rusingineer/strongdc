@@ -82,6 +82,7 @@ namespace dht
 			case AdcCommand::CMD_PUB: maxAllowedPacketsPerMinute = 10; break;
 			case AdcCommand::CMD_INF: maxAllowedPacketsPerMinute = 3; break;
 			case AdcCommand::CMD_CTM: maxAllowedPacketsPerMinute = 2; break;
+			case AdcCommand::CMD_RCM: maxAllowedPacketsPerMinute = 2; break;
 			case AdcCommand::CMD_GET: maxAllowedPacketsPerMinute = 2; break;
 			case AdcCommand::CMD_PSR: maxAllowedPacketsPerMinute = 3; break;
 			

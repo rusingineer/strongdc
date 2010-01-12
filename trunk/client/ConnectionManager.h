@@ -23,7 +23,6 @@
 
 #include "UserConnection.h"
 #include "User.h"
-#include "CriticalSection.h"
 #include "Singleton.h"
 #include "Util.h"
 

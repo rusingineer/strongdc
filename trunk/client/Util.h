@@ -414,7 +414,6 @@ public:
 	static wstring::size_type findSubString(const wstring& aString, const wstring& aSubString, wstring::size_type start = 0) throw();
 	
 	static void replace(string& aString, const string& findStr, const string& replaceStr);
-	static TCHAR* strstr(const TCHAR *str1, const TCHAR *str2, int *pnIdxFound);
 	
 	static string getIpCountry (const string& IP);
 
@@ -515,6 +514,22 @@ struct noCaseStringEq {
 	}
 	bool operator()(const wstring& a, const wstring& b) const {
 		return stricmp(a, b) == 0;
+	}
+};
+
+/** Case insensitive string ordering */
+struct noCaseStringLess {
+	bool operator()(const string* a, const string* b) const {
+		return stricmp(*a, *b) < 0;
+	}
+	bool operator()(const string& a, const string& b) const {
+		return stricmp(a, b) < 0;
+	}
+	bool operator()(const wstring* a, const wstring* b) const {
+		return stricmp(*a, *b) < 0;
+	}
+	bool operator()(const wstring& a, const wstring& b) const {
+		return stricmp(a, b) < 0;
 	}
 };
 

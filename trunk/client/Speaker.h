@@ -19,7 +19,7 @@
 #ifndef DCPLUSPLUS_DCPP_SPEAKER_H
 #define DCPLUSPLUS_DCPP_SPEAKER_H
 
-#include "CriticalSection.h"
+#include "Thread.h"
 
 namespace dcpp {
 

@@ -24,7 +24,6 @@
 #include "UserConnectionListener.h"
 #include "BufferedSocketListener.h"
 #include "BufferedSocket.h"
-#include "CriticalSection.h"
 #include "File.h"
 #include "User.h"
 #include "AdcCommand.h"

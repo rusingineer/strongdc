@@ -42,7 +42,7 @@ class PrivateFrame : public MDITabChildWindowImpl<PrivateFrame, RGB(0, 255, 255)
 {
 public:
 	static void gotMessage(const Identity& from, const UserPtr& to, const UserPtr& replyTo, const tstring& aMessage, Client* c);
-	static void openWindow(const UserPtr& replyTo, const tstring& aMessage = Util::emptyStringT, Client* c = NULL);
+	static void openWindow(const HintedUser& replyTo, const tstring& aMessage = Util::emptyStringT, Client* c = NULL);
 	static bool isOpen(const UserPtr u) { return frames.find(u) != frames.end(); }
 	static void closeAll();
 	static void closeAllOffline();
@@ -165,8 +165,8 @@ public:
 	void sendMessage(const tstring& msg, bool thirdPerson = false);
 
 private:
-	PrivateFrame(const UserPtr& replyTo_, Client* c) : replyTo(replyTo_),
-		priv(FavoriteManager::getInstance()->isPrivate(c->getHubUrl())),
+	PrivateFrame(const HintedUser& replyTo_, Client* c) : replyTo(replyTo_),
+		priv(FavoriteManager::getInstance()->isPrivate(replyTo_.hint)),
 		created(false), closed(false), isoffline(false), curCommandPosition(0),  
 		ctrlMessageContainer(WC_EDIT, this, PM_MESSAGE_MAP),
 		ctrlClientContainer(WC_EDIT, this, PM_MESSAGE_MAP), menuItems(0)
@@ -189,7 +189,7 @@ private:
 	CButton ctrlEmoticons;
 	HBITMAP hEmoticonBmp;
 
-	UserPtr replyTo;
+	HintedUser replyTo;
 	const bool priv;
 	
 	CContainedWindow ctrlMessageContainer;
@@ -206,21 +206,19 @@ private:
 	tstring currentCommand;
 	TStringList::size_type curCommandPosition;
 	
-	const string& getHubHint() const { return ctrlClient.getClient() ? ctrlClient.getClient()->getHubUrl() : Util::emptyString; }
-
 	// ClientManagerListener
 	void on(ClientManagerListener::UserUpdated, const OnlineUser& aUser) throw() {
-		if(aUser.getUser() == replyTo) {
+		if(aUser.getUser() == replyTo.user) {
 			ctrlClient.setClient(const_cast<Client*>(&aUser.getClient()));
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 		}
 	}
 	void on(ClientManagerListener::UserConnected, const UserPtr& aUser) throw() {
-		if(aUser == replyTo)
+		if(aUser == replyTo.user)
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 	}
 	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
-		if(aUser == replyTo) {
+		if(aUser == replyTo.user) {
 			ctrlClient.setClient(NULL);
 			PostMessage(WM_SPEAKER, USER_UPDATED);
 		}

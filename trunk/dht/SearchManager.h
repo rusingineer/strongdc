@@ -21,7 +21,6 @@
 #include "KBucket.h"
 
 #include "../client/CID.h"
-#include "../client/CriticalSection.h"
 #include "../client/FastAlloc.h"
 #include "../client/MerkleTree.h"
 #include "../client/Singleton.h"

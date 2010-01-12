@@ -23,7 +23,6 @@
 #include "MerkleTree.h"
 #include "TimerManager.h"
 #include "Util.h"
-#include "CriticalSection.h"
 #include "Segment.h"
 
 namespace dcpp {

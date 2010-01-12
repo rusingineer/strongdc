@@ -1,3 +1,11 @@
+** svn473
+	chat optimizations (THX Crise)
+	fixed building/running without STLPort
+	[DHT] fixed RCM command incorrectly detected as spam
+	[DHT] do handshake when connection is initiated from "offline" node
+	critical sections replaced with boost's mutex/spinlock
+	favorite hubs grouping
+
 ** svn472
 	fixed building
 

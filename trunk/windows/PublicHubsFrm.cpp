@@ -635,11 +635,11 @@ void PublicHubsFrame::on(DownloadFailed, const string& l) throw() {
 	speak(SET_TEXT, TSTRING(DOWNLOAD_FAILED) + _T(" ") + Text::toT(l)); 
 }
 
-void PublicHubsFrame::on(DownloadFinished, const string& l, bool fromCoral) throw() { 
+void PublicHubsFrame::on(DownloadFinished, const string& l, bool /* TODO fromCoral*/) throw() { 
 	speak(FINISHED, TSTRING(HUB_LIST_DOWNLOADED) + _T(" (") + Text::toT(l) + _T(")"));
 }
 
-void PublicHubsFrame::on(LoadedFromCache, const string& l, const string& d) throw() { 
+void PublicHubsFrame::on(LoadedFromCache, const string& l, const string& /* TODO d*/) throw() { 
 	speak(FINISHED, TSTRING(HUB_LIST_LOADED_FROM_CACHE) + _T(" (") + Text::toT(l) + _T(")")); 
 }
 

@@ -352,7 +352,7 @@ void DetectionEntryDlg::updateControls() {
 	}
 }
 
-LRESULT DetectionEntryDlg::onEnable(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT DetectionEntryDlg::onEnable(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	bool state = IsDlgButtonChecked(IDC_ENABLE) == BST_CHECKED;
 #define _EnableItem(id) ::EnableWindow(GetDlgItem(id), state)
 	_EnableItem(IDC_CHECK_MISMATCH);

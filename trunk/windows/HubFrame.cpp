@@ -354,14 +354,14 @@ void HubFrame::onEnter() {
 
 					if(ui) {
 						if(param.size() > j + 1)
-							PrivateFrame::openWindow(ui->getUser(), param.substr(j+1), client);
+							PrivateFrame::openWindow(HintedUser(ui->getUser(), client->getHubUrl()), param.substr(j+1), client);
 						else
-							PrivateFrame::openWindow(ui->getUser(), Util::emptyStringT, client);
+							PrivateFrame::openWindow(HintedUser(ui->getUser(), client->getHubUrl()), Util::emptyStringT, client);
 					}
 				} else if(!param.empty()) {
 					const OnlineUserPtr ui = client->findUser(Text::fromT(param));
 					if(ui) {
-						PrivateFrame::openWindow(ui->getUser(), Util::emptyStringT, client);
+						PrivateFrame::openWindow(HintedUser(ui->getUser(), client->getHubUrl()), Util::emptyStringT, client);
 					}
 				}
 			} else if(stricmp(cmd.c_str(), _T("stats")) == 0) {
@@ -991,7 +991,7 @@ LRESULT HubFrame::onLButton(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& b
 			if(ui) {
 				bHandled = true;
 				if (wParam & MK_CONTROL) { // MK_CONTROL = 0x0008
-					PrivateFrame::openWindow(ui->getUser(), Util::emptyStringT, client);
+					PrivateFrame::openWindow(HintedUser(ui->getUser(), client->getHubUrl()), Util::emptyStringT, client);
 				} else if (wParam & MK_SHIFT) {
 					try {
 						QueueManager::getInstance()->addList(HintedUser(ui->getUser(), client->getHubUrl()), QueueItem::FLAG_CLIENT_VIEW);
@@ -1066,7 +1066,6 @@ void HubFrame::addLine(const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = t
 }
 
 void HubFrame::addLine(const Identity& i, const tstring& aLine, CHARFORMAT2& cf, bool bUseEmo/* = true*/) {
-	ctrlClient.AdjustTextSize();
 
 	if(BOOLSETTING(LOG_MAIN_CHAT)) {
 		StringMap params;
@@ -1143,7 +1142,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 	}
 		
 	if(reinterpret_cast<HWND>(wParam) == ctrlUsers && showUsers && (ctrlUsers.GetSelectedCount() > 0)) {
-		ChatCtrl::setSelectedUser(Util::emptyStringT);
+		ctrlClient.setSelectedUser(Util::emptyStringT);
 		if ( ctrlUsers.GetSelectedCount() == 1 ) {
 			if(pt.x == -1 && pt.y == -1) {
 				WinUtil::getContextMenuPos(ctrlUsers, pt);
@@ -1909,7 +1908,7 @@ bool HubFrame::matchFilter(const OnlineUser& ui, int sel, bool doSizeCompare, Fi
 	return insert;
 }
 
-bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
+bool HubFrame::PreparePopupMenu(CWindow* /*pCtrl*/, OMenu& menu) {
 	if (copyMenu.m_hMenu != NULL) {
 		copyMenu.DestroyMenu();
 		copyMenu.m_hMenu = NULL;
@@ -1987,12 +1986,12 @@ bool HubFrame::PreparePopupMenu(CWindow *pCtrl, OMenu& menu ) {
 }
 
 LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(ChatCtrl::getSelectedUser().empty()) {
+	if(ctrlClient.getSelectedUser().empty()) {
 		// No nick selected
 		return 0;
 	}
 
-	int pos = ctrlUsers.findItem(ChatCtrl::getSelectedUser());
+	int pos = ctrlUsers.findItem(ctrlClient.getSelectedUser());
 	if ( pos == -1 ) {
 		// User not found is list
 		return 0;
@@ -2012,7 +2011,7 @@ LRESULT HubFrame::onSelectUser(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 LRESULT HubFrame::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	int i = -1;
 	while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		PrivateFrame::openWindow(ctrlUsers.getItemData(i)->getUser(), Util::emptyStringT, client);
+		PrivateFrame::openWindow(HintedUser(ctrlUsers.getItemData(i)->getUser(), client->getHubUrl()), Util::emptyStringT, client);
 	}
 
 	return 0;
@@ -2025,14 +2024,14 @@ LRESULT HubFrame::onPublicMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	if(!client->isConnected())
 		return 0;
 
-	if(ChatCtrl::getSelectedUser().empty()) {
+	if(ctrlClient.getSelectedUser().empty()) {
 		while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
 			if (!sUsers.empty())
 				sUsers += _T(", ");
 			sUsers += Text::toT(((OnlineUser*)ctrlUsers.getItemData(i))->getIdentity().getNick());
 		}
 	} else {
-		sUsers = ChatCtrl::getSelectedUser();
+		sUsers = ctrlClient.getSelectedUser();
 	}
 
 	int iSelBegin, iSelEnd;

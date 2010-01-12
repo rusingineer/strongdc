@@ -21,7 +21,6 @@
 
 #include "SettingsManager.h"
 
-#include "CriticalSection.h"
 #include "HttpConnection.h"
 #include "User.h"
 #include "UserCommand.h"

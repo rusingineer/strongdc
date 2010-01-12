@@ -20,7 +20,6 @@
 
 #include "../client/AdcCommand.h"
 #include "../client/CID.h"
-#include "../client/CriticalSection.h"
 #include "../client/MerkleTree.h"
 
 namespace dht

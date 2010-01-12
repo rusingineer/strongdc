@@ -23,7 +23,6 @@
 #include "UploadManagerListener.h"
 
 #include "Speaker.h"
-#include "CriticalSection.h"
 #include "Singleton.h"
 #include "FinishedManagerListener.h"
 #include "Util.h"
@@ -93,8 +92,8 @@ class FinishedManager : public Singleton<FinishedManager>,
 	public Speaker<FinishedManagerListener>, private QueueManagerListener, private UploadManagerListener
 {
 public:
-	const FinishedItemList& lockList(bool upload = false) { cs.enter(); return upload ? uploads : downloads; }
-	void unlockList() { cs.leave(); }
+	const FinishedItemList& lockList(bool upload = false) { cs.lock(); return upload ? uploads : downloads; }
+	void unlockList() { cs.unlock(); }
 
 	void remove(FinishedItemPtr item, bool upload = false);
 	void removeAll(bool upload = false);

@@ -27,7 +27,6 @@
 #include "../client/DCPlusPlus.h"
 #include "../client/Singleton.h"
 #include "../client/TimerManager.h"
-#include "../client/CriticalSection.h"
 
 #include "PopupDlg.h"
 #include "WinUtil.h"

@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include "CriticalSection.h"
 #include "MerkleTree.h"
 
 namespace dcpp {

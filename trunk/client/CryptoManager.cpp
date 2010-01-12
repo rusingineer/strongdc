@@ -483,12 +483,12 @@ string CryptoManager::makeKey(const string& aLock) {
 }
 
 #ifdef HEADER_OPENSSLV_H
-void CryptoManager::locking_function(int mode, int n, const char *file, int line)
+void CryptoManager::locking_function(int mode, int n, const char* /*file*/, int /*line*/)
 {
     if (mode & CRYPTO_LOCK) {
-        cs[n].enter();
+        cs[n].lock();
     } else {
-        cs[n].leave();
+        cs[n].unlock();
     }
 }
 #endif
