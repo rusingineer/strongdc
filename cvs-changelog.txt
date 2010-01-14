@@ -1,3 +1,7 @@
+** svn474
+	some theming stuff -  must be tested if it works on XP
+	[ADC] allow hubs to set IP for passive users (DC++ BZR)
+
 ** svn473
 	chat optimizations (THX Crise)
 	fixed building/running without STLPort

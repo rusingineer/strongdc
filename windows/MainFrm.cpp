@@ -208,6 +208,10 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	m_CmdBar.m_arrCommand.Add(ID_GET_TTH);	
 	m_CmdBar.m_arrCommand.Add(IDC_UPDATE);	
 
+	// use Vista-styled menus on Vista/Win7
+	if(WinUtil::getOsMajor() >= 6)
+		m_CmdBar._AddVistaBitmapsFromImageList(0, m_CmdBar.m_arrCommand.GetSize());
+
 	// remove old menu
 	SetMenu(NULL);
 

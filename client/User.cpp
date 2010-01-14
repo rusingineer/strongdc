@@ -20,6 +20,8 @@
 #include "DCPlusPlus.h"
 
 #include "User.h"
+
+#include "AdcHub.h"
 #include "Client.h"
 #include "StringTokenizer.h"
 #include "FavoriteUser.h"
@@ -35,6 +37,22 @@ namespace dcpp {
 FastCriticalSection Identity::cs;
 
 OnlineUser::OnlineUser(const UserPtr& ptr, ClientBase& client_, uint32_t sid_) : identity(ptr, sid_), client(client_), isInList(false) { 
+}
+
+bool Identity::isTcpActive(const Client* c) const {
+	if(c != NULL && user == ClientManager::getInstance()->getMe()) {
+		return c->isActive(); // userlist should display our real mode
+	} else {
+		return (!user->isSet(User::NMDC)) ?
+			!getIp().empty() && supports(AdcHub::TCP4_FEATURE) :
+			!user->isSet(User::PASSIVE);	
+	}
+}
+
+bool Identity::isUdpActive() const {
+	if(getIp().empty() || getUdpPort().empty())
+		return false;
+	return (!user->isSet(User::NMDC)) ? supports(AdcHub::UDP4_FEATURE) : !user->isSet(User::PASSIVE);
 }
 
 void Identity::getParams(StringMap& sm, const string& prefix, bool compatibility, bool dht) const {
@@ -116,14 +134,6 @@ bool Identity::supports(const string& name) const {
 	return false;
 }
 
-bool Identity::isTcpActive(const Client* c) const {
-	if(c != NULL && user == ClientManager::getInstance()->getMe()) {
-		return c->isActive();
-	} else {
-		return user->isSet(User::NMDC) ? !user->isSet(User::PASSIVE) : !getIp().empty();
-	}
-}
-
 void FavoriteUser::update(const OnlineUser& info) { 
 	setNick(info.getIdentity().getNick()); 
 	setUrl(info.getClient().getHubUrl()); 
@@ -148,6 +158,16 @@ string Identity::setCheat(const ClientBase& c, const string& aCheatDescription, 
 
 string Identity::getReport() const {
 	string report = "\r\nClient:		" + get("CL");
+	report += "\r\nDescription:	" + getDescription();
+	report += "\r\nEmail:		" + getEmail();
+	report += "\r\nConnection:	" + getConnection();
+	report += "\r\nUser CID:		" +	getUser()->getCID().toBase32();
+	if(!getUser()->isSet(User::NMDC) && getUser() != ClientManager::getInstance()->getMe()) {
+		report += "\r\nUser SID:		" +			getSIDString() + " (" + get("SI") + ")";
+	}
+	report += "\r\nIP:		" + getIp();
+	report += "\r\nHost:		" + Socket::getRemoteHost(getIp());
+
 	report += "\r\nXML Generator:	" + (get("GE").empty() ? "N/A" : get("GE"));
 	report += "\r\nLock:		" + get("LO");
 	report += "\r\nPk:		" + get("PK");
@@ -157,11 +177,6 @@ string Identity::getReport() const {
 	report += "\r\nTestSUR:		" + get("TS");
 	report += "\r\nDisconnects:	" + get("FD");
 	report += "\r\nTimeouts:		" + get("TO");
-	report += "\r\nIP:		" + getIp();
-	report += "\r\nHost:		" + Socket::getRemoteHost(getIp());
-	report += "\r\nDescription:	" + getDescription();
-	report += "\r\nEmail:		" + getEmail();
-	report += "\r\nConnection:	" + getConnection();
 	report += "\r\nCommands:	" + get("UC");
 
 	int64_t listSize = Util::toInt64(get("LS"));

@@ -430,6 +430,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			ItemInfo* ii = (ItemInfo*)cd->nmcd.lItemlParam;
 			CRect rc;
 			ctrlTransfers.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
+			/* should this be enabled for XP?
 			COLORREF color;
 			if(ctrlTransfers.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
 				if(ctrlTransfers.m_hWnd == ::GetFocus()) {
@@ -439,7 +440,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				} else {
 					color = GetBkColor(cd->nmcd.hdc);
 					SetBkColor(cd->nmcd.hdc, color);
-				}				
+				}*			
 			} else {
 				color = WinUtil::bgColor;
 				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
@@ -450,7 +451,10 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 			Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
 
 			DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
-			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+			DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));*/
+
+			SetTextColor(cd->nmcd.hdc, WinUtil::textColor);
+			DrawThemeBackground(GetWindowTheme(ctrlTransfers.m_hWnd), cd->nmcd.hdc, LVP_LISTITEM, 3, &rc, &rc );
 
 			TCHAR buf[256];
 			ctrlTransfers.GetItemText((int)cd->nmcd.dwItemSpec, cd->iSubItem, buf, 255);

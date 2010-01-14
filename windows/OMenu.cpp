@@ -116,23 +116,21 @@ BOOL OMenu::InsertMenuItem(UINT uItem, BOOL bByPosition, LPMENUITEMINFO lpmii) {
 LRESULT OMenu::onInitMenuPopup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	HMENU mnu = (HMENU)wParam;
 	bHandled = TRUE; // Always true, since we do the following manually:
-	/*LRESULT ret = */::DefWindowProc(hWnd, uMsg, wParam, lParam);
-//	if (fixedMenus.find(mnu) == fixedMenus.end()) {
-		for (int i = 0; i < ::GetMenuItemCount(mnu); ++i) {
-			MENUITEMINFO mii = {0};
-			mii.cbSize = sizeof(MENUITEMINFO);
-			mii.fMask = MIIM_TYPE | MIIM_DATA;
-			::GetMenuItemInfo(mnu, i, TRUE, &mii);
-			if ((mii.fType &= MFT_OWNERDRAW) != MFT_OWNERDRAW && mii.dwItemData != NULL) {
-				OMenuItem* omi = (OMenuItem*)mii.dwItemData;
-				if (omi->ownerdrawn) {
-					mii.fType |= MFT_OWNERDRAW;
-					::SetMenuItemInfo(mnu, i, TRUE, &mii);
-				}
+	::DefWindowProc(hWnd, uMsg, wParam, lParam);
+	for (int i = 0; i < ::GetMenuItemCount(mnu); ++i) {
+		MENUITEMINFO mii = {0};
+		mii.cbSize = sizeof(MENUITEMINFO);
+		mii.fMask = MIIM_TYPE | MIIM_DATA;
+		::GetMenuItemInfo(mnu, i, TRUE, &mii);
+		if ((mii.fType &= MFT_OWNERDRAW) != MFT_OWNERDRAW && mii.dwItemData != NULL) {
+			OMenuItem* omi = (OMenuItem*)mii.dwItemData;
+			if (omi->ownerdrawn) {
+				mii.fType |= MFT_OWNERDRAW;
+				::SetMenuItemInfo(mnu, i, TRUE, &mii);
 			}
 		}
-//		fixedMenus[mnu] = true;
-//	}
+	}
+
 	return S_OK;
 }
 
@@ -158,7 +156,7 @@ LRESULT OMenu::onMeasureItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM
 	return S_OK;
 }
 
-LRESULT OMenu::onDrawItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT OMenu::onDrawItem(HWND hWnd, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	bHandled = FALSE;
 	if (wParam == NULL) {
 		DRAWITEMSTRUCT dis = *(DRAWITEMSTRUCT*)lParam;
@@ -186,10 +184,11 @@ LRESULT OMenu::onDrawItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM lP
 				dc.SelectFont(oldFont);
 
 				dc.Detach();
-				return TRUE;
+				return S_OK;
 			}
 		}
 	}
+
 	return S_OK;
 }
 
