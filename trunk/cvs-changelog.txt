@@ -1,3 +1,6 @@
+** svn475
+	I hate Visual Studio which changes path names by itself!!!!
+
 ** svn474
 	some theming stuff -  must be tested if it works on XP
 	[ADC] allow hubs to set IP for passive users (DC++ BZR)
