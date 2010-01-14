@@ -880,7 +880,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDB_FOLDERS             BITMAP                  "res\\folders.bmp"
 IDB_ARROWS              BITMAP                  "res\\arrows.bmp"
 IDB_USERS               BITMAP                  "res\\users.bmp"
-IDB_TOOLBAR             BITMAP                  "res\\toolbar.bmp"
+IDB_TOOLBAR             BITMAP                  "D:\\Projekty\\StrongDC++\\trunk\\res\\toolbar.bmp"
 IDB_TOOLBAR20           BITMAP                  "res\\toolbar20.bmp"
 IDB_TOOLBAR20_HOT       BITMAP                  "res\\toolbar20-highlight.bmp"
 IDB_O_SETTINGS_DLG      BITMAP                  "res\\o_settings_dlg.bmp"

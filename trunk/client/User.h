@@ -31,7 +31,7 @@ namespace dcpp {
 class ClientBase;
 
 /** A user connected to one or more hubs. */
-class User : public FastAlloc<User>, public intrusive_ptr_base<User>, public Flags
+class User : public FastAlloc<User>, public intrusive_ptr_base<User>, public Flags, private boost::noncopyable
 {
 public:
 	/** Each flag is set if it's true in at least one hub */
@@ -64,9 +64,6 @@ public:
 	bool isNMDC() const { return isSet(NMDC); }
 
 private:
-	User(const User&);
-	User& operator=(const User&);
-
 	CID cid;
 };
 
@@ -141,7 +138,7 @@ public:
 	bool isBot() const { return isClientType(CT_BOT) || isSet("BO"); }
 	bool isAway() const { return (getStatus() & AWAY) || isSet("AW"); }
 	bool isTcpActive(const Client* = NULL) const;
-	bool isUdpActive() const { return !getIp().empty() && !getUdpPort().empty(); }
+	bool isUdpActive() const;
 	string get(const char* name) const;
 	void set(const char* name, const string& val);
 	bool isSet(const char* name) const;	

@@ -162,6 +162,7 @@ public:
 		rebuildArrows();
 		T* pThis = (T*)this;
 		_Module.AddSettingChangeNotify(pThis->m_hWnd);
+		SetWindowTheme(pThis->m_hWnd, L"explorer", NULL);
 		bHandled = FALSE;
 		return 0;
 	}
