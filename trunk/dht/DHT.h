@@ -43,7 +43,7 @@ namespace dht
 		
 		/** Socket functions */
 		void listen();
-		void disconnect() { socket.disconnect(); }
+		void disconnect() { socket.disconnect(); lastPacket = 0; }
 		uint16_t getPort() const { return BOOLSETTING(USE_DHT) ? socket.getPort() : 0; }
 		
 		void create();

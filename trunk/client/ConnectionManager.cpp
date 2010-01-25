@@ -151,13 +151,13 @@ void ConnectionManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 					continue;
 				} 
 				
-				if(	cqi->getUser().user->isSet(User::PASSIVE) &&
+				/*if(	cqi->getUser().user->isSet(User::PASSIVE) &&
 					!ClientManager::getInstance()->isActive(cqi->getUser().hint)) 
 				{
 					passiveUsers.push_back(cqi->getUser());
 					removed.push_back(cqi);
 					continue;
-				}
+				}*/
 
 				if(cqi->getLastAttempt() == 0 || (((cqi->getLastAttempt() + 60*1000) < aTick) && ((SETTING(DOWNCONN_PER_SEC) == 0) || (attempts < SETTING(DOWNCONN_PER_SEC))))) {
 					cqi->setLastAttempt(aTick);
@@ -220,7 +220,6 @@ static const uint32_t FLOOD_ADD = 2000;
 ConnectionManager::Server::Server(bool secure_, uint16_t aPort, const string& ip_ /* = "0.0.0.0" */) : port(0), secure(secure_), die(false) {
 	sock.create();
 	ip = ip_;
-	sock.setSocketOpt(SO_REUSEADDR, 1);
 	port = sock.bind(aPort, ip);
 	sock.listen();
 
@@ -340,6 +339,10 @@ bool ConnectionManager::checkIpFlood(const string& aServer, uint16_t aPort, cons
 } 
 	
 void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const string& aNick, const string& hubUrl, string* encoding, bool stealth, bool secure) {
+	nmdcConnect(aServer, aPort, 0, BufferedSocket::NAT_NONE, aNick, hubUrl, encoding, stealth, secure);
+}
+
+void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, uint16_t localPort, BufferedSocket::NatRoles natRole, const string& aNick, const string& hubUrl, string* encoding, bool stealth, bool secure) {
 	if(shuttingDown)
 		return;
 		
@@ -356,7 +359,7 @@ void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const
 		uc->setFlag(UserConnection::FLAG_STEALTH);
 	}
 	try {
-		uc->connect(aServer, aPort);
+		uc->connect(aServer, aPort, localPort, natRole);
 	} catch(const Exception&) {
 		putConnection(uc);
 		delete uc;
@@ -364,6 +367,10 @@ void ConnectionManager::nmdcConnect(const string& aServer, uint16_t aPort, const
 }
 
 void ConnectionManager::adcConnect(const OnlineUser& aUser, uint16_t aPort, const string& aToken, bool secure) {
+	adcConnect(aUser, aPort, 0, BufferedSocket::NAT_NONE, aToken, secure);
+}
+
+void ConnectionManager::adcConnect(const OnlineUser& aUser, uint16_t aPort, uint16_t localPort, BufferedSocket::NatRoles natRole, const string& aToken, bool secure) {
 	if(shuttingDown)
 		return;
 
@@ -379,7 +386,7 @@ void ConnectionManager::adcConnect(const OnlineUser& aUser, uint16_t aPort, cons
 		uc->setFlag(UserConnection::FLAG_OP);
 	}
 	try {
-		uc->connect(aUser.getIdentity().getIp(), aPort);
+		uc->connect(aUser.getIdentity().getIp(), aPort, localPort, natRole);
 	} catch(const Exception&) {
 		putConnection(uc);
 		delete uc;

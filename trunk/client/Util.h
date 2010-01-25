@@ -114,6 +114,8 @@ public:
 		PATH_USER_LOCAL,
 		/** Various resources (help files etc) */
 		PATH_RESOURCES,
+		/** Translations */
+		PATH_LOCALE,
 		/** Default download location */
 		PATH_DOWNLOADS,
 		/** Default file list location */

@@ -277,6 +277,7 @@
 		<String Name="Joins">Joins:</String>
 		<String Name="Kb">KiB</String>
 		<String Name="Kbps">KiB/s</String>
+		<String Name="KeepFinishedFiles">Keep finished files in the queue</String>
 		<String Name="KickUser">Kick user(s)</String>
 		<String Name="KickUserFile">Kick user(s) with filename</String>
 		<String Name="LastHub">Hub (last seen on if offline)</String>
@@ -308,6 +309,7 @@
 		<String Name="MagnetHandlerDesc">Download files from the Direct Connect network</String>
 		<String Name="MagnetHandlerRoot">StrongDC++</String>
 		<String Name="MagnetShellDesc">URL:MAGNET URI</String>
+		<String Name="ManageGroups">Manage Groups</String>
 		<String Name="MatchQueue">Match queue</String>
 		<String Name="MatchedFiles">Matched %d file(s)</String>
 		<String Name="MaxHubs">Max Hubs</String>
@@ -794,6 +796,7 @@
 		<String Name="SpecifySearchString">Specify a search string</String>
 		<String Name="SpecifyServer">Specify a server to connect to</String>
 		<String Name="Speed">Speed</String>
+		<String Name="SslError">SSL Error</String>
 		<String Name="Started">Started</String>
 		<String Name="Status">Status</String>
 		<String Name="StealthMode">Emulate DC++ in this hub</String>

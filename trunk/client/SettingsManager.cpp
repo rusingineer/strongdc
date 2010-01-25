@@ -127,7 +127,7 @@ const string SettingsManager::settingTags[] =
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
-	"UcSubMenu", "AutoSlots", "Coral", "UseDHT", "DHTPort", "UpdateIP", "DHTKey",
+	"UcSubMenu", "AutoSlots", "Coral", "UseDHT", "DHTPort", "UpdateIP", "DHTKey", "KeepFinishedFiles",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -446,6 +446,7 @@ SettingsManager::SettingsManager()
 	setDefault(DISCONNECT_FILESIZE, 50);
     setDefault(REMOVE_SPEED, 2);
 	setDefault(OVERLAP_CHUNKS, true);
+	setDefault(KEEP_FINISHED_FILES, false);
 
 	setDefault(MAIN_WINDOW_STATE, SW_SHOWNORMAL);
 	setDefault(MAIN_WINDOW_SIZE_X, CW_USEDEFAULT);

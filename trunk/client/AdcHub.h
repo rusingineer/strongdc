@@ -90,6 +90,7 @@ private:
 	static const string ADCS_FEATURE;
 	static const string TCP4_FEATURE;
 	static const string UDP4_FEATURE;
+	static const string NAT0_FEATURE;
 	static const string BASE_SUPPORT;
 	static const string BAS0_SUPPORT;
 	static const string TIGR_SUPPORT;
@@ -131,11 +132,15 @@ private:
 	void handle(AdcCommand::CMD, AdcCommand& c) throw();
 	void handle(AdcCommand::RES, AdcCommand& c) throw();
 	void handle(AdcCommand::GET, AdcCommand& c) throw();
+	void handle(AdcCommand::NAT, AdcCommand& c) throw();
+	void handle(AdcCommand::RNT, AdcCommand& c) throw();
 	void handle(AdcCommand::PSR, AdcCommand& c) throw();
 
 	template<typename T> void handle(T, AdcCommand&) { }
 
 	void sendUDP(const AdcCommand& cmd) throw();
+	void unknownProtocol(uint32_t target, const string& protocol, const string& token);
+	bool secureAvail(uint32_t target, const string& protocol, const string& token);
 
 	void on(Connecting) throw() { fire(ClientListener::Connecting(), this); }
 	void on(Connected) throw();

@@ -230,8 +230,8 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 
 	ctrlStatus.Attach(m_hWndStatusBar);
 	ctrlStatus.SetSimple(FALSE);
-	int w[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	ctrlStatus.SetParts(10, w);
+	int w[11] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	ctrlStatus.SetParts(11, w);
 	statusSizes[0] = WinUtil::getTextWidth(TSTRING(AWAY), ctrlStatus.m_hWnd); // for "AWAY" segment
 
 	CToolInfo ti(TTF_SUBCLASS, ctrlStatus.m_hWnd);
@@ -469,7 +469,7 @@ void MainFrame::startSocket() {
 	ConnectionManager::getInstance()->disconnect();
 	DHT::getInstance()->disconnect();
 
-//	if(ClientManager::getInstance()->isActive()) {
+	//if(ClientManager::getInstance()->isActive()) {
 		try {
 			ConnectionManager::getInstance()->listen();
 		} catch(const Exception&) {
@@ -486,7 +486,7 @@ void MainFrame::startSocket() {
 		} catch(const Exception&) {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}
-//	}
+	//}
 
 	startUPnP();
 }
@@ -629,7 +629,7 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 		if(ctrlStatus.IsWindow()) {
 			bool u = false;
 			ctrlStatus.SetText(1, str[0].c_str());
-			for(int i = 1; i < 8; i++) {
+			for(int i = 1; i < 9; i++) {
 				int w = WinUtil::getTextWidth(str[i], ctrlStatus.m_hWnd);
 				
 				if(statusSizes[i] < w) {
@@ -645,15 +645,15 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 			if (bShutdown) {
 				uint64_t iSec = GET_TICK() / 1000;
 				if(!isShutdownStatus) {
-					ctrlStatus.SetIcon(9, hShutdownIcon);
+					ctrlStatus.SetIcon(10, hShutdownIcon);
 					isShutdownStatus = true;
 				}
 				if (DownloadManager::getInstance()->getDownloadCount() > 0) {
 					iCurrentShutdownTime = iSec;
-					ctrlStatus.SetText(9, _T(""));
+					ctrlStatus.SetText(10, _T(""));
 				} else {
 					int64_t timeLeft = SETTING(SHUTDOWN_TIMEOUT) - (iSec - iCurrentShutdownTime);
-					ctrlStatus.SetText(9, (_T(" ") + Util::formatSeconds(timeLeft, timeLeft < 3600)).c_str(), SBT_POPOUT);
+					ctrlStatus.SetText(10, (_T(" ") + Util::formatSeconds(timeLeft, timeLeft < 3600)).c_str(), SBT_POPOUT);
 					if (iCurrentShutdownTime + SETTING(SHUTDOWN_TIMEOUT) <= iSec) {
 						bool bDidShutDown = false;
 						bDidShutDown = WinUtil::shutDown(SETTING(SHUTDOWN_ACTION));
@@ -661,8 +661,8 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 							// Should we go faster here and force termination?
 							// We "could" do a manual shutdown of this app...
 						} else {
-							ctrlStatus.SetText(0, CTSTRING(FAILED_TO_SHUTDOWN));
-							ctrlStatus.SetText(9, _T(""));
+							LogManager::getInstance()->message(STRING(FAILED_TO_SHUTDOWN));
+							ctrlStatus.SetText(10, _T(""));
 						}
 						// We better not try again. It WON'T work...
 						bShutdown = false;
@@ -670,10 +670,10 @@ LRESULT MainFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& 
 				}
 			} else {
 				if(isShutdownStatus) {
-					ctrlStatus.SetIcon(9, NULL);
+					ctrlStatus.SetIcon(10, NULL);
 					isShutdownStatus = false;
 				}
-				ctrlStatus.SetText(9, _T(""));
+				ctrlStatus.SetText(10, _T(""));
 			}
 		}
 	} else if(wParam == AUTO_CONNECT) {
@@ -1215,14 +1215,14 @@ void MainFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	
 	if(ctrlStatus.IsWindow() && ctrlLastLines.IsWindow()) {
 		CRect sr;
-		int w[10];
+		int w[11];
 		ctrlStatus.GetClientRect(sr);
-		w[9] = sr.right - 20;
-		w[8] = w[9] - 60;
+		w[10] = sr.right - 20;
+		w[9] = w[10] - 60;
 #define setw(x) w[x] = max(w[x+1] - statusSizes[x], 0)
-		setw(7); setw(6); setw(5); setw(4); setw(3); setw(2); setw(1); setw(0);
+		setw(8); setw(7); setw(6); setw(5); setw(4); setw(3); setw(2); setw(1); setw(0);
 
-		ctrlStatus.SetParts(10, w);
+		ctrlStatus.SetParts(11, w);
 		ctrlLastLines.SetMaxTipWidth(w[0]);
 	}
 	CRect rc = rect;
@@ -1412,6 +1412,9 @@ void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 
 	TStringList* str = new TStringList();
 	str->push_back(Util::getAway() ? TSTRING(AWAY) : _T(""));
+	
+	dht::DHT* dhtManager = DHT::getInstance();
+	str->push_back(_T("DHT: ") + (dhtManager->isConnected() ? Util::toStringW(dhtManager->getNodesCount()) : _T("-")));
 	str->push_back(TSTRING(SHARED) + _T(": ") + Util::formatBytesW(ShareManager::getInstance()->getSharedSize()));
 	str->push_back(_T("H: ") + Text::toT(Client::getCounts()));
 	str->push_back(TSTRING(SLOTS) + _T(": ") + Util::toStringW(UploadManager::getInstance()->getFreeSlots()) + _T('/') + Util::toStringW(UploadManager::getInstance()->getSlots()) + _T(" (") + Util::toStringW(UploadManager::getInstance()->getFreeExtraSlots()) + _T('/') + Util::toStringW(SETTING(EXTRA_SLOTS)) + _T(")"));

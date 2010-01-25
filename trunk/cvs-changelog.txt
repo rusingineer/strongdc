@@ -1,3 +1,13 @@
+** svn476
+	language file name now accepts path relative to strongdc.exe directory
+	fixed some crashes with partial file sharing
+	initial work on NAT traversal => passive-passive connections (cologic, BCDC++)
+	first try on better SSL error messages
+	added DHT info into main window's statusbar
+	fixed loading hubhint from queue.xml
+	favgroups fixes
+	added option to keep finished files in queue (DC++ BZR)
+
 ** svn475
 	I hate Visual Studio which changes path names by itself!!!!
 

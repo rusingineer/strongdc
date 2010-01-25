@@ -65,7 +65,8 @@ bool SSLSocket::waitConnected(uint64_t millis) {
 	}
 
 	while(true) {
-		int ret = SSL_connect(ssl);
+		// OpenSSL needs server handshake for NAT traversal
+		int ret = ssl->server ? SSL_accept(ssl) : SSL_connect(ssl);
 		if(ret == 1) {
 			dcdebug("Connected to SSL server using %s\n", SSL_get_cipher(ssl));
 #ifndef HEADER_OPENSSLV_H			
@@ -184,15 +185,19 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 					return -1;
 #endif				
 				throw SocketException(STRING(CONNECTION_CLOSED));
-			case SSL_ERROR_SYSCALL:
-				if(ret == 0)
-					throw SocketException(STRING(CONNECTION_CLOSED));
 			default:
 				{
 					ssl.reset();
-					// @todo replace 80 with MAX_ERROR_SZ or whatever's appropriate for yaSSL in some nice way...
-					char errbuf[80];
-					throw SocketException(string("SSL Error: ") + ERR_error_string(err, errbuf) + " (" + Util::toString(ret) + ", " + Util::toString(err) + ")"); // @todo Translate
+
+					char buf[80];
+					int error = ERR_get_error();
+					/* TODO: better message for SSL_ERROR_SYSCALL
+					 * If the error queue is empty (i.e. ERR_get_error() returns 0), ret can be used to find out more about the error: 
+					 * If ret == 0, an EOF was observed that violates the protocol. If ret == -1, the underlying BIO reported an I/O error 
+					 * (for socket I/O on Unix systems, consult errno for details).
+					 */
+					sprintf(buf, "%s %d: %s\n", CSTRING(SSL_ERROR), err, (error == 0) ? CSTRING(CONNECTION_CLOSED) : ERR_reason_error_string(error));
+					throw SocketException(buf);
 				}
 		}
 	}

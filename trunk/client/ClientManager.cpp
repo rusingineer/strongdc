@@ -343,7 +343,7 @@ OnlineUser* ClientManager::findOnlineUser_hint(const CID& cid, const string& hin
 	if(!p.first->second->getUser()->isSet(User::DHT) && !hintUrl.empty()) {
 		for(OnlineIterC i = p.first; i != p.second; ++i) {
 			OnlineUser* u = i->second;
-			if(u->getClient().getAddress() == hintUrl) {
+			if(u->getClient().getHubUrl() == hintUrl) {
 				return u;
 			}
 		}
@@ -397,6 +397,8 @@ void ClientManager::send(AdcCommand& cmd, const CID& cid) {
 	if(i != onlineUsers.end()) {
 		OnlineUser& u = *i->second;
 		if(cmd.getType() == AdcCommand::TYPE_UDP && !u.getIdentity().isUdpActive()) {
+			if(u.getUser()->isNMDC() || u.getClientBase().getType() == Client::DHT)
+				return;
 			cmd.setType(AdcCommand::TYPE_DIRECT);
 			cmd.setTo(u.getIdentity().getSID());
 			u.getClient().send(cmd);

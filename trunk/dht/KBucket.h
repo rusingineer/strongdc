@@ -21,6 +21,7 @@
 #include "Constants.h"
 
 #include "../client/CID.h"
+#include "../client/Client.h"
 #include "../client/MerkleTree.h"
 #include "../client/Pointer.h"
 #include "../client/SimpleXML.h"
@@ -29,6 +30,19 @@
 
 namespace dht
 {
+
+	const string DHTName = "DHT";
+	
+	struct DHTClient : public ClientBase
+	{
+		DHTClient() { type = DHT; }
+		
+		const string& getHubUrl() const { return DHTName; }
+		string getHubName() const { return DHTName; }
+		bool isOp() const { return false; }
+		void connect(const OnlineUser& user, const string& token);
+		void privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson = false);
+	};
 
 	struct Node :
 		public OnlineUser

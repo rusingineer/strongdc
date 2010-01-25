@@ -41,7 +41,7 @@ namespace dht
 
 	UDPSocket::UDPSocket(void) : stop(false), port(0), delay(100)
 #ifdef _DEBUG
-		, sentBytes(0), receivedBytes(0)
+		, sentBytes(0), receivedBytes(0), sentPackets(0), receivedPackets(0)
 #endif	
 	{
 	}
@@ -106,6 +106,7 @@ namespace dht
 			boost::scoped_array<uint8_t> buf(new uint8_t[BUFSIZE]);	
 			int len = socket->read(&buf[0], BUFSIZE, remoteAddr);
 			dcdrun(receivedBytes += len);
+			dcdrun(receivedPackets++);
 			
 			if(len > 1)
 			{
@@ -185,7 +186,7 @@ namespace dht
 					DHT::getInstance()->dispatch(s.substr(0, s.length() - 1), ip, port, isUdpKeyValid);
 				}
 				
-				Thread::sleep(20);
+				Thread::sleep(25);
 			}				
 		}	
 	}
@@ -218,6 +219,7 @@ namespace dht
 			try
 			{
 				dcdrun(sentBytes += packet->length);
+				dcdrun(sentPackets++);
 				socket->writeTo(packet->ip, packet->port, packet->data, packet->length);
 			}
 			catch(SocketException& e)

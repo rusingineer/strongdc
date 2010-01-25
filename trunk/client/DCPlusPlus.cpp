@@ -40,6 +40,7 @@
 #include "DetectionManager.h"
 #include "WebServerManager.h"
 #include "ThrottleManager.h"
+#include "File.h"
 
 #include "../dht/dht.h"
 #include "../windows/PopupManager.h"
@@ -93,7 +94,10 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	SettingsManager::getInstance()->load();	
 
 	if(!SETTING(LANGUAGE_FILE).empty()) {
-		ResourceManager::getInstance()->loadLanguage(SETTING(LANGUAGE_FILE));
+		string languageFile = SETTING(LANGUAGE_FILE);
+		if(!File::isAbsolute(languageFile))
+			languageFile = Util::getPath(Util::PATH_LOCALE) + languageFile;
+		ResourceManager::getInstance()->loadLanguage(languageFile);
 	}
 
 	FavoriteManager::getInstance()->load();

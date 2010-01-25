@@ -107,7 +107,6 @@ void EmoticonSetup::Load() {
 		return;
 	}
 
-	
 	try {
 		SimpleXML xml;
 		xml.fromXML(File(Util::getPath(Util::PATH_EMOPACKS) + SETTING(EMOTICONS_FILE) + ".xml", File::READ, File::OPEN).read());

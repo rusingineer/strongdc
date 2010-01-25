@@ -163,6 +163,7 @@ public:
 #endif
 
 	string getLocalIp() const throw();
+	uint16_t getLocalPort() throw();
 
 	// Low level interface
 	virtual void create(uint8_t aType = TYPE_TCP) throw(SocketException);
