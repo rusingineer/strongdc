@@ -23,26 +23,23 @@
 #include "KBucket.h"
 #include "Utils.h"
 
-#include "../client/Client.h"
 #include "../client/ClientManager.h"
 
 namespace dht
 {
-	const string DHTName = "DHT";
-	
-	struct DHTClient : public ClientBase
-	{
-		DHTClient() { type = DHT; }
-		
-		const string& getHubUrl() const { return DHTName; }
-		string getHubName() const { return DHTName; }
-		bool isOp() const { return false; }
-		void connect(const OnlineUser& user, const string& token) { DHT::getInstance()->connect(user, token); }
-		void privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson = false) { DHT::getInstance()->privateMessage(*user.get(), aMessage, thirdPerson); }
-	};
-	
+
 	static DHTClient client;
 	
+	void DHTClient::connect(const OnlineUser& user, const string& token) 
+	{ 
+		DHT::getInstance()->connect(user, token); 
+	}
+
+	void DHTClient::privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson) 
+	{ 
+		DHT::getInstance()->privateMessage(*user.get(), aMessage, thirdPerson); 
+	}
+
 	// Set all new nodes' type to 3 to avoid spreading dead nodes..
 	Node::Node(const UserPtr& u) : 
 		OnlineUser(u, dht::client, 0), created(GET_TICK()), type(3), expires(0), ipVerified(false)
@@ -124,6 +121,8 @@ namespace dht
 						{
 							node->setIpVerified(false);
 							
+							 // TODO: don't allow update when new IP already exists for different node
+
 							// erase old IP and remember new one
 							ipMap.erase(oldIp + ":" + oldPort);
 							ipMap.insert(ip + ":" + Util::toString(port));
@@ -159,37 +158,28 @@ namespace dht
 		// is there already such contact with this IP?
 		bool ipExists = ipMap.find(ip + ":" + Util::toString(port)) != ipMap.end();
 		
-#ifdef _DEBUG
 		if(!ipExists)
-#else
-		if(!ipExists && nodes.size() < (K * ID_BITS))
-#endif
 		{
-			// bucket still has room to store new node
-			nodes.push_back(node);
-			ipMap.insert(ip + ":" + Util::toString(port));
-				
-			if(DHT::getInstance())
-				DHT::getInstance()->setDirty();
-		}
-		else
-		{
-#ifdef _DEBUG
-			CID oldCID;
-			for(NodeList::iterator it = nodes.begin(); it != nodes.end(); ++it)
+			if(nodes.size() < (K * ID_BITS))
 			{
-				if(	(*it)->getIdentity().getIp() == ip &&
-					(*it)->getIdentity().getUdpPort() == Util::toString(port))
-				{
-					oldCID = (*it)->getUser()->getCID();
-					break;
-				}
+				// bucket still has room to store new node
+				nodes.push_back(node);
+				ipMap.insert(ip + ":" + Util::toString(port));
+					
+				if(DHT::getInstance())
+					DHT::getInstance()->setDirty();
 			}
+			else if(isUdpKeyValid)
+			{
+				// this node was verified in the past, so insert him
+				// TODO: should we remove the oldest unverified node?
+				nodes.push_back(node);
+				ipMap.insert(ip + ":" + Util::toString(port));
 
-			dcassert(!oldCID.isZero());
-			// when user isn't added to routing table, this line will be processed with every packet got from that user (that' why debugger window can be spammed with a lot of messages)
-			dcdebug("DHT node NOT added to our routing table - IP %s exists: %d, old CID: %s, new CID: %s\n", ip.c_str(), (int)ipExists, oldCID.toBase32().c_str(), u->getCID().toBase32().c_str());
-#endif
+				if(DHT::getInstance())
+					DHT::getInstance()->setDirty();
+
+			}
 		}
 		
 		return node;
@@ -245,7 +235,7 @@ namespace dht
 				if(node->unique(2))
 				{
 					// node is dead, remove it
-					if(node->isInList)
+					if(node->getUser()->isOnline())
 						ClientManager::getInstance()->putOffline((*i).get());
 					
 					string ip	= node->getIdentity().getIp();

@@ -440,7 +440,7 @@ LRESULT TransferView::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
 				} else {
 					color = GetBkColor(cd->nmcd.hdc);
 					SetBkColor(cd->nmcd.hdc, color);
-				}*			
+				}		
 			} else {
 				color = WinUtil::bgColor;
 				SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);

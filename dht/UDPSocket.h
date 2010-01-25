@@ -94,15 +94,15 @@ namespace dht
 		uint64_t delay;
 
 		/** Locks access to sending queue */
-		// TODO: 
-		// Use Fast critical section, because we don't need locking so often.
-		// Almost all shared access is done within one thread.
 		CriticalSection cs;
 	
 #ifdef _DEBUG
 		// debug constants to optimize bandwidth
 		size_t sentBytes;
 		size_t receivedBytes;
+
+		size_t sentPackets;
+		size_t receivedPackets;
 #endif
 	
 		/** Thread for receiving UDP packets */

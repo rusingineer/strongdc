@@ -344,7 +344,7 @@ namespace dht
 					}
 					else
 					{
-						SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, Util::emptyString, "DHT", Util::emptyString, i4, TTHValue(s->term), token));
+						SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, Util::emptyString, DHTName, DHTName, i4, TTHValue(s->term), token));
 						if(!u->isOnline())	// TODO: only node type < 3
 						{
 							// node is not online, try to contact him if we didn't contact him recently

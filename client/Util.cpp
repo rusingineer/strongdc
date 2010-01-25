@@ -234,6 +234,7 @@ void Util::initialize() {
 	}
 
 	paths[PATH_RESOURCES] = exePath;
+	paths[PATH_LOCALE] = exePath;
 	paths[PATH_DOWNLOADS] = getDownloadsPath(paths[PATH_USER_CONFIG]);
 
 #else
@@ -258,6 +259,7 @@ void Util::initialize() {
 	paths[PATH_USER_LOCAL] = paths[PATH_USER_CONFIG];
 
 	// @todo paths[PATH_RESOURCES] = <replace from sconscript?>;
+	// @todo paths[PATH_LOCALE] = <replace from sconscript?>;
 
 	paths[PATH_DOWNLOADS] = home + "/Downloads/";
 #endif

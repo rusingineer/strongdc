@@ -29,6 +29,7 @@
 
 #ifdef HEADER_OPENSSLV_H
 # include <openssl/bn.h>
+# include <openssl/err.h>
 # ifdef _DEBUG
 #  pragma comment(lib, "libeay32d.lib")
 #  pragma comment(lib, "ssleay32d.lib")
@@ -70,7 +71,7 @@ CryptoManager::CryptoManager()
 	certsLoaded(false), 
 	lock("EXTENDEDPROTOCOLABCABCABCABCABCABC"), 
 	pk("DCPLUSPLUS" DCVERSIONSTRING)
-{
+{/*
 #ifdef HEADER_OPENSSLV_H
 	cs = new CriticalSection[CRYPTO_num_locks()];
 	CRYPTO_set_locking_callback(locking_function);
@@ -79,9 +80,10 @@ CryptoManager::CryptoManager()
 	LPFUNC _d_gcry_control = (LPFUNC)GetProcAddress(LoadLibrary(_T("libgcrypt-11")), "gcry_control");
 	_d_gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_other);
 #endif
-	
+*/	
 	SSL_library_init();
-	
+	SSL_load_error_strings();
+
 	clientContext.reset(SSL_CTX_new(TLSv1_client_method()));
 	clientVerContext.reset(SSL_CTX_new(TLSv1_client_method()));
 	serverContext.reset(SSL_CTX_new(TLSv1_server_method()));
@@ -168,6 +170,8 @@ CryptoManager::CryptoManager()
 }
 
 CryptoManager::~CryptoManager() {
+	ERR_free_strings();
+
 #ifdef HEADER_OPENSSLV_H
 	CRYPTO_set_locking_callback(NULL);
 	delete[] cs;

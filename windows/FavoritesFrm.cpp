@@ -87,7 +87,7 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 
 	ctrlManageGroups.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		BS_PUSHBUTTON , 0, IDC_MANAGE_GROUPS);
-	ctrlManageGroups.SetWindowText(_T("Manage Groups"));
+	ctrlManageGroups.SetWindowText(CTSTRING(MANAGE_GROUPS));
 	ctrlManageGroups.SetFont(WinUtil::font);
 
 	FavoriteManager::getInstance()->addListener(this);
@@ -257,7 +257,6 @@ LRESULT FavoriteHubsFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		FavHubProperties dlg(e);
 		if(dlg.DoModal(m_hWnd) == IDOK)
 		{
-			ctrlHubs.DeleteAllItems(); 
 			fillList();
 		}
 	}
@@ -337,10 +336,7 @@ void FavoriteHubsFrame::handleMove(bool up)
 	fh = fh_copy;
 	FavoriteManager::getInstance()->save();
 
-	ctrlHubs.DeleteAllItems();
 	fillList();
-
-	ctrlHubs.SetRedraw(TRUE);
 
 	int count = ctrlHubs.GetItemCount() - 2;
 	for(FavoriteHubEntryList::const_iterator i = selected.begin(), iend = selected.end(); i != iend; ++i) {
@@ -352,6 +348,8 @@ void FavoriteHubsFrame::handleMove(bool up)
 			}
 		}
 	}
+
+	ctrlHubs.SetRedraw(TRUE);
 }
 
 LRESULT FavoriteHubsFrame::onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -421,7 +419,8 @@ void FavoriteHubsFrame::UpdateLayout(BOOL bResizeBars /* = TRUE */)
 	rc.OffsetRect(bspace + bwidth +2, 0);
 	ctrlConnect.MoveWindow(rc);
 
-	rc.OffsetRect(bspace + bwidth +2, 0);
+	rc.OffsetRect(bspace + bwidth + 2, 0);
+	rc.right += 16;
 	ctrlManageGroups.MoveWindow(rc);
 }
 
@@ -446,6 +445,8 @@ LRESULT FavoriteHubsFrame::onOpenHubLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 LRESULT FavoriteHubsFrame::onManageGroups(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	FavHubGroupsDlg dlg;
 	dlg.DoModal();
+
+	fillList();
 	return 0;
 }
 

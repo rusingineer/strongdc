@@ -105,8 +105,10 @@ public:
 	C(SID, 'S','I','D');
 	// Extensions
 	C(CMD, 'C','M','D');
+	C(NAT, 'N','A','T');
+	C(RNT, 'R','N','T');
 	C(PSR, 'P','S','R');
-	C(PUB, 'P','U','B');		
+	C(PUB, 'P','U','B');
 #undef C
 
 	static const uint32_t HUB_SID = 0xffffffff;		// No client will have this sid
@@ -202,6 +204,8 @@ public:
 				C(SND);
 				C(SID);
 				C(CMD);
+				C(NAT);
+				C(RNT);
 				C(PSR);
 			default: 
 				dcdebug("Unknown ADC command: %.50s\n", aLine.c_str());

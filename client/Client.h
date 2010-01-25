@@ -40,6 +40,8 @@ public:
 	enum P2PType { DIRECT_CONNECT, DHT };
 	P2PType type;
 	
+	P2PType getType() const { return type; }
+
 	virtual const string& getHubUrl() const = 0;
 	virtual string getHubName() const = 0;
 	virtual bool isOp() const = 0;

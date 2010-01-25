@@ -573,6 +573,18 @@ string Socket::getLocalIp() const throw() {
 	return Util::emptyString;
 }
 
+uint16_t Socket::getLocalPort() throw() {
+	if(sock == INVALID_SOCKET)
+		return 0;
+
+	sockaddr_in sock_addr;
+	socklen_t len = sizeof(sock_addr);
+	if(getsockname(sock, (sockaddr*)&sock_addr, &len) == 0) {
+		return ntohs(sock_addr.sin_port);
+	}
+	return 0;
+}
+
 void Socket::socksUpdated() {
 	udpServer.clear();
 	udpPort = 0;

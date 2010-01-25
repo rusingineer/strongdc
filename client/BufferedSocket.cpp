@@ -77,6 +77,7 @@ void BufferedSocket::setSocket(std::auto_ptr<Socket> s) {
 		s->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
 	if(SETTING(SOCKET_OUT_BUFFER) > 0)
 		s->setSocketOpt(SO_SNDBUF, SETTING(SOCKET_OUT_BUFFER));
+	s->setSocketOpt(SO_REUSEADDR, 1);	// NAT traversal
 
 	inbuf.resize(s->getSocketOptInt(SO_RCVBUF));
 	
@@ -97,44 +98,71 @@ void BufferedSocket::accept(const Socket& srv, bool secure, bool allowUntrusted)
 }
 
 void BufferedSocket::connect(const string& aAddress, uint16_t aPort, bool secure, bool allowUntrusted, bool proxy) throw(SocketException) {
-	dcdebug("BufferedSocket::connect() %p\n", (void*)this);
-	std::auto_ptr<Socket> s(secure ? CryptoManager::getInstance()->getClientSocket(allowUntrusted) : new Socket);
-
-	s->create();
-	s->bind(0, SETTING(BIND_ADDRESS));
-	
-	setSocket(s);
-	
-	Lock l(cs);
-	addTask(CONNECT, new ConnectInfo(aAddress, aPort, proxy && (SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5)));
+	connect(aAddress, aPort, 0, NAT_NONE, secure, allowUntrusted, proxy);
 }
 
-#define CONNECT_TIMEOUT 30000
-void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, bool proxy) throw(SocketException) {
+void BufferedSocket::connect(const string& aAddress, uint16_t aPort, uint16_t localPort, NatRoles natRole, bool secure, bool allowUntrusted, bool proxy) throw(SocketException) {
+	dcdebug("BufferedSocket::connect() %p\n", (void*)this);
+	std::auto_ptr<Socket> s(secure ? (natRole == NAT_SERVER ? CryptoManager::getInstance()->getServerSocket(allowUntrusted) : CryptoManager::getInstance()->getClientSocket(allowUntrusted)) : new Socket);
+
+	s->create();
+	setSocket(s);
+	sock->bind(localPort, SETTING(BIND_ADDRESS));
+	
+	Lock l(cs);
+	addTask(CONNECT, new ConnectInfo(aAddress, aPort, localPort, natRole, proxy && (SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5)));
+}
+
+#define LONG_TIMEOUT 30000
+#define SHORT_TIMEOUT 1000
+void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t localPort, NatRoles natRole, bool proxy) throw(SocketException) {
 	dcassert(state == STARTING);
 
-	dcdebug("threadConnect %s:%d\n", aAddr.c_str(), (int)aPort);
+	dcdebug("threadConnect %s:%d/%d\n", aAddr.c_str(), (int)localPort, (int)aPort);
 	fire(BufferedSocketListener::Connecting());
+
+	uint64_t endTime = GET_TICK() + LONG_TIMEOUT;
 
 	state = RUNNING;
 
-	uint64_t startTime = GET_TICK();
-	if(proxy) {
-		sock->socksConnect(aAddr, aPort, CONNECT_TIMEOUT);
-	} else {
-		sock->connect(aAddr, aPort);
-	}
+	while (GET_TICK() < endTime) {
+		dcdebug("threadConnect attempt to addr \"%s\"\n", aAddr.c_str());
+		try {
+			clock_t t;
+			if(proxy) {
+				sock->socksConnect(aAddr, aPort, LONG_TIMEOUT);
+			} else {
+				t = clock();
+				sock->connect(aAddr, aPort);
+			}
+	
+			bool connSucceeded;
+			while(!(connSucceeded = sock->waitConnected(POLL_TIMEOUT)) && endTime >= GET_TICK()) {
+				if(disconnecting) return;
+			}
+	
+			if (connSucceeded) {
+				dcdebug("It took %d ms\n", clock() - t);
+				fire(BufferedSocketListener::Connected());
+				return;
+			}
+		}
+		catch (const SocketException&) {
+			if (natRole == NAT_NONE)
+				throw;
 
-	while(!sock->waitConnected(POLL_TIMEOUT)) {
-		if(disconnecting)
-			return;
+			sock->setBlocking(true);
+			sock->disconnect();
+			Thread::sleep(SHORT_TIMEOUT);
 
-		if((startTime + 30000) < GET_TICK()) {
-			throw SocketException(STRING(CONNECTION_TIMEOUT));
+			// recreate socket, but it still doesn't work, because we get "connection refused" when no timeout :(
+			sock->create();
+			setSocket(sock);
+			sock->bind(localPort, SETTING(BIND_ADDRESS));
 		}
 	}
 
-	fire(BufferedSocketListener::Connected());
+	throw SocketException(STRING(CONNECTION_TIMEOUT));
 }	
 
 void BufferedSocket::threadAccept() throw(SocketException) {
@@ -421,7 +449,7 @@ bool BufferedSocket::checkEvents() throw(Exception) {
 		if(state == STARTING) {
 			if(p.first == CONNECT) {
 				ConnectInfo* ci = static_cast<ConnectInfo*>(p.second.get());
-				threadConnect(ci->addr, ci->port, ci->proxy);
+				threadConnect(ci->addr, ci->port, ci->localPort, ci->natRole, ci->proxy);
 			} else if(p.first == ACCEPTED) {
 				threadAccept();
 			} else {

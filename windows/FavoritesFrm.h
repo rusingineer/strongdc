@@ -129,6 +129,11 @@ private:
 	
 	void fillList() {
 		ctrlHubs.SetRedraw(FALSE);
+
+		bool old_nosave = nosave;
+		nosave = true;
+
+		ctrlHubs.DeleteAllItems(); 
 		
 		// sort groups
 		set<tstring, noCaseStringLess> sorted_groups;
@@ -167,13 +172,14 @@ private:
 
 			addEntry(*i, ctrlHubs.GetItemCount(), index);
 		}
+
+		nosave = old_nosave;
 		ctrlHubs.SetRedraw(TRUE);
-		ctrlHubs.Invalidate();
 	}
 
 	void addEntry(const FavoriteHubEntry* entry, int pos, int groupIndex);
 	void handleMove(bool up);
-	void on(FavoriteAdded, const FavoriteHubEntry* e)  throw() { ctrlHubs.DeleteAllItems(); fillList(); }
+	void on(FavoriteAdded, const FavoriteHubEntry* e)  throw() { fillList(); }
 	void on(FavoriteRemoved, const FavoriteHubEntry* e) throw() { ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)e)); }
 	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };

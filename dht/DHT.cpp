@@ -415,11 +415,10 @@ namespace dht
 			node->getIdentity().setConnection(Util::formatBytes(node->getIdentity().get("US")) + "/s");
 		}
 		
-		if(!node->isInList)
+		if(!node->getUser()->isOnline())
 		{
 			// put him online so we can make a connection with him
 			node->inc();
-			node->isInList = true;
 			ClientManager::getInstance()->putOnline(node.get());
 		}
 		
@@ -583,6 +582,7 @@ namespace dht
 	// partial file request
 	void DHT::handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw()
 	{
+		c.getParameters().erase(c.getParameters().begin());	 // remove CID from UDP command
 		dcpp::SearchManager::getInstance()->onPSR(c, node->getUser(), node->getIdentity().getIp());
 	}
 
