@@ -71,7 +71,7 @@ CryptoManager::CryptoManager()
 	certsLoaded(false), 
 	lock("EXTENDEDPROTOCOLABCABCABCABCABCABC"), 
 	pk("DCPLUSPLUS" DCVERSIONSTRING)
-{/*
+{
 #ifdef HEADER_OPENSSLV_H
 	cs = new CriticalSection[CRYPTO_num_locks()];
 	CRYPTO_set_locking_callback(locking_function);
@@ -80,7 +80,7 @@ CryptoManager::CryptoManager()
 	LPFUNC _d_gcry_control = (LPFUNC)GetProcAddress(LoadLibrary(_T("libgcrypt-11")), "gcry_control");
 	_d_gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_other);
 #endif
-*/	
+	
 	SSL_library_init();
 	SSL_load_error_strings();
 

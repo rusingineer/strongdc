@@ -567,6 +567,7 @@
 #define IDC_RAW                         1322
 #define IDC_CHECK2                      1322
 #define IDC_AUTOCONNECT                 1322
+#define IDC_NATT                        1322
 #define IDC_GROUP_PROPERTIES            1323
 #define IDC_BW_SIMPLE                   1324
 #define IDC_NAME_STATIC                 1324

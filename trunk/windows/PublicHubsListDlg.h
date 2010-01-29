@@ -64,7 +64,7 @@ public:
 		// set up the list of lists
 		CRect rc;
 		ctrlList.Attach(GetDlgItem(IDC_LIST_LIST));
-		ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_FULLROWSELECT);
+		ctrlList.SetExtendedListViewStyle(LVS_EX_LABELTIP | LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 		ctrlList.GetClientRect(rc);
 		ctrlList.InsertColumn(0, CTSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width() - 4, 0);
 		StringList lists(FavoriteManager::getInstance()->getHubLists());

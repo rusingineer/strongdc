@@ -64,7 +64,7 @@ LRESULT Sounds::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 	ctrlSounds.Attach(GetDlgItem(IDC_SOUNDLIST));
 
-	ctrlSounds.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+	ctrlSounds.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 	ctrlSounds.InsertColumn(0, CTSTRING(SETTINGS_SOUNDS), LVCFMT_LEFT, 172, 0);
 	ctrlSounds.InsertColumn(1, CTSTRING(FILENAME), LVCFMT_LEFT, 210, 1);
 

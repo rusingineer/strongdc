@@ -35,7 +35,7 @@ LRESULT ClientsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	ctrlProfiles.InsertColumn(1, CTSTRING(COMMENT),			LVCFMT_LEFT, rc.Width() / 2 - 18, 1);
 	ctrlProfiles.InsertColumn(2, _T("Raw"),					LVCFMT_LEFT, rc.Width() / 6, 0);
 
-	ctrlProfiles.SetExtendedListViewStyle(LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT);
+	ctrlProfiles.SetExtendedListViewStyle(LVS_EX_INFOTIP | LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
 	// Do specialized reading here
 	const DetectionManager::DetectionItems& lst = DetectionManager::getInstance()->getProfiles();

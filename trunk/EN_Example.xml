@@ -28,6 +28,7 @@
 		<String Name="AllDownloadSlotsTaken">All download slots taken</String>
 		<String Name="AllFileSlotsTaken">All file slots taken</String>
 		<String Name="AllUsersOffline">All %d users offline</String>
+		<String Name="AllowNatTraversal">Allow NAT Traversal for connections with passive users</String>
 		<String Name="AlternatesSend">Searching TTH alternates for:</String>
 		<String Name="AntiPassiveSearch">-- WARNING --
 -- You are in active mode, but have activated passive search. --

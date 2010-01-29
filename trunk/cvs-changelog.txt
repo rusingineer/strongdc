@@ -1,3 +1,9 @@
+** svn477
+	returned back OpenSSL' locking callback which was disabled by mistake
+	updated OpenSSL
+	added option to enable/disable NAT traversal
+	added double buffering to all listviews
+
 ** svn476
 	language file name now accepts path relative to strongdc.exe directory
 	fixed some crashes with partial file sharing

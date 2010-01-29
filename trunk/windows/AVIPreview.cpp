@@ -46,7 +46,7 @@ LRESULT AVIPreview::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	ctrlCommands.InsertColumn(2, CTSTRING(SETTINGS_ARGUMENT), LVCFMT_LEFT, rc.Width() / 5, 2);
 	ctrlCommands.InsertColumn(3, CTSTRING(SETTINGS_EXTENSIONS), LVCFMT_LEFT, rc.Width() / 5, 3);
 
-	ctrlCommands.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+	ctrlCommands.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
 	// Do specialized reading here
 	PreviewApplication::List lst = FavoriteManager::getInstance()->getPreviewApps();

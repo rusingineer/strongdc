@@ -62,7 +62,7 @@ LRESULT DetectionEntryDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM
 	ctrlParams.GetClientRect(rc);
 	ctrlParams.InsertColumn(0, CTSTRING(SETTINGS_NAME), LVCFMT_LEFT, rc.Width() / 10, 0);
 	ctrlParams.InsertColumn(1, CTSTRING(REGEXP), LVCFMT_LEFT, ((rc.Width() / 10) * 9) - 17, 1);
-	ctrlParams.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+	ctrlParams.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
 	ctrlLevel.AddString(_T("Green"));
 	ctrlLevel.AddString(_T("Yellow"));
