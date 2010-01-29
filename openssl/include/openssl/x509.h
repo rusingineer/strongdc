@@ -585,6 +585,7 @@ struct pkcs8_priv_key_info_st
 #define PKCS8_NO_OCTET		1
 #define PKCS8_EMBEDDED_PARAM	2
 #define PKCS8_NS_DB		3
+#define PKCS8_NEG_PRIVKEY	4
         ASN1_INTEGER *version;
         X509_ALGOR *pkeyalg;
         ASN1_TYPE *pkey; /* Should be OCTET STRING but some are broken */
@@ -960,6 +961,11 @@ unsigned long	X509_issuer_name_hash(X509 *a);
 
 int		X509_subject_name_cmp(const X509 *a, const X509 *b);
 unsigned long	X509_subject_name_hash(X509 *x);
+
+#ifndef OPENSSL_NO_MD5
+unsigned long	X509_issuer_name_hash_old(X509 *a);
+unsigned long	X509_subject_name_hash_old(X509 *x);
+#endif
 
 int		X509_cmp(const X509 *a, const X509 *b);
 int		X509_NAME_cmp(const X509_NAME *a, const X509_NAME *b);

@@ -32,6 +32,7 @@ enum Strings { // @DontAdd
 	ALL_DOWNLOAD_SLOTS_TAKEN, // "All download slots taken"
 	ALL_FILE_SLOTS_TAKEN, // "All file slots taken"
 	ALL_USERS_OFFLINE, // "All %d users offline"
+	ALLOW_NAT_TRAVERSAL, // "Allow NAT Traversal for connections with passive users"
 	ALTERNATES_SEND, // "Searching TTH alternates for:"
 	ANTI_PASSIVE_SEARCH, // "-- WARNING --\r\n-- You are in active mode, but have activated passive search. --\r\n-- Don't use passive search if you have search results without this option --\r\n-- because you don't get search result from passive clients !!! --\r\n-- Turn it off in settings => StrongDC++ => Always use Passive Mode for Search --\r\n"
 	ANY, // "Any"

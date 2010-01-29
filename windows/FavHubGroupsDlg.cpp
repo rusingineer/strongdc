@@ -35,7 +35,7 @@ LRESULT FavHubGroupsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 
 	ctrlGroups.InsertColumn(0, _T("Name"), LVCFMT_LEFT, WinUtil::percent(width, 70), 0);
 	ctrlGroups.InsertColumn(1, _T("Private"), LVCFMT_LEFT, WinUtil::percent(width, 15), 0);
-	ctrlGroups.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+	ctrlGroups.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
 	const FavHubGroups& groups = FavoriteManager::getInstance()->getFavHubGroups();
 	for(FavHubGroups::const_iterator i = groups.begin(); i != groups.end(); ++i) {

@@ -406,7 +406,7 @@ void AdcHub::handle(AdcCommand::RCM, AdcCommand& c) throw() {
 		return;
 	}
 
-	if (!u->getIdentity().supports(NAT0_FEATURE))
+	if (!u->getIdentity().supports(NAT0_FEATURE) || !BOOLSETTING(ALLOW_NAT_TRAVERSAL))
 		return;
 
 	// Attempt to traverse NATs and/or firewalls with TCP.
@@ -609,6 +609,9 @@ void AdcHub::handle(AdcCommand::GET, AdcCommand& c) throw() {
 }
 
 void AdcHub::handle(AdcCommand::NAT, AdcCommand& c) throw() {
+	if(!BOOLSETTING(ALLOW_NAT_TRAVERSAL))
+		return;
+
 	OnlineUser* u = findUser(c.getFrom());
 	if(!u || u->getUser() == ClientManager::getInstance()->getMe() || c.getParameters().size() < 3)
 		return;
@@ -641,6 +644,9 @@ void AdcHub::handle(AdcCommand::RNT, AdcCommand& c) throw() {
 	// Sent request for NAT traversal cooperation, which
 	// was acknowledged (with requisite local port information).
 	// If not, that's fine, it just won't work.
+	if(!BOOLSETTING(ALLOW_NAT_TRAVERSAL))
+		return;
+
 	OnlineUser* u = findUser(c.getFrom());
 	if(!u || u->getUser() == ClientManager::getInstance()->getMe() || c.getParameters().size() < 3)
 		return;
@@ -861,7 +867,7 @@ void AdcHub::info(bool /*alwaysSend*/) {
 	if(isActive()) {
 		su += TCP4_FEATURE + ",";
 		su += UDP4_FEATURE + ",";
-	} else {
+	} else if(BOOLSETTING(ALLOW_NAT_TRAVERSAL)) {
 		su += NAT0_FEATURE + ",";
 	}
 
