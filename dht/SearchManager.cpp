@@ -212,7 +212,7 @@ namespace dht
 			
 		string type;
 		if(!cmd.getParam("TY", 1, type))
-			return;	// type not specified?			
+			return;	// type not specified?
 			
 		AdcCommand res(AdcCommand::CMD_RES, AdcCommand::TYPE_UDP);
 		res.addParam("TO", token);
@@ -221,7 +221,9 @@ namespace dht
 		xml.addTag("Nodes");
 		xml.stepIn();		
 		
-		switch(Util::toInt(type))
+		bool empty = true;
+		unsigned int searchType = Util::toInt(type);
+		switch(searchType)
 		{
 			case Search::TYPE_FILE:
 			{
@@ -240,15 +242,27 @@ namespace dht
 						xml.addChildAttrib("U4", i->getUdpPort());
 						xml.addChildAttrib("SI", i->getSize());
 						xml.addChildAttrib("PF", i->getPartial());
+
+						empty = false;
 					}
 					break;
 				}
 			}
 			default:
 			{
+				// maximum nodes in response is based on search type
+				unsigned int count;
+				switch(searchType)
+				{
+				case Search::TYPE_FILE: count = 2; break;
+				case Search::TYPE_NODE: count = 10; break;
+				case Search::TYPE_STOREFILE: count = 4; break;
+				default: return; // unknown type
+				}
+
 				// get nodes closest to requested ID
 				Node::Map nodes;
-				DHT::getInstance()->getClosestNodes(CID(term), nodes, K, 2);
+				DHT::getInstance()->getClosestNodes(CID(term), nodes, count, 2);
 				
 				// add nodelist in XML format
 				for(Node::Map::const_iterator i = nodes.begin(); i != nodes.end(); i++)
@@ -256,7 +270,9 @@ namespace dht
 					xml.addTag("Node");
 					xml.addChildAttrib("CID", i->second->getUser()->getCID().toBase32());
 					xml.addChildAttrib("I4", i->second->getIdentity().getIp());
-					xml.addChildAttrib("U4", i->second->getIdentity().getUdpPort());			
+					xml.addChildAttrib("U4", i->second->getIdentity().getUdpPort());
+
+					empty = false;
 				}
 							
 				break;
@@ -265,12 +281,15 @@ namespace dht
 		
 		xml.stepOut();
 			
+		if(empty)
+			return;	// no requested nodes found, don't send empty list
+
 		string nodes;
 		StringOutputStream sos(nodes);
-		sos.write(SimpleXML::utf8Header);
+		//sos.write(SimpleXML::utf8Header); // don't write header to save some bytes
 		xml.toXML(&sos);
 			
-		res.addParam("NX", nodes);
+		res.addParam("NX", Utils::compressXML(nodes));
 				
 		// send search result
 		DHT::getInstance()->send(res, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
@@ -385,19 +404,17 @@ namespace dht
 				if(!Utils::isGoodIPPort(i4, u4))
 					continue;
 					
-				// we don't allow multiple CIDs with same IP in a response to avoid possible attack
-				bool moreSameIPs = false;
-				for(Node::Map::const_iterator i = s->possibleNodes.begin(); i != s->possibleNodes.end(); i++)
-					if(i->second->getIdentity().getIp() == i4)
-					{
-						moreSameIPs = true;
-						break;
-					}
+				// create unverified node
+				// if this node already exists in our routing table, don't update it's ip/port for security reasons
+				Node::Ptr node = DHT::getInstance()->createNode(cid, i4, u4, false, false);
 
-				if(!moreSameIPs)
+				// node won't be accept for several reasons (invalid IP etc.)
+				// if routing table is full, node can be accept
+				bool isAcceptable = DHT::getInstance()->addNode(node, false);
+				if(isAcceptable)
 				{
 					// update our list of possible nodes
-					s->possibleNodes[distance] = DHT::getInstance()->addUser(cid, i4, u4, false, false);
+					s->possibleNodes[distance] = node;
 				}
 			}
 									

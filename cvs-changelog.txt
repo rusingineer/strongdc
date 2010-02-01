@@ -1,3 +1,11 @@
+** svn478
+	[DHT] nodes count in response is based on search type (it should save some bandwidth)
+	[DHT] sending more pings at once to allow faster detection of dead nodes and verification
+	returned REUSE_ADDR into ConnectionManager to avoid used ports after crash
+	[DHT] rewritten procedure to add nodes into routing table
+	[DHT] fixed UDP key
+	don't disconnect when NAT traversal attempt fails (needs to be tested)
+
 ** svn477
 	returned back OpenSSL' locking callback which was disabled by mistake
 	updated OpenSSL

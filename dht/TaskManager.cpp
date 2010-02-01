@@ -29,7 +29,7 @@ namespace dht
 	// TimerManagerListener
 	void TaskManager::on(TimerManagerListener::Second, uint64_t aTick) throw()
 	{	
-		if(DHT::getInstance()->isConnected())
+		if(DHT::getInstance()->isConnected() && DHT::getInstance()->getNodesCount() >= K)
 		{
 			if(!DHT::getInstance()->isFirewalled() && IndexManager::getInstance()->getPublish() && aTick >= nextPublishTime)
 			{

@@ -44,6 +44,12 @@ namespace dht
 		void privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson = false);
 	};
 
+	struct UDPKey
+	{
+		string	ip;
+		CID		key;
+	};
+
 	struct Node :
 		public OnlineUser
 	{
@@ -61,17 +67,14 @@ namespace dht
 		void setTimeout(uint64_t now = GET_TICK());
 
 		CID getUdpKey() const;
-		void setUdpKey(const CID& key);
+		void setUdpKey(const CID& _key);
+		const UDPKey& getUDPKey() const { return key; }
 		
 	private:
 	
 		friend class KBucket;
 
-		struct
-		{
-			string	ip;
-			CID		key;
-		} UDPKey;
+		UDPKey		key;
 				
 		uint64_t	created;
 		uint64_t	expires;
@@ -87,8 +90,11 @@ namespace dht
 
 		typedef std::deque<Node::Ptr> NodeList;
 		
-		/** Inserts node to bucket */
-		Node::Ptr insert(const UserPtr& u, const string& ip, uint64_t port, bool update, bool isUdpKeyValid);
+		/** Creates new (or update existing) node which is NOT added to our routing table */
+		Node::Ptr createNode(const UserPtr& u, const string& ip, uint16_t port, bool update, bool isUdpKeyValid);
+
+		/** Adds node to routing table */
+		bool insert(const Node::Ptr& node);
 		
 		/** Finds "max" closest nodes and stores them to the list */
 		void getClosestNodes(const CID& cid, Node::Map& closest, unsigned int max, uint8_t maxType) const;

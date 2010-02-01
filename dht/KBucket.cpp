@@ -49,17 +49,17 @@ namespace dht
 	CID Node::getUdpKey() const 
 	{ 
 		// if our external IP changed from the last time, we can't encrypt packet with this key
-		if(DHT::getInstance()->getLastExternalIP() == UDPKey.ip)
-			return UDPKey.key;
+		if(DHT::getInstance()->getLastExternalIP() == key.ip)
+			return key.key;
 		else
 			return CID();
 	}
 	
-	void Node::setUdpKey(const CID& key)
+	void Node::setUdpKey(const CID& _key)
 	{ 
 		// store key with our current IP address
-		UDPKey.ip = DHT::getInstance()->getLastExternalIP();
-		UDPKey.key = key;
+		key.ip = DHT::getInstance()->getLastExternalIP();
+		key.key = _key;
 	}
 		
 	void Node::setAlive()
@@ -101,9 +101,9 @@ namespace dht
 	}
 	
 	/*
-	 * Inserts node to bucket 
+	 * Creates new (or update existing) node which is NOT added to our routing table 
 	 */
-	Node::Ptr KBucket::insert(const UserPtr& u, const string& ip, uint64_t port, bool update, bool isUdpKeyValid)
+	Node::Ptr KBucket::createNode(const UserPtr& u, const string& ip, uint16_t port, bool update, bool isUdpKeyValid)
 	{
 		if(u->isSet(User::DHT)) // is this user already known in DHT?
 		{
@@ -112,7 +112,7 @@ namespace dht
 				Node::Ptr node = *it;
 				if(u->getCID() == node->getUser()->getCID())
 				{
-					// node is already here, move it to the end
+				// node is already here, move it to the end
 					if(update)
 					{	
 						string oldIp	= node->getIdentity().getIp();
@@ -143,48 +143,46 @@ namespace dht
 					return node;
 				}
 			}
-			
-			//dcassert(0);			
-			// this can happen when we already know this user, but it has not been added to routing table
 		}
 
-		// it's new DHT node
-		u->setFlag(User::DHT);
-		
 		Node::Ptr node(new Node(u));
 		node->getIdentity().setIp(ip);
-		node->getIdentity().setUdpPort(Util::toString(port));	
+		node->getIdentity().setUdpPort(Util::toString(port));
+		node->setIpVerified(isUdpKeyValid);
 
-		// is there already such contact with this IP?
-		bool ipExists = ipMap.find(ip + ":" + Util::toString(port)) != ipMap.end();
-		
-		if(!ipExists)
-		{
-			if(nodes.size() < (K * ID_BITS))
-			{
-				// bucket still has room to store new node
-				nodes.push_back(node);
-				ipMap.insert(ip + ":" + Util::toString(port));
-					
-				if(DHT::getInstance())
-					DHT::getInstance()->setDirty();
-			}
-			else if(isUdpKeyValid)
-			{
-				// this node was verified in the past, so insert him
-				// TODO: should we remove the oldest unverified node?
-				nodes.push_back(node);
-				ipMap.insert(ip + ":" + Util::toString(port));
-
-				if(DHT::getInstance())
-					DHT::getInstance()->setDirty();
-
-			}
-		}
-		
+		u->setFlag(User::DHT);
 		return node;
 	}
-	
+
+	/*
+	 * Adds node to routing table 
+	 */
+	bool KBucket::insert(const Node::Ptr& node)
+	{
+		if(node->isInList)
+			return true;	// node is already in the table
+
+		string ip = node->getIdentity().getIp();
+		string port = node->getIdentity().getUdpPort();
+
+		// allow only one same IP:port
+		bool isAcceptable = (ipMap.find(ip + ":" + port) == ipMap.end());
+
+		if((nodes.size() < (K * ID_BITS)) && isAcceptable)
+		{
+			nodes.push_back(node);
+			node->isInList = true;
+			ipMap.insert(ip + ":" + port);
+				
+			if(DHT::getInstance())
+				DHT::getInstance()->setDirty();
+
+			return true;
+		}
+
+		return isAcceptable;
+	}
+
 	/*
 	 * Finds "max" closest nodes and stores them to the list 
 	 */
@@ -222,8 +220,12 @@ namespace dht
 	{
 		bool dirty = false;
 		
-		Node::Ptr oldest = NULL;
-		
+		// we should ping oldest node from every bucket here
+		// but since we have only one bucket now, simulate it by pinging more nodes
+		unsigned int pingCount = max(K, min((int)2 * K, (int)(nodes.size() / (K * 10)) + 1)); // <-- pings 10 - 20 oldest nodes
+		unsigned int pinged = 0;
+		dcdrun(unsigned int removed = 0);
+
 		// first, remove dead nodes		
 		NodeList::iterator i = nodes.begin();
 		while(i != nodes.end())
@@ -243,6 +245,8 @@ namespace dht
 					ipMap.erase(ip + ":" + port);
 					i = nodes.erase(i);
 					dirty = true;
+
+					dcdrun(removed++);
 				}
 				else
 				{
@@ -251,10 +255,18 @@ namespace dht
 					
 				continue;
 			}
-				
+			
+			if(node->expires == 0)
+				node->expires = currentTime;
+
 			// select the oldest expired node
-			if(oldest == NULL && node->getType() < 4 && node->expires <= currentTime)
-				oldest = node;
+			if(pinged < pingCount && node->getType() < 4 && node->expires <= currentTime)
+			{
+				// ping the oldest (expired) node
+				node->setTimeout(currentTime);
+				DHT::getInstance()->info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), DHT::PING, node->getUser()->getCID(), node->getUdpKey());
+				pinged++;
+			}
 					
 			++i;
 		}
@@ -270,16 +282,9 @@ namespace dht
 			types[n->getType()]++;
 		}
 			
-		dcdebug("DHT Nodes: %d (%d verified)\nTypes: %d/%d/%d/%d/%d\n", nodes.size(), verified, types[0], types[1], types[2], types[3], types[4]);
+		dcdebug("DHT Nodes: %d (%d verified), Types: %d/%d/%d/%d/%d, pinged %d of %d, removed %d\n", nodes.size(), verified, types[0], types[1], types[2], types[3], types[4], pinged, pingCount, removed);
 #endif
-		
-		if(oldest != NULL)
-		{
-			// ping the oldest (expired) node
-			oldest->setTimeout(currentTime);
-			DHT::getInstance()->info(oldest->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(oldest->getIdentity().getUdpPort())), DHT::PING, oldest->getUser()->getCID(), oldest->getUdpKey());
-		}
-		
+
 		return dirty;
 	}
 
@@ -326,6 +331,12 @@ namespace dht
 			xml.addChildAttrib("CID", node->getUser()->getCID().toBase32());
 			xml.addChildAttrib("type", node->getType());
 			xml.addChildAttrib("verified", node->isIpVerified());
+
+			if(!node->getUDPKey().key.isZero() && !node->getUDPKey().ip.empty())
+			{
+				xml.addChildAttrib("key", node->getUDPKey().key.toBase32());
+				xml.addChildAttrib("keyIP", node->getUDPKey().ip);
+			}
 
 			StringMap params;
 			node->getIdentity().getParams(params, Util::emptyString, false, true);

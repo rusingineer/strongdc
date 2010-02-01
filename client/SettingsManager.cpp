@@ -59,7 +59,7 @@ const string SettingsManager::settingTags[] =
 	"MainFrameVisible", "SearchFrameVisible", "QueueFrameVisible", "HubFrameVisible", "UploadQueueFrameVisible", 
 	"EmoticonsFile", "TLSPrivateKeyFile", "TLSCertificateFile", "TLSTrustedCertificatesPath",
 	"FinishedVisible", "FinishedULVisible", "DirectoryListingFrameVisible",
-	"RecentFrameOrder", "RecentFrameWidths", "ToolbarSettings",
+	"RecentFrameOrder", "RecentFrameWidths", "ToolbarSettings", "DHTKey",
 	"SENTRY", 
 	// Ints
 	"IncomingConnections", "InPort", "Slots", "AutoFollow", "ClearSearch",
@@ -127,7 +127,7 @@ const string SettingsManager::settingTags[] =
  	"AllowUntrustedHubs", "AllowUntrustedClients", "TLSPort", "FastHash", "DownConnPerSec",
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
-	"UcSubMenu", "AutoSlots", "Coral", "UseDHT", "DHTPort", "UpdateIP", "DHTKey", "KeepFinishedFiles",
+	"UcSubMenu", "AutoSlots", "Coral", "UseDHT", "DHTPort", "UpdateIP", "KeepFinishedFiles",
 	"AllowNATTraversal",
 	"SENTRY",
 	// Int64
@@ -548,7 +548,6 @@ SettingsManager::SettingsManager()
 	
 	setDefault(USE_DHT, true);
 	setDefault(UPDATE_IP, false);
-	setDefault(DHT_KEY, Util::rand());
 	setDefault(ALLOW_NAT_TRAVERSAL, true);
 	
 #ifdef _WIN32
@@ -648,6 +647,9 @@ void SettingsManager::load(string const& aFileName)
 		set(UDP_PORT, (int)Util::rand(1025, 32000));
 		set(TLS_PORT, (int)Util::rand(1025, 32000));
 	}
+
+	if(SETTING(DHT_KEY).length() != 39 || CID(SETTING(DHT_KEY)).isZero())
+		set(DHT_KEY, CID::generate().toBase32());
 }
 
 void SettingsManager::save(string const& aFileName) {

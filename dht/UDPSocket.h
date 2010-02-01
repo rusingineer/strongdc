@@ -32,8 +32,8 @@ namespace dht
 		FastAlloc<Packet>
 	{
 		/** Public constructor */
-		Packet(const string& ip_, uint16_t port_, const uint8_t* data_, size_t length_) : 
-			ip(ip_), port(port_), data(data_), length(length_)
+		Packet(const string& ip_, uint16_t port_, const std::string& data_, const CID& _targetCID, const CID& _udpKey) : 
+			ip(ip_), port(port_), data(data_), targetCID(_targetCID), udpKey(_udpKey)
 		{
 		}
 		
@@ -44,18 +44,14 @@ namespace dht
 		uint16_t port;
 		
 		/** Data to sent */
-		const uint8_t* data;
+		std::string data;
 		
-		/** Data's length */
-		size_t length;
-		
-#ifdef _DEBUG
-		union
-		{
-			char cmdChar[4];
-			uint32_t cmdInt;
-		};
-#endif		
+		/** CID of target node */
+		CID targetCID;
+
+		/** Key to encrypt packet */
+		CID udpKey;
+			
 	};
 	
 	class UDPSocket :
@@ -110,6 +106,12 @@ namespace dht
 		
 		void checkIncoming() throw(SocketException);
 		void checkOutgoing(uint64_t& timer) throw(SocketException);
+
+		void compressPacket(const string& data, uint8_t* destBuf, unsigned long& destSize);
+		void encryptPacket(const CID& targetCID, const CID& udpKey, uint8_t* destBuf, unsigned long& destSize);
+
+		bool decompressPacket(uint8_t* destBuf, unsigned long& destLen, const uint8_t* buf, size_t len);
+		bool decryptPacket(uint8_t* buf, int& len, const string& remoteIp, bool& isUdpKeyValid);
 	};
 
 }
