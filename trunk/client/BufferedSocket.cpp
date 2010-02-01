@@ -121,18 +121,15 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t
 	dcdebug("threadConnect %s:%d/%d\n", aAddr.c_str(), (int)localPort, (int)aPort);
 	fire(BufferedSocketListener::Connecting());
 
-	uint64_t endTime = GET_TICK() + LONG_TIMEOUT;
-
+	const uint64_t endTime = GET_TICK() + LONG_TIMEOUT;
 	state = RUNNING;
 
 	while (GET_TICK() < endTime) {
 		dcdebug("threadConnect attempt to addr \"%s\"\n", aAddr.c_str());
 		try {
-			clock_t t;
 			if(proxy) {
 				sock->socksConnect(aAddr, aPort, LONG_TIMEOUT);
 			} else {
-				t = clock();
 				sock->connect(aAddr, aPort);
 			}
 	
@@ -142,7 +139,6 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t
 			}
 	
 			if (connSucceeded) {
-				dcdebug("It took %d ms\n", clock() - t);
 				fire(BufferedSocketListener::Connected());
 				return;
 			}
@@ -151,14 +147,7 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t
 			if (natRole == NAT_NONE)
 				throw;
 
-			sock->setBlocking(true);
-			sock->disconnect();
 			Thread::sleep(SHORT_TIMEOUT);
-
-			// recreate socket, but it still doesn't work, because we get "connection refused" when no timeout :(
-			sock->create();
-			setSocket(sock);
-			sock->bind(localPort, SETTING(BIND_ADDRESS));
 		}
 	}
 

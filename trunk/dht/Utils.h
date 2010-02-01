@@ -52,6 +52,8 @@ public:
 	
 	/** Generates UDP key for specified IP address */
 	static CID getUdpKey(const string& targetIp);
+
+	static const string& compressXML(string& xml);
 	
 private:
 	Utils(void) { }

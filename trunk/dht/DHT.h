@@ -54,8 +54,11 @@ namespace dht
 		/** Sends command to ip and port */
 		void send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const CID& udpKey);
 		
-		/** Insert (or update) user into routing table */
-		Node::Ptr addUser(const CID& cid, const string& ip, uint16_t port, bool update, bool isUdpKeyValid);
+		/** Creates new (or update existing) node which is NOT added to our routing table */
+		Node::Ptr createNode(const CID& cid, const string& ip, uint16_t port, bool update, bool isUdpKeyValid);
+
+		/** Adds node to routing table */
+		bool addNode(const Node::Ptr& node, bool makeOnline);
 		
 		/** Returns counts of nodes available in k-buckets */
 		unsigned int getNodesCount() { Lock l(cs); return bucket->getNodes().size(); }

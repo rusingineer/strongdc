@@ -37,7 +37,7 @@ namespace dht
 {
 
 	#define BUFSIZE					16384
-	#define	MAGICVALUE_UDP			91	
+	#define	MAGICVALUE_UDP			0x5b	
 
 	UDPSocket::UDPSocket(void) : stop(false), port(0), delay(100)
 #ifdef _DEBUG
@@ -110,72 +110,29 @@ namespace dht
 			
 			if(len > 1)
 			{
-				uLongf destLen = BUFSIZE; // what size should be reserved?
-				boost::scoped_array<uint8_t> destBuf;
-				bool isUdpKeyValid = false;
-				
-#ifdef HEADER_RC4_H				
+				bool isUdpKeyValid = false;				
 				if(buf[0] != ADC_PACKED_PACKET_HEADER && buf[0] != ADC_PACKET_HEADER)
 				{
 					// it seems to be encrypted packet
-	
-					// the first try decrypts with our UDP key and CID
-					// if it fails, decryption will happen with CID only
-					int tries = 0;
-					len -= 1;
-					
-					destBuf.reset(new uint8_t[len]);
-					do
-					{
-						if(++tries == 3)
-						{
-							// decryption error, it could be malicious packet
-							return;
-						}
-						
-						// generate key
-						TigerHash th;
-						if(tries == 1)
-							th.update(Utils::getUdpKey(inet_ntoa(remoteAddr.sin_addr)).data(), sizeof(CID));
-						th.update(ClientManager::getInstance()->getMe()->getCID().data(), sizeof(CID));
-							
-						RC4_KEY recvKey;
-						RC4_set_key(&recvKey, TigerTree::BYTES, th.finalize());
-									
-						// decrypt data
-						RC4(&recvKey, len, &buf[1], &destBuf[0]);
-					}
-					while(destBuf[0] != MAGICVALUE_UDP);
-					
-					len -= 1;
-					memcpy(&buf[0], &destBuf[1], len);
-					
-					// if decryption was successful in first try, it happened via UDP key
-					// it happens only when we sent our UDP key to this node some time ago
-					if(tries == 1) isUdpKeyValid = true;
+					if(!decryptPacket(&buf[0], len, inet_ntoa(remoteAddr.sin_addr), isUdpKeyValid))
+						return;
 				}
 				//else
 				//	return; // non-encrypted packets are forbidden
-#endif
 				
+				unsigned long destLen = BUFSIZE; // what size should be reserved?
+				std::auto_ptr<uint8_t> destBuf(new uint8_t[destLen]);
 				if(buf[0] == ADC_PACKED_PACKET_HEADER) // is this compressed packet?
 				{
-					destBuf.reset(new uint8_t[destLen]);
-					
-					// decompress incoming packet
-					int result = uncompress(destBuf.get(), &destLen, &buf[0] + 1, len - 1);
-					if(result != Z_OK)
-					{
-						// decompression error!!!
+					if(!decompressPacket(destBuf.get(), destLen, buf.get(), len))
 						return;
-					}
 				}
 				else
 				{
-					destBuf.swap(buf);
+					memcpy(destBuf.get(), buf.get(), len);
 					destLen = len;
 				}
-				
+
 				// process decompressed packet
 				string s((char*)destBuf.get(), destLen);
 				if(s[0] == ADC_PACKET_HEADER && s[s.length() - 1] == ADC_PACKET_FOOTER)	// is it valid ADC command?
@@ -218,16 +175,23 @@ namespace dht
 		{
 			try
 			{
-				dcdrun(sentBytes += packet->length);
+				unsigned long length = compressBound(packet->data.length()) + 2;
+				std::auto_ptr<uint8_t> data(new uint8_t[length]);
+
+				// compress packet
+				compressPacket(packet->data, data.get(), length);
+
+				// encrypt packet
+				encryptPacket(packet->targetCID, packet->udpKey, data.get(), length);
+
+				dcdrun(sentBytes += packet->data.length());
 				dcdrun(sentPackets++);
-				socket->writeTo(packet->ip, packet->port, packet->data, packet->length);
+				socket->writeTo(packet->ip, packet->port, data.get(), length);
 			}
 			catch(SocketException& e)
 			{
 				dcdebug("DHT::run Write error: %s\n", e.getError().c_str());
 			}
-			
-			delete[] packet->data;
 		}	
 	}
 
@@ -309,14 +273,16 @@ namespace dht
 		string command = cmd.toString(ClientManager::getInstance()->getMe()->getCID());
 		COMMAND_DEBUG(command, DebugManager::HUB_OUT, ip + ":" + Util::toString(port));
 				
-		// compress packet
-		uLongf destSize = compressBound(command.length()) + 2;
-		
-		uint8_t* srcBuf = (uint8_t*)command.data();
-		uint8_t* destBuf = new uint8_t[destSize];
-		
-		int result = compress2(destBuf + 1, &destSize, srcBuf, command.length(), 9);
-		if(result == Z_OK && destSize <= command.length())
+		Packet* p = new Packet(ip, port, command, targetCID, udpKey);
+
+		Lock l(cs);
+		sendQueue.push_back(p);		
+	}
+
+	void UDPSocket::compressPacket(const string& data, uint8_t* destBuf, unsigned long& destSize)
+	{
+		int result = compress2(destBuf + 1, &destSize, (uint8_t*)data.data(), data.length(), Z_BEST_COMPRESSION);
+		if(result == Z_OK && destSize <= data.length())
 		{
 			destBuf[0] = ADC_PACKED_PACKET_HEADER;
 			destSize += 1;
@@ -324,12 +290,15 @@ namespace dht
 		else
 		{
 			// compression failed, send uncompressed packet
-			destSize = command.length();
-			memcpy(destBuf, srcBuf, destSize);
+			destSize = data.length();
+			memcpy(destBuf, (uint8_t*)data.data(), destSize);
 			
 			dcassert(destBuf[0] == ADC_PACKET_HEADER);
 		}
-		
+	}
+
+	void UDPSocket::encryptPacket(const CID& targetCID, const CID& udpKey, uint8_t* destBuf, unsigned long& destSize)
+	{
 #ifdef HEADER_RC4_H		
 		// generate encryption key
 		TigerHash th;
@@ -353,14 +322,62 @@ namespace dht
 			destSize += 2;
 		}
 #endif
+	}
+
+	bool UDPSocket::decompressPacket(uint8_t* destBuf, unsigned long& destLen, const uint8_t* buf, size_t len)
+	{
+		// decompress incoming packet
+		int result = uncompress(destBuf, &destLen, buf + 1, len - 1);
+		if(result != Z_OK)
+		{
+			// decompression error!!!
+			return false;
+		}
+
+		return true;
+	}
+
+	bool UDPSocket::decryptPacket(uint8_t* buf, int& len, const string& remoteIp, bool& isUdpKeyValid)
+	{
+#ifdef HEADER_RC4_H
+		boost::scoped_array<uint8_t> destBuf(new uint8_t[len]);
+
+		// the first try decrypts with our UDP key and CID
+		// if it fails, decryption will happen with CID only
+		int tries = 0;
+		len -= 1;
 		
-		Packet* p = new Packet(ip, port, destBuf, destSize);
-#ifdef _DEBUG
-		p->cmdInt = cmd.getCommand();
+		do
+		{
+			if(++tries == 3)
+			{
+				// decryption error, it could be malicious packet
+				return false;
+			}
+			
+			// generate key
+			TigerHash th;
+			if(tries == 1)
+				th.update(Utils::getUdpKey(remoteIp).data(), sizeof(CID));
+			th.update(ClientManager::getInstance()->getMe()->getCID().data(), sizeof(CID));
+				
+			RC4_KEY recvKey;
+			RC4_set_key(&recvKey, TigerTree::BYTES, th.finalize());
+						
+			// decrypt data
+			RC4(&recvKey, len, buf + 1, &destBuf[0]);
+		}
+		while(destBuf[0] != MAGICVALUE_UDP);
+		
+		len -= 1;
+		memcpy(buf, &destBuf[1], len);
+		
+		// if decryption was successful in first try, it happened via UDP key
+		// it happens only when we sent our UDP key to this node some time ago
+		if(tries == 1) isUdpKeyValid = true;
 #endif
 
-		Lock l(cs);
-		sendQueue.push_back(p);
+		return true;
 	}
 
 }
