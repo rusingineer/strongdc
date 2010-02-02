@@ -41,12 +41,11 @@ namespace dht
 		
 		enum InfType { NONE = 0, PING = 1, MAKE_ONLINE = 2 };
 		
-		/** Socket functions */
-		void listen();
-		void disconnect() { socket.disconnect(); lastPacket = 0; }
+		/** Starts DHT. */
+		void start();
+		void stop(bool exiting = false);
+
 		uint16_t getPort() const { return BOOLSETTING(USE_DHT) ? socket.getPort() : 0; }
-		
-		void create();
 		
 		/** Process incoming command */
 		void dispatch(const string& aLine, const string& ip, uint16_t port, bool isUdpKeyValid);

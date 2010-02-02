@@ -104,7 +104,7 @@ namespace dht
 					string i4	= remoteXml.getChildAttrib("I4");
 					string u4	= remoteXml.getChildAttrib("U4");
 					
-					addBootstrapNode(i4, static_cast<uint16_t>(Util::toInt(u4)), cid);
+					addBootstrapNode(i4, static_cast<uint16_t>(Util::toInt(u4)), cid, UDPKey());
 				}
 
 				remoteXml.stepOut();
@@ -121,9 +121,9 @@ namespace dht
 		LogManager::getInstance()->message("DHT bootstrap error: " + aLine);
 	}
 	
-	void BootstrapManager::addBootstrapNode(const string& ip, uint16_t udpPort, const CID& targetCID)
+	void BootstrapManager::addBootstrapNode(const string& ip, uint16_t udpPort, const CID& targetCID, const UDPKey& udpKey)
 	{
-		BootstrapNode node = { ip, udpPort, targetCID };
+		BootstrapNode node = { ip, udpPort, targetCID, udpKey };
 		bootstrapNodes.push_back(node);
 	}
 	
@@ -138,7 +138,14 @@ namespace dht
 			cmd.addParam("dht.xml");
 			
 			const BootstrapNode& node = bootstrapNodes.front();
-			DHT::getInstance()->send(cmd, node.ip, node.udpPort, node.cid, CID());
+
+			CID key;
+			// if our external IP changed from the last time, we can't encrypt packet with this key
+			// this won't probably work now
+			if(DHT::getInstance()->getLastExternalIP() == node.udpKey.ip)
+				key = node.udpKey.key;
+
+			DHT::getInstance()->send(cmd, node.ip, node.udpPort, node.cid, key);
 			
 			bootstrapNodes.pop_front();
 		}

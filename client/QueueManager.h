@@ -330,6 +330,7 @@ private:
 
 	void load(const SimpleXML& aXml);
 	void moveFile(const string& source, const string& target);
+	static void moveFile_(const string& source, const string& target);
 	void moveStuckFile(QueueItem* qi);
 	void rechecked(QueueItem* qi);
 

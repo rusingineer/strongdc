@@ -367,15 +367,15 @@ private:
 	void on(QueueManagerListener::StatusUpdated, const QueueItem* aQI) throw() { on(QueueManagerListener::SourcesUpdated(), aQI); }
 	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 	
-	void onRechecked(const QueueItem* qi, const string& message);
+	void onRechecked(const string& target, const string& message);
 	
-	void on(QueueManagerListener::RecheckStarted, const QueueItem* aQI) throw();
-	void on(QueueManagerListener::RecheckNoFile, const QueueItem* aQI) throw();
-	void on(QueueManagerListener::RecheckFileTooSmall, const QueueItem* aQI) throw();
-	void on(QueueManagerListener::RecheckDownloadsRunning, const QueueItem* aQI) throw();
-	void on(QueueManagerListener::RecheckNoTree, const QueueItem* aQI) throw();
-	void on(QueueManagerListener::RecheckAlreadyFinished, const QueueItem* aQI) throw();
-	void on(QueueManagerListener::RecheckDone, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::RecheckStarted, const string& target) throw();
+	void on(QueueManagerListener::RecheckNoFile, const string& target) throw();
+	void on(QueueManagerListener::RecheckFileTooSmall, const string& target) throw();
+	void on(QueueManagerListener::RecheckDownloadsRunning, const string& target) throw();
+	void on(QueueManagerListener::RecheckNoTree, const string& target) throw();
+	void on(QueueManagerListener::RecheckAlreadyFinished, const string& target) throw();
+	void on(QueueManagerListener::RecheckDone, const string& target) throw();
 };
 
 #endif // !defined(QUEUE_FRAME_H)

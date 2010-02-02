@@ -214,8 +214,10 @@ const string& ClientManager::findHubEncoding(const string& aUrl) const {
 }
 
 UserPtr ClientManager::findLegacyUser(const string& aNick) const throw() {
+	if (aNick.empty())
+		return UserPtr();
+
 	Lock l(cs);
-	dcassert(aNick.size() > 0);
 
 	// this be slower now, but it's not called so often
 	for(NickMap::const_iterator i = nicks.begin(); i != nicks.end(); ++i) {

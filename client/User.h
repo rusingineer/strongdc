@@ -36,17 +36,16 @@ class User : public FastAlloc<User>, public intrusive_ptr_base<User>, public Fla
 public:
 	/** Each flag is set if it's true in at least one hub */
 	enum UserFlags {
-		ONLINE		= 0x01,
-		DCPLUSPLUS	= 0x02,
-		PASSIVE		= 0x04,
-		NMDC		= 0x08,
-		BOT			= 0x10,
-		TLS			= 0x20,	//< Client supports TLS
-		OLD_CLIENT	= 0x40, //< Can't download - old client
+		ONLINE					= 0x01,
+		DCPLUSPLUS				= 0x02,
+		PASSIVE					= 0x04,
+		NMDC					= 0x08,
+		BOT						= 0x10,
+		TLS						= 0x20,	//< Client supports TLS
+		OLD_CLIENT				= 0x40, //< Can't download - old client
 		NO_ADC_1_0_PROTOCOL		=  0x80,	//< Doesn't support "ADC/1.0" (dc++ <=0.703)
-		NO_ADC_0_10_PROTOCOL	= 0x100,	//< Doesn't support "ADC/0.10"
-		NO_ADCS_0_10_PROTOCOL	= 0x200,	//< Doesn't support "ADCS/0.10"
-		DHT			= 0x400
+		NO_ADCS_0_10_PROTOCOL	= 0x100,	//< Doesn't support "ADCS/0.10"
+		DHT						= 0x200
 	};
 
 	struct Hash {

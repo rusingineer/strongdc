@@ -357,18 +357,7 @@ int QueueManager::FileMover::run() {
 			next = files.back();
 			files.pop_back();
 		}
-		try {
-			File::renameFile(next.first, next.second);
-		} catch(const FileException&) {
-			try {
-				// Try to just rename it to the correct name  at least
-				string newTarget = Util::getFilePath(next.first) + Util::getFileName(next.second);
-				File::renameFile(next.first, newTarget);
-				LogManager::getInstance()->message(next.first + " " + STRING(RENAMED_TO) + " " + newTarget);
-			} catch(const FileException& e) {
-				LogManager::getInstance()->message(STRING(UNABLE_TO_RENAME) + " " + next.first + ": " + e.getError());
-			}
-		}
+		moveFile_(next.first, next.second);
 	}
 }
 
@@ -406,18 +395,18 @@ int QueueManager::Rechecker::run() {
 			if(!q || q->isSet(QueueItem::FLAG_USER_LIST))
 				continue;
 
-			qm->fire(QueueManagerListener::RecheckStarted(), q);
+			qm->fire(QueueManagerListener::RecheckStarted(), q->getTarget());
 			dcdebug("Rechecking %s\n", file.c_str());
 
 			tempSize = File::getSize(q->getTempTarget());
 
 			if(tempSize == -1) {
-				qm->fire(QueueManagerListener::RecheckNoFile(), q);
+				qm->fire(QueueManagerListener::RecheckNoFile(), q->getTarget());
 				continue;
 			}
 
 			if(tempSize < 64*1024) {
-				qm->fire(QueueManagerListener::RecheckFileTooSmall(), q);
+				qm->fire(QueueManagerListener::RecheckFileTooSmall(), q->getTarget());
 				continue;
 			}
 
@@ -426,7 +415,7 @@ int QueueManager::Rechecker::run() {
 			}
 
 			if(q->isRunning()) {
-				qm->fire(QueueManagerListener::RecheckDownloadsRunning(), q);
+				qm->fire(QueueManagerListener::RecheckDownloadsRunning(), q->getTarget());
 				continue;
 			}
 
@@ -447,7 +436,7 @@ int QueueManager::Rechecker::run() {
 				continue;
 
 			if(!gotTree) {
-				qm->fire(QueueManagerListener::RecheckNoTree(), q);
+				qm->fire(QueueManagerListener::RecheckNoTree(), q->getTarget());
 				continue;
 			}
 
@@ -1178,26 +1167,25 @@ void QueueManager::setFile(Download* d) {
 }
 
 void QueueManager::moveFile(const string& source, const string& target) {
+	File::ensureDirectory(target);
+	if(File::getSize(source) > MOVER_LIMIT) {
+		mover.moveFile(source, target);
+	} else {
+		moveFile_(source, target);
+	}
+}
+
+void QueueManager::moveFile_(const string& source, const string& target) {
 	try {
-		File::ensureDirectory(target);
-		if(File::getSize(source) > MOVER_LIMIT) {
-			mover.moveFile(source, target);
-		} else {
-			File::renameFile(source, target);
-		}
-	} catch(const FileException&) {
+		File::renameFile(source, target);
+	} catch(const FileException& /*e1*/) {
+		// Try to just rename it to the correct name at least
+		string newTarget = Util::getFilePath(source) + Util::getFileName(target);
 		try {
-			if(!SETTING(DOWNLOAD_DIRECTORY).empty()) {
-				File::renameFile(source, SETTING(DOWNLOAD_DIRECTORY) + Util::getFileName(target));
-			} else {
-				File::renameFile(source, Util::getFilePath(source) + Util::getFileName(target));
-			}
-		} catch(const FileException&) {
-			try {
-				File::renameFile(source, Util::getFilePath(source) + Util::getFileName(target));
-			} catch(const FileException&) {
-				// Ignore...
-			}
+			File::renameFile(source, newTarget);
+			LogManager::getInstance()->message(source + " " + STRING(RENAMED_TO) + " " + newTarget);
+		} catch(const FileException& e2) {
+			LogManager::getInstance()->message(STRING(UNABLE_TO_RENAME) + " " + source + ": " + e2.getError());
 		}
 	}
 }
@@ -1205,18 +1193,25 @@ void QueueManager::moveFile(const string& source, const string& target) {
 void QueueManager::moveStuckFile(QueueItem* qi) {
 	moveFile(qi->getTempTarget(), qi->getTarget());
 
-	fire(QueueManagerListener::Removed(), qi);
-
 	if(qi->isFinished()) {
 		userQueue.remove(qi);
 	}
-	fileQueue.remove(qi);
 
-	fire(QueueManagerListener::RecheckAlreadyFinished(), qi);
+	string target = qi->getTarget();
+
+	if(!BOOLSETTING(KEEP_FINISHED_FILES)) {
+		fire(QueueManagerListener::Removed(), qi);
+		fileQueue.remove(qi);
+	 } else {
+		qi->addSegment(Segment(0, qi->getSize()));
+		fire(QueueManagerListener::StatusUpdated(), qi);
+	}
+
+	fire(QueueManagerListener::RecheckAlreadyFinished(), target);
 }
 
 void QueueManager::rechecked(QueueItem* qi) {
-	fire(QueueManagerListener::RecheckDone(), qi);
+	fire(QueueManagerListener::RecheckDone(), qi->getTarget());
 	fire(QueueManagerListener::StatusUpdated(), qi);
 
 	setDirty();

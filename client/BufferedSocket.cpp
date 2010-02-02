@@ -146,7 +146,6 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t
 		catch (const SocketException&) {
 			if (natRole == NAT_NONE)
 				throw;
-
 			Thread::sleep(SHORT_TIMEOUT);
 		}
 	}

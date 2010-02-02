@@ -98,6 +98,18 @@ namespace dht
 
 	KBucket::~KBucket(void)
 	{
+		// empty table
+		for(NodeList::iterator it = nodes.begin(); it != nodes.end(); ++it)
+		{
+			Node::Ptr& node = *it;
+			if(node->getUser()->isOnline())
+			{
+				ClientManager::getInstance()->putOffline(node.get());
+				node->dec();
+			}
+		}
+
+		nodes.clear();
 	}
 	
 	/*
@@ -238,7 +250,10 @@ namespace dht
 				{
 					// node is dead, remove it
 					if(node->getUser()->isOnline())
-						ClientManager::getInstance()->putOffline((*i).get());
+					{
+						ClientManager::getInstance()->putOffline(node.get());
+						node->dec();
+					}
 					
 					string ip	= node->getIdentity().getIp();
 					string port = node->getIdentity().getUdpPort();
@@ -299,13 +314,25 @@ namespace dht
 			xml.stepIn();
 			while(xml.findChild("Node"))
 			{
-				CID cid		= CID(xml.getChildAttrib("CID"));
-				string i4	= xml.getChildAttrib("I4");
-				uint16_t u4	= static_cast<uint16_t>(xml.getIntChildAttrib("U4"));
-				
+				CID cid			= CID(xml.getChildAttrib("CID"));
+				string i4		= xml.getChildAttrib("I4");
+				uint16_t u4		= static_cast<uint16_t>(xml.getIntChildAttrib("U4"));
+
 				if(Utils::isGoodIPPort(i4, u4))
+				{
+					UDPKey udpKey;
+					string key		= xml.getChildAttrib("key");
+					string keyIp	= xml.getChildAttrib("keyIP");
+
+					if(!key.empty() && !keyIp.empty())
+					{
+						udpKey.key = CID(key);
+						udpKey.ip = keyIp;
+					}
+
 					//addUser(cid, i4, u4);
-					BootstrapManager::getInstance()->addBootstrapNode(i4, u4, cid);
+					BootstrapManager::getInstance()->addBootstrapNode(i4, u4, cid, udpKey);
+				}
 			}
 			xml.stepOut();
 		}	

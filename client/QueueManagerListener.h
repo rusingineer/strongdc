@@ -52,13 +52,13 @@ public:
 	virtual void on(StatusUpdated, const QueueItem*) throw() { }
 	virtual void on(PartialList, const HintedUser&, const string&) throw() { }
 	
-	virtual void on(RecheckStarted, const QueueItem*) throw() { }
-	virtual void on(RecheckNoFile, const QueueItem*) throw() { }
-	virtual void on(RecheckFileTooSmall, const QueueItem*) throw() { }
-	virtual void on(RecheckDownloadsRunning, const QueueItem*) throw() { }
-	virtual void on(RecheckNoTree, const QueueItem*) throw() { }
-	virtual void on(RecheckAlreadyFinished, const QueueItem*) throw() { }
-	virtual void on(RecheckDone, const QueueItem*) throw() { }
+	virtual void on(RecheckStarted, const string&) throw() { }
+	virtual void on(RecheckNoFile, const string&) throw() { }
+	virtual void on(RecheckFileTooSmall, const string&) throw() { }
+	virtual void on(RecheckDownloadsRunning, const string&) throw() { }
+	virtual void on(RecheckNoTree, const string&) throw() { }
+	virtual void on(RecheckAlreadyFinished, const string&) throw() { }
+	virtual void on(RecheckDone, const string&) throw() { }
 };
 
 } // namespace dcpp

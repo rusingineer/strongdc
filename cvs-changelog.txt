@@ -1,3 +1,11 @@
+** svn479
+	fixed freezing with certain queues
+	[DHT] display slots count for search results
+	[DHT] default search results's file name is set to TTH
+	DC++ BZR merge
+	[DHT] fixed node disconnecting (it should fix last seen in favusers)
+	made user commands box multiline to allow line endings (ctrl+enter) for ADC cmds
+
 ** svn478
 	[DHT] nodes count in response is based on search type (it should save some bandwidth)
 	[DHT] sending more pings at once to allow faster detection of dead nodes and verification
