@@ -84,7 +84,7 @@ namespace dht
 		void processSearches();
 		
 		/** Processes incoming search results */
-		bool processSearchResults(const UserPtr& user);
+		bool processSearchResults(const UserPtr& user, size_t slots);
 		
 	private:
 	

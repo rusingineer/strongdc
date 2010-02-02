@@ -19,6 +19,7 @@
 #pragma once
 
 #include "Constants.h"
+#include "KBucket.h"
 
 #include "../client/CID.h"
 #include "../client/HttpConnection.h"
@@ -38,7 +39,7 @@ namespace dht
 		
 		void process();
 		
-		void addBootstrapNode(const string& ip, uint16_t udpPort, const CID& targetCID);
+		void addBootstrapNode(const string& ip, uint16_t udpPort, const CID& targetCID, const UDPKey& udpKey);
 		
 	private:
 	
@@ -49,6 +50,7 @@ namespace dht
 			string		ip;
 			uint16_t	udpPort;
 			CID			cid;
+			UDPKey		udpKey;
 		};
 		
 		/** List of bootstrap nodes */

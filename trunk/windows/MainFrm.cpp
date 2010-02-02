@@ -467,7 +467,7 @@ void MainFrame::updateQuickSearches() {
 void MainFrame::startSocket() {
 	SearchManager::getInstance()->disconnect();
 	ConnectionManager::getInstance()->disconnect();
-	DHT::getInstance()->disconnect();
+	DHT::getInstance()->stop();
 
 	//if(ClientManager::getInstance()->isActive()) {
 		try {
@@ -482,7 +482,7 @@ void MainFrame::startSocket() {
 		}
 		
 		try {
-			DHT::getInstance()->listen();
+			DHT::getInstance()->start();
 		} catch(const Exception&) {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}

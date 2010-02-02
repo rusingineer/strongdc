@@ -40,15 +40,9 @@
 namespace dht
 {
 
-	DHT::DHT(void) : bucket(NULL), lastPacket(0), dirty(false), requestFWCheck(true)
+	DHT::DHT(void) : bucket(NULL), lastPacket(0), dirty(false), requestFWCheck(true), firewalled(true)
 	{
-		// start with global firewalled status
-		firewalled = !ClientManager::getInstance()->isActive(Util::emptyString);
-		
-		if(!BOOLSETTING(USE_DHT))
-			return;
-	
-		create();
+		lastExternalIP = Util::getLocalIp(); // hack
 	}
 
 	DHT::~DHT(void)
@@ -57,50 +51,65 @@ namespace dht
 		if(bucket == NULL)
 			return;
 			
-		disconnect();
-		
-		dirty = true;
-		saveData();
-		
-		delete bucket;
-		
-		ConnectionManager::deleteInstance();		
-		TaskManager::deleteInstance();
-		IndexManager::deleteInstance();
-		SearchManager::deleteInstance();
-		BootstrapManager::deleteInstance(); 
+		stop(true);
 	}
 	
-	void DHT::create()
-	{
-		if(BOOLSETTING(UPDATE_IP))
-			SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::emptyString);
-				
-		bucket = new KBucket();	
-			
-		BootstrapManager::newInstance();
-		SearchManager::newInstance();
-		IndexManager::newInstance();
-		TaskManager::newInstance();
-		ConnectionManager::newInstance();
-				
-		loadData();	
-	}
-	
-	void DHT::listen() 
+	/*
+	 * Starts DHT.
+	 */
+	void DHT::start() 
 	{ 
 		if(!BOOLSETTING(USE_DHT))
 			return;
 			
+		// start with global firewalled status
+		firewalled = !ClientManager::getInstance()->isActive(Util::emptyString);
+		requestFWCheck = true;
+
 		if(!bucket) 
 		{
-			create();
+			if(BOOLSETTING(UPDATE_IP))
+				SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::emptyString);
+					
+			bucket = new KBucket();	
+				
+			BootstrapManager::newInstance();
+			SearchManager::newInstance();
+			IndexManager::newInstance();
+			TaskManager::newInstance();
+			ConnectionManager::newInstance();
+					
+			loadData();	
 		}
 			
 		socket.listen(); 
 		BootstrapManager::getInstance()->bootstrap(); 
 	}
 	
+	void DHT::stop(bool exiting) 
+	{ 
+		if(!bucket)
+			return;
+
+		socket.disconnect(); 
+		
+		if(!BOOLSETTING(USE_DHT) || exiting)
+		{
+			saveData();
+
+			delete bucket;
+			bucket = NULL;
+
+			ConnectionManager::deleteInstance();		
+			TaskManager::deleteInstance();
+			IndexManager::deleteInstance();
+			SearchManager::deleteInstance();
+			BootstrapManager::deleteInstance();
+
+			lastPacket = 0;
+		}
+	}
+
 	/*
 	 * Process incoming command 
 	 */
@@ -439,7 +448,7 @@ namespace dht
 		addNode(node, true);
 		
 		// do we wait for any search results from this user?
-		SearchManager::getInstance()->processSearchResults(node->getUser());		
+		SearchManager::getInstance()->processSearchResults(node->getUser(), Util::toInt(node->getIdentity().get("SL")));		
 		
 		if(it & PING)
 		{

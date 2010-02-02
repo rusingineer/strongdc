@@ -363,7 +363,8 @@ namespace dht
 					}
 					else
 					{
-						SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, Util::emptyString, DHTName, DHTName, i4, TTHValue(s->term), token));
+						// create search result: hub name+ip => "DHT", file name => TTH
+						SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, s->term, DHTName, DHTName, i4, TTHValue(s->term), token));
 						if(!u->isOnline())	// TODO: only node type < 3
 						{
 							// node is not online, try to contact him if we didn't contact him recently
@@ -374,6 +375,7 @@ namespace dht
 						}
 						else
 						{
+							sr->setSlots(ClientManager::getInstance()->getSlots(cid));
 							dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 						}
 					}
@@ -487,7 +489,7 @@ namespace dht
 	/*
 	 * Processes incoming search results 
 	 */
-	bool SearchManager::processSearchResults(const UserPtr& user)
+	bool SearchManager::processSearchResults(const UserPtr& user, size_t slots)
 	{
 		bool ok = false;
 		uint64_t tick = GET_TICK();
@@ -498,9 +500,13 @@ namespace dht
 			if(it->first == user->getCID())
 			{
 				// user is online, process his result
-				ok = true;
-				dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), it->second.second);
+				SearchResultPtr sr = it->second.second;
+				sr->setSlots(slots); // slot count should be known now
+				
+				dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 				searchResults.erase(it++);
+
+				ok = true;
 			}
 			else if(it->second.first + 60*1000 <= tick)
 			{

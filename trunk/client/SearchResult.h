@@ -57,6 +57,9 @@ public:
 	size_t getSlots() const { return slots; }
 	size_t getFreeSlots() const { return freeSlots; }
 	const TTHValue& getTTH() const { return tth; }
+
+	// for DHT use only
+	void setSlots(size_t _slots) { slots = _slots; }
 	
 	const string& getIP() const { return IP; }
 	const string& getToken() const { return token; }
