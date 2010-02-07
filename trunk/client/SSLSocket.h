@@ -34,6 +34,17 @@ using namespace yaSSL;
 
 namespace dcpp {
 
+class SSLSocketException : public SocketException {
+public:
+#ifdef _DEBUG
+	SSLSocketException(const string& aError) throw() : SocketException("SSLSocketException: " + aError) { }
+#else //_DEBUG
+	SSLSocketException(const string& aError) throw() : SocketException(aError) { }
+#endif // _DEBUG
+
+	virtual ~SSLSocketException() throw() { }
+};
+
 class CryptoManager;
 
 class SSLSocket : public Socket {

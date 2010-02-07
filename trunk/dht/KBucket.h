@@ -62,6 +62,9 @@ namespace dht
 		uint8_t getType() const { return type; }
 		bool isIpVerified() const { return ipVerified; }
 		
+		bool isOnline() const { return online; }
+		void setOnline(bool _online) { online = _online; }
+		
 		void setAlive();
 		void setIpVerified(bool verified) { ipVerified = verified; }
 		void setTimeout(uint64_t now = GET_TICK());
@@ -80,6 +83,7 @@ namespace dht
 		uint64_t	expires;
 		uint8_t		type;
 		bool		ipVerified;
+		bool		online;	// getUser()->isOnline() returns true when node is online in any hub, we need info when he is online in DHT
 	};
 		
 	class KBucket

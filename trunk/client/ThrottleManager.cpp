@@ -122,14 +122,34 @@ namespace dcpp
 		return 0;	// from BufferedSocket: -1 = failed, 0 = retry
 	}
 	
+	/*
+	 * Returns current download limit.
+	 */
+	int64_t ThrottleManager::getDownloadLimit() const
+	{
+		return downLimit;
+	}
+
+	/*
+	 * Returns current upload limit.
+	 */
+	int64_t ThrottleManager::getUploadLimit() const
+	{
+		return upLimit;
+	}
+
 	// TimerManagerListener
 	void ThrottleManager::on(TimerManagerListener::Second, uint64_t /*aTick*/) throw()
 	{
 		if(!BOOLSETTING(THROTTLE_ENABLE))
+		{
+			downLimit = 0;
+			upLimit = 0;
 			return;
+		}
 			
-		downLimit	= SETTING(MAX_DOWNLOAD_SPEED_LIMIT);
-		upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT);
+		downLimit	= SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024;
+		upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
 		
 		// limiter restrictions: up_limit >= 5 * slots + 4, up_limit >= 7 * down_limit
 		if(upLimit < MIN_UPLOAD_SPEED_LIMIT)
@@ -164,8 +184,8 @@ namespace dcpp
 				(SETTING(BANDWIDTH_LIMIT_START) > SETTING(BANDWIDTH_LIMIT_END) &&
 				(currentHour >= SETTING(BANDWIDTH_LIMIT_START) || currentHour < SETTING(BANDWIDTH_LIMIT_END))))
 			{
-				downLimit	= SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME);
-				upLimit		= SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME);
+				downLimit	= SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) * 1024;
+				upLimit		= SETTING(MAX_DOWNLOAD_SPEED_LIMIT_TIME) * 1024;
 			}
 		}
 		
@@ -173,14 +193,14 @@ namespace dcpp
 		if(downLimit > 0)
 		{
 			boost::lock_guard<boost::mutex> lock(downMutex);
-			downTokens = downLimit * 1024;
+			downTokens = downLimit;
 			downCond.notify_all();
 		}
 			
 		if(upLimit > 0)
 		{
 			boost::lock_guard<boost::mutex> lock(upMutex);
-			upTokens = upLimit * 1024;
+			upTokens = upLimit;
 			upCond.notify_all();
 		}
 	}

@@ -47,6 +47,16 @@ namespace dcpp
 		 * We must handle this a little bit differently than downloads, because of that stupidity in OpenSSL
 		 */		
 		int write(Socket* sock, void* buffer, size_t& len);
+
+		/*
+		 * Returns current download limit.
+		 */
+		int64_t getDownloadLimit() const;
+
+		/*
+		 * Returns current download limit.
+		 */
+		int64_t getUploadLimit() const;
 		
 	private:
 		

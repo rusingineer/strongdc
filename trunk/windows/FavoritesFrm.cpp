@@ -310,9 +310,9 @@ void FavoriteHubsFrame::handleMove(bool up)
 
 	// in grouped mode, the indexes of each item are completely random, so use entry pointers instead
 	FavoriteHubEntryList selected;
-	for(int i = ctrlHubs.GetItemCount() - 2; i >= 0; --i) {
-		if(ctrlHubs.GetItemState(i, LVIS_SELECTED))
-			selected.push_back((FavoriteHubEntry*)ctrlHubs.GetItemData(i));
+	int i = -1;
+	while( (i = ctrlHubs.GetNextItem(i, LVNI_SELECTED)) != -1) {
+		selected.push_back((FavoriteHubEntry*)ctrlHubs.GetItemData(i));
 	}
 	
 	FavoriteHubEntryList fh_copy = fh;
@@ -338,12 +338,12 @@ void FavoriteHubsFrame::handleMove(bool up)
 
 	fillList();
 
-	int count = ctrlHubs.GetItemCount() - 2;
 	for(FavoriteHubEntryList::const_iterator i = selected.begin(), iend = selected.end(); i != iend; ++i) {
-		for(int j = count; j >= 0; --j) {
+		for(int j = 0; j < ctrlHubs.GetItemCount(); ++j) {
 			if((FavoriteHubEntry*)ctrlHubs.GetItemData(j) == *i)
 			{
 				ctrlHubs.SetItemState(j, LVIS_SELECTED, LVIS_SELECTED);
+				ctrlHubs.EnsureVisible(j, FALSE);
 				break;
 			}
 		}

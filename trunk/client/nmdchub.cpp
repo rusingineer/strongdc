@@ -270,15 +270,11 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		
 		string seeker = param.substr(i, j-i);
 
-		bool bPassive = (seeker.compare(0, 4, "Hub:") == 0);
+		bool isPassive = (seeker.compare(0, 4, "Hub:") == 0);
 		bool meActive = isActive();
 
-		// We don't wan't to answer passive searches if we're in passive mode...
-		if((bPassive == true) && !meActive) {
-			return;
-		}
 		// Filter own searches
-		if(meActive && bPassive == false) {
+		if(meActive && isPassive == false) {
 			if(seeker == (getLocalIp() + ":" + Util::toString(SearchManager::getInstance()->getPort()))) {
 				return;
 			}
@@ -310,7 +306,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 
 			if(count > 7) {
 			    if(isOp()) {
-					if(bPassive)
+					if(isPassive)
 						fire(ClientListener::SearchFlood(), this, seeker.substr(4));
 					else
 						fire(ClientListener::SearchFlood(), this, seeker + " " + STRING(NICK_UNKNOWN));
@@ -343,7 +339,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		string terms = unescape(param.substr(i));
 
 		if(terms.size() > 0) {
-			if(seeker.compare(0, 4, "Hub:") == 0) {
+			if(isPassive) {
 				OnlineUserPtr u = findUser(seeker.substr(4));
 
 				if(u == NULL) {
@@ -354,9 +350,14 @@ void NmdcHub::onLine(const string& aLine) throw() {
 					u->getUser()->setFlag(User::PASSIVE);
 					updated(u);
 				}
+
+				// ignore if we or remote client don't support NAT traversal in passive mode
+				// although many NMDC hubs won't send us passive if we're in passive too, so just in case...
+				if(!meActive && (!u->getUser()->isSet(User::NAT_TRAVERSAL) || !BOOLSETTING(ALLOW_NAT_TRAVERSAL)))
+					return;
 			}
 
-			fire(ClientListener::NmdcSearch(), this, seeker, a, Util::toInt64(size), type, terms, bPassive);
+			fire(ClientListener::NmdcSearch(), this, seeker, a, Util::toInt64(size), type, terms, isPassive);
 		}
 	} else if(cmd == "MyINFO") {
 		string::size_type i, j;
@@ -410,10 +411,17 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		u.getIdentity().setConnection(connection);
 		u.getIdentity().setStatus(Util::toString(param[j-1]));
 		
+		
 		if(u.getIdentity().getStatus() & Identity::TLS) {
 			u.getUser()->setFlag(User::TLS);
 		} else {
 			u.getUser()->unsetFlag(User::TLS);
+		}
+
+		if(u.getIdentity().getStatus() & Identity::NAT) {
+			u.getUser()->setFlag(User::NAT_TRAVERSAL);
+		} else {
+			u.getUser()->unsetFlag(User::NAT_TRAVERSAL);
 		}
 
 		i = j + 1;

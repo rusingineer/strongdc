@@ -608,8 +608,8 @@
 		<String Name="SettingsConfirmExit">Potvrzovat ukončení StrongDC++</String>
 		<String Name="SettingsConfirmHubRemoval">Potvrzovat odebrání hubu z oblíbených</String>
 		<String Name="SettingsConfirmItemRemoval">Potvrzovat při odebírání položek z fronty stahování</String>
-		<String Name="SettingsStrongDC">StrongDC++</String>
-		<String Name="SettingsStrongDCExtraDownloads">Extra sloty pro soubory s nejvyšší prioritou</String>
+		<String Name="SettingsStrongdc">StrongDC++</String>
+		<String Name="SettingsStrongdcExtraDownloads">Extra sloty pro soubory s nejvyšší prioritou</String>
 		<String Name="SettingsDebugCommands">Debug příkazy</String>
 		<String Name="SettingsDefaultAwayMsg">Výchozí away zpráva</String>
 		<String Name="SettingsDirect">Přímé spojení</String>
