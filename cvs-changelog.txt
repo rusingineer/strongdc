@@ -1,3 +1,9 @@
+** svn480
+	accepting search results from users with NAT-T support in passive mode
+	[DHT] fixed problems when user was online in any hub but not in DHT (crashes ...)
+	[DHT] search results requests are now encrypted when key is known
+	fixed non-working multimedia keys (THX adrian_007)
+
 ** svn479
 	fixed freezing with certain queues
 	[DHT] display slots count for search results

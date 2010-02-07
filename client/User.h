@@ -41,11 +41,12 @@ public:
 		PASSIVE					= 0x04,
 		NMDC					= 0x08,
 		BOT						= 0x10,
-		TLS						= 0x20,	//< Client supports TLS
-		OLD_CLIENT				= 0x40, //< Can't download - old client
-		NO_ADC_1_0_PROTOCOL		=  0x80,	//< Doesn't support "ADC/1.0" (dc++ <=0.703)
+		TLS						= 0x20,		//< Client supports TLS
+		OLD_CLIENT				= 0x40,		//< Can't download - old client
+		NO_ADC_1_0_PROTOCOL		= 0x80,		//< Doesn't support "ADC/1.0" (dc++ <=0.703)
 		NO_ADCS_0_10_PROTOCOL	= 0x100,	//< Doesn't support "ADCS/0.10"
-		DHT						= 0x200
+		DHT						= 0x200,
+		NAT_TRAVERSAL			= 0x400,	//< Client supports NAT Traversal
 	};
 
 	struct Hash {

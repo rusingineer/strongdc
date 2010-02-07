@@ -343,15 +343,14 @@ namespace dht
 						continue;
 
 					// create user as offline (only TCP connected users will be online)
-					UserPtr u = ClientManager::getInstance()->getUser(cid);
-					u->setFlag(User::DHT);
-					
+					Node::Ptr source = DHT::getInstance()->createNode(cid, i4, u4, false, false);
+
 					if(partial)
 					{
-						if(!u->isOnline())	// TODO: only node type < 3
+						if(!source->isOnline())
 						{
 							// node is not online, try to contact him
-							DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE, cid, CID()); // TODO: key
+							DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE, cid, source->getUdpKey());
 						}
 						
 						// ask for partial file
@@ -359,23 +358,23 @@ namespace dht
 						cmd.addParam("U4", Util::toString(dcpp::SearchManager::getInstance()->getPort()));
 						cmd.addParam("TR", s->term);
 						
-						DHT::getInstance()->send(cmd, i4, u4, cid, CID()); // TODO: key
+						DHT::getInstance()->send(cmd, i4, u4, cid, source->getUdpKey());
 					}
 					else
 					{
 						// create search result: hub name+ip => "DHT", file name => TTH
-						SearchResultPtr sr(new SearchResult(u, SearchResult::TYPE_FILE, 0, 0, size, s->term, DHTName, DHTName, i4, TTHValue(s->term), token));
-						if(!u->isOnline())	// TODO: only node type < 3
+						SearchResultPtr sr(new SearchResult(source->getUser(), SearchResult::TYPE_FILE, 0, 0, size, s->term, DHTName, DHTName, i4, TTHValue(s->term), token));
+						if(!source->isOnline())
 						{
 							// node is not online, try to contact him if we didn't contact him recently
-							if(searchResults.find(u->getCID()) != searchResults.end())
-								DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE, cid, CID()); // TODO: key
+							if(searchResults.find(source->getUser()->getCID()) != searchResults.end())
+								DHT::getInstance()->info(i4, u4, DHT::PING | DHT::MAKE_ONLINE, cid, source->getUdpKey());
 								
-							searchResults.insert(std::make_pair(u->getCID(), std::make_pair(GET_TICK(), sr)));
+							searchResults.insert(std::make_pair(source->getUser()->getCID(), std::make_pair(GET_TICK(), sr)));
 						}
 						else
 						{
-							sr->setSlots(ClientManager::getInstance()->getSlots(cid));
+							sr->setSlots(Util::toInt(source->getIdentity().get("SL")));
 							dcpp::SearchManager::getInstance()->fire(SearchManagerListener::SR(), sr);
 						}
 					}

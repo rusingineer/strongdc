@@ -59,6 +59,7 @@
 #include "../client/LogManager.h"
 #include "../client/WebServerManager.h"
 #include "../client/Thread.h"
+#include "../client/ThrottleManager.h"
 
 #include "../dht/dht.h"
 
@@ -1424,8 +1425,8 @@ void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	tstring down = _T("D: [") + Util::toStringW(DownloadManager::getInstance()->getDownloadCount()) + _T("][");
 	tstring up = _T("U: [") + Util::toStringW(UploadManager::getInstance()->getUploadCount()) + _T("][");
 	if(BOOLSETTING(THROTTLE_ENABLE)) {
-		down += Util::formatBytesW(SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024) + _T("/s");
-		up += Util::formatBytesW(SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024) + _T("/s");
+		down += Util::formatBytesW(ThrottleManager::getInstance()->getDownloadLimit()) + _T("/s");
+		up += Util::formatBytesW(ThrottleManager::getInstance()->getUploadLimit()) + _T("/s");
 	} else {
 		down += _T("-");
 		up += _T("-");
@@ -1498,13 +1499,16 @@ LRESULT MainFrame::onActivateApp(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/
 	return 0;
 }
 
-LRESULT MainFrame::onAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) {
-		if(GET_APPCOMMAND_LPARAM(lParam) == APPCOMMAND_BROWSER_FORWARD)
+LRESULT MainFrame::onAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
+	if(GET_APPCOMMAND_LPARAM(lParam) == APPCOMMAND_BROWSER_FORWARD) {
 		ctrlTab.SwitchTo();
-	if(GET_APPCOMMAND_LPARAM(lParam) == APPCOMMAND_BROWSER_BACKWARD)
+	} else if(GET_APPCOMMAND_LPARAM(lParam) == APPCOMMAND_BROWSER_BACKWARD) {
 		ctrlTab.SwitchTo(false);
+	} else {
+		bHandled = FALSE;
+	}
 	
-	return TRUE;
+	return FALSE;
 }
 
 LRESULT MainFrame::onAway(WORD , WORD , HWND, BOOL& ) {

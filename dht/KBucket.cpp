@@ -42,7 +42,7 @@ namespace dht
 
 	// Set all new nodes' type to 3 to avoid spreading dead nodes..
 	Node::Node(const UserPtr& u) : 
-		OnlineUser(u, dht::client, 0), created(GET_TICK()), type(3), expires(0), ipVerified(false)
+		OnlineUser(u, dht::client, 0), created(GET_TICK()), type(3), expires(0), ipVerified(false), online(false)
 	{
 	}
 
@@ -102,7 +102,7 @@ namespace dht
 		for(NodeList::iterator it = nodes.begin(); it != nodes.end(); ++it)
 		{
 			Node::Ptr& node = *it;
-			if(node->getUser()->isOnline())
+			if(node->isOnline())
 			{
 				ClientManager::getInstance()->putOffline(node.get());
 				node->dec();
@@ -119,6 +119,7 @@ namespace dht
 	{
 		if(u->isSet(User::DHT)) // is this user already known in DHT?
 		{
+			// todo: try to get node from ClientManager to bug when putting node online
 			for(NodeList::iterator it = nodes.begin(); it != nodes.end(); ++it)
 			{
 				Node::Ptr node = *it;
@@ -146,12 +147,14 @@ namespace dht
 						node->setAlive();
 						node->getIdentity().setIp(ip);
 						node->getIdentity().setUdpPort(Util::toString(port));
+						
+						// put node at the end of the list
+						nodes.erase(it);
+						nodes.push_back(node);
+					
+						DHT::getInstance()->setDirty();
 					}
 
-					nodes.erase(it);
-					nodes.push_back(node);
-					
-					DHT::getInstance()->setDirty();
 					return node;
 				}
 			}
@@ -249,15 +252,16 @@ namespace dht
 				if(node->unique(2))
 				{
 					// node is dead, remove it
-					if(node->getUser()->isOnline())
+					string ip	= node->getIdentity().getIp();
+					string port = node->getIdentity().getUdpPort();
+					ipMap.erase(ip + ":" + port);
+
+					if(node->isOnline())
 					{
 						ClientManager::getInstance()->putOffline(node.get());
 						node->dec();
 					}
-					
-					string ip	= node->getIdentity().getIp();
-					string port = node->getIdentity().getUdpPort();
-					ipMap.erase(ip + ":" + port);
+
 					i = nodes.erase(i);
 					dirty = true;
 

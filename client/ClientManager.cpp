@@ -430,11 +430,6 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 {
 	Speaker<ClientManagerListener>::fire(ClientManagerListener::IncomingSearch(), aString);
 
-	// We don't wan't to answer passive searches if we're in passive mode...
-	if(isPassive && !ClientManager::getInstance()->isActive(aClient->getHubUrl())) {
-		return;
-	}
-
 	SearchResultList l;
 	ShareManager::getInstance()->search(l, aString, aSearchType, aSize, aFileType, aClient, isPassive ? 5 : 10);
 	if(l.size() > 0) {
