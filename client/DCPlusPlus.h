@@ -139,6 +139,7 @@ typedef WStringMap::iterator WStringMapIter;
 typedef wstring tstring;
 typedef WStringList TStringList;
 typedef WStringIter TStringIter;
+typedef WStringIterC TStringIterC;
 
 typedef WStringPair TStringPair;
 typedef WStringPairIter TStringPairIter;
@@ -152,6 +153,7 @@ typedef WStringMapIter TStringMapIter;
 typedef string tstring;
 typedef StringList TStringList;
 typedef StringIter TStringIter;
+typedef StringIterC TStringIterC;
 
 typedef StringPair TStringPair;
 typedef StringPairIter TStringPairIter;

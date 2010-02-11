@@ -46,7 +46,6 @@ WinUtil::TextItem CommandDlg::texts[] = {
 	{ IDC_SETTINGS_HUB, ResourceManager::USER_CMD_HUB },
 	{ IDC_SETTINGS_TO, ResourceManager::USER_CMD_TO },
 	{ IDC_SETTINGS_ONCE, ResourceManager::USER_CMD_ONCE },
-	{ IDC_USER_CMD_EXAMPLE, ResourceManager::USER_CMD_PREVIEW },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -56,7 +55,6 @@ LRESULT CommandDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	SetWindowText(CTSTRING(USER_CMD_WINDOW));
 
 #define ATTACH(id, var) var.Attach(GetDlgItem(id))
-	ATTACH(IDC_RESULT, ctrlResult);
 	ATTACH(IDC_NAME, ctrlName);
 	ATTACH(IDC_HUB, ctrlHub);
 	ATTACH(IDC_SETTINGS_SEPARATOR, ctrlSeparator);
@@ -101,42 +99,31 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 %[line:reason]: opens up a window asking for \"reason\"\
 "));
 
+	int newType;
 	if(type == UserCommand::TYPE_SEPARATOR) {
 		ctrlSeparator.SetCheck(BST_CHECKED);
+		newType = 0;
 	} else {
-		// More difficult, determine type by what it seems to be...
-		if((_tcsncmp(command.c_str(), _T("$To: "), 5) == 0) &&
-			(command.find(_T(" From: %[myNI] $<%[myNI]> ")) != string::npos ||
-			command.find(_T(" From: %[mynick] $<%[mynick]> ")) != string::npos) &&
-			command.find(_T('|')) == command.length() - 1) // if it has | anywhere but the end, it is raw
-		{
-			string::size_type i = command.find(_T(' '), 5);
-			dcassert(i != string::npos);
-			tstring to = command.substr(5, i-5);
-			string::size_type cmd_pos = command.find(_T('>'), 5) + 2;
-			tstring cmd = Text::toT(NmdcHub::validateMessage(Text::fromT(command.substr(cmd_pos, command.length()-cmd_pos-1)), true));
-			ctrlPM.SetCheck(BST_CHECKED);
-			ctrlNick.SetWindowText(to.c_str());
-			ctrlCommand.SetWindowText(cmd.c_str());
-		} else if(((_tcsncmp(command.c_str(), _T("<%[mynick]> "), 12) == 0) ||
-			(_tcsncmp(command.c_str(), _T("<%[myNI]> "), 10) == 0)) &&
-			command[command.length()-1] == '|') 
-		{
-			// Looks like a chat thing...
-			string::size_type cmd_pos = command.find(_T('>')) + 2;
-			tstring cmd = Text::toT(NmdcHub::validateMessage(Text::fromT(command.substr(cmd_pos, command.length()-cmd_pos-1)), true));
-			ctrlChat.SetCheck(BST_CHECKED);
-			ctrlCommand.SetWindowText(cmd.c_str());
-		} else {
-			tstring cmd = command;
+		ctrlCommand.SetWindowText(Text::toDOS(command).c_str());
+		if(type == UserCommand::TYPE_RAW || type == UserCommand::TYPE_RAW_ONCE) {
 			ctrlRaw.SetCheck(BST_CHECKED);
-			ctrlCommand.SetWindowText(cmd.c_str());
+			newType = 1;
+		} else if(type == UserCommand::TYPE_CHAT || type == UserCommand::TYPE_CHAT_ONCE) {
+			if(to.empty()) {
+				ctrlChat.SetCheck(BST_CHECKED);
+				newType = 2;
+			} else {
+				ctrlPM.SetCheck(BST_CHECKED);
+				ctrlNick.SetWindowText(to.c_str());
+				newType = 3;
+			}		
 		}
-		if(type == UserCommand::TYPE_RAW_ONCE) {
+
+		if(type == UserCommand::TYPE_RAW_ONCE || type == UserCommand::TYPE_CHAT_ONCE) {
 			ctrlOnce.SetCheck(BST_CHECKED);
-			type = 1;
 		}
 	}
+	type = newType;
 
 	ctrlHub.SetWindowText(hub.c_str());
 	ctrlName.SetWindowText(name.c_str());
@@ -152,7 +139,6 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 	
 	updateControls();
 	updateCommand();
-	ctrlResult.SetWindowText(command.c_str());
 
 	ctrlSeparator.SetFocus();
 	
@@ -162,26 +148,30 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 
 LRESULT CommandDlg::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	updateContext();
 	if(wID == IDOK) {
-		TCHAR buf[256];
-
-		if((type != 0) && 
-			((ctrlName.GetWindowTextLength() == 0) || (ctrlCommand.GetWindowTextLength()== 0)))
-		{
+		if((type != 0) && ((ctrlName.GetWindowTextLength() == 0) || (ctrlCommand.GetWindowTextLength()== 0))) {
 			MessageBox(_T("Name and command must not be empty"));
 			return 0;
 		}
 
-#define GET_TEXT(id, var) \
-	GetDlgItemText(id, buf, 256); \
-	var = buf;
+		updateContext();
 
-		GET_TEXT(IDC_NAME, name);
-		GET_TEXT(IDC_HUB, hub);
-
-		if(type != 0) {
-			type = (ctrlOnce.GetCheck() == BST_CHECKED) ? 2 : 1;
+		TCHAR buf[256];
+		switch(type) {
+		case 0:
+			type = UserCommand::TYPE_SEPARATOR;
+			break;
+		case 1:
+			type = (ctrlOnce.GetCheck() == BST_CHECKED) ? UserCommand::TYPE_RAW_ONCE : UserCommand::TYPE_RAW;
+			break;
+		case 2:
+			type = UserCommand::TYPE_CHAT;
+			break;
+		case 3:
+			type = (ctrlOnce.GetCheck() == BST_CHECKED) ? UserCommand::TYPE_CHAT_ONCE : UserCommand::TYPE_CHAT;
+			ctrlNick.GetWindowText(buf, sizeof(buf) - 1);
+			to = buf;
+			break;
 		}
 	}
 	EndDialog(wID);
@@ -190,14 +180,18 @@ LRESULT CommandDlg::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 
 LRESULT CommandDlg::onChange(WORD , WORD , HWND , BOOL& ) {
 	updateCommand();
-	ctrlResult.SetWindowText(command.c_str());
+	return 0;
+}
+
+LRESULT CommandDlg::onHub(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	updateHub();
 	return 0;
 }
 
 LRESULT CommandDlg::onType(WORD , WORD, HWND , BOOL& ) {
 	updateType();
 	updateCommand();
-	ctrlResult.SetWindowText(command.c_str());
 	updateControls();
 	return 0;
 }
@@ -232,18 +226,21 @@ void CommandDlg::updateCommand() {
 	TCHAR buf[BUF_LEN];
 	if(type == 0) {
 		command.clear();
-	} else if(type == 1) {
+	} else {
 		ctrlCommand.GetWindowText(buf, BUF_LEN-1);
 		command = buf;
-	} else if(type == 2) {
-		ctrlCommand.GetWindowText(buf, BUF_LEN - 1);
-		command = Text::toT("<%[myNI]> " + NmdcHub::validateMessage(Text::fromT(buf), false) + "|");
-	} else if(type == 3) {
-		ctrlNick.GetWindowText(buf, BUF_LEN - 1);
-		tstring to(buf);
-		ctrlCommand.GetWindowText(buf, BUF_LEN - 1);
-		command = _T("$To: ") + to + _T(" From: %[myNI] $<%[myNI]> ") + Text::toT(NmdcHub::validateMessage(Text::fromT(buf), false)) + _T("|");
 	}
+
+	if(type == 1 && UserCommand::adc(Text::fromT(hub)) && !command.empty() && *(command.end() - 1) != '\n')
+		command += '\n';
+}
+
+void CommandDlg::updateHub() {
+	static const size_t BUF_LEN = 1024;
+	TCHAR buf[BUF_LEN];
+	ctrlHub.GetWindowText(buf, BUF_LEN-1);
+	hub = buf;
+	updateCommand();
 }
 
 void CommandDlg::updateControls() {

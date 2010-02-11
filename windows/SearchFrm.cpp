@@ -989,7 +989,7 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		if(!sr->getUser()->isOnline())
 			continue;
 
-		if(uc.getType() == UserCommand::TYPE_RAW_ONCE) {
+		if(uc.once()) {
 			if(users.find(sr->getUser()->getCID()) != users.end())
 				continue;
 			users.insert(sr->getUser()->getCID());
@@ -1009,7 +1009,7 @@ void SearchFrame::runUserCommand(UserCommand& uc) {
 		ucParams["tth"] = ucParams["fileTR"];
 
 		StringMap tmp = ucParams;
-		ClientManager::getInstance()->userCommand(sr->getUser(), uc, tmp, true);
+		ClientManager::getInstance()->userCommand(HintedUser(sr->getUser(), sr->getHubURL()), uc, tmp, true);
 	}
 }
 

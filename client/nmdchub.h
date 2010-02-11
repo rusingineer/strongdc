@@ -44,7 +44,7 @@ public:
 
 	void hubMessage(const string& aMessage, bool /*thirdPerson*/ = false);
 	void privateMessage(const OnlineUserPtr& aUser, const string& aMessage, bool /*thirdPerson*/ = false);
-	void sendUserCmd(const string& aUserCmd) throw() { send(fromUtf8(aUserCmd)); }
+	void sendUserCmd(const UserCommand& command, const StringMap& params);
 	void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken);
 	void password(const string& aPass) { send("$MyPass " + fromUtf8(aPass) + "|"); }
 	void info(bool force) { myInfo(force); }
@@ -108,6 +108,7 @@ private:
 	string toUtf8(const string& str) const { return Text::toUtf8(str, *getEncoding()); }
 	string fromUtf8(const string& str) const { return Text::fromUtf8(str, *getEncoding()); }
 
+	void privateMessage(const string& nick, const string& aMessage, bool thirdPerson);
 	void validateNick(const string& aNick) { send("$ValidateNick " + fromUtf8(aNick) + "|"); }
 	void key(const string& aKey) { send("$Key " + aKey + "|"); }
 	void version() { send("$Version 1,0091|"); }

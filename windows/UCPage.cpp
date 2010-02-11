@@ -72,7 +72,7 @@ LRESULT UCPage::onAddMenu(WORD , WORD , HWND , BOOL& ) {
 
 	if(dlg.DoModal() == IDOK) {
 		addEntry(FavoriteManager::getInstance()->addUserCommand(dlg.type, dlg.ctx,
-			0, Text::fromT(dlg.name), Text::fromT(dlg.command), Text::fromT(dlg.hub)), ctrlCommands.GetItemCount());
+			0, Text::fromT(dlg.name), Text::fromT(dlg.command), Text::fromT(dlg.to), Text::fromT(dlg.hub)), ctrlCommands.GetItemCount());
 	}
 	return 0;
 }
@@ -88,6 +88,7 @@ LRESULT UCPage::onChangeMenu(WORD , WORD , HWND , BOOL& ) {
 		dlg.ctx = uc.getCtx();
 		dlg.name = Text::toT(uc.getName());
 		dlg.command = Text::toT(uc.getCommand());
+		dlg.to = Text::toT(uc.getTo());
 		dlg.hub = Text::toT(uc.getHub());
 
 		if(dlg.DoModal() == IDOK) {
@@ -99,6 +100,7 @@ LRESULT UCPage::onChangeMenu(WORD , WORD , HWND , BOOL& ) {
 			ctrlCommands.SetItemText(sel, 2, dlg.hub.c_str());
 			uc.setName(Text::fromT(dlg.name));
 			uc.setCommand(Text::fromT(dlg.command));
+			uc.setTo(Text::fromT(dlg.to));
 			uc.setHub(Text::fromT(dlg.hub));
 			uc.setType(dlg.type);
 			uc.setCtx(dlg.ctx);

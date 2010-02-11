@@ -239,8 +239,6 @@ namespace dht
 				isAcceptable = bucket->insert(node); // insert node to our routing table
 			}
 
-			// fixme:	there is a bug when user is not added to routing table but we need to make him online
-			//			it can result in situation that dht node can be put online moretimes (you see [DHT,DHT] then)
 			if(makeOnline)
 			{
 				// put him online so we can make a connection with him

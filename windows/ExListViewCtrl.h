@@ -26,8 +26,6 @@
 #include "ListViewArrows.h"
 #include "WinUtil.h"
 
-#include <uxtheme.h>
-
 class ExListViewCtrl : public CWindowImpl<ExListViewCtrl, CListViewCtrl, CControlWinTraits>,
 	public ListViewArrows<ExListViewCtrl>
 {

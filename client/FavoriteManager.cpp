@@ -55,10 +55,10 @@ FavoriteManager::~FavoriteManager() throw() {
 	for_each(previewApplications.begin(), previewApplications.end(), DeleteFunction());
 }
 
-UserCommand FavoriteManager::addUserCommand(int type, int ctx, Flags::MaskType flags, const string& name, const string& command, const string& hub) {
+UserCommand FavoriteManager::addUserCommand(int type, int ctx, Flags::MaskType flags, const string& name, const string& command, const string& to, const string& hub) {
 	// No dupes, add it...
 	Lock l(cs);
-	userCommands.push_back(UserCommand(lastId++, type, ctx, flags, name, command, hub));
+	userCommands.push_back(UserCommand(lastId++, type, ctx, flags, name, command, to, hub));
 	UserCommand& uc = userCommands.back();
 	if(!uc.isSet(UserCommand::FLAG_NOSAVE)) 
 		save();
@@ -432,6 +432,7 @@ void FavoriteManager::save() {
 				xml.addChildAttrib("Context", i->getCtx());
 				xml.addChildAttrib("Name", i->getName());
 				xml.addChildAttrib("Command", i->getCommand());
+				xml.addChildAttrib("To", i->getTo());
 				xml.addChildAttrib("Hub", i->getHub());
 			}
 		}
@@ -504,15 +505,15 @@ void FavoriteManager::load() {
 	static const char kickstr[] = 
 		"$To: %[userNI] From: %[myNI] $<%[myNI]> You are being kicked because: %[kickline:Reason]|<%[myNI]> is kicking %[userNI] because: %[kickline:Reason]|$Kick %[userNI]|";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
-		STRING(KICK_USER), kickstr, "op");
+		STRING(KICK_USER), kickstr, "", "op");
 	static const char kickfilestr[] = 
 		"$To: %[userNI] From: %[myNI] $<%[myNI]> You are being kicked because: %[kickline:Reason] %[fileFN]|<%[myNI]> is kicking %[userNI] because: %[kickline:Reason] %[fileFN]|$Kick %[userNI]|";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
-		STRING(KICK_USER_FILE), kickfilestr, "op");
+		STRING(KICK_USER_FILE), kickfilestr, "", "op");
 	static const char redirstr[] =
 		"$OpForceMove $Who:%[userNI]$Where:%[line:Target Server]$Msg:%[line:Message]|";
 	addUserCommand(UserCommand::TYPE_RAW_ONCE, UserCommand::CONTEXT_CHAT | UserCommand::CONTEXT_SEARCH, UserCommand::FLAG_NOSAVE, 
-		STRING(REDIRECT_USER), redirstr, "op");
+		STRING(REDIRECT_USER), redirstr, "", "op");
 
 	try {
 		SimpleXML xml;
@@ -623,8 +624,8 @@ void FavoriteManager::load(SimpleXML& aXml) {
 	if(aXml.findChild("UserCommands")) {
 		aXml.stepIn();
 		while(aXml.findChild("UserCommand")) {
-			addUserCommand(aXml.getIntChildAttrib("Type"), aXml.getIntChildAttrib("Context"),
-				0, aXml.getChildAttrib("Name"), aXml.getChildAttrib("Command"), aXml.getChildAttrib("Hub"));
+			addUserCommand(aXml.getIntChildAttrib("Type"), aXml.getIntChildAttrib("Context"), 0, aXml.getChildAttrib("Name"),
+				aXml.getChildAttrib("Command"), aXml.getChildAttrib("To"), aXml.getChildAttrib("Hub"));
 		}
 		aXml.stepOut();
 	}
@@ -856,7 +857,7 @@ UserCommand::List FavoriteManager::getUserCommands(int ctx, const StringList& hu
 					lst.push_back(*i);
 					break;
 				}
-			} else if(!hubAdc && !commandAdc) {
+			} else if((!hubAdc && !commandAdc) || uc.isChat()) {
 				if((uc.getHub().length() == 0) || 
 					(uc.getHub() == "op" && isOp[j]) ||
 					(uc.getHub() == hub) )

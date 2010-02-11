@@ -726,6 +726,28 @@ void AdcHub::privateMessage(const OnlineUserPtr& user, const string& aMessage, b
 	send(c);
 }
 
+void AdcHub::sendUserCmd(const UserCommand& command, const StringMap& params) {
+	if(state != STATE_NORMAL)
+		return;
+	string cmd = Util::formatParams(command.getCommand(), params, false);
+	if(command.isChat()) {
+		if(command.getTo().empty()) {
+			hubMessage(cmd);
+		} else {
+			const string& to = command.getTo();
+			Lock l(cs);
+			for(SIDMap::const_iterator i = users.begin(); i != users.end(); ++i) {
+				if(i->second->getIdentity().getNick() == to) {
+					privateMessage(i->second, cmd);
+					return;
+				}
+			}
+		}
+	} else {
+		send(cmd);
+	}
+}
+
 void AdcHub::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) {
 	if(state != STATE_NORMAL)
 		return;

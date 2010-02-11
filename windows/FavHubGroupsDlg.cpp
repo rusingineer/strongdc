@@ -33,7 +33,15 @@ LRESULT FavHubGroupsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 		width = rc.Width() - 20; // for scroll
 	}
 
-	ctrlGroups.InsertColumn(0, _T("Name"), LVCFMT_LEFT, WinUtil::percent(width, 70), 0);
+	// Translate dialog
+	SetWindowText(CTSTRING(MANAGE_GROUPS));
+	SetDlgItemText(IDC_ADD, CTSTRING(ADD));
+	SetDlgItemText(IDC_REMOVE, CTSTRING(REMOVE));
+	SetDlgItemText(IDC_UPDATE, CTSTRING(UPDATE));
+	SetDlgItemText(IDCANCEL, CTSTRING(CLOSE));
+	SetDlgItemText(IDC_NAME_STATIC, CTSTRING(NAME));
+
+	ctrlGroups.InsertColumn(0, CTSTRING(NAME), LVCFMT_LEFT, WinUtil::percent(width, 70), 0);
 	ctrlGroups.InsertColumn(1, _T("Private"), LVCFMT_LEFT, WinUtil::percent(width, 15), 0);
 	ctrlGroups.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
@@ -68,7 +76,7 @@ void FavHubGroupsDlg::save() {
 		group.second.connect = getText(2, i) == _T("Yes");
 		groups.insert(group);*/
 		name = Text::fromT(getText(0, i));
-		group.priv = getText(1, i) == _T("Yes");
+		group.priv = getText(1, i) == TSTRING(YES);
 		groups.insert(make_pair(name, group));
 	}
 	FavoriteManager::getInstance()->setFavHubGroups(groups);
@@ -88,7 +96,7 @@ int FavHubGroupsDlg::findGroup(LPCTSTR name) {
 
 void FavHubGroupsDlg::addItem(const tstring& name, bool priv, bool select /*= false*/) {
 	int32_t item = ctrlGroups.InsertItem(ctrlGroups.GetItemCount(), name.c_str());
-	ctrlGroups.SetItemText(item, 1, priv ? _T("Yes") : _T("No"));
+	ctrlGroups.SetItemText(item, 1, priv ? CTSTRING(YES) : CTSTRING(NO));
 	if(select)
 		ctrlGroups.SelectItem(item);
 }
@@ -101,12 +109,12 @@ bool FavHubGroupsDlg::getItem(tstring& name, bool& priv, bool checkSel) {
 		name.resize(wnd.GetWindowText(&name[0], name.size()));
 		wnd.Detach();
 		if(name.empty()) {
-			MessageBox(_T("You must enter a group name!"), _T("Manage Groups"), MB_ICONERROR);
+			MessageBox(_T("You must enter a group name!"), CTSTRING(MANAGE_GROUPS), MB_ICONERROR);
 			return false;
 		} else {
 			int32_t pos = findGroup(name.c_str());
 			if(pos != -1 && (checkSel == false || pos != ctrlGroups.GetSelectedIndex())) {
-				MessageBox(_T("Item already exists!"), _T("Manage Groups"), MB_ICONERROR);
+				MessageBox(_T("Item already exists!"), CTSTRING(MANAGE_GROUPS), MB_ICONERROR);
 				return false;
 			}
 		}
@@ -138,7 +146,7 @@ void FavHubGroupsDlg::updateSelectedGroup(bool forceClean /*= false*/) {
 	if(ctrlGroups.GetSelectedIndex() != -1) {
 		if(forceClean == false) {
 			name = getText(0);
-			priv = getText(1) == _T("Yes");
+			priv = getText(1) == TSTRING(YES);
 		}
 		enableButtons = true;
 	}

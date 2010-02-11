@@ -138,6 +138,7 @@ namespace Text {
 	}
 	
 	string toDOS(string tmp);
+	wstring toDOS(wstring tmp);
 	
 	template<typename T>
 	tstring tformat(const tstring& src, T t) {

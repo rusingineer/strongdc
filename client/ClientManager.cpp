@@ -393,6 +393,24 @@ void ClientManager::privateMessage(const HintedUser& user, const string& msg, bo
 	}
 }
 
+void ClientManager::userCommand(const HintedUser& user, const UserCommand& uc, StringMap& params, bool compatibility) {
+	Lock l(cs);
+	/** @todo we allow wrong hints for now ("false" param of findOnlineUser) because users
+	 * extracted from search results don't always have a correct hint; see
+	 * SearchManager::onRES(const AdcCommand& cmd, ...). when that is done, and SearchResults are
+	 * switched to storing only reliable HintedUsers (found with the token of the ADC command),
+	 * change this call to findOnlineUser_hint. */
+	OnlineUser* ou = findOnlineUser(user.user->getCID(), user.hint, false);
+	if(!ou || ou->getClientBase().type == ClientBase::DHT)
+		return;
+
+	ou->getIdentity().getParams(params, "user", compatibility);
+	ou->getClient().getHubIdentity().getParams(params, "hub", false);
+	ou->getClient().getMyIdentity().getParams(params, "my", compatibility);
+	ou->getClient().escapeParams(params);
+	ou->getClient().sendUserCmd(uc, params);
+}
+
 void ClientManager::send(AdcCommand& cmd, const CID& cid) {
 	Lock l(cs);
 	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&cid));
@@ -490,27 +508,13 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 	}
 }
 
-void ClientManager::userCommand(const UserPtr& p, const UserCommand& uc, StringMap& params, bool compatibility) {
-	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-	if(i == onlineUsers.end() || i->second->getClientBase().type == ClientBase::DHT)
-		return;
-
-	OnlineUser& ou = *i->second;
-	ou.getIdentity().getParams(params, "user", compatibility);
-	ou.getClient().getHubIdentity().getParams(params, "hub", false);
-	ou.getClient().getMyIdentity().getParams(params, "my", compatibility);
-	ou.getClient().escapeParams(params);
-	ou.getClient().sendUserCmd(Util::formatParams(uc.getCommand(), params, false));
-}
-
-void ClientManager::sendRawCommand(const UserPtr& user, const Client& c, const int aRawCommand) {
-	string rawCommand = c.getRawCommand(aRawCommand);
+void ClientManager::sendRawCommand(const OnlineUser& ou, const int aRawCommand) {
+	string rawCommand = ou.getClient().getRawCommand(aRawCommand);
 	if (!rawCommand.empty()) {
 		StringMap ucParams;
 
-		UserCommand uc = UserCommand(0, 0, 0, 0, "", rawCommand, "");
-		userCommand(user, uc, ucParams, true);
+		UserCommand uc = UserCommand(0, 0, 0, 0, "", rawCommand, "", "");
+		userCommand(HintedUser(ou.getUser(), ou.getClient().getHubUrl()), uc, ucParams, true);
 	}
 }
 
@@ -634,43 +638,6 @@ string ClientManager::getMyNick(const string& hubUrl) const {
 	return Util::emptyString;
 }
 	
-void ClientManager::on(Connected, const Client* c) throw() {
-	fire(ClientManagerListener::ClientConnected(), c);
-}
-
-void ClientManager::on(UserUpdated, const Client*, const OnlineUserPtr& user) throw() {
-	fire(ClientManagerListener::UserUpdated(), *user);
-}
-
-void ClientManager::on(UsersUpdated, const Client*, const OnlineUserList& l) throw() {
-	for(OnlineUserList::const_iterator i = l.begin(), iend = l.end(); i != iend; ++i) {
-		updateNick(*(*i));
-		fire(ClientManagerListener::UserUpdated(), *(*i)); 
-	}
-}
-
-void ClientManager::on(HubUpdated, const Client* c) throw() {
-	fire(ClientManagerListener::ClientUpdated(), c);
-}
-
-void ClientManager::on(Failed, const Client* client, const string&) throw() { 
-	fire(ClientManagerListener::ClientDisconnected(), client);
-}
-
-void ClientManager::on(HubUserCommand, const Client* client, int aType, int ctx, const string& name, const string& command) throw() { 
-	if(BOOLSETTING(HUB_USER_COMMANDS)) {
-		if(aType == UserCommand::TYPE_REMOVE) {
-			int cmd = FavoriteManager::getInstance()->findUserCommand(name, client->getHubUrl());
-			if(cmd != -1)
-				FavoriteManager::getInstance()->removeUserCommand(cmd);
-		} else if(aType == UserCommand::TYPE_CLEAR) {
- 			FavoriteManager::getInstance()->removeHubUserCommands(ctx, client->getHubUrl());
- 		} else {
-			FavoriteManager::getInstance()->addUserCommand(aType, ctx, UserCommand::FLAG_NOSAVE, name, command, client->getHubUrl());
-		}
-	}
-}
-
 void ClientManager::setListLength(const UserPtr& p, const string& listLen) {
 	Lock l(cs);
 	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
@@ -697,7 +664,7 @@ void ClientManager::fileListDisconnected(const UserPtr& p) {
 			if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
 				c = &ou.getClient();
 				report = ou.getIdentity().setCheat(ou.getClientBase(), "Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
-				ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(DISCONNECT_RAW));
+				ClientManager::getInstance()->sendRawCommand(ou, SETTING(DISCONNECT_RAW));
 			}
 		}
 	}
@@ -726,7 +693,7 @@ void ClientManager::connectionTimeout(const UserPtr& p) {
 				c = &ou.getClient();
 				report = ou.getIdentity().setCheat(ou.getClientBase(), "Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
 				remove = true;
-				sendRawCommand(ou.getUser(), ou.getClient(), SETTING(TIMEOUT_RAW));
+				sendRawCommand(ou, SETTING(TIMEOUT_RAW));
 			}
 		}
 	}
@@ -782,7 +749,7 @@ void ClientManager::checkCheating(const UserPtr& p, DirectoryListing* dl) {
 			detectString += STRING(CHECK_SHOW_REAL_SHARE);
 
 			report = ou->getIdentity().setCheat(ou->getClientBase(), detectString, false);
-			sendRawCommand(ou->getUser(), ou->getClient(), SETTING(FAKESHARE_RAW));
+			sendRawCommand(*ou.get(), SETTING(FAKESHARE_RAW));
 		}
 		ou->getIdentity().set("FC", "1");
 	}
@@ -810,7 +777,7 @@ void ClientManager::setCheating(const UserPtr& p, const string& aTestSURString, 
 			report = ou->getIdentity().setCheat(ou->getClientBase(), aCheatString, aBadClient);
 		}
 		if(aRawCommand != -1)
-			sendRawCommand(ou->getUser(), ou->getClient(), aRawCommand);
+			sendRawCommand(*ou.get(), aRawCommand);
 	}
 	ou->getClient().updated(ou);
 	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))
@@ -895,7 +862,63 @@ void ClientManager::reportUser(const HintedUser& user) {
 	}
 	c->cheatMessage("*** Info on " + nick + " ***" + "\r\n" + report + "\r\n");
 }
+
+OnlineUserPtr ClientManager::findDHTNode(const CID& cid) const
+{
+	Lock l(cs);
 	
+	OnlinePairC op = onlineUsers.equal_range(const_cast<CID*>(&cid));
+	for(OnlineIterC i = op.first; i != op.second; ++i) {
+		OnlineUser* ou = i->second;
+		
+		// user not in DHT, so don't bother with other hubs
+		if(!ou->getUser()->isSet(User::DHT))
+			break;
+
+		if(ou->getClientBase().getType() == Client::DHT)
+			return ou;
+	}
+
+	return NULL;
+}
+
+void ClientManager::on(Connected, const Client* c) throw() {
+	fire(ClientManagerListener::ClientConnected(), c);
+}
+
+void ClientManager::on(UserUpdated, const Client*, const OnlineUserPtr& user) throw() {
+	fire(ClientManagerListener::UserUpdated(), *user);
+}
+
+void ClientManager::on(UsersUpdated, const Client*, const OnlineUserList& l) throw() {
+	for(OnlineUserList::const_iterator i = l.begin(), iend = l.end(); i != iend; ++i) {
+		updateNick(*(*i));
+		fire(ClientManagerListener::UserUpdated(), *(*i)); 
+	}
+}
+
+void ClientManager::on(HubUpdated, const Client* c) throw() {
+	fire(ClientManagerListener::ClientUpdated(), c);
+}
+
+void ClientManager::on(Failed, const Client* client, const string&) throw() {
+	fire(ClientManagerListener::ClientDisconnected(), client);
+}
+
+void ClientManager::on(HubUserCommand, const Client* client, int aType, int ctx, const string& name, const string& command) throw() {
+	if(BOOLSETTING(HUB_USER_COMMANDS)) {
+		if(aType == UserCommand::TYPE_REMOVE) {
+			int cmd = FavoriteManager::getInstance()->findUserCommand(name, client->getHubUrl());
+			if(cmd != -1)
+				FavoriteManager::getInstance()->removeUserCommand(cmd);
+		} else if(aType == UserCommand::TYPE_CLEAR) {
+ 			FavoriteManager::getInstance()->removeHubUserCommands(ctx, client->getHubUrl());
+ 		} else {
+			FavoriteManager::getInstance()->addUserCommand(aType, ctx, UserCommand::FLAG_NOSAVE, name, command, "", client->getHubUrl());
+		}
+	}
+}
+
 } // namespace dcpp
 
 /**

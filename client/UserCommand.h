@@ -33,6 +33,8 @@ public:
 		TYPE_RAW,
 		TYPE_RAW_ONCE,
 		TYPE_REMOVE,
+		TYPE_CHAT,
+		TYPE_CHAT_ONCE,
 		TYPE_CLEAR = 255		// In a momentary lapse of reason, 255 was chosen in the nmdc version of usercommand for clearing them all
 	};
 
@@ -49,27 +51,42 @@ public:
 	};
 
 	UserCommand() : cid(0), type(0), ctx(0) { }
-	UserCommand(int aId, int aType, int aCtx, Flags::MaskType aFlags, const string& aName, const string& aCommand, const string& aHub) throw() 
-		: Flags(aFlags), cid(aId), type(aType), ctx(aCtx), name(aName), command(aCommand), hub(aHub) { }
+	UserCommand(int aId, int aType, int aCtx, Flags::MaskType aFlags, const string& aName, const string& aCommand, const string& aTo, const string& aHub) throw()
+		: Flags(aFlags), cid(aId), type(aType), ctx(aCtx), name(aName), command(aCommand), to(aTo), hub(aHub) { }
 	
 	UserCommand(const UserCommand& rhs) : Flags(rhs), cid(rhs.cid), type(rhs.type), 
-		ctx(rhs.ctx), name(rhs.name), command(rhs.command), hub(rhs.hub) 
+		ctx(rhs.ctx), name(rhs.name), command(rhs.command), to(rhs.to), hub(rhs.hub)
 	{
-		
 	}
 
 	UserCommand& operator=(const UserCommand& rhs) {
 		cid = rhs.cid; type = rhs.type; ctx = rhs.ctx;
-		name = rhs.name; command = rhs.command; hub = rhs.hub;
+		name = rhs.name; command = rhs.command; to = rhs.to; hub = rhs.hub;
 		*((Flags*)this) = rhs;
 		return *this;
 	}
+
+	inline bool isRaw() const {
+		return type == TYPE_RAW || type == TYPE_RAW_ONCE;
+	}
+	inline bool isChat() const {
+		return type == TYPE_CHAT || type == TYPE_CHAT_ONCE;
+	}
+	inline bool once() const {
+		return type == TYPE_RAW_ONCE || type == TYPE_CHAT_ONCE;
+	}
+
+	static bool adc(const string& h) {
+		return h.compare(0, 6, "adc://") == 0 || h.compare(0, 7, "adcs://") == 0;
+	}
+	bool adc() const { return adc(hub); }
 
 	GETSET(int, cid, Id);
 	GETSET(int, type, Type);
 	GETSET(int, ctx, Ctx);
 	GETSET(string, name, Name);
 	GETSET(string, command, Command);
+	GETSET(string, to, To);
 	GETSET(string, hub, Hub);
 };
 

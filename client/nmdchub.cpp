@@ -609,6 +609,9 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			if(j == string::npos)
 				return;
 			string name = unescape(param.substr(i, j-i));
+			// NMDC uses '\' as a separator but both ADC and our internal representation use '/'
+			Util::replace("/", "//", name);
+			Util::replace("\\", "/", name);
 			i = j+1;
 			string command = unescape(param.substr(i, param.length() - i));
 			fire(ClientListener::HubUserCommand(), this, type, ctx, name, command);
@@ -1013,15 +1016,33 @@ string NmdcHub::validateMessage(string tmp, bool reverse) {
 	return tmp;
 }
 
+void NmdcHub::privateMessage(const string& nick, const string& message, bool thirdPerson) {
+	send("$To: " + fromUtf8(nick) + " From: " + fromUtf8(getMyNick()) + " $" + fromUtf8(escape("<" + getMyNick() + "> " + (thirdPerson ? "/me " + message : message))) + "|");
+}
+
 void NmdcHub::privateMessage(const OnlineUserPtr& aUser, const string& aMessage, bool thirdPerson) {
 	checkstate();
 
-	send("$To: " + fromUtf8(aUser->getIdentity().getNick()) + " From: " + fromUtf8(getMyNick()) + " $" + fromUtf8(escape("<" + getMyNick() + "> " + (thirdPerson ? "/me " + aMessage : aMessage))) + "|");
+	privateMessage(aUser->getIdentity().getNick(), aMessage, thirdPerson);
 	// Emulate a returning message...
 	OnlineUserPtr ou = findUser(getMyNick());
 	if(ou) {
 		ChatMessage message = { aMessage, ou, aUser, ou };
 		fire(ClientListener::Message(), this, message);
+	}
+}
+
+void NmdcHub::sendUserCmd(const UserCommand& command, const StringMap& params) {
+	checkstate();
+	string cmd = Util::formatParams(command.getCommand(), params, false);
+	if(command.isChat()) {
+		if(command.getTo().empty()) {
+			hubMessage(cmd);
+		} else {
+			privateMessage(command.getTo(), cmd, false);
+		}
+	} else {
+		send(fromUtf8(cmd));
 	}
 }
 

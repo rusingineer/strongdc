@@ -40,13 +40,13 @@ class CommandDlg : public CDialogImpl<CommandDlg>
 	CButton ctrlSearchMenu;
 	CButton ctrlFilelistMenu;
 	CButton ctrlOnce;
-	CEdit ctrlResult;
 
 public:
 	int type;
 	int ctx;
 	tstring name;
 	tstring command;
+	tstring to;
 	tstring hub;
 
 	enum { IDD = IDD_USER_COMMAND };
@@ -62,6 +62,7 @@ public:
 		COMMAND_ID_HANDLER(IDC_SETTINGS_PM, onType)
 		COMMAND_HANDLER(IDC_COMMAND, EN_CHANGE, onChange)
 		COMMAND_HANDLER(IDC_NICK, EN_CHANGE, onChange)
+		COMMAND_HANDLER(IDC_HUB, EN_CHANGE, onHub);
 	END_MSG_MAP()
 
 	CommandDlg() : type(0), ctx(0) { }
@@ -74,13 +75,14 @@ public:
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT onType(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-
+	LRESULT onHub(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 private:
 	static WinUtil::TextItem texts[];
 
 	void updateType();
 	void updateCommand();
+	void updateHub();
 	void updateControls();
 	void updateContext();
 };
