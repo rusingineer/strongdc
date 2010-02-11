@@ -201,7 +201,7 @@ string Identity::updateClientType(const OnlineUser& ou) {
 			set("BC", "1");
 			set("BF", "1");
 
-			ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(LISTLEN_MISMATCH));
+			ClientManager::getInstance()->sendRawCommand(ou, SETTING(LISTLEN_MISMATCH));
 			return report;
 		} else if(strncmp(getTag().c_str(), "<++ V:0.69", 10) == 0 && get("LL") != "42") {
 			string report = setCheat(ou.getClient(), "Listlen mismatched" , true);
@@ -209,7 +209,7 @@ string Identity::updateClientType(const OnlineUser& ou) {
 			set("CM", "Supports corrupted files...");
 			set("BC", "1");
 
-			ClientManager::getInstance()->sendRawCommand(ou.getUser(), ou.getClient(), SETTING(LISTLEN_MISMATCH));
+			ClientManager::getInstance()->sendRawCommand(ou, SETTING(LISTLEN_MISMATCH));
 			return report;
 		}
 	}
@@ -271,7 +271,7 @@ string Identity::updateClientType(const OnlineUser& ou) {
 			report = setCheat(ou.getClient(), entry.cheat, true);
 		}
 
-		ClientManager::getInstance()->sendRawCommand(getUser(), ou.getClient(), entry.rawToSend);
+		ClientManager::getInstance()->sendRawCommand(ou, entry.rawToSend);
 		return report;
 	}
 
@@ -316,20 +316,20 @@ void Identity::getDetectionParams(StringMap& p) {
 	// convert all special chars to make regex happy
 	for(StringMap::iterator i = p.begin(); i != p.end(); ++i) {
 		// looks really bad... but do the job
-		Util::replace(i->second, "\\", "\\\\"); // this one must be first
-		Util::replace(i->second, "[", "\\[");
-		Util::replace(i->second, "]", "\\]");
-		Util::replace(i->second, "^", "\\^");
-		Util::replace(i->second, "$", "\\$");
-		Util::replace(i->second, ".", "\\.");
-		Util::replace(i->second, "|", "\\|");
-		Util::replace(i->second, "?", "\\?");
-		Util::replace(i->second, "*", "\\*");
-		Util::replace(i->second, "+", "\\+");
-		Util::replace(i->second, "(", "\\(");
-		Util::replace(i->second, ")", "\\)");
-		Util::replace(i->second, "{", "\\{");
-		Util::replace(i->second, "}", "\\}");
+		Util::replace("\\", "\\\\", i->second); // this one must be first
+		Util::replace("[", "\\[", i->second);
+		Util::replace("]", "\\]", i->second);
+		Util::replace("^", "\\^", i->second);
+		Util::replace("$", "\\$", i->second);
+		Util::replace(".", "\\.", i->second);
+		Util::replace("|", "\\|", i->second);
+		Util::replace("?", "\\?", i->second);
+		Util::replace("*", "\\*", i->second);
+		Util::replace("+", "\\+", i->second);
+		Util::replace("(", "\\(", i->second);
+		Util::replace(")", "\\)", i->second);
+		Util::replace("{", "\\{", i->second);
+		Util::replace("}", "\\}", i->second);
 	}
 }
 

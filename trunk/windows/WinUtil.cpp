@@ -826,6 +826,12 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 			dlg.title = Text::toT(uc.getName());
 			dlg.description = Text::toT(name);
 			dlg.line = Text::toT(sm["line:" + name]);
+
+			if(uc.adc()) {
+				Util::replace(_T("\\\\"), _T("\\"), dlg.description);
+				Util::replace(_T("\\s"), _T(" "), dlg.description);
+			}
+
 			if(dlg.DoModal(parent) == IDOK) {
 				sm["line:" + name] = Text::fromT(dlg.line);
 				done[name] = Text::fromT(dlg.line);
@@ -847,6 +853,12 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 			KickDlg dlg;
 			dlg.title = Text::toT(uc.getName());
 			dlg.description = Text::toT(name);
+
+			if(uc.adc()) {
+				Util::replace(_T("\\\\"), _T("\\"), dlg.description);
+				Util::replace(_T("\\s"), _T(" "), dlg.description);
+			}
+
 			if(dlg.DoModal(parent) == IDOK) {
 				sm["kickline:" + name] = Text::fromT(dlg.line);
 				done[name] = Text::fromT(dlg.line);

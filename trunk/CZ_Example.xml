@@ -28,7 +28,8 @@
 		<String Name="AllDownloadSlotsTaken">Všechny sloty pro stahování obsazeny</String>
 		<String Name="AllFileSlotsTaken">Všechny sloty na soubory obsazeny</String>
 		<String Name="AllUsersOffline">Ani jeden z %d uživatelů není připojen</String>
-		<String Name="AlternatesSend">Hledám TTH alternativy pro: </String>
+		<String Name="AllowNatTraversal">Povolit NAT-T při spojení s pasivními uživateli</String>		
+<String Name="AlternatesSend">Hledám TTH alternativy pro: </String>
 		<String Name="AntiPassiveSearch">-- Varování --
 -- Jste v aktivním módu, ale máte zapnuto pasivní vyhledávání. --
 -- Používejte pasivní vyhledávání jen, je-li to nutné! --
@@ -110,6 +111,7 @@
 		<String Name="Destination">cíl</String>
 		<String Name="Directory">Složka</String>
 		<String Name="DirectoryAddError">Složka již existuje</String>
+		<String Name="DirectoryIsHidden">Adresář je skrytý</String>
 		<String Name="DisableSounds">Vypnout zvuky</String>
 		<String Name="Disabled">Vypnuto</String>
 		<String Name="DisconnectAll">Odpojit všechny uživatele</String>
@@ -214,6 +216,7 @@
 		<String Name="GrantExtraSlotHour">Dát extraslot (hodina)</String>
 		<String Name="GrantExtraSlotWeek">Dát extraslot (týden)</String>
 		<String Name="GrantSlotsMenu">Extra sloty</String>
+		<String Name="Group">Skupina</String>
 		<String Name="GroupSearchResults">Seskupit výsledky hledání podle TTH</String>
 		<String Name="HashDatabase">Hash databáze</String>
 		<String Name="HashProgress">Indexuji soubor...</String>
@@ -244,6 +247,8 @@
 		<String Name="HubTopic">Téma hubu :</String>		
 		<String Name="HubUsers">Uživatelů</String>
 		<String Name="Hubs">Huby</String>
+		<String Name="HublistCacheCorrupted">Cachovaný seznam hubů je poškozený nebo nepodporovaný...</String>
+		<String Name="HublistDownloadCorrupted">Stažený seznam hubů je poškozený nebo nepodporovaný...</String>
 		<String Name="Chatdblclickaction">Dvojklik na přezdívku v chatu</String>
 		<String Name="CheatingUser">Nalezení FAKERa</String>
 		<String Name="Check0byteShare">Zkontrolovat 0B sdílení</String>
@@ -273,9 +278,9 @@
 		<String Name="Joins">Příchod: </String>
 		<String Name="Kb">KiB</String>
 		<String Name="Kbps">KiB/s</String>
+		<String Name="KeepFinishedFiles">Ponechat stažené soubory ve frontě</String>
 		<String Name="KickUser">Kopnout uživatele</String>
 		<String Name="KickUserFile">Kopnout uživatele (s názvem souboru)</String>
-		<String Name="LargerTargetFileExists">Jméno souboru se stejnou nebo větší velikostí již existuje.</String>
 		<String Name="LastHub">Hub (Naposledy online)</String>
 		<String Name="LastChange">Poslední změna: </String>
 		<String Name="LastSeen">Naposledy viděn</String>
@@ -284,7 +289,6 @@
 		<String Name="LeftColor">Barva vlevo</String>
 		<String Name="LibCrash">Aplikace "%s" způsobila výjimku ve StrongDC++. Přeinstalujte ji, upgradujte, nebo použijte alternativní produkt.</String>
 		<String Name="Limit">Limit</String>
-		<String Name="ListenerFailed">Naslouchání socketu selhalo (musíte restartovat StrongDC++): </String>
 		<String Name="LoadedFileList">Seznam souborů načten.</String>
 		<String Name="Loading">Spouštím StrongDC++, čekejte...</String>
 		<String Name="LoadingFileList">Načítám seznam souborů, může to chvíli trvat, pokud je seznam velký.</String>
@@ -306,6 +310,7 @@
 		<String Name="MagnetHandlerDesc">Stáhnout soubor ze sítě Direct Connect</String>
 		<String Name="MagnetHandlerRoot">StrongDC++</String>
 		<String Name="MagnetShellDesc">URL:MAGNET URL</String>
+		<String Name="ManageGroups">Spravovat skupiny</String>
 		<String Name="MatchQueue">Porovnání fronty</String>
 		<String Name="MatchedFiles">Porovnán(o) %d soubor(ů)</String>
 		<String Name="MaxHubs">Max Hubů</String>
@@ -859,7 +864,8 @@ Výchozí: %H:%M:%S</String>
 		<String Name="Unknown">Neznámý</String>
 		<String Name="UnknownCommand">Neznámý příkaz: </String>
 		<String Name="UnknownError">Neznámá chyba: 0x%x</String>
-		<String Name="UpdateCheck">Update kontrola</String>
+		<String Name="Update">Aktualizovat</String>
+		<String Name="UpdateCheck">Kontrola aktualizací</String>
 		<String Name="UploadFinishedIdle">Odesílání dokončeno, čekám...</String>
 		<String Name="UploadQueue">Fronta odesílání</String>
 		<String Name="UploadStarting">Odesílání zahájeno...</String>

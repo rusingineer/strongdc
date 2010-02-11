@@ -867,6 +867,7 @@ Default: %H:%M:%S</String>
 		<String Name="Unknown">Unknown</String>
 		<String Name="UnknownCommand">Unknown command:</String>
 		<String Name="UnknownError">Unknown error: 0x%x</String>
+		<String Name="Update">Update</String>
 		<String Name="UpdateCheck">Update check</String>
 		<String Name="UploadFinishedIdle">Upload finished, idle...</String>
 		<String Name="UploadQueue">Upload queue</String>
@@ -887,7 +888,6 @@ Default: %H:%M:%S</String>
 		<String Name="UserCmdOnce">Send once per nick</String>
 		<String Name="UserCmdParameters">Parameters</String>
 		<String Name="UserCmdPm">PM</String>
-		<String Name="UserCmdPreview">Text sent to hub</String>
 		<String Name="UserCmdRaw">Raw</String>
 		<String Name="UserCmdSearchMenu">Search Menu</String>
 		<String Name="UserCmdTo">To</String>

@@ -113,9 +113,8 @@ public:
 	void send(AdcCommand& c, const CID& to);
 	void connect(const HintedUser& user, const string& token);
 	void privateMessage(const HintedUser& user, const string& msg, bool thirdPerson);
-
-	void userCommand(const UserPtr& p, const UserCommand& uc, StringMap& params, bool compatibility);
-	void sendRawCommand(const UserPtr& user, const Client& c, const int aRawCommand);
+	void userCommand(const HintedUser& user, const UserCommand& uc, StringMap& params, bool compatibility);
+	void sendRawCommand(const OnlineUser& ou, const int aRawCommand);
 
 	int getMode(const string& aHubUrl) const;
 	bool isActive(const string& aHubUrl = Util::emptyString) const { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
@@ -141,6 +140,8 @@ public:
 	
 	void setGenerator(const UserPtr& p, const string& aGenerator);
 	void setUnknownCommand(const UserPtr& p, const string& aUnknownCommand);
+
+	OnlineUserPtr findDHTNode(const CID& cid) const;
 
 private:
 

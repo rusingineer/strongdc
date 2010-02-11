@@ -808,7 +808,7 @@ string Util::encodeURI(const string& aString, bool reverse) {
  * date/time and then finally written to the log file. If the parameter is not present at all,
  * it is removed from the string completely...
  */
-string Util::formatParams(const string& msg, StringMap& params, bool filter, const time_t t) {
+string Util::formatParams(const string& msg, const StringMap& params, bool filter, const time_t t) {
 	string result = msg;
 
 	string::size_type i, j, k;
@@ -818,7 +818,7 @@ string Util::formatParams(const string& msg, StringMap& params, bool filter, con
 			break;
 		}
 		string name = result.substr(j + 2, k - j - 2);
-		StringMapIter smi = params.find(name);
+		StringMap::const_iterator smi = params.find(name);
 		if(smi == params.end()) {
 			result.erase(j, k-j + 1);
 			i = j;
@@ -886,7 +886,7 @@ string fixedftime(const string& format, struct tm* t) {
 	return ret;
 }
 
-string Util::formatRegExp(const string& msg, StringMap& params) {
+string Util::formatRegExp(const string& msg, const StringMap& params) {
 	string result = msg;
 	string::size_type i, j, k;
 	i = 0;
@@ -895,7 +895,7 @@ string Util::formatRegExp(const string& msg, StringMap& params) {
 			break;
 		}
 		string name = result.substr(j + 2, k - j - 2);
-		StringMapIter smi = params.find(name);
+		StringMap::const_iterator smi = params.find(name);
 		if(smi != params.end()) {
 			result.replace(j, k-j + 1, smi->second);
 			i = j + smi->second.size();
@@ -1189,14 +1189,6 @@ string Util::formatStatus(int iStatus) {
 	}
 	
 	return (status.empty() ? "Unknown " : status) + "(" + toString(iStatus) + ")";
-}
-
-void Util::replace(string& aString, const string& findStr, const string& replaceStr) {
-   string::size_type offset = 0;
-   while((offset = aString.find(findStr, offset)) != string::npos) {
-      aString.replace(offset, findStr.length(), replaceStr);
-      offset += replaceStr.length();
-   }
 }
 	
 } // namespace dcpp

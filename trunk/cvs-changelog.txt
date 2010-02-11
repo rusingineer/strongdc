@@ -1,3 +1,8 @@
+** svn481
+	better user commands (DC++ BZR)
+	move fav hubs across groups with move up / move down (DC++ BZR)
+	hopefully fixed jumping to the top when moving favhubs
+
 ** svn480
 	accepting search results from users with NAT-T support in passive mode
 	[DHT] fixed problems when user was online in any hub but not in DHT (crashes ...)

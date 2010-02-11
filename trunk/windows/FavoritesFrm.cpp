@@ -114,6 +114,49 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	return TRUE;
 }
 
+FavoriteHubsFrame::StateKeeper::StateKeeper(ExListViewCtrl& hubs_, bool ensureVisible_) :
+hubs(hubs_),
+ensureVisible(ensureVisible_)
+{
+	hubs.SetRedraw(FALSE);
+
+	// in grouped mode, the indexes of each item are completely random, so use entry pointers instead
+	int i = -1;
+	while( (i = hubs.GetNextItem(i, LVNI_SELECTED)) != -1) {
+		selected.push_back((FavoriteHubEntry*)hubs.GetItemData(i));
+	}
+
+	SCROLLINFO si = { 0 };
+	si.cbSize = sizeof(si);
+	si.fMask = SIF_POS;
+	hubs.GetScrollInfo(SB_VERT, &si);
+
+	scroll = si.nPos;
+}
+
+FavoriteHubsFrame::StateKeeper::~StateKeeper() {
+	// restore visual updating now, otherwise it doesn't always scroll
+	hubs.SetRedraw(TRUE);
+
+	for(FavoriteHubEntryList::const_iterator i = selected.begin(), iend = selected.end(); i != iend; ++i) {
+		for(int j = 0; j < hubs.GetItemCount(); ++j) {
+			if((FavoriteHubEntry*)hubs.GetItemData(j) == *i)
+			{
+				hubs.SetItemState(j, LVIS_SELECTED, LVIS_SELECTED);
+				if(ensureVisible)
+					hubs.EnsureVisible(j, FALSE);
+				break;
+			}
+		}
+	}
+
+	ListView_Scroll(hubs.m_hWnd, 0, scroll);
+}
+
+const FavoriteHubEntryList& FavoriteHubsFrame::StateKeeper::getSelection() const {
+	return selected;
+}
+
 void FavoriteHubsFrame::openSelected() {
 	if(!checkNick())
 		return;
@@ -257,6 +300,7 @@ LRESULT FavoriteHubsFrame::onEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		FavHubProperties dlg(e);
 		if(dlg.DoModal(m_hWnd) == IDOK)
 		{
+			StateKeeper keeper(ctrlHubs);
 			fillList();
 		}
 	}
@@ -302,33 +346,44 @@ LRESULT FavoriteHubsFrame::onMoveDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /
 	return 0;
 }
 
-void FavoriteHubsFrame::handleMove(bool up)
-{
+void FavoriteHubsFrame::handleMove(bool up) {
 	FavoriteHubEntryList& fh = FavoriteManager::getInstance()->getFavoriteHubs();
-
-	ctrlHubs.SetRedraw(FALSE);
-
-	// in grouped mode, the indexes of each item are completely random, so use entry pointers instead
-	FavoriteHubEntryList selected;
-	int i = -1;
-	while( (i = ctrlHubs.GetNextItem(i, LVNI_SELECTED)) != -1) {
-		selected.push_back((FavoriteHubEntry*)ctrlHubs.GetItemData(i));
-	}
+	if(fh.size() <= 1)
+		return;
 	
+	StateKeeper keeper(ctrlHubs);
+	const FavoriteHubEntryList& selected = keeper.getSelection();
+
 	FavoriteHubEntryList fh_copy = fh;
 	if(!up)
 		reverse(fh_copy.begin(), fh_copy.end());
-	for(FavoriteHubEntryList::iterator i = fh_copy.begin() + 1; i != fh_copy.end(); ++i) {
+	FavoriteHubEntryList moved;
+	for(FavoriteHubEntryList::iterator i = fh_copy.begin(); i != fh_copy.end(); ++i) {
 		if(find(selected.begin(), selected.end(), *i) == selected.end())
 			continue;
+		if(find(moved.begin(), moved.end(), *i) != moved.end())
+			continue;
 		const string& group = (*i)->getGroup();
-		for(FavoriteHubEntryList::iterator j = i - 1; ; --j) {
-			if((*j)->getGroup() == group) {
+		for(FavoriteHubEntryList::iterator j = i; ;) {
+			if(j == fh_copy.begin()) {
+				// couldn't move within the same group; change group.
+				TStringList groups(getSortedGroups());
+				if(!up)
+					reverse(groups.begin(), groups.end());
+				TStringIterC ig = find(groups.begin(), groups.end(), Text::toT(group));
+				if(ig != groups.begin()) {
+					FavoriteHubEntryPtr f = *i;
+					f->setGroup(Text::fromT(*(ig - 1)));
+					i = fh_copy.erase(i);
+					fh_copy.push_back(f);
+					moved.push_back(f);
+				}
+				break;
+			}
+			if((*--j)->getGroup() == group) {
 				swap(*i, *j);
 				break;
 			}
-			if(j == fh_copy.begin())
-				break;
 		}
 	}
 	if(!up)
@@ -337,19 +392,59 @@ void FavoriteHubsFrame::handleMove(bool up)
 	FavoriteManager::getInstance()->save();
 
 	fillList();
+}
 
-	for(FavoriteHubEntryList::const_iterator i = selected.begin(), iend = selected.end(); i != iend; ++i) {
-		for(int j = 0; j < ctrlHubs.GetItemCount(); ++j) {
-			if((FavoriteHubEntry*)ctrlHubs.GetItemData(j) == *i)
-			{
-				ctrlHubs.SetItemState(j, LVIS_SELECTED, LVIS_SELECTED);
-				ctrlHubs.EnsureVisible(j, FALSE);
-				break;
-			}
-		}
+TStringList FavoriteHubsFrame::getSortedGroups() const {
+	set<tstring, noCaseStringLess> sorted_groups;
+	const FavHubGroups& favHubGroups = FavoriteManager::getInstance()->getFavHubGroups();
+	for(FavHubGroups::const_iterator i = favHubGroups.begin(), iend = favHubGroups.end(); i != iend; ++i)
+		sorted_groups.insert(Text::toT(i->first));
+
+	TStringList groups(sorted_groups.begin(), sorted_groups.end());
+	groups.insert(groups.begin(), Util::emptyStringT); // default group (otherwise, hubs without group don't show up)
+	return groups;
+}
+
+void FavoriteHubsFrame::fillList()
+{
+	bool old_nosave = nosave;
+	nosave = true;
+
+	ctrlHubs.DeleteAllItems(); 
+	
+	// sort groups
+	TStringList groups(getSortedGroups());
+	
+	for(int i = 0; i < groups.size(); ++i) {
+		// insert groups
+		LVGROUP lg = {0};
+		lg.cbSize = sizeof(lg);
+		lg.iGroupId = i;
+		lg.state = LVGS_NORMAL | (WinUtil::getOsMajor() >= 6 ? LVGS_COLLAPSIBLE : 0);
+		lg.mask = LVGF_GROUPID | LVGF_HEADER | LVGF_STATE | LVGF_ALIGN;
+		lg.uAlign = LVGA_HEADER_LEFT;
+
+		// Header-title must be unicode (Convert if necessary)
+		lg.pszHeader = (LPWSTR)groups[i].c_str();
+		lg.cchHeader = groups[i].size();
+		ctrlHubs.InsertGroup(i, &lg );
 	}
 
-	ctrlHubs.SetRedraw(TRUE);
+	const FavoriteHubEntryList& fl = FavoriteManager::getInstance()->getFavoriteHubs();
+	for(FavoriteHubEntryList::const_iterator i = fl.begin(); i != fl.end(); ++i) {
+		const string& group = (*i)->getGroup();
+
+		int index = 0;
+		if(!group.empty()) {
+			TStringList::const_iterator groupI = find(groups.begin() + 1, groups.end(), Text::toT(group));
+			if(groupI != groups.end())
+				index = groupI - groups.begin();
+		}
+
+		addEntry(*i, ctrlHubs.GetItemCount(), index);
+	}
+
+	nosave = old_nosave;
 }
 
 LRESULT FavoriteHubsFrame::onItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
@@ -446,7 +541,9 @@ LRESULT FavoriteHubsFrame::onManageGroups(WORD /*wNotifyCode*/, WORD /*wID*/, HW
 	FavHubGroupsDlg dlg;
 	dlg.DoModal();
 
+	StateKeeper keeper(ctrlHubs);
 	fillList();
+
 	return 0;
 }
 

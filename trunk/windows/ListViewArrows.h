@@ -21,6 +21,8 @@
 
 #include "WinUtil.h"
 
+#include <uxtheme.h>
+
 template<class T>
 class ListViewArrows {
 public:

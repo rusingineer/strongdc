@@ -940,7 +940,7 @@ void ChatCtrl::runUserCommand(UserCommand& uc) {
 		StringMap tmp = ucParams;
 		ou->getIdentity().getParams(tmp, "user", true);
 		client->escapeParams(tmp);
-		client->sendUserCmd(Util::formatParams(uc.getCommand(), tmp, false));
+		client->sendUserCmd(uc, tmp);
 	}
 }
 

@@ -64,7 +64,7 @@ size_t HashManager::getBlockSize(const TTHValue& root) {
 	return store.getBlockSize(root);
 }
 
-void HashManager::hashDone(const string& aFileName, uint64_t aTimeStamp, const TigerTree& tth, int64_t speed) {
+void HashManager::hashDone(const string& aFileName, uint64_t aTimeStamp, const TigerTree& tth, int64_t speed, int64_t size) {
 	try {
 		Lock l(cs);
 		store.addFile(aFileName, aTimeStamp, tth, true);
@@ -808,7 +808,7 @@ int HashManager::Hasher::run() {
 				if(end > start) {
 					speed = size * _LL(1000) / (end - start);
 				}
-				HashManager::getInstance()->hashDone(fname, timestamp, *tth, speed);
+				HashManager::getInstance()->hashDone(fname, timestamp, *tth, speed, size);
 			} catch(const FileException& e) {
 				LogManager::getInstance()->message(STRING(ERROR_HASHING) + " " + fname + ": " + e.getError());
 			}

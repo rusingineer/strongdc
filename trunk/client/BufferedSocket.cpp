@@ -127,11 +127,9 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t
 	while (GET_TICK() < endTime) {
 		dcdebug("threadConnect attempt to addr \"%s\"\n", aAddr.c_str());
 		try {
-			clock_t t;
 			if(proxy) {
 				sock->socksConnect(aAddr, aPort, LONG_TIMEOUT);
 			} else {
-				t = clock();
 				sock->connect(aAddr, aPort);
 			}
 	
@@ -141,7 +139,6 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t
 			}
 	
 			if (connSucceeded) {
-				dcdebug("Connected in %d ms\n", clock() - t);
 				fire(BufferedSocketListener::Connected());
 				return;
 			}
