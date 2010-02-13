@@ -894,20 +894,16 @@ LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 
 LRESULT ChatCtrl::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
-	if(ou)
-		client->cheatMessage("*** Info on " + ou->getIdentity().getNick() + " ***" + "\r\n" + ou->getIdentity().getReport() + "\r\n");
-
-	return 0;
-}
-
-LRESULT ChatCtrl::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+		
 	if(ou) {
-		try {
-			QueueManager::getInstance()->addTestSUR(HintedUser(ou->getUser(), client->getHubUrl()), false);
-		} catch(const Exception& e) {
-			LogManager::getInstance()->message(e.getError());		
-		}
+			CHARFORMAT2 cf;
+			memzero(&cf, sizeof(CHARFORMAT2));
+			cf.cbSize = sizeof(cf);
+			cf.dwMask = CFM_BACKCOLOR | CFM_COLOR | CFM_BOLD;
+			cf.crBackColor = SETTING(BACKGROUND_COLOR);
+			cf.crTextColor = SETTING(ERROR_COLOR);
+
+			AppendText(Identity(NULL, 0), Text::toT(client->getCurrentNick()), Text::toT("[" + Util::getShortTimeString() + "] "), Text::toT(WinUtil::getReport(ou->getIdentity(), m_hWnd)) + _T('\n'), cf, false);
 	}
 
 	return 0;
@@ -917,7 +913,7 @@ LRESULT ChatCtrl::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl
 	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou) {
 		try {
-			QueueManager::getInstance()->addList(HintedUser(ou->getUser(), client->getHubUrl()), QueueItem::FLAG_CHECK_FILE_LIST, client->getHubUrl());
+			QueueManager::getInstance()->addList(HintedUser(ou->getUser(), client->getHubUrl()), QueueItem::FLAG_USER_CHECK, client->getHubUrl());
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}

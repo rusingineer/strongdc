@@ -1,3 +1,10 @@
+** svn482
+	removed TestSUR check, because it is unuseful nowadays
+	reorganised user report text
+	NMDC tag's L-part displayed in Connection column
+	fake detector functions moved from ClientManager to its own header
+	updated copyright years
+
 ** svn481
 	better user commands (DC++ BZR)
 	move fav hubs across groups with move up / move down (DC++ BZR)

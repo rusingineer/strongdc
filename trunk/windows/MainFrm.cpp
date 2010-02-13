@@ -1466,7 +1466,7 @@ void MainFrame::on(QueueManagerListener::Finished, const QueueItem* qi, const st
 		} else if(qi->isSet(QueueItem::FLAG_TEXT)) {
 			PostMessage(WM_SPEAKER, VIEW_FILE_AND_DELETE, (LPARAM) new tstring(Text::toT(qi->getTarget())));
 		}
-	} else if(qi->isSet(QueueItem::FLAG_USER_LIST) && qi->isSet(QueueItem::FLAG_CHECK_FILE_LIST)) {
+	} else if(qi->isSet(QueueItem::FLAG_USER_CHECK)) {
 		DirectoryListInfo* i = new DirectoryListInfo(qi->getDownloads()[0]->getHintedUser(), Text::toT(qi->getListName()), Text::toT(dir), static_cast<int64_t>(download->getAverageSpeed()));
 		
 		if(listQueue.stop) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -182,6 +182,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 			}
 		} else if((j = i->find("L:")) != string::npos) {
 			i->erase(i->begin() + j, i->begin() + j + 2);
+			id.set("US", Util::toString(Util::toInt(*i) * 1024));
 		}
 	}
 	/// @todo Think about this

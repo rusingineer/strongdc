@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -779,8 +779,6 @@ void TransferView::on(ConnectionManagerListener::Added, const ConnectionQueueIte
 				type = Transfer::TYPE_FULL_LIST;
 			else if(aFlags & QueueItem::FLAG_PARTIAL_LIST)
 				type = Transfer::TYPE_PARTIAL_LIST;
-			else if(aFlags & QueueItem::FLAG_TESTSUR)
-				type = Transfer::TYPE_TESTSUR;
 			
 			ui->setType(type);
 			ui->setTarget(Text::toT(aTarget));
@@ -804,15 +802,13 @@ void TransferView::on(ConnectionManagerListener::StatusChanged, const Connection
 			type = Transfer::TYPE_FULL_LIST;
 		else if(aFlags & QueueItem::FLAG_PARTIAL_LIST)
 			type = Transfer::TYPE_PARTIAL_LIST;
-		else if(aFlags & QueueItem::FLAG_TESTSUR)
-			type = Transfer::TYPE_TESTSUR;
-		
+	
 		ui->setType(type);
 		ui->setTarget(Text::toT(aTarget));
 		ui->setSize(aSize);
 	}
 
-	ui->setStatusString((aFlags & QueueItem::FLAG_TESTSUR) ? TSTRING(CHECKING_CLIENT) : TSTRING(CONNECTING));
+	ui->setStatusString(TSTRING(CONNECTING));
 	ui->setStatus(ItemInfo::STATUS_WAITING);
 
 	speak(UPDATE_ITEM, ui);
@@ -840,8 +836,6 @@ static tstring getFile(const Transfer::Type& type, const tstring& fileName) {
 		file = _T("TTH: ") + fileName;
 	} else if(type == Transfer::TYPE_FULL_LIST || type == Transfer::TYPE_PARTIAL_LIST) {
 		file = TSTRING(FILE_LIST);
-	} else if(type == Transfer::TYPE_TESTSUR) {
-		file = _T("TestSUR");
 	} else {
 		file = fileName;
 	}
@@ -1182,7 +1176,7 @@ void TransferView::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw()
 
 void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) throw() {
 	
-	if(qi->getFlags() & QueueItem::FLAG_USER_LIST || qi->getFlags() & QueueItem::FLAG_TESTSUR)
+	if(qi->getFlags() & QueueItem::FLAG_USER_LIST)
 		return;
 
 	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true);
@@ -1297,7 +1291,7 @@ void TransferView::on(QueueManagerListener::StatusUpdated, const QueueItem* qi) 
 
 void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const string&, const Download* download) throw() {
 
-	if(qi->getFlags() & QueueItem::FLAG_USER_LIST || qi->getFlags() & QueueItem::FLAG_TESTSUR)
+	if(qi->getFlags() & QueueItem::FLAG_USER_LIST)
 		return;
 
 	// update download item
@@ -1330,7 +1324,7 @@ void TransferView::on(QueueManagerListener::Finished, const QueueItem* qi, const
 
 void TransferView::on(QueueManagerListener::Removed, const QueueItem* qi) throw() {
 
-	if(qi->getFlags() & QueueItem::FLAG_USER_LIST || qi->getFlags() & QueueItem::FLAG_TESTSUR)
+	if(qi->getFlags() & QueueItem::FLAG_USER_LIST)
 		return;
 		
 	UpdateInfo* ui = new UpdateInfo(const_cast<QueueItem*>(qi), true);

@@ -467,19 +467,9 @@ LRESULT PrivateFrame::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 	return 0;
 }
 
-LRESULT PrivateFrame::onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	try {
-		QueueManager::getInstance()->addTestSUR(HintedUser(replyTo, replyTo.hint), false);
-	} catch(const Exception& e) {
-		LogManager::getInstance()->message(e.getError());		
-	}
-
-	return 0;
-}
-
 LRESULT PrivateFrame::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	try {
-		QueueManager::getInstance()->addList(HintedUser(replyTo, replyTo.hint), QueueItem::FLAG_CHECK_FILE_LIST);
+		QueueManager::getInstance()->addList(HintedUser(replyTo, replyTo.hint), QueueItem::FLAG_USER_CHECK);
 	} catch(const Exception& e) {
 		LogManager::getInstance()->message(e.getError());		
 	}

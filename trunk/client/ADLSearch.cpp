@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -220,7 +220,7 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 				char buf[128];
 				snprintf(buf, sizeof(buf), CSTRING(CHECK_FORBIDDEN), currentFile->getName().c_str());
 				
-				ClientManager::getInstance()->setCheating(user, "", buf, is->raw, false);
+				ClientManager::getInstance()->setCheating(user, buf, is->raw, false);
 
 				setSentRaw(true);
 			}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include "User.h"
 #include "Socket.h"
 #include "DirectoryListing.h"
+#include "FavoriteManager.h"
 
 #include "ClientManagerListener.h"
 
@@ -97,8 +98,6 @@ public:
 		}
 	}
 	
-	void reportUser(const HintedUser& user);
-	
 	bool isOp(const UserPtr& aUser, const string& aHubUrl) const;
 	bool isStealth(const string& aHubUrl) const;
 
@@ -114,7 +113,6 @@ public:
 	void connect(const HintedUser& user, const string& token);
 	void privateMessage(const HintedUser& user, const string& msg, bool thirdPerson);
 	void userCommand(const HintedUser& user, const UserCommand& uc, StringMap& params, bool compatibility);
-	void sendRawCommand(const OnlineUser& ou, const int aRawCommand);
 
 	int getMode(const string& aHubUrl) const;
 	bool isActive(const string& aHubUrl = Util::emptyString) const { return getMode(aHubUrl) != SettingsManager::INCOMING_FIREWALL_PASSIVE; }
@@ -128,18 +126,7 @@ public:
 	const CID& getMyPID();
 	
 	// fake detection methods
-	void setListLength(const UserPtr& p, const string& listLen);
-	void fileListDisconnected(const UserPtr& p);
-	void connectionTimeout(const UserPtr& p);
-	void checkCheating(const UserPtr& p, DirectoryListing* dl);
-	void setCheating(const UserPtr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient);
-	
-	// NMDC functions only!!!
-	void setPkLock(const UserPtr& p, const string& aPk, const string& aLock);
-	void setSupports(const UserPtr& p, const string& aSupports);
-	
-	void setGenerator(const UserPtr& p, const string& aGenerator);
-	void setUnknownCommand(const UserPtr& p, const string& aUnknownCommand);
+	#include "CheatManager.h"
 
 	OnlineUserPtr findDHTNode(const CID& cid) const;
 

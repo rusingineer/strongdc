@@ -229,9 +229,6 @@ void DetectionManager::importProfiles(SimpleXML& xml) {
 				} if(xml.findChild("Supports") && !xml.getChildData().empty()) {
 					item.nmdcMap.push_back(make_pair("SU", xml.getChildData()));
 					xml.resetCurrentChild();
-				} if(xml.findChild("TestSUR") && !xml.getChildData().empty()) {
-					item.nmdcMap.push_back(make_pair("TS", xml.getChildData()));
-					xml.resetCurrentChild();
 				} if(xml.findChild("UserConCom") && !xml.getChildData().empty()) {
 					item.nmdcMap.push_back(make_pair("UC", xml.getChildData()));
 					xml.resetCurrentChild();

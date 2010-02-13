@@ -646,6 +646,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\CheatManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\client\CID.h"
 				>
 			</File>

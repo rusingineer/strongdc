@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 namespace dcpp {
 
 const string Transfer::names[] = {
-	"file", "file", "list", "tthl", "file"
+	"file", "file", "list", "tthl"
 };
 
 const string Transfer::USER_LIST_NAME = "files.xml";

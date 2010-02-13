@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -150,47 +150,78 @@ string Identity::setCheat(const ClientBase& c, const string& aCheatDescription, 
 	string cheat = Util::formatParams(aCheatDescription, ucParams, false);
 	
 	set("CS", cheat);
-	set("BC", Util::toString(aBadClient));
+
+	if(aBadClient)
+		set("FC", Util::toString(Util::toInt(get("FC")) | BAD_CLIENT));
+	else
+		set("FC", Util::toString(Util::toInt(get("FC")) & ~BAD_CLIENT));
 
 	string report = "*** " + STRING(USER) + " " + getNick() + " - " + cheat;
 	return report;
 }
 
-string Identity::getReport() const {
-	string report = "\r\nClient:		" + get("CL");
-	report += "\r\nDescription:	" + getDescription();
-	report += "\r\nEmail:		" + getEmail();
-	report += "\r\nConnection:	" + getConnection();
-	report += "\r\nUser CID:		" +	getUser()->getCID().toBase32();
-	if(!getUser()->isSet(User::NMDC) && getUser() != ClientManager::getInstance()->getMe()) {
-		report += "\r\nUser SID:		" +			getSIDString() + " (" + get("SI") + ")";
+map<string, string> Identity::getReport() const {
+	map<string, string> reportSet;
+
+	string sid = getSIDString();
+
+	{
+		FastLock l(cs);
+		for(InfIter i = info.begin(); i != info.end(); ++i) {
+			// TODO: translate known tags
+			string name = string((char*)(&i->first), 2);
+			string value = i->second;
+
+#define TAG(x,y) (x + (y << 8))
+			
+			switch(i->first) {
+				case TAG('A','W'): name = "Away mode"; break;
+				case TAG('B','O'): name = "Bot"; break;
+				case TAG('C','L'): name = "Client name"; break;
+				case TAG('C','M'): name = "Comment"; break;
+				case TAG('C','O'): name = "Connection"; break;
+				case TAG('C','S'): name = "Cheat description"; break;
+				case TAG('C','T'): name = "Client type"; break;
+				case TAG('D','E'): name = "Description"; break;
+				case TAG('D','S'): name = "Download speed"; value = Util::formatBytes(value) + "/s"; break;
+				case TAG('E','M'): name = "E-mail"; break;
+				case TAG('F','C'): name = "Fake Check status"; break;
+				case TAG('F','D'): name = "Filelist disconnects"; break;
+				case TAG('G','E'): name = "Filelist generator"; break;
+				case TAG('H','N'): name = "Hubs Normal"; break;
+				case TAG('H','O'): name = "Hubs OP"; break;
+				case TAG('H','R'): name = "Hubs Registered"; break;
+				case TAG('I','4'): name = "IPv4 Address"; value += " (" + Socket::getRemoteHost(value) + ")"; break;
+				case TAG('I','6'): name = "IPv6 Address"; value += " (" + Socket::getRemoteHost(value) + ")"; break;
+				case TAG('I','D'): name = "Client ID"; break;
+				case TAG('L','O'): name = "NMDC Lock"; break;
+				case TAG('N','I'): name = "Nick"; break;
+				case TAG('O','P'): name = "Operator"; break;
+				case TAG('P','K'): name = "NMDC Pk"; break;
+				case TAG('R','S'): name = "Shared bytes - real"; value = Text::fromT(Util::formatExactSize(Util::toInt64(value))); break;
+				case TAG('S','F'): name = "Shared files"; break;
+				case TAG('S','I'): name = "Session ID"; value = sid; break;
+				case TAG('S','L'): name = "Slots"; break;
+				case TAG('S','S'): name = "Shared bytes - reported"; value = Text::fromT(Util::formatExactSize(Util::toInt64(value))); break;
+				case TAG('S','T'): name = "NMDC Status"; value = Util::formatStatus(Util::toInt(value)); break;
+				case TAG('S','U'): name = "Supports"; break;
+				case TAG('T','A'): name = "Tag"; break;
+				case TAG('T','O'): name = "Timeouts"; break;
+				case TAG('U','4'): name = "IPv4 UDP port"; break;
+				case TAG('U','6'): name = "IPv6 UDP port"; break;
+				case TAG('U','S'): name = "Upload speed"; value = Util::formatBytes(value) + "/s"; break;
+				case TAG('V','E'): name = "Client version"; break;
+				case TAG('W','O'): name = ""; break;	// for GUI purposes
+				default: name += " (unknown)";
+
+			}
+
+			if(!name.empty())
+				reportSet.insert(make_pair(name, value));
+		}
 	}
-	report += "\r\nIP:		" + getIp();
-	report += "\r\nHost:		" + Socket::getRemoteHost(getIp());
 
-	report += "\r\nXML Generator:	" + (get("GE").empty() ? "N/A" : get("GE"));
-	report += "\r\nLock:		" + get("LO");
-	report += "\r\nPk:		" + get("PK");
-	report += "\r\nTag:		" + getTag();
-	report += "\r\nSupports:		" + get("SU");
-	report += "\r\nStatus:		" + Util::formatStatus(getStatus());
-	report += "\r\nTestSUR:		" + get("TS");
-	report += "\r\nDisconnects:	" + get("FD");
-	report += "\r\nTimeouts:		" + get("TO");
-	report += "\r\nCommands:	" + get("UC");
-
-	int64_t listSize = Util::toInt64(get("LS"));
-	report += "\r\nFilelist size:	" + ((listSize != -1) ? (string)(Util::formatBytes(listSize) + "  (" + Text::fromT(Util::formatExactSize(listSize)) + " )") : "N/A");
-	
-	int64_t listLen = Util::toInt64(get("LL"));
-	report += "\r\nListLen:		" + (listLen != -1 ? (string)(Util::formatBytes(listLen) + "  (" + Text::fromT(Util::formatExactSize(listLen)) + " )") : "N/A");
-	report += "\r\nStated Share:	" + Util::formatBytes(getBytesShared()) + "  (" + Text::fromT(Util::formatExactSize(getBytesShared())) + " )";
-	
-	int64_t realBytes = Util::toInt64(get("RS"));
-	report += "\r\nReal Share:	" + (realBytes > -1 ? (string)(Util::formatBytes(realBytes) + "  (" + Text::fromT(Util::formatExactSize(realBytes)) + " )") : "N/A");
-	report += "\r\nCheat status:	" + (get("CS").empty() ? "N/A" : get("CS"));
-	report += "\r\nComment:		" + get("CM");
-	return report;
+	return reportSet;
 }
 
 string Identity::updateClientType(const OnlineUser& ou) {
@@ -198,8 +229,8 @@ string Identity::updateClientType(const OnlineUser& ou) {
 		if (get("LL") == "11" && getBytesShared() > 0) {
 			string report = setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
 			set("CL", "DC++ Stealth");
-			set("BC", "1");
-			set("BF", "1");
+			set("FC", Util::toString(Util::toInt(get("FC")) | BAD_CLIENT));
+			set("FC", Util::toString(Util::toInt(get("FC")) | BAD_LIST));
 
 			ClientManager::getInstance()->sendRawCommand(ou, SETTING(LISTLEN_MISMATCH));
 			return report;
@@ -207,7 +238,7 @@ string Identity::updateClientType(const OnlineUser& ou) {
 			string report = setCheat(ou.getClient(), "Listlen mismatched" , true);
 			set("CL", "Faked DC++");
 			set("CM", "Supports corrupted files...");
-			set("BC", "1");
+			set("FC", Util::toString(Util::toInt(get("FC")) | BAD_CLIENT));
 
 			ClientManager::getInstance()->sendRawCommand(ou, SETTING(LISTLEN_MISMATCH));
 			return report;
@@ -259,7 +290,11 @@ string Identity::updateClientType(const OnlineUser& ou) {
 
 		set("CL", entry.name);
 		set("CM", entry.comment);
-		set("BC", entry.cheat.empty() ? Util::emptyString : "1");
+		
+		if(entry.cheat.empty())
+			set("FC", Util::toString(Util::toInt(get("FC")) & ~BAD_CLIENT));
+		else
+			set("FC", Util::toString(Util::toInt(get("FC")) | BAD_CLIENT));
 
 		if(entry.checkMismatch && getUser()->isSet(User::NMDC) &&  (params["VE"] != params["PKVE"])) { 
 			set("CL", entry.name + " Version mis-match");
@@ -277,7 +312,7 @@ string Identity::updateClientType(const OnlineUser& ou) {
 
 	set("CL", "Unknown");
 	set("CS", Util::emptyString);
-	set("BC", Util::emptyString);
+	set("FC", Util::toString(Util::toInt(get("FC")) & ~BAD_CLIENT));
 	return Util::emptyString;
 }
 
@@ -414,7 +449,7 @@ tstring OnlineUser::getText(uint8_t col) const {
 		case COLUMN_EXACT_SHARED: return Util::formatExactSize(identity.getBytesShared());
 		case COLUMN_DESCRIPTION: return Text::toT(identity.getDescription());
 		case COLUMN_TAG: return Text::toT(identity.getTag());
-		case COLUMN_CONNECTION: return Text::toT(identity.getConnection());
+		case COLUMN_CONNECTION: return identity.get("US").empty() ? Text::toT(identity.getConnection()) : (Text::toT(Util::formatBytes(identity.get("US"))) + _T("/s"));
 		case COLUMN_IP: {
 			string ip = identity.getIp();
 			string country = ip.empty() ? Util::emptyString : Util::getIpCountry(ip);

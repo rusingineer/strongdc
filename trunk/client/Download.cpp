@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,14 +38,8 @@ Download::Download(UserConnection& conn, QueueItem& qi, const string& path) thro
 		setType(TYPE_PARTIAL_LIST);
 	} else if(qi.isSet(QueueItem::FLAG_USER_LIST)) {
 		setType(TYPE_FULL_LIST);
-	} else if(qi.isSet(QueueItem::FLAG_TESTSUR)) {
-		setType(TYPE_TESTSUR);
 	}
 
-	if(qi.isSet(QueueItem::FLAG_CHECK_FILE_LIST))
-		setFlag(FLAG_CHECK_FILE_LIST);
-	if(qi.isSet(QueueItem::FLAG_TESTSUR))
-		setFlag(FLAG_TESTSUR);		
 	if(source->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(FLAG_PARTIAL);
 	

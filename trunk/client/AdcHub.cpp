@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -185,10 +185,6 @@ void AdcHub::handle(AdcCommand::INF, AdcCommand& c) throw() {
 
 	if(u->getIdentity().supports(ADCS_FEATURE)) {
 		u->getUser()->setFlag(User::TLS);
-	}
-
-	if(!u->getIdentity().get("US").empty()) {
-		u->getIdentity().setConnection(Util::formatBytes(u->getIdentity().get("US")) + "/s");
 	}
 
 	if(u->getUser() == getMyIdentity().getUser()) {
