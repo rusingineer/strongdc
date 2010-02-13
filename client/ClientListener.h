@@ -28,8 +28,9 @@ public:
 	typedef X<16> SearchFlood;
 	typedef X<17> NmdcSearch;
 	typedef X<18> AdcSearch;
-	typedef X<29> CheatMessage;
+	typedef X<19> CheatMessage;
 	typedef X<20> HubTopic;
+	typedef X<21> UserReport;
 
 	enum StatusFlags {
 		FLAG_NORMAL = 0x00,
@@ -55,6 +56,7 @@ public:
 	virtual void on(AdcSearch, const Client*, const AdcCommand&, const CID&) throw() { }
 	virtual void on(CheatMessage, const Client*, const string&) throw() { }
 	virtual void on(HubTopic, const Client*, const string&) throw() { }
+	virtual void on(UserReport, const Client*, const Identity&) throw() { }
 };
 
 } // namespace dcpp

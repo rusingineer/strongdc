@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -122,7 +122,7 @@ void DownloadManager::addConnection(UserConnectionPtr conn) {
 	if(!conn->isSet(UserConnection::FLAG_SUPPORTS_TTHF) || !conn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET)) {
 		// Can't download from these...
 		conn->getUser()->setFlag(User::OLD_CLIENT);
-		ClientManager::getInstance()->setCheating(conn->getUser(), "Too old client", STRING(SOURCE_TOO_OLD), -1, true);
+		ClientManager::getInstance()->setCheating(conn->getUser(), STRING(SOURCE_TOO_OLD), -1, true);
 		QueueManager::getInstance()->removeSource(conn->getUser(), QueueItem::Source::FLAG_NO_TTHF);
 		conn->disconnect();
 		return;
@@ -174,10 +174,6 @@ void DownloadManager::checkDownloads(UserConnection* aConn) {
 		aConn->setState(UserConnection::STATE_IDLE);
  	    idlers.push_back(aConn);
 		return;
-	}
-
-	if(d->isSet(Download::FLAG_TESTSUR) && aConn->isSet(UserConnection::FLAG_NMDC)) {
-		aConn->getListLen();
 	}
 
 	aConn->setState(UserConnection::STATE_SND);
@@ -406,15 +402,9 @@ void DownloadManager::failDownload(UserConnection* aSource, const string& reason
 
 		if (d->getType() == Transfer::TYPE_FULL_LIST && reason == STRING(DISCONNECTED)) {
 			ClientManager::getInstance()->fileListDisconnected(aSource->getUser());
-		} else if( d->isSet(Download::FLAG_TESTSUR) ) {
-			if(reason == STRING(NO_SLOTS_AVAILABLE))
-				ClientManager::getInstance()->setCheating(aSource->getUser(), "MaxedOut", "No slots for TestSUR. User is using slotlocker.", -1, true);
-			else
-				ClientManager::getInstance()->setCheating(aSource->getUser(), reason, "", -1, true);
-			QueueManager::getInstance()->putDownload(d, true);
-			removeConnection(aSource);
-			return;
 		}
+
+		// TODO: update client type here
 
 		QueueManager::getInstance()->putDownload(d, false);
 	}
@@ -532,17 +522,9 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	fire(DownloadManagerListener::Failed(), d, STRING(FILE_NOT_AVAILABLE));
 
 	if (d->getType() == Transfer::TYPE_FULL_LIST) {
-		ClientManager::getInstance()->setCheating(aSource->getUser(), "", "Filelist Not Available", SETTING(FILELIST_UNAVAILABLE), false);
+		ClientManager::getInstance()->setCheating(aSource->getUser(), "Filelist Not Available", SETTING(FILELIST_UNAVAILABLE), false);
 		QueueManager::getInstance()->putDownload(d, true);
 		removeConnection(aSource);
-		return;
-	} else if (d->isSet(Download::FLAG_TESTSUR)) {
-		dcdebug("TestSUR File not available\n");
-
-		ClientManager::getInstance()->setCheating(aSource->getUser(), "File Not Available", "", -1, false);
-		
-		QueueManager::getInstance()->putDownload(d, true);
-		checkDownloads(aSource);
 		return;
 	}
 	

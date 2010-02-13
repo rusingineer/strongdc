@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +20,10 @@
 #define VERSIONSTRING "2.31"
 #define VERSIONFLOAT 2.31
 
-#define DCVERSIONSTRING "0.75"
+#define DCVERSIONSTRING "0.760"
 #define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
 
-#define SVNVERSION "svn481"
+#define SVNVERSION "svn482"
 
 #ifdef _WIN64
 # define CONFIGURATION_TYPE "x86-64"

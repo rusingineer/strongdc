@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -152,7 +152,11 @@ string ClientManager::getConnection(const CID& cid) const {
 	Lock l(cs);
 	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&cid));
 	if(i != onlineUsers.end()) {
-		return i->second->getIdentity().getConnection();
+		if(i->second->getIdentity().get("US").empty())
+			return i->second->getIdentity().getConnection();
+		else
+			return Util::formatBytes(i->second->getIdentity().get("US")) + "/s";
+		
 	}
 	return STRING(OFFLINE);
 }
@@ -508,16 +512,6 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 	}
 }
 
-void ClientManager::sendRawCommand(const OnlineUser& ou, const int aRawCommand) {
-	string rawCommand = ou.getClient().getRawCommand(aRawCommand);
-	if (!rawCommand.empty()) {
-		StringMap ucParams;
-
-		UserCommand uc = UserCommand(0, 0, 0, 0, "", rawCommand, "", "");
-		userCommand(HintedUser(ou.getUser(), ou.getClient().getHubUrl()), uc, ucParams, true);
-	}
-}
-
 void ClientManager::on(AdcSearch, const Client* c, const AdcCommand& adc, const CID& from) throw() {
 	bool isUdpActive = false;
 	{
@@ -638,152 +632,6 @@ string ClientManager::getMyNick(const string& hubUrl) const {
 	return Util::emptyString;
 }
 	
-void ClientManager::setListLength(const UserPtr& p, const string& listLen) {
-	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-	if(i != onlineUsers.end()) {
-		i->second->getIdentity().set("LL", listLen);
-	}
-}
-
-void ClientManager::fileListDisconnected(const UserPtr& p) {
-	string report = Util::emptyString;
-	Client* c = NULL;
-	{
-		Lock l(cs);
-		OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-		if(i != onlineUsers.end()) {
-			OnlineUser& ou = *i->second;
-	
-			int fileListDisconnects = Util::toInt(ou.getIdentity().get("FD")) + 1;
-			ou.getIdentity().set("FD", Util::toString(fileListDisconnects));
-
-			if(SETTING(ACCEPTED_DISCONNECTS) == 0)
-				return;
-
-			if(fileListDisconnects == SETTING(ACCEPTED_DISCONNECTS)) {
-				c = &ou.getClient();
-				report = ou.getIdentity().setCheat(ou.getClientBase(), "Disconnected file list " + Util::toString(fileListDisconnects) + " times", false);
-				ClientManager::getInstance()->sendRawCommand(ou, SETTING(DISCONNECT_RAW));
-			}
-		}
-	}
-	if(c && !report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT)) {
-		c->cheatMessage(report);
-	}
-}
-
-void ClientManager::connectionTimeout(const UserPtr& p) {
-	string report = Util::emptyString;
-	bool remove = false;
-	Client* c = NULL;
-	{
-		Lock l(cs);
-		OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-		if(i != onlineUsers.end()) {
-			OnlineUser& ou = *i->second;
-	
-			int connectionTimeouts = Util::toInt(ou.getIdentity().get("TO")) + 1;
-			ou.getIdentity().set("TO", Util::toString(connectionTimeouts));
-	
-			if(SETTING(ACCEPTED_TIMEOUTS) == 0)
-				return;
-	
-			if(connectionTimeouts == SETTING(ACCEPTED_TIMEOUTS)) {
-				c = &ou.getClient();
-				report = ou.getIdentity().setCheat(ou.getClientBase(), "Connection timeout " + Util::toString(connectionTimeouts) + " times", false);
-				remove = true;
-				sendRawCommand(ou, SETTING(TIMEOUT_RAW));
-			}
-		}
-	}
-	if(remove) {
-		try {
-			QueueManager::getInstance()->removeTestSUR(HintedUser(p, c->getHubUrl()));
-		} catch(...) {
-		}
-	}
-	if(c && !report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT)) {
-		c->cheatMessage(report);
-	}
-}
-
-void ClientManager::checkCheating(const UserPtr& p, DirectoryListing* dl) {
-	string report = Util::emptyString;
-	OnlineUserPtr ou = NULL;
-	{
-		Lock l(cs);
-
-		OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-		if(i == onlineUsers.end())
-			return;
-
-		ou = i->second;
-
-		int64_t statedSize = ou->getIdentity().getBytesShared();
-		int64_t realSize = dl->getTotalSize();
-	
-		double multiplier = ((100+(double)SETTING(PERCENT_FAKE_SHARE_TOLERATED))/100); 
-		int64_t sizeTolerated = (int64_t)(realSize*multiplier);
-		string detectString = Util::emptyString;
-		string inflationString = Util::emptyString;
-		ou->getIdentity().set("RS", Util::toString(realSize));
-		bool isFakeSharing = false;
-	
-		if(statedSize > sizeTolerated) {
-			isFakeSharing = true;
-		}
-
-		if(isFakeSharing) {
-			ou->getIdentity().set("BF", "1");
-			detectString += STRING(CHECK_MISMATCHED_SHARE_SIZE) + " ";
-			if(realSize == 0) {
-				detectString += STRING(CHECK_0BYTE_SHARE);
-			} else {
-				double qwe = (double)((double)statedSize / (double)realSize);
-				char buf[128];
-				snprintf(buf, sizeof(buf), CSTRING(CHECK_INFLATED), Util::toString(qwe).c_str());
-				inflationString = buf;
-				detectString += inflationString;
-			}
-			detectString += STRING(CHECK_SHOW_REAL_SHARE);
-
-			report = ou->getIdentity().setCheat(ou->getClientBase(), detectString, false);
-			sendRawCommand(*ou.get(), SETTING(FAKESHARE_RAW));
-		}
-		ou->getIdentity().set("FC", "1");
-	}
-	ou->getClient().updated(ou);
-	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))
-		ou->getClient().cheatMessage(report);
-}
-
-void ClientManager::setCheating(const UserPtr& p, const string& aTestSURString, const string& aCheatString, const int aRawCommand, bool aBadClient) {
-	OnlineUserPtr ou = NULL;
-	string report = Util::emptyString;
-	{
-		Lock l(cs);
-		OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-		if(i == onlineUsers.end()) return;
-		
-		ou = i->second;
-		
-		if(!aTestSURString.empty()) {
-			ou->getIdentity().set("TS", aTestSURString);
-			ou->getIdentity().set("TC", "1");
-			report = ou->getIdentity().updateClientType(*ou);
-		}
-		if(!aCheatString.empty()) {
-			report = ou->getIdentity().setCheat(ou->getClientBase(), aCheatString, aBadClient);
-		}
-		if(aRawCommand != -1)
-			sendRawCommand(*ou.get(), aRawCommand);
-	}
-	ou->getClient().updated(ou);
-	if(!report.empty() && BOOLSETTING(DISPLAY_CHEATS_IN_MAIN_CHAT))
-		ou->getClient().cheatMessage(report);
-}
-
 int ClientManager::getMode(const string& aHubUrl) const {
 	
 	if(aHubUrl.empty()) 
@@ -814,53 +662,6 @@ void ClientManager::cancelSearch(void* aOwner) {
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		i->second->cancelSearch(aOwner);
 	}
-}
-
-void ClientManager::setPkLock(const UserPtr& p, const string& aPk, const string& aLock) {
-	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-	if(i == onlineUsers.end()) return;
-	
-	i->second->getIdentity().set("PK", aPk);
-	i->second->getIdentity().set("LO", aLock);
-}
-
-void ClientManager::setSupports(const UserPtr& p, const string& aSupports) {
-	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-	if(i == onlineUsers.end()) return;
-	
-	i->second->getIdentity().set("SU", aSupports);
-}
-
-void ClientManager::setGenerator(const UserPtr& p, const string& aGenerator) {
-	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-	if(i == onlineUsers.end()) return;
-	i->second->getIdentity().set("GE", aGenerator);
-}
-
-void ClientManager::setUnknownCommand(const UserPtr& p, const string& aUnknownCommand) {
-	Lock l(cs);
-	OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-	if(i == onlineUsers.end()) return;
-	i->second->getIdentity().set("UC", aUnknownCommand);
-}
-
-void ClientManager::reportUser(const HintedUser& user) {
-	bool priv = FavoriteManager::getInstance()->isPrivate(user.hint);
-	string nick; string report;
-	Client* c;
-	{
-		Lock l(cs);
-		OnlineUser* u = findOnlineUser(user.user->getCID(), user.hint, priv);
-		if(!u) return;
-
-		nick = u->getIdentity().getNick();
-		report = u->getIdentity().getReport();
-		c = &u->getClient();
-	}
-	c->cheatMessage("*** Info on " + nick + " ***" + "\r\n" + report + "\r\n");
 }
 
 OnlineUserPtr ClientManager::findDHTNode(const CID& cid) const

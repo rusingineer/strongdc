@@ -78,7 +78,6 @@ public:
 
 		COMMAND_ID_HANDLER(IDC_REPORT, onReport)
 		COMMAND_ID_HANDLER(IDC_CHECKLIST, onCheckList)
-		COMMAND_ID_HANDLER(IDC_GET_USER_RESPONSES, onGetUserResponses)
 		CHAIN_COMMANDS(ucBase)
 
 		MESSAGE_HANDLER(WM_COMMAND, onCommand)
@@ -117,7 +116,6 @@ public:
 	LRESULT onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	LRESULT onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	void runUserCommand(UserCommand& uc);

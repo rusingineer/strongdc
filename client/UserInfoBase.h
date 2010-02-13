@@ -27,7 +27,6 @@ public:
 	
 	void getList(const string& hubHint);
 	void browseList(const string& hubHint);
-	void getUserResponses(const string& hubHint);
 	void checkList(const string& hubHint);
 	void doReport(const string& hubHint);
 	void matchQueue(const string& hubHint);
@@ -73,15 +72,15 @@ public:
 			} else if( (strncmp(conn.c_str(), "NetLimiter", 10) == 0)) {
 				image = 3;
 			} else {
-				double us = Util::toDouble(conn);
-				if(us == 0.005) {
-					image = 5;
-				} else if(us >= 10) {
+				double us = conn.empty() ? (8 * Util::toDouble(u.get("US")) / 1024 / 1024): Util::toDouble(conn);
+				if(us >= 10) {
 					image = 10;
 				} else if(us > 0.1) {
 					image = 7;
 				} else if(us >= 0.01) {
 					image = 4;
+				} else if(us > 0) {
+					image = 5;
 				}
 			}
 		}

@@ -209,7 +209,6 @@
 		<String Name="Gb">GiB</String>
 		<String Name="GenerateCertificates">Generate certificates</String>
 		<String Name="GetFileList">Get file list</String>
-		<String Name="GetUserResponses">Get user response</String>
 		<String Name="GoToDirectory">Go to directory</String>
 		<String Name="GrantExtraSlot">Grant extra slot (10 min)</String>
 		<String Name="GrantExtraSlotDay">Grant extra slot (day)</String>
@@ -258,7 +257,6 @@
 		<String Name="CheckMismatchedShareSize">Mismatched share size -</String>
 		<String Name="CheckOnConnect">Check user on join</String>
 		<String Name="CheckShowRealShare">, stated size = %[shareshort], real size = %[realshareformat]</String>
-		<String Name="CheckingClient">Checking client...</String>
 		<String Name="ChooseFolder">Choose folder</String>
 		<String Name="IgnoreTthSearches">Ignore TTH searches</String>
 		<String Name="IgnoreUser">Ignore User</String>

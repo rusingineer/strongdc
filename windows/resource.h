@@ -357,7 +357,6 @@
 #define IDC_TREE1                       1224
 #define IDC_STATICb                     1225
 #define IDC_IMAGEBROWSE                 1225
-#define IDC_CLIENT_TESTSUR_RESPONSE     1225
 #define IDC_SETTINGS_MAX_HASH_SPEED     1225
 #define IDC_SHOW_SPEED_CHECK            1225
 #define IDC_TOOLBAR_POSSIBLE            1226
@@ -815,7 +814,6 @@
 #define IDC_FOLLOW                      32784
 #define IDC_SEND_MESSAGE                32786
 #define IDC_FILTER_FOCUS                32788
-#define IDC_GET_USER_RESPONSES          32789
 #define IDC_REPORT                      32790
 #define IDC_COPY                        32791
 #define ID_ACCELERATOR32796             32796

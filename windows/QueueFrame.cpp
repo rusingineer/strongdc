@@ -236,7 +236,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 		}
 		case COLUMN_ADDED: return Text::toT(Util::formatTime("%Y-%m-%d %H:%M", getAdded()));
 		case COLUMN_TTH: 
-			return qi->isSet(QueueItem::FLAG_USER_LIST) || qi->isSet(QueueItem::FLAG_TESTSUR) ? Util::emptyStringT : Text::toT(getTTH().toBase32());
+			return qi->isSet(QueueItem::FLAG_USER_LIST) ? Util::emptyStringT : Text::toT(getTTH().toBase32());
 
 		default: return Util::emptyStringT;
 	}
@@ -249,7 +249,7 @@ void QueueFrame::on(QueueManagerListener::Added, const QueueItem* aQI) {
 }
 
 void QueueFrame::addQueueItem(QueueItemInfo* ii, bool noSort) {
-	if(!ii->isSet(QueueItem::FLAG_USER_LIST) && !ii->isSet(QueueItem::FLAG_TESTSUR)) {
+	if(!ii->isSet(QueueItem::FLAG_USER_LIST)) {
 		queueSize+=ii->getSize();
 	}
 	queueItems++;
@@ -540,7 +540,7 @@ LRESULT QueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 				ctrlQueue.deleteItem(ii);
 			}
 			
-			bool userList = ii->isSet(QueueItem::FLAG_USER_LIST) || ii->isSet(QueueItem::FLAG_TESTSUR);
+			bool userList = ii->isSet(QueueItem::FLAG_USER_LIST);
 			
 			if(!userList) {
 				queueSize-=ii->getSize();

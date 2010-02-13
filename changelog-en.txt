@@ -1,3 +1,24 @@
+  -- StrongDC++ 2.31 --
+
+* the first 64-bit release
+* merged with DC++ BZR
+* added possibility of passive-passive connections
+* many DHT fixed and optimizations
+* implemented DHT packets encryption
+* crash fixes
+* added some missing country flags (THX RadoX)
+* hopefully fixed UTF-8 in magnet links (FlyLinkDC++)
+* added hub address into queue context menu
+* changed default hublists
+* updated OpenSSL, Boost, WTL libraries
+* added favourite hubs groups
+* bandwidth limiter optimizations
+* chat optimizations (THX Crise)
+* look adopted to Windows native theme
+* language file name now accepts path relative to strongdc.exe directory
+* many other fixes, changes etc. see developer changelog
+
+
   -- StrongDC++ 2.30 --
   
 * fixed upload connection tokens (grant extra slot, upload queue etc.)

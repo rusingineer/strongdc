@@ -55,7 +55,6 @@ public:
 		COMMAND_ID_HANDLER(IDC_GETLIST, onGetList)
 		COMMAND_ID_HANDLER(IDC_BROWSELIST, onBrowseList)
 		COMMAND_ID_HANDLER(IDC_CHECKLIST, onCheckList)
-		COMMAND_ID_HANDLER(IDC_GET_USER_RESPONSES, onGetUserResponses)
 		COMMAND_ID_HANDLER(IDC_MATCH_QUEUE, onMatchQueue)
 		COMMAND_ID_HANDLER(IDC_PRIVATEMESSAGE, onPrivateMessage)
 		COMMAND_ID_HANDLER(IDC_ADD_TO_FAVORITES, onAddToFavorites)
@@ -81,12 +80,6 @@ public:
 		((T*)this)->getUserList().forEachSelectedT(boost::bind(&UserInfoBase::doReport, _1, hubHint));
 		return 0;
 	}
-
-	LRESULT onGetUserResponses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		((T*)this)->getUserList().forEachSelectedT(boost::bind(&UserInfoBase::getUserResponses, _1, hubHint));
-		return 0;
-	}
-
 	LRESULT onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 		((T*)this)->getUserList().forEachSelectedT(boost::bind(&UserInfoBase::checkList, _1, hubHint));
 		return 0;
@@ -468,6 +461,8 @@ public:
 	static bool shutDown(int action);
 	static int getFirstSelectedIndex(CListViewCtrl& list);
 	static int setButtonPressed(int nID, bool bPressed = true);
+
+	static string getReport(const Identity& identity, HWND hwnd);
 private:
 	static int CALLBACK browseCallbackProc(HWND hwnd, UINT uMsg, LPARAM /*lp*/, LPARAM pData);
 

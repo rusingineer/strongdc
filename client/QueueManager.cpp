@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ QueueItem* QueueManager::FileQueue::add(const string& aTarget, int64_t aSize,
 
 	QueueItem* qi = new QueueItem(aTarget, aSize, p, aFlags, aAdded, root);
 
-	if(qi->isSet(QueueItem::FLAG_USER_LIST) || qi->isSet(QueueItem::FLAG_TESTSUR)) {
+	if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 		qi->setPriority(QueueItem::HIGHEST);
 	} else {
 		qi->setMaxSegments(getMaxSegments(qi->getSize()));
@@ -147,7 +147,7 @@ static QueueItem* findCandidate(QueueItem::StringIter start, QueueItem::StringIt
 		if(q->isFinished())
 			continue;
 		// No user lists
-		if(q->isSet(QueueItem::FLAG_USER_LIST) || q->isSet(QueueItem::FLAG_TESTSUR) || q->isSet(QueueItem::FLAG_CHECK_FILE_LIST))
+		if(q->isSet(QueueItem::FLAG_USER_LIST))
 			continue;
         // No paused downloads
 		if(q->getPriority() == QueueItem::PAUSED)
@@ -208,7 +208,7 @@ void QueueManager::UserQueue::add(QueueItem* qi) {
 void QueueManager::UserQueue::add(QueueItem* qi, const UserPtr& aUser) {
 	QueueItem::List& l = userQueue[qi->getPriority()][aUser];
 
-	if(qi->getDownloadedBytes() > 0 || qi->isSet(QueueItem::FLAG_TESTSUR)) {
+	if(qi->getDownloadedBytes() > 0 || qi->isSet(QueueItem::FLAG_USER_CHECK)) {
 		l.push_front(qi);
 	} else {
 		l.push_back(qi);
@@ -246,7 +246,7 @@ QueueItem* QueueManager::UserQueue::getNext(const UserPtr& aUser, QueueItem::Pri
 
 				if(qi->isWaiting()) {
 					// check maximum simultaneous files setting
-					if(SETTING(FILE_SLOTS) == 0 || qi->isSet(QueueItem::FLAG_TESTSUR) || qi->isSet(QueueItem::FLAG_USER_LIST) ||
+					if(SETTING(FILE_SLOTS) == 0 || qi->isSet(QueueItem::FLAG_USER_LIST) ||
 						QueueManager::getInstance()->getRunningFiles().size() < (size_t)SETTING(FILE_SLOTS)) 
 					{
 						return qi;
@@ -705,7 +705,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 		Lock l(cs);
 
 		QueueItem* q = fileQueue.find(target);
-		if(q == NULL && !((aFlags & QueueItem::FLAG_USER_LIST) || (aFlags & QueueItem::FLAG_TESTSUR))) {
+		if(q == NULL && !(aFlags & QueueItem::FLAG_USER_LIST)) {
 			QueueItem::List ql;
 			fileQueue.find(ql, root);
 			if(!ql.empty()){
@@ -718,7 +718,7 @@ void QueueManager::add(const string& aTarget, int64_t aSize, const TTHValue& roo
 			q = fileQueue.add(target, aSize, aFlags, QueueItem::DEFAULT, tempTarget, GET_TIME(), root);
 			fire(QueueManagerListener::Added(), q);
 
-			newItem = !q->isSet(QueueItem::FLAG_USER_LIST) && !q->isSet(QueueItem::FLAG_TESTSUR);
+			newItem = !q->isSet(QueueItem::FLAG_USER_LIST);
 		} else {
 			if(q->getSize() != aSize) {
 				throw QueueException(STRING(FILE_WITH_DIFFERENT_SIZE));
@@ -802,7 +802,7 @@ bool QueueManager::addSource(QueueItem* qi, const HintedUser& aUser, Flags::Mask
 	bool wantConnection = (qi->getPriority() != QueueItem::PAUSED) && !userQueue.getRunning(aUser);
 
 	if(qi->isSource(aUser)) {
-		if(qi->isSet(QueueItem::FLAG_USER_LIST) || qi->isSet(QueueItem::FLAG_TESTSUR)) {
+		if(qi->isSet(QueueItem::FLAG_USER_LIST)) {
 			return wantConnection;
 		}
 		throw QueueException(STRING(DUPLICATE_SOURCE) + ": " + Util::getFileName(qi->getTarget()));
@@ -1222,8 +1222,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
  	string fl_fname;
 	HintedUser fl_user = aDownload->getHintedUser();
 	Flags::MaskType fl_flag = 0;
-
-	bool downloadList = aDownload->isSet(Download::FLAG_CHECK_FILE_LIST) && aDownload->isSet(Download::FLAG_TESTSUR);
+	bool downloadList = false;
 
 	{
 		Lock l(cs);
@@ -1389,10 +1388,10 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 		processList(fl_fname, fl_user, fl_flag);
 	}
 
-	// check filelist only if user is still online (hasn't been banned for testsur)
+	// partial file list failed, redownload full list
 	if(fl_user.user->isOnline() && downloadList) {
 		try {
-			addList(fl_user, fl_flag == 0 ? QueueItem::FLAG_CHECK_FILE_LIST : fl_flag);
+			addList(fl_user, fl_flag);
 		} catch(const Exception&) {}
 	}
 }
@@ -1641,7 +1640,7 @@ void QueueManager::saveQueue(bool force) throw() {
 		string b32tmp;
 		for(QueueItem::StringIter i = fileQueue.getQueue().begin(); i != fileQueue.getQueue().end(); ++i) {
 			QueueItem* qi = i->second;
-			if(!qi->isSet(QueueItem::FLAG_USER_LIST) && !qi->isSet(QueueItem::FLAG_TESTSUR)) {
+			if(!qi->isSet(QueueItem::FLAG_USER_LIST)) {
 				f.write(LIT("\t<Download Target=\""));
 				f.write(SimpleXML::escape(qi->getTarget(), tmp, true));
 				f.write(LIT("\" Size=\""));
@@ -1916,23 +1915,17 @@ void QueueManager::on(ClientManagerListener::UserConnected, const UserPtr& aUser
 }
 
 void QueueManager::on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
-	bool hasTestSURinQueue = false;
-
 	{
 		Lock l(cs);
 		for(int i = 0; i < QueueItem::LAST; ++i) {
 			QueueItem::UserListIter j = userQueue.getList(i).find(aUser);
 			if(j != userQueue.getList(i).end()) {
 				for(QueueItem::Iter m = j->second.begin(); m != j->second.end(); ++m) {
-					if((*m)->isSet(QueueItem::FLAG_TESTSUR))  hasTestSURinQueue = true;
 					fire(QueueManagerListener::StatusUpdated(), *m);
 				}
 			}
 		}
 	}
-	
-	if(hasTestSURinQueue)
-		removeTestSUR(HintedUser(aUser, Util::emptyString)); // TODO: hub hint?
 }
 
 void QueueManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {

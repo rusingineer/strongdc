@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,27 +78,6 @@ public:
 		Flags::MaskType aFlags = 0, bool addBad = true) throw(QueueException, FileException);
 		/** Add a user's filelist to the queue. */
 	void addList(const HintedUser& HintedUser, Flags::MaskType aFlags, const string& aInitialDir = Util::emptyString) throw(QueueException, FileException);
-
-	void addTestSUR(const HintedUser& aUser, bool checkList) throw(QueueException, FileException) {
-		StringList nicks = ClientManager::getInstance()->getNicks(aUser);
-		string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
-		string target = Util::getPath(Util::PATH_USER_CONFIG) + "TestSURs\\TestSUR" + nick + aUser.user->getCID().toBase32();
-
-		add(target, -1, TTHValue(), aUser, (Flags::MaskType)((checkList ? QueueItem::FLAG_CHECK_FILE_LIST : 0) | QueueItem::FLAG_TESTSUR));
-	}
-
-	void removeTestSUR(const HintedUser& aUser) {
-		try {
-			StringList nicks = ClientManager::getInstance()->getNicks(aUser);
-			string nick = nicks.empty() ? Util::emptyString : Util::cleanPathChars(nicks[0]) + ".";
-			string target = Util::getPath(Util::PATH_USER_CONFIG) + "TestSURs\\TestSUR" + nick + aUser.user->getCID().toBase32();
-
-			remove(target);
-		} catch(...) {
-			// exception
-		}
-		return;
-	}
 
 	/** Readd a source that was removed */
 	void readd(const string& target, const HintedUser& aUser) throw(QueueException);

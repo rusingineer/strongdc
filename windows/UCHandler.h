@@ -77,7 +77,6 @@ public:
 			CMenuHandle cur = BOOLSETTING(UC_SUBMENU) ? subMenu.m_hMenu : menu.m_hMenu;	
 
 			if(isOp) {
-				cur.AppendMenu(MF_STRING, IDC_GET_USER_RESPONSES, CTSTRING(GET_USER_RESPONSES));
 				cur.AppendMenu(MF_STRING, IDC_REPORT, CTSTRING(REPORT));
 				cur.AppendMenu(MF_STRING, IDC_CHECKLIST, CTSTRING(CHECK_FILELIST));
 				cur.AppendMenu(MF_SEPARATOR);

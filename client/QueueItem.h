@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,12 +71,10 @@ public:
 		FLAG_XML_BZLIST			= 0x20,
 		/** Only download a part of the file list */
 		FLAG_PARTIAL_LIST 		= 0x40,
-		/** Test user for slotlocker */
-		FLAG_TESTSUR			= 0x80,
 		/** Test user's file list for fake share */
-		FLAG_CHECK_FILE_LIST	= 0x100,
+		FLAG_USER_CHECK			= 0x80,
 		/** Autodrop slow source is enabled for this file */
-		FLAG_AUTODROP			= 0x200
+		FLAG_AUTODROP			= 0x100
 	};
 
 	/**

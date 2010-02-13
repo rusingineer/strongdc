@@ -224,16 +224,6 @@ void UserInfoBase::matchQueue(const string& hubHint) {
 	}
 }
 
-void UserInfoBase::getUserResponses(const string& hubHint) {
-	if(getUser()) {
-		try {
-			QueueManager::getInstance()->addTestSUR(HintedUser(getUser(), hubHint), false);
-		} catch(const Exception& e) {
-			LogManager::getInstance()->message(e.getError());		
-		}
-	}
-}
-
 void UserInfoBase::doReport(const string& hubHint) {
 	if(getUser()) {
 		ClientManager::getInstance()->reportUser(HintedUser(getUser(), hubHint));
@@ -261,7 +251,7 @@ void UserInfoBase::browseList(const string& hubHint) {
 void UserInfoBase::checkList(const string& hubHint) {
 	if(getUser()) {
 		try {
-			QueueManager::getInstance()->addList(HintedUser(getUser(), hubHint), QueueItem::FLAG_CHECK_FILE_LIST);
+			QueueManager::getInstance()->addList(HintedUser(getUser(), hubHint), QueueItem::FLAG_USER_CHECK);
 		} catch(const Exception& e) {
 			LogManager::getInstance()->message(e.getError());		
 		}
@@ -1841,6 +1831,21 @@ void WinUtil::saveReBarSettings(HWND bar) {
 	SettingsManager::getInstance()->set(SettingsManager::TOOLBAR_SETTINGS, toolbarSettings);
 }
 
+string WinUtil::getReport(const Identity& identity, HWND hwnd)
+{
+	map<string, string> reportMap = identity.getReport();
+
+	string report = "*** Info on " + identity.getNick() + " ***" + "\n";
+
+	for(map<string, string>::const_iterator i = reportMap.begin(); i != reportMap.end(); ++i) {
+		int width = getTextWidth(Text::toT(i->first + ":"), hwnd);
+		string tabs = (width < 70) ? "\t\t\t" : (width < 130 ? "\t\t" : "\t");
+
+		report += "\n" + i->first + ":" + tabs + i->second;// + " >>> " + Util::toString(width);
+	}
+
+	return report + "\n";
+}
 
 /**
  * @file

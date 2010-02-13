@@ -599,7 +599,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 					if(BOOLSETTING(CHECK_NEW_USERS)) {
 						if(u.onlineUser->getIdentity().isTcpActive(client) || client->isActive()) {
 							try {
-								QueueManager::getInstance()->addTestSUR(HintedUser(u.onlineUser->getUser(), client->getHubUrl()), true);
+								QueueManager::getInstance()->addList(HintedUser(u.onlineUser->getUser(), client->getHubUrl()), QueueItem::FLAG_USER_CHECK);
 							} catch(const Exception&) {
 							}
 						}
@@ -2150,14 +2150,14 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 				cd->clrText = SETTING(NORMAL_COLOUR);
 			}
 
-			if (client->isOp()) {				
-				if (!ui->getIdentity().get("BC").empty()) {
+			if (client->isOp()) {
+				if(Util::toInt(ui->getIdentity().get("FC")) & Identity::BAD_CLIENT) {
 					cd->clrText = SETTING(BAD_CLIENT_COLOUR);
-				} else if(!ui->getIdentity().get("BF").empty()) {
+				} else if(Util::toInt(ui->getIdentity().get("FC")) & Identity::BAD_LIST) {
 					cd->clrText = SETTING(BAD_FILELIST_COLOUR);
 				} else if(BOOLSETTING(SHOW_SHARE_CHECKED_USERS)) {
-					bool cClient = !ui->getIdentity().get("TC").empty();
-					bool cFilelist = !ui->getIdentity().get("FC").empty();
+					bool cClient = (Util::toInt(ui->getIdentity().get("FC")) & Identity::CLIENT_CHECKED);
+					bool cFilelist = (Util::toInt(ui->getIdentity().get("FC")) & Identity::LIST_CHECKED);
 					if(cClient && cFilelist) {
 						cd->clrText = SETTING(FULL_CHECKED_COLOUR);
 					} else if(cClient) {
@@ -2213,6 +2213,12 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 	return 0;
 }
 	
+void HubFrame::on(UserReport, const Client*, const Identity& i) throw()
+{
+	string report = WinUtil::getReport(i, ctrlClient.m_hWnd);
+	speak(CHEATING_USER, report);
+}
+
 /**
  * @file
  * $Id$

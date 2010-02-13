@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2009 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,6 +105,14 @@ public:
 		TLS			= 0x10,
 		NAT			= 0x20
 	};
+
+	enum FakeFlags {
+		NOT_CHECKED		= 0x01,
+		CLIENT_CHECKED	= 0x02,
+		LIST_CHECKED	= 0x04,
+		BAD_CLIENT		= 0x08,
+		BAD_LIST		= 0x10
+	};
 	
 	Identity() { }
 	Identity(const UserPtr& ptr, uint32_t aSID) : user(ptr) { setSID(aSID); }
@@ -151,7 +159,7 @@ public:
 	bool isClientType(ClientType ct) const;
 		
 	string setCheat(const ClientBase& c, const string& aCheatDescription, bool aBadClient);
-	string getReport() const;
+	map<string, string> getReport() const;
 	string updateClientType(const OnlineUser& ou);
 	bool matchProfile(const string& aString, const string& aProfile) const;
 
