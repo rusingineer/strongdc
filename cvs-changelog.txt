@@ -1,3 +1,11 @@
+** svn483
+	delay load of uxtheme.dll
+	don't redirect everything to DHT
+	some DC++ BZR merge
+	removed NetLimiter v1 speed limit check
+	updated GeoIP db
+	hopefully fixed migration from local mode
+
 ** svn482
 	removed TestSUR check, because it is unuseful nowadays
 	reorganised user report text

@@ -16,6 +16,7 @@
 * chat optimizations (THX Crise)
 * look adopted to Windows native theme
 * language file name now accepts path relative to strongdc.exe directory
+* upload limiter value shown in Connection field (hubs should update their scripts)
 * many other fixes, changes etc. see developer changelog
 
 

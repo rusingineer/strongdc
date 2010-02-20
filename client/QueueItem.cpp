@@ -249,7 +249,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 				continue;
 
 			// current chunk must be running at least for 2 seconds
-			if(d->getStart() == 0 || GET_TIME() - d->getStart() < 2000) 
+			if(d->getStart() == 0 || GET_TICK() - d->getStart() < 2000) 
 				continue;
 
 			// current chunk mustn't be finished in next 10 seconds

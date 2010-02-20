@@ -37,6 +37,8 @@
 #include "QueueManager.h"
 #include "ZUtils.h"
 
+#include "ThrottleManager.h"
+
 namespace dcpp {
 
 NmdcHub::NmdcHub(const string& aHubURL, bool secure) : Client(aHubURL, '|', secure), supportFlags(0),
@@ -156,6 +158,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 	StringTokenizer<string> tok(tag, ',');
 	string::size_type j;
 	size_t slots = 1;
+	id.set("US", Util::emptyString);
 	for(StringIter i = tok.getTokens().begin(); i != tok.getTokens().end(); ++i) {
 		if(i->length() < 2)
 			continue;
@@ -896,16 +899,21 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	else 
 		modeChar = 'P';
 	
-	char tag[256];
+	string uploadSpeed;
+	int upLimit = BOOLSETTING(THROTTLE_ENABLE) ? ThrottleManager::getInstance()->getUploadLimit() : 0;
+	if (upLimit > 0) {
+		uploadSpeed = Util::toString((double)upLimit / 1024) + " KiB/s";
+	} else {
+		uploadSpeed = SETTING(UPLOAD_SPEED);
+	}
+
 	string dc;
 	string version = DCVERSIONSTRING;
-	int NetLimit = Util::getNetLimiterLimit();
-	string connection = (NetLimit > -1) ? "NetLimiter [" + Util::toString(NetLimit) + " kB/s]" : SETTING(UPLOAD_SPEED);
 
 	if (getStealth()) {
-		dc = "<++";
+		dc = "++";
 	} else {
-		dc = "<StrgDC++";
+		dc = "StrgDC++";
 #ifdef SVNVERSION
 		version = VERSIONSTRING SVNVERSION;
 #else
@@ -929,22 +937,16 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		StatusMode |= Identity::TLS;
 	}	
 
-	if (BOOLSETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
-		snprintf(tag, sizeof(tag), "%s V:%s,M:%c,H:%s,S:%d,L:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots(), SETTING(MAX_UPLOAD_SPEED_LIMIT));
-	} else {
-		snprintf(tag, sizeof(tag), "%s V:%s,M:%c,H:%s,S:%d>", dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), UploadManager::getInstance()->getSlots());
-	}
-
 	char myInfo[256];
-	snprintf(myInfo, sizeof(myInfo), "$MyINFO $ALL %s %s%s$ $%s%c$%s$", fromUtf8(getCurrentNick()).c_str(),
-		fromUtf8(escape(getCurrentDescription())).c_str(), tag, connection.c_str(), StatusMode, 
-		fromUtf8(escape(SETTING(EMAIL))).c_str());
+	snprintf(myInfo, sizeof(myInfo), "$MyINFO $ALL %s %s<%s V:%s,M:%c,H:%s,S:%d>$ $%s%c$%s$", fromUtf8(getCurrentNick()).c_str(),
+		fromUtf8(escape(getCurrentDescription())).c_str(), dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), 
+		UploadManager::getInstance()->getSlots(), uploadSpeed.c_str(), StatusMode, fromUtf8(escape(SETTING(EMAIL))).c_str());
+
 	int64_t newBytesShared = ShareManager::getInstance()->getShareSize();
 	if (strcmp(myInfo, lastMyInfo.c_str()) != 0 || alwaysSend || (newBytesShared != lastBytesShared && lastUpdate + 15*60*1000 < GET_TICK())) {
-		snprintf(tag, sizeof(tag), "%s%lld$|", myInfo, newBytesShared);
-		
 		dcdebug("MyInfo %s...\n", getMyNick().c_str());		
-		send(tag);
+		send(string(myInfo) + Util::toString(newBytesShared) + "$|");
+		
 		lastMyInfo = myInfo;
 		lastBytesShared = newBytesShared;
 		lastUpdate = GET_TICK();

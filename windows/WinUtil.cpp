@@ -1839,7 +1839,7 @@ string WinUtil::getReport(const Identity& identity, HWND hwnd)
 
 	for(map<string, string>::const_iterator i = reportMap.begin(); i != reportMap.end(); ++i) {
 		int width = getTextWidth(Text::toT(i->first + ":"), hwnd);
-		string tabs = (width < 70) ? "\t\t\t" : (width < 130 ? "\t\t" : "\t");
+		string tabs = (width < 70) ? "\t\t\t" : (width < 135 ? "\t\t" : "\t");
 
 		report += "\n" + i->first + ":" + tabs + i->second;// + " >>> " + Util::toString(width);
 	}

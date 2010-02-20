@@ -445,8 +445,6 @@ public:
 	static uint32_t rand(uint32_t low, uint32_t high) { return rand(high-low) + low; }
 	static double randd() { return ((double)rand()) / ((double)0xffffffff); }
 
-	static int getNetLimiterLimit();
-
 private:
 	/** In local mode, all config and temp files are kept in the same dir as the executable */
 	static bool localMode;
