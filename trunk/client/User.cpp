@@ -168,12 +168,12 @@ map<string, string> Identity::getReport() const {
 	{
 		FastLock l(cs);
 		for(InfIter i = info.begin(); i != info.end(); ++i) {
-			// TODO: translate known tags
 			string name = string((char*)(&i->first), 2);
 			string value = i->second;
 
 #define TAG(x,y) (x + (y << 8))
 			
+			// TODO: translate known tags and format values to something more readable
 			switch(i->first) {
 				case TAG('A','W'): name = "Away mode"; break;
 				case TAG('B','O'): name = "Bot"; break;
@@ -194,6 +194,7 @@ map<string, string> Identity::getReport() const {
 				case TAG('I','4'): name = "IPv4 Address"; value += " (" + Socket::getRemoteHost(value) + ")"; break;
 				case TAG('I','6'): name = "IPv6 Address"; value += " (" + Socket::getRemoteHost(value) + ")"; break;
 				case TAG('I','D'): name = "Client ID"; break;
+				case TAG('K','P'): name = "KeyPrint"; break;
 				case TAG('L','O'): name = "NMDC Lock"; break;
 				case TAG('N','I'): name = "Nick"; break;
 				case TAG('O','P'): name = "Operator"; break;

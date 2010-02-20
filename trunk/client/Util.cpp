@@ -103,100 +103,6 @@ static string getDownloadsPath(const string& def) {
 	return def + "Downloads\\";
 }
 
-bool nlfound = false;
-BOOL CALLBACK GetWOkna(HWND handle, LPARAM) {
-	TCHAR buf[256];
-	buf[0] = NULL;
-	if (!handle) {
-		nlfound = false;
-		return TRUE;// Not a window
-	}
-	SendMessageTimeout(handle, WM_GETTEXT, 255, (LPARAM)buf, SMTO_ABORTIFHUNG | SMTO_BLOCK, 100, NULL);
-	buf[255] = NULL;
-
-	if(buf[0] != NULL) {
-		if(_tcsnicmp(buf, _T("NetLimiter"), 10) == 0/* || _tcsnicmp(buf, _T("DU Super Controler"), 18) == 0*/) {
-			nlfound = true;
-			return false;
-		}
-	}
-
-	nlfound = false;
-	return true;
-}
-
-int Util::getNetLimiterLimit() {
-	int NetLimiter_UploadLimit = -1;
-	int NetLimiter_UploadOn = 0;
-
-	if(GetModuleHandle(_T("nl_lsp.dll")) == 0) return -1;
-
-	try {
-		TCHAR AppData[256];
-		GetEnvironmentVariable(_T("APPDATA"), AppData, 255);
-
-		File f(Text::fromT(AppData) + "\\LockTime\\NetLimiter\\history\\apphist.dat", File::RW, File::OPEN);
-
-		const size_t BUF_SIZE = 800;
-
-		TCHAR appName[MAX_PATH+1];
-		DWORD x = GetModuleFileName(NULL, appName, MAX_PATH);
-		string cesta = Text::fromT(tstring(appName, x)) + "/";
-
-		char buf[BUF_SIZE];
-		size_t len;
-		char* w2 = _strdup(cesta.c_str());
-
-		for(;;) {
-			size_t n = BUF_SIZE;
-			len = f.read(buf, n);
-			string txt = Util::emptyString;
-			for(uint32_t i = 0; i < len; ++i) {
-				if (buf[i]== 0) 
-				txt += "/"; else
-				txt += buf[i];
-			}
-			char* w1 = _strdup(txt.c_str());
-
-			if(::strstr(_strupr(w1),_strupr(w2)) != NULL) {
-				char limit_hex[256];
-				snprintf(limit_hex, sizeof(limit_hex), "0x%X%X", uint8_t(buf[6]), uint8_t(buf[5]));
-
-				NetLimiter_UploadLimit = 0;
-				sscanf(limit_hex, "%x", &NetLimiter_UploadLimit);
-				NetLimiter_UploadLimit /= 4;
-
-				NetLimiter_UploadOn = uint8_t(txt[16]);
-				buf[255] = 0;
-
-				if(NetLimiter_UploadOn == 1) {
-					EnumWindows(GetWOkna,NULL);
-					if(!nlfound) {
-						NetLimiter_UploadLimit = -1;
-						NetLimiter_UploadOn = 0;
-					}
-				} else {
-					NetLimiter_UploadLimit = -1;
-					NetLimiter_UploadOn = 0;
-				}
-				delete w1;
-				break;
-			}
-
-			delete w1;
-
-			if(len < BUF_SIZE)
-				break;
-		}
-	
-		f.close();
-		delete w2;
-	} catch(...) {
-	}
-
-	return NetLimiter_UploadLimit;
-}
-
 #endif
 
 void Util::initialize() {
@@ -325,7 +231,7 @@ void Util::migrate(const string& file) {
 	}
 
 	string fname = getFileName(file);
-	string old = paths[PATH_GLOBAL_CONFIG] + fname;
+	string old = paths[PATH_GLOBAL_CONFIG] + "Settings\\" + fname;
 	if(File::getSize(old) == -1) {
 		return;
 	}

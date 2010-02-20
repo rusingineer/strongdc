@@ -346,10 +346,10 @@ OnlineUser* ClientManager::findOnlineUser_hint(const CID& cid, const string& hin
 	if(p.first == p.second) // no user found with the given CID.
 		return 0;
 
-	if(!p.first->second->getUser()->isSet(User::DHT) && !hintUrl.empty()) {
+	if(!hintUrl.empty()) {
 		for(OnlineIterC i = p.first; i != p.second; ++i) {
 			OnlineUser* u = i->second;
-			if(u->getClient().getHubUrl() == hintUrl) {
+			if(u->getClientBase().getHubUrl() == hintUrl) {
 				return u;
 			}
 		}
