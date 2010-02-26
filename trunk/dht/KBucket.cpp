@@ -37,7 +37,7 @@ namespace dht
 
 	void DHTClient::privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson) 
 	{ 
-		DHT::getInstance()->privateMessage(*user.get(), aMessage, thirdPerson); 
+		DHT::getInstance()->privateMessage(user, aMessage, thirdPerson); 
 	}
 
 	// Set all new nodes' type to 3 to avoid spreading dead nodes..

@@ -21,6 +21,7 @@
 
 #include "TreePropertySheet.h"
 #include "../client/ResourceManager.h"
+#include "WinUtil.h"
 
 static const TCHAR SEPARATOR = _T('\\');
 
@@ -77,7 +78,10 @@ void TreePropertySheet::addTree()
 
 	CRect rc(SPACE_LEFT, rcPage.top, TREE_WIDTH, rcPage.bottom);
 	ctrlTree.Create(m_hWnd, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | TVS_TRACKSELECT, WS_EX_CLIENTEDGE, IDC_PAGE);
-	SetWindowTheme(ctrlTree.m_hWnd, L"explorer", NULL);
+	
+	if(WinUtil::getOsMajor() >= 6)
+		SetWindowTheme(ctrlTree.m_hWnd, L"explorer", NULL);
+	
 	ctrlTree.SetImageList(tree_icons, TVSIL_NORMAL);
 }
 

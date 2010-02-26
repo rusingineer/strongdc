@@ -149,6 +149,10 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 LRESULT CommandDlg::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	if(wID == IDOK) {
+		TCHAR buf[256];
+		GetDlgItemText(IDC_NAME, buf, sizeof(buf) - 1);
+		name = buf;
+
 		if((type != 0) && ((ctrlName.GetWindowTextLength() == 0) || (ctrlCommand.GetWindowTextLength()== 0))) {
 			MessageBox(_T("Name and command must not be empty"));
 			return 0;
@@ -156,7 +160,6 @@ LRESULT CommandDlg::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/,
 
 		updateContext();
 
-		TCHAR buf[256];
 		switch(type) {
 		case 0:
 			type = UserCommand::TYPE_SEPARATOR;

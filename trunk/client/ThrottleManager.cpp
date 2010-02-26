@@ -66,7 +66,7 @@ namespace dcpp
 
 		if(downTokens > 0)
 		{
-			size_t slice = (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024) / downs;
+			size_t slice = getDownloadLimit() / downs;
 			size_t readSize = min(slice, min(len, static_cast<size_t>(downTokens)));
 				
 			// read from socket
@@ -102,7 +102,7 @@ namespace dcpp
 		
 		if(upTokens > 0)
 		{
-			size_t slice = (SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024) / ups;
+			size_t slice = getUploadLimit() / ups;
 			len = min(slice, min(len, static_cast<size_t>(upTokens)));
 			upTokens -= len;
 
@@ -152,14 +152,14 @@ namespace dcpp
 		upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
 		
 		// limiter restrictions: up_limit >= 5 * slots + 4, up_limit >= 7 * down_limit
-		if(upLimit < MIN_UPLOAD_SPEED_LIMIT)
+		if(SETTING(MAX_UPLOAD_SPEED_LIMIT) < MIN_UPLOAD_SPEED_LIMIT)
 		{
 			SettingsManager::getInstance()->set(SettingsManager::MAX_UPLOAD_SPEED_LIMIT, MIN_UPLOAD_SPEED_LIMIT);
 		}
 			
-		if((downLimit > MAX_LIMIT_RATIO * upLimit) || (downLimit == 0))
+		if((SETTING(MAX_DOWNLOAD_SPEED_LIMIT) > MAX_LIMIT_RATIO * SETTING(MAX_UPLOAD_SPEED_LIMIT) ) || (SETTING(MAX_DOWNLOAD_SPEED_LIMIT) == 0))
 		{
-			SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, MAX_LIMIT_RATIO * upLimit);
+			SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT, MAX_LIMIT_RATIO * SETTING(MAX_UPLOAD_SPEED_LIMIT) );
 		}
 
 		if(SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME) < MIN_UPLOAD_SPEED_LIMIT)

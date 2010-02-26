@@ -200,6 +200,7 @@ public:
 		COLUMN_MODE, 
 		COLUMN_HUBS, 
 		COLUMN_SLOTS,
+		COLUMN_CID,
 		COLUMN_LAST
 	};
 

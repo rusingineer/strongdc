@@ -468,6 +468,7 @@ tstring OnlineUser::getText(uint8_t col) const {
 			return (hn.empty() || hr.empty() || ho.empty()) ? Util::emptyStringT : (hn + _T("/") + hr + _T("/") + ho);
 		}
 		case COLUMN_SLOTS: return Text::toT(identity.get("SL"));
+		case COLUMN_CID: return Text::toT(identity.getUser()->getCID().toBase32());
 		default: return Util::emptyStringT;
 	}
 }
