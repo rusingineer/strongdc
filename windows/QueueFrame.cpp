@@ -58,7 +58,9 @@ LRESULT QueueFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		TVS_HASBUTTONS | TVS_LINESATROOT | TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | TVS_TRACKSELECT, 
 		 WS_EX_CLIENTEDGE, IDC_DIRECTORIES);
 	
-	SetWindowTheme(ctrlDirs.m_hWnd, L"explorer", NULL);
+	if(WinUtil::getOsMajor() >= 6)
+		SetWindowTheme(ctrlDirs.m_hWnd, L"explorer", NULL);
+
 	ctrlDirs.SetImageList(WinUtil::fileImages, TVSIL_NORMAL);
 	ctrlQueue.SetImageList(WinUtil::fileImages, LVSIL_SMALL);
 	

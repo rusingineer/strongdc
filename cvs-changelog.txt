@@ -1,3 +1,10 @@
+** svn484
+	some limiter fixes
+	added CID column to userlist
+	fixed execution on Win2000
+	fixed usercommands name settings
+	max xml nesting set to 32
+
 ** svn483
 	delay load of uxtheme.dll
 	don't redirect everything to DHT

@@ -26,7 +26,7 @@ private:
 
 	static const size_t MAX_NAME_SIZE = 256;
 	static const size_t MAX_VALUE_SIZE = 64*1024;
-	static const size_t MAX_NESTING = 16;
+	static const size_t MAX_NESTING = 32;
 
 	enum ParseState {
 		/// Start of document

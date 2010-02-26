@@ -33,7 +33,7 @@ namespace dht
 {
 
 	class DHT :	
-		public Singleton<DHT>
+		public Singleton<DHT>, public Speaker<ClientListener>
 	{
 	public:
 		DHT(void);
@@ -75,7 +75,7 @@ namespace dht
 		void connect(const OnlineUser& ou, const string& token);
 		
 		/** Sends private message to online node */
-		void privateMessage(const OnlineUser& ou, const string& aMessage, bool thirdPerson);
+		void privateMessage(const OnlineUserPtr& ou, const string& aMessage, bool thirdPerson);
 		
 		/** Is DHT connected? */
 		bool isConnected() const { return lastPacket && (GET_TICK() - lastPacket < CONNECTED_TIMEOUT); }
