@@ -44,6 +44,12 @@ LRESULT FavoriteHubsFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*l
 	ctrlHubs.SetTextColor(WinUtil::textColor);
 	ctrlHubs.EnableGroupView(TRUE);
 
+	LVGROUPMETRICS metrics = {0};
+	metrics.cbSize = sizeof(metrics);
+	metrics.mask = LVGMF_TEXTCOLOR;
+	metrics.crHeader = SETTING(TEXT_GENERAL_FORE_COLOR);
+	ctrlHubs.SetGroupMetrics(&metrics);
+
 	// Create listview columns
 	WinUtil::splitTokens(columnIndexes, SETTING(FAVORITESFRAME_ORDER), COLUMN_LAST);
 	WinUtil::splitTokens(columnSizes, SETTING(FAVORITESFRAME_WIDTHS), COLUMN_LAST);
