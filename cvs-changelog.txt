@@ -1,3 +1,7 @@
+** svn486
+	adopt explorer theme on WinXP too
+	fixed 2 warnings (HubFrame+BufferedSocket)
+
 ** svn485
 	fixed alternate limiting
 	setting default theme set correct default theme

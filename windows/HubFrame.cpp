@@ -2153,8 +2153,8 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 				} else if(Util::toInt(ui->getIdentity().get("FC")) & Identity::BAD_LIST) {
 					cd->clrText = SETTING(BAD_FILELIST_COLOUR);
 				} else if(BOOLSETTING(SHOW_SHARE_CHECKED_USERS)) {
-					bool cClient = (Util::toInt(ui->getIdentity().get("FC")) & Identity::CLIENT_CHECKED);
-					bool cFilelist = (Util::toInt(ui->getIdentity().get("FC")) & Identity::LIST_CHECKED);
+					bool cClient = (Util::toInt(ui->getIdentity().get("FC")) & Identity::CLIENT_CHECKED) == Identity::CLIENT_CHECKED;
+					bool cFilelist = (Util::toInt(ui->getIdentity().get("FC")) & Identity::LIST_CHECKED) == Identity::LIST_CHECKED;
 					if(cClient && cFilelist) {
 						cd->clrText = SETTING(FULL_CHECKED_COLOUR);
 					} else if(cClient) {

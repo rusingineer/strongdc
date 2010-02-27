@@ -51,7 +51,8 @@ LRESULT UploadQueueFrame::onCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		TVS_HASBUTTONS | TVS_LINESATROOT | TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | TVS_TRACKSELECT,
 		 WS_EX_CLIENTEDGE, IDC_DIRECTORIES);
 
-	if(WinUtil::getOsMajor() >= 6)
+	if((WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1) //WinXP & WinSvr2003
+		|| (WinUtil::getOsMajor() >= 6)) //Vista & Win7
 		SetWindowTheme(ctrlQueued.m_hWnd, L"explorer", NULL);
 
 	ctrlQueued.SetImageList(WinUtil::fileImages, TVSIL_NORMAL);
