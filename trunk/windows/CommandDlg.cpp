@@ -99,7 +99,7 @@ In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m
 %[line:reason]: opens up a window asking for \"reason\"\
 "));
 
-	int newType;
+	int newType = 0;
 	if(type == UserCommand::TYPE_SEPARATOR) {
 		ctrlSeparator.SetCheck(BST_CHECKED);
 		newType = 0;
