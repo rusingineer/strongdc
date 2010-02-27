@@ -456,7 +456,7 @@ SettingsManager::SettingsManager()
 	setDefault(MAIN_WINDOW_POS_Y, CW_USEDEFAULT);
 
 	/* Theme settings */
-	setDefault(TEXT_FONT, "Tahoma,-11,400,0");
+	setDefault(TEXT_FONT, "Segoe UI,-11,400,0");
 
 	setDefault(BACKGROUND_COLOR, RGB(242,245,255));
 	setDefault(TEXT_COLOR, RGB(0,0,128));

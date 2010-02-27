@@ -230,47 +230,47 @@ void PropPageTextStyles::RefreshPreview() {
 }
 
 LRESULT PropPageTextStyles::onDefaultStyles(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	bg = RGB(37,60,121);
-	fg = RGB(255,255,255);
+	bg = RGB(242,245,255);
+	fg = RGB(0,0,128);
 	::GetObject((HFONT)GetStockObject(DEFAULT_GUI_FONT), sizeof(m_Font), &m_Font);
-	TextStyles[ TS_GENERAL ].crBackColor = RGB(37,60,121);
-	TextStyles[ TS_GENERAL ].crTextColor = RGB(255,255,255);
+	TextStyles[ TS_GENERAL ].crBackColor = RGB(242,245,255);
+	TextStyles[ TS_GENERAL ].crTextColor = RGB(67,98,154);
 	TextStyles[ TS_GENERAL ].dwEffects = 0;
 
-	TextStyles[ TS_MYNICK ].crBackColor = RGB(37,60,121);
-	TextStyles[ TS_MYNICK ].crTextColor = RGB(255,255,0);
+	TextStyles[ TS_MYNICK ].crBackColor = RGB(242,245,255);
+	TextStyles[ TS_MYNICK ].crTextColor = RGB(128,0,0);
 	TextStyles[ TS_MYNICK ].dwEffects = CFE_BOLD;
 
-	TextStyles[ TS_MYMSG ].crBackColor = RGB(96,0,0);
-	TextStyles[ TS_MYMSG ].crTextColor = RGB(255,255,0);
+	TextStyles[ TS_MYMSG ].crBackColor = RGB(242,245,255);
+	TextStyles[ TS_MYMSG ].crTextColor = RGB(128,0,0);
 	TextStyles[ TS_MYMSG ].dwEffects = CFE_BOLD;
 
-	TextStyles[ TS_PRIVATE ].crBackColor = RGB(0,96,0);
-	TextStyles[ TS_PRIVATE ].crTextColor = RGB(255,255,255);
+	TextStyles[ TS_PRIVATE ].crBackColor = RGB(242,245,255);
+	TextStyles[ TS_PRIVATE ].crTextColor = RGB(67,98,154);
 	TextStyles[ TS_PRIVATE ].dwEffects = CFE_BOLD;
 
-	TextStyles[ TS_SYSTEM ].crBackColor = RGB(0,0,0);
-	TextStyles[ TS_SYSTEM ].crTextColor = RGB(192,192,192);
+	TextStyles[ TS_SYSTEM ].crBackColor = RGB(242,245,255);
+	TextStyles[ TS_SYSTEM ].crTextColor = RGB(0,128,64);
 	TextStyles[ TS_SYSTEM ].dwEffects = CFE_BOLD | CFE_ITALIC;
 
-	TextStyles[ TS_SERVER ].crBackColor = RGB(0,0,0);
-	TextStyles[ TS_SERVER ].crTextColor = RGB(128,255,128);
+	TextStyles[ TS_SERVER ].crBackColor = RGB(242,245,255);
+	TextStyles[ TS_SERVER ].crTextColor = RGB(0,128,64);
 	TextStyles[ TS_SERVER ].dwEffects = CFE_BOLD;
 
-	TextStyles[ TS_TIMESTAMP ].crBackColor = RGB(0,0,0);
-	TextStyles[ TS_TIMESTAMP ].crTextColor = RGB(255,255,0);
+	TextStyles[ TS_TIMESTAMP ].crBackColor = RGB(242,245,255);
+	TextStyles[ TS_TIMESTAMP ].crTextColor = RGB(67,98,154);
 	TextStyles[ TS_TIMESTAMP ].dwEffects = 0;
 
-	TextStyles[ TS_URL ].crBackColor = RGB(192,192,192);
+	TextStyles[ TS_URL ].crBackColor = RGB(242,245,255);
 	TextStyles[ TS_URL ].crTextColor = RGB(0,0,255);
-	TextStyles[ TS_URL ].dwEffects = 0;
+	TextStyles[ TS_URL ].dwEffects = CFE_LINK;
 
-	TextStyles[ TS_FAVORITE ].crBackColor = RGB(0,0,0);
-	TextStyles[ TS_FAVORITE ].crTextColor = RGB(255,128,128);
+	TextStyles[ TS_FAVORITE ].crBackColor = RGB(242,245,255);
+	TextStyles[ TS_FAVORITE ].crTextColor = RGB(255,128,64);
 	TextStyles[ TS_FAVORITE ].dwEffects = CFE_BOLD | CFE_ITALIC;
 
-	TextStyles[ TS_OP ].crBackColor = RGB(37,60,121);
-	TextStyles[ TS_OP ].crTextColor = RGB(200,0,0);
+	TextStyles[ TS_OP ].crBackColor = RGB(242,245,255);
+	TextStyles[ TS_OP ].crTextColor = RGB(0,128,0);
 	TextStyles[ TS_OP ].dwEffects = CFE_BOLD;
 
 	RefreshPreview();

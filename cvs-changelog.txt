@@ -1,3 +1,8 @@
+** svn485
+	fixed alternate limiting
+	setting default theme set correct default theme
+	added code to set favgroup color but it doesn't work (Windows don't support it)
+
 ** svn484
 	some limiter fixes
 	added CID column to userlist
