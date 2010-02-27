@@ -1,4 +1,4 @@
-  -- StrongDC++ 2.31 --
+  -- StrongDC++ 2.40 --
 
 * the first 64-bit release
 * merged with DC++ BZR
@@ -17,6 +17,7 @@
 * look adopted to Windows native theme
 * language file name now accepts path relative to strongdc.exe directory
 * upload limiter value shown in Connection field (hubs should update their scripts)
+* removed TestSUR checking
 * many other fixes, changes etc. see developer changelog
 
 
