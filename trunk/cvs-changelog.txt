@@ -1,3 +1,6 @@
+** svn487
+	updated default hublists
+
 ** svn486
 	adopt explorer theme on WinXP too
 	fixed 2 warnings (HubFrame+BufferedSocket)

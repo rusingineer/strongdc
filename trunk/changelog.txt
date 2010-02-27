@@ -1,3 +1,25 @@
+  -- StrongDC++ 2.40 --
+
+* poprvé 64-bit release
+* aktualizováno na nejnovìjší jádro DC++ BZR
+* lze vytvoøit spojení mezi 2 pasivními uživateli
+* spousta vylepšení a oprav pro DHT
+* DHT pakety jsou šifrovány
+* oprava padù
+* doplnìno pár chybìjících vlajek státù (THX RadoX)
+* snad opraveno UTF-8 v magnet linkách (FlyLinkDC++)
+* pøidána adresa hubu do kontextového menu ve frontì
+* zmìnìny výchozí seznamy souborù
+* aktualizace knihoven OpenSSL, Boost a WTL
+* pøidány skupiny pro oblíbené huby
+* optimalizace chatu (THX Crise)
+* vzhled kopíruje nativní téma Windows
+* cesta k souboru s pøekladem nyní mùže být relativní k adresáøi se strongdc.exe
+* hodnota omezení rychlosti odesílání se zobrazuje ve sloupci Pøipojení (huby by mìly aktualizovat své skripty)
+* odstranìna kontrola TestSUR
+* spousta dalších oprav, zmìn atd. viz seznam zmìn pro vývojáøe
+
+
   -- StrongDC++ 2.30 --
   
 * opraveny tokeny pro odesílání (extra sloty, fronta odesílání atd.)
