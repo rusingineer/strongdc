@@ -122,6 +122,7 @@ namespace dht
 		
 		/** Lock to routing table */
 		CriticalSection	cs;
+		CriticalSection fwCheckCs;
 		
 		/** Our external IP got from last firewalled check */
 		string lastExternalIP;

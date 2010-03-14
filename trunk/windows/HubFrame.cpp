@@ -637,8 +637,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			}
 		} else if(i->first == ADD_CHAT_LINE) {
     		const MessageTask& msg = *static_cast<MessageTask*>(i->second);
-        	if(!msg.from.getUser() || (ignoreList.find(msg.from.getUser()) == ignoreList.end()) ||
-	          (msg.from.isOp() && !client->isOp())) {
+        	if(!msg.from.getUser() || (ignoreList.find(msg.from.getUser()) == ignoreList.end())) {
 				  addLine(msg.from, Text::toT(msg.str), WinUtil::m_ChatTextGeneral);
         	}
 		} else if(i->first == ADD_STATUS_LINE) {
@@ -704,8 +703,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 		} else if(i->first == PRIVATE_MESSAGE) {
 			const MessageTask& pm = *static_cast<MessageTask*>(i->second);
 			tstring nick = Text::toT(pm.from.getNick());
-			if(!pm.from.getUser() || (ignoreList.find(pm.from.getUser()) == ignoreList.end()) ||
-			  (pm.from.isOp() && !client->isOp())) {
+			if(!pm.from.getUser() || (ignoreList.find(pm.from.getUser()) == ignoreList.end())) {
 				bool myPM = pm.replyTo == ClientManager::getInstance()->getMe();
 				const UserPtr& user = myPM ? pm.to : pm.replyTo;
 				if(pm.hub) {
@@ -1094,7 +1092,7 @@ LRESULT HubFrame::onTabContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lPar
 	copyHubMenu.AppendMenu(MF_STRING, IDC_COPY_HUBADDRESS, CTSTRING(HUB_ADDRESS));
 
 	tabMenu.CreatePopupMenu();
-	tabMenu.InsertSeparatorFirst(Text::toT(client->getHubName().empty() ? (client->getHubName().size() > 50 ? client->getHubName().substr(0, 50) : client->getHubName()) : client->getHubUrl()));	
+	tabMenu.InsertSeparatorFirst(Text::toT(!client->getHubName().empty() ? (client->getHubName().size() > 50 ? (client->getHubName().substr(0, 50) + "...") : client->getHubName()) : client->getHubUrl()));	
 	if(BOOLSETTING(LOG_MAIN_CHAT)) {
 		tabMenu.AppendMenu(MF_STRING, IDC_OPEN_HUB_LOG, CTSTRING(OPEN_HUB_LOG));
 		tabMenu.AppendMenu(MF_SEPARATOR);

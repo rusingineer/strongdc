@@ -202,7 +202,7 @@ namespace dht
 	{
 		{
 			// FW check
-			Lock l(cs);
+			Lock l(fwCheckCs);
 			if(requestFWCheck && (firewalledWanted.size() + firewalledChecks.size() < FW_RESPONSES))
 			{
 				if(firewalledWanted.count(ip) == 0)	// only when not requested from this node yet
@@ -266,11 +266,16 @@ namespace dht
 	 */
 	void DHT::checkExpiration(uint64_t aTick)
 	{
-		Lock l(cs);
-		if(bucket->checkExpiration(aTick))
-			setDirty();
-			
-		firewalledWanted.clear();
+		{
+			Lock l(cs);
+			if(bucket->checkExpiration(aTick))
+				setDirty();
+		}
+
+		{
+			Lock l(fwCheckCs);			
+			firewalledWanted.clear();
+		}
 	}
 	
 	/*
@@ -528,7 +533,7 @@ namespace dht
 			}
 			else if(resTo == "FWCHECK")
 			{
-				Lock l(cs);
+				Lock l(fwCheckCs);
 				if(!firewalledWanted.count(fromIP))
 					return; // we didn't requested firewall check from this node
 					

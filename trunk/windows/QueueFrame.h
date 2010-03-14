@@ -248,6 +248,7 @@ private:
 
 		QueueItem::Priority getPriority() const { return qi->getPriority(); }
 		bool isWaiting() const { return qi->isWaiting(); }
+		bool isFinished() const { return qi->isFinished(); }
 
 		bool getAutoPriority() const { return qi->getAutoPriority(); }
 

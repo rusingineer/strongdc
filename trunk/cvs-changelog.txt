@@ -1,3 +1,14 @@
+** svn489
+	hopefully autoupdating SVN revision numbers
+	[ADC] fixed compatibility with older clients in passive mode
+	hopefully fixed some crashes
+	fixed deadlock in DTH FW check vs ClientManager
+	adding OPs to ignore list is allowed
+	correctly displaying finished status in queue frame
+
+** svn488
+	released 2.40
+
 ** svn487
 	updated default hublists
 
