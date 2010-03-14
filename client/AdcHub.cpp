@@ -858,8 +858,13 @@ void AdcHub::info(bool /*alwaysSend*/) {
 	if(isActive()) {
 		su += TCP4_FEATURE + ",";
 		su += UDP4_FEATURE + ",";
-	} else if(BOOLSETTING(ALLOW_NAT_TRAVERSAL)) {
-		su += NAT0_FEATURE + ",";
+	} else {
+		if(BOOLSETTING(ALLOW_NAT_TRAVERSAL)) {
+			su += NAT0_FEATURE + ",";
+		} else {
+			addParam(lastInfoMap, c, "I4", "");
+		}
+		addParam(lastInfoMap, c, "U4", "");
 	}
 
 	if(!su.empty()) {

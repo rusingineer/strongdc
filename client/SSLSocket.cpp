@@ -197,7 +197,7 @@ int SSLSocket::checkSSL(int ret) throw(SocketException) {
 					 * (for socket I/O on Unix systems, consult errno for details).
 					 */
 					int error = ERR_get_error();
-					sprintf(errbuf, "%s %d: %s\n", CSTRING(SSL_ERROR), err, (error == 0) ? CSTRING(CONNECTION_CLOSED) : ERR_reason_error_string(error));
+					sprintf(errbuf, "%s %d: %s", CSTRING(SSL_ERROR), err, (error == 0) ? CSTRING(CONNECTION_CLOSED) : ERR_reason_error_string(error));
 					throw SSLSocketException(errbuf);
 				}
 		}

@@ -91,7 +91,7 @@ LRESULT UsersFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, B
 		
 		tstring x;
 		if (ctrlUsers.GetSelectedCount() == 1) {
-			x = Text::toT(ClientManager::getInstance()->getNicks(ctrlUsers.getItemData(WinUtil::getFirstSelectedIndex(ctrlUsers))->user->getCID(), Util::emptyString)[0]);
+			x = ctrlUsers.getItemData(WinUtil::getFirstSelectedIndex(ctrlUsers))->columns[COLUMN_NICK];
 		} else {
 			x = _T("");
 		}
