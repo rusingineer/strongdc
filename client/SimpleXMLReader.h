@@ -20,7 +20,7 @@ public:
 	SimpleXMLReader(CallBack* callback);
 	virtual ~SimpleXMLReader() { }
 
-	void parse(InputStream& is);
+	void parse(InputStream& is, size_t maxSize = 0);
 	bool parse(const char* data, size_t len, bool more);
 private:
 
@@ -119,7 +119,7 @@ private:
 
 	bool needChars(size_t n) const;
 	int charAt(size_t n) const;
-	bool skipSpace();
+	bool skipSpace(bool store = false);
 	void advancePos(size_t n = 1);
 	std::string::size_type bufSize() const;
 

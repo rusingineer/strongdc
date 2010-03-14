@@ -846,16 +846,20 @@ void AdcHub::info(bool /*alwaysSend*/) {
 		su += ADCS_FEATURE + ",";
 	}
 
-	if(!getFavIp().empty()) {
-		addParam(lastInfoMap, c, "I4", getFavIp());
-	} else if(BOOLSETTING(NO_IP_OVERRIDE) && !SETTING(EXTERNAL_IP).empty()) {
-		addParam(lastInfoMap, c, "I4", Socket::resolve(SETTING(EXTERNAL_IP)));
-	} else {
-		addParam(lastInfoMap, c, "I4", "0.0.0.0");
+	if(isActive() || BOOLSETTING(ALLOW_NAT_TRAVERSAL))
+	{
+		if(!getFavIp().empty()) {
+			addParam(lastInfoMap, c, "I4", getFavIp());
+		} else if(BOOLSETTING(NO_IP_OVERRIDE) && !SETTING(EXTERNAL_IP).empty()) {
+			addParam(lastInfoMap, c, "I4", Socket::resolve(SETTING(EXTERNAL_IP)));
+		} else {
+			addParam(lastInfoMap, c, "I4", "0.0.0.0");
+		}
 	}
-	addParam(lastInfoMap, c, "U4", Util::toString(SearchManager::getInstance()->getPort()));
 
 	if(isActive()) {
+		addParam(lastInfoMap, c, "U4", Util::toString(SearchManager::getInstance()->getPort()));
+
 		su += TCP4_FEATURE + ",";
 		su += UDP4_FEATURE + ",";
 	} else {
