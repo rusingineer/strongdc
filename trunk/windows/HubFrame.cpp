@@ -2165,6 +2165,70 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 			return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;
 		}
 
+	case CDDS_SUBITEM | CDDS_ITEMPREPAINT: {
+		if(BOOLSETTING(GET_USER_COUNTRY) && (ctrlUsers.findColumn(cd->iSubItem) == OnlineUser::COLUMN_IP)) {
+			CRect rc;
+			OnlineUser* ou = (OnlineUser*)cd->nmcd.lItemlParam;
+			ctrlUsers.GetSubItemRect((int)cd->nmcd.dwItemSpec, cd->iSubItem, LVIR_BOUNDS, rc);
+
+			if((WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1) //WinXP & WinSvr2003
+				|| (WinUtil::getOsMajor() >= 6)) //Vista & Win7
+			{
+				SetTextColor(cd->nmcd.hdc, cd->clrText);
+				DrawThemeBackground(GetWindowTheme(ctrlUsers.m_hWnd), cd->nmcd.hdc, LVP_LISTITEM, 3, &rc, &rc );
+			} else {
+				COLORREF color;
+				if(ctrlUsers.GetItemState((int)cd->nmcd.dwItemSpec, LVIS_SELECTED) & LVIS_SELECTED) {
+					if(ctrlUsers.m_hWnd == ::GetFocus()) {
+						color = GetSysColor(COLOR_HIGHLIGHT);
+						SetBkColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHT));
+						SetTextColor(cd->nmcd.hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+					} else {
+						color = GetBkColor(cd->nmcd.hdc);
+						SetBkColor(cd->nmcd.hdc, color);
+					}				
+				} else {
+					color = WinUtil::bgColor;
+					SetBkColor(cd->nmcd.hdc, WinUtil::bgColor);
+					SetTextColor(cd->nmcd.hdc, cd->clrText);
+				}
+				HGDIOBJ oldpen = ::SelectObject(cd->nmcd.hdc, CreatePen(PS_SOLID, 0, color));
+				HGDIOBJ oldbr = ::SelectObject(cd->nmcd.hdc, CreateSolidBrush(color));
+				Rectangle(cd->nmcd.hdc,rc.left, rc.top, rc.right, rc.bottom);
+
+				DeleteObject(::SelectObject(cd->nmcd.hdc, oldpen));
+				DeleteObject(::SelectObject(cd->nmcd.hdc, oldbr));
+			}
+
+			TCHAR buf[256];
+			ctrlUsers.GetItemText((int)cd->nmcd.dwItemSpec, cd->iSubItem, buf, 255);
+			buf[255] = 0;
+			if(_tcslen(buf) > 0) {
+				rc.left += 2;
+				LONG top = rc.top + (rc.Height() - 15)/2;
+				if((top - rc.top) < 2)
+					top = rc.top + 1;
+
+				POINT p = { rc.left, top };
+
+				string ip = ou->getIdentity().getIp();
+				uint8_t flagIndex = 0;
+				if (!ip.empty()) {
+					// Only attempt to grab a country mapping if we actually have an IP address
+					string tmpCountry = Util::getIpCountry(ip);
+					if(!tmpCountry.empty()) {
+						flagIndex = WinUtil::getFlagIndex(tmpCountry.c_str());
+					}
+				}
+
+				WinUtil::flagImages.Draw(cd->nmcd.hdc, flagIndex, p, LVSIL_SMALL);
+				top = rc.top + (rc.Height() - WinUtil::getTextHeight(cd->nmcd.hdc) - 1)/2;
+				::ExtTextOut(cd->nmcd.hdc, rc.left + 30, top + 1, ETO_CLIPPED, rc, buf, _tcslen(buf), NULL);
+				return CDRF_SKIPDEFAULT;
+			}
+		}		
+	}
+
 	default:
 		return CDRF_DODEFAULT;
 	}

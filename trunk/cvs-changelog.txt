@@ -1,3 +1,10 @@
+** svn490
+	fixed that SVN revision number was autoupdated in x64 release only
+	some DC++ BZR merge
+	fixed country flags crash under Win2000
+	added country flags into userlist
+	fixed U4
+
 ** svn489
 	hopefully autoupdating SVN revision numbers
 	[ADC] fixed compatibility with older clients in passive mode

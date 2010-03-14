@@ -29,6 +29,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Generating revision number..."
+				CommandLine="&quot;SubWCRev.exe&quot; &quot;$(SolutionDir).&quot; &quot;$(SolutionDir)client\version.h.template&quot; &quot;$(SolutionDir)client\version.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -105,6 +107,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Generating revision number..."
+				CommandLine="&quot;SubWCRev.exe&quot; &quot;$(SolutionDir).&quot; &quot;$(SolutionDir)client\version.h.template&quot; &quot;$(SolutionDir)client\version.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -183,6 +187,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Generating revision number..."
+				CommandLine="&quot;SubWCRev.exe&quot; &quot;$(SolutionDir).&quot; &quot;$(SolutionDir)client\version.h.template&quot; &quot;$(SolutionDir)client\version.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -269,6 +275,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				Description="Generating revision number..."
 				CommandLine="&quot;SubWCRev.exe&quot; &quot;$(SolutionDir).&quot; &quot;$(SolutionDir)client\version.h.template&quot; &quot;$(SolutionDir)client\version.h&quot;"
 			/>
 			<Tool
