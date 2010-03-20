@@ -48,14 +48,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\boost&quot;;&quot;$(SolutionDir)\openssl\include&quot;"
-				StringPooling="true"
 				MinimalRebuild="true"
-				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
-				SmallerTypeCheck="false"
 				RuntimeLibrary="1"
-				BufferSecurityCheck="true"
-				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
 				ForceConformanceInForLoopScope="true"
 				UsePrecompiledHeader="2"
@@ -127,14 +122,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\boost&quot;;&quot;$(SolutionDir)\openssl\include&quot;"
-				StringPooling="true"
 				MinimalRebuild="true"
-				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
-				SmallerTypeCheck="false"
 				RuntimeLibrary="1"
-				BufferSecurityCheck="true"
-				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
 				ForceConformanceInForLoopScope="true"
 				UsePrecompiledHeader="2"
@@ -1027,6 +1017,10 @@
 			</File>
 			<File
 				RelativePath=".\client\version.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client\version.h.template"
 				>
 			</File>
 			<File

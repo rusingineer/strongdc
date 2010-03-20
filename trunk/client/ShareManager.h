@@ -299,7 +299,7 @@ private:
 	StringList notShared;
 	bool loadCache() throw();
 	DirList::const_iterator getByVirtual(const string& virtualName) const throw();
-	
+	pair<Directory::Ptr, string> splitVirtual(const string& virtualPath) const throw(ShareException);
 	string findRealRoot(const string& virtualRoot, const string& virtualLeaf) const throw(ShareException);
 
 	Directory::Ptr getDirectory(const string& fname);

@@ -80,6 +80,7 @@ public:
 		};
 		typedef vector<Ptr> List;
 		typedef List::const_iterator Iter;
+
 		typedef unordered_set<TTHValue> TTHSet;
 		
 		List directories;

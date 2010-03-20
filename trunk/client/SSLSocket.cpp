@@ -68,7 +68,7 @@ bool SSLSocket::waitConnected(uint64_t millis) {
 		// OpenSSL needs server handshake for NAT traversal
 		int ret = ssl->server ? SSL_accept(ssl) : SSL_connect(ssl);
 		if(ret == 1) {
-			dcdebug("Connected to SSL server using %s\n", SSL_get_cipher(ssl));
+			dcdebug("Connected to SSL server using %s as %s\n", SSL_get_cipher(ssl), ssl->server?"server":"client");
 #ifndef HEADER_OPENSSLV_H			
 			finished = true;
 #endif
@@ -223,7 +223,7 @@ bool SSLSocket::isTrusted() throw() {
 	}
 
 #ifdef HEADER_OPENSSLV_H
-	if(SSL_get_verify_result(ssl) != SSL_ERROR_NONE) {
+	if(SSL_get_verify_result(ssl) != X509_V_OK) {
 		return false;
 	}
 #else
@@ -232,9 +232,12 @@ bool SSLSocket::isTrusted() throw() {
 	}
 #endif
 
-	if(!SSL_get_peer_certificate(ssl)) {
+	X509* cert = SSL_get_peer_certificate(ssl);
+	if(!cert) {
 		return false;
 	}
+
+	X509_free(cert);
 
 	return true;
 }

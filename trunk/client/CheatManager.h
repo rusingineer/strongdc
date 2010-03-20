@@ -138,7 +138,7 @@ void checkCheating(const UserPtr& p, DirectoryListing* dl) {
 		ou->getClient().cheatMessage(report);
 }
 
-void setCheating(const UserPtr& p, const string& aCheatString, const int aRawCommand, bool aBadClient) {
+void setClientStatus(const UserPtr& p, const string& aCheatString, const int aRawCommand, bool aBadClient) {
 	OnlineUserPtr ou = NULL;
 	string report = Util::emptyString;
 	{

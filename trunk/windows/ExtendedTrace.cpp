@@ -383,7 +383,11 @@ void StackTrace( HANDLE hThread, LPCTSTR lpszMessage, File& f, DWORD64 eip, DWOR
 		for( ULONG index = 0; index < 100; index++ ) 
 		{
 			bResult = StackWalk(
+#ifdef _M_AMD64
+				IMAGE_FILE_MACHINE_AMD64,
+#else
 				IMAGE_FILE_MACHINE_I386,
+#endif
 				hProcess,
 				hThread,
 				&callStack,

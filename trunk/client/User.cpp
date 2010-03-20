@@ -226,26 +226,6 @@ map<string, string> Identity::getReport() const {
 }
 
 string Identity::updateClientType(const OnlineUser& ou) {
-	if(getUser()->isSet(User::DCPLUSPLUS)) {
-		if (get("LL") == "11" && getBytesShared() > 0) {
-			string report = setCheat(ou.getClient(), "Fake file list - ListLen = 11" , true);
-			set("CL", "DC++ Stealth");
-			set("FC", Util::toString(Util::toInt(get("FC")) | BAD_CLIENT));
-			set("FC", Util::toString(Util::toInt(get("FC")) | BAD_LIST));
-
-			ClientManager::getInstance()->sendRawCommand(ou, SETTING(LISTLEN_MISMATCH));
-			return report;
-		} else if(strncmp(getTag().c_str(), "<++ V:0.69", 10) == 0 && get("LL") != "42") {
-			string report = setCheat(ou.getClient(), "Listlen mismatched" , true);
-			set("CL", "Faked DC++");
-			set("CM", "Supports corrupted files...");
-			set("FC", Util::toString(Util::toInt(get("FC")) | BAD_CLIENT));
-
-			ClientManager::getInstance()->sendRawCommand(ou, SETTING(LISTLEN_MISMATCH));
-			return report;
-		}
-	}
-
 	uint64_t tick = GET_TICK();
 
 	StringMap params;
