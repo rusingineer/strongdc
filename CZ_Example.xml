@@ -422,7 +422,7 @@
 		<String Name="OpenFolder">Otevřít složku</String>
 		<String Name="OpenHubLog">Otevřít záznam hubu</String>
 		<String Name="OpenUserLog">Otevřít záznam uživatele</String>
-		<String Name="OverlapChunks">Překrýt pomalé segmenty rychlejším uživatelem když se soubor blíží ke konci</String>
+		<String Name="OverlapChunks">Překrýt pomalé segmenty rychlejším uživatelem, když se soubor blíží ke konci</String>
 		<String Name="OverlappedSlowSegment">Nahrazeno rychlejším uživatelem</String>
 		<String Name="OwnCertificateFile">Soubor s vlastním certifikátem</String>		
 		<String Name="Parts">Odchod: </String>

@@ -122,7 +122,7 @@ void DownloadManager::addConnection(UserConnectionPtr conn) {
 	if(!conn->isSet(UserConnection::FLAG_SUPPORTS_TTHF) || !conn->isSet(UserConnection::FLAG_SUPPORTS_ADCGET)) {
 		// Can't download from these...
 		conn->getUser()->setFlag(User::OLD_CLIENT);
-		ClientManager::getInstance()->setCheating(conn->getUser(), STRING(SOURCE_TOO_OLD), -1, true);
+		ClientManager::getInstance()->setClientStatus(conn->getUser(), STRING(SOURCE_TOO_OLD), -1, true);
 		QueueManager::getInstance()->removeSource(conn->getUser(), QueueItem::Source::FLAG_NO_TTHF);
 		conn->disconnect();
 		return;
@@ -400,11 +400,13 @@ void DownloadManager::failDownload(UserConnection* aSource, const string& reason
 		removeDownload(d);
 		fire(DownloadManagerListener::Failed(), d, reason);
 
-		if (d->getType() == Transfer::TYPE_FULL_LIST && reason == STRING(DISCONNECTED)) {
-			ClientManager::getInstance()->fileListDisconnected(aSource->getUser());
+		if(d->isSet(Download::FLAG_USER_CHECK)) {
+			if(reason == STRING(DISCONNECTED)) {
+				ClientManager::getInstance()->fileListDisconnected(aSource->getUser());
+			} else {
+				ClientManager::getInstance()->setClientStatus(aSource->getUser(), reason, -1, false);
+			}
 		}
-
-		// TODO: update client type here
 
 		QueueManager::getInstance()->putDownload(d, false);
 	}
@@ -521,11 +523,8 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	removeDownload(d);
 	fire(DownloadManagerListener::Failed(), d, STRING(FILE_NOT_AVAILABLE));
 
-	if (d->getType() == Transfer::TYPE_FULL_LIST) {
-		ClientManager::getInstance()->setCheating(aSource->getUser(), "Filelist Not Available", SETTING(FILELIST_UNAVAILABLE), false);
-		QueueManager::getInstance()->putDownload(d, true);
-		removeConnection(aSource);
-		return;
+	if (d->isSet(Download::FLAG_USER_CHECK)) {
+		ClientManager::getInstance()->setClientStatus(aSource->getUser(), "Filelist Not Available", SETTING(FILELIST_UNAVAILABLE), false);
 	}
 	
 	QueueManager::getInstance()->removeSource(d->getPath(), aSource->getUser(), (Flags::MaskType)(d->getType() == Transfer::TYPE_TREE ? QueueItem::Source::FLAG_NO_TREE : QueueItem::Source::FLAG_FILE_NOT_AVAILABLE), false);

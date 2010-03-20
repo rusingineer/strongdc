@@ -1103,10 +1103,15 @@ void QueueManager::setFile(Download* d) {
 			// ok, we got a fast slot, so it's possible to disconnect original user now
 			for(DownloadList::const_iterator i = qi->getDownloads().begin(); i != qi->getDownloads().end(); ++i) {
 				if((*i) != d && (*i)->getSegment().contains(d->getSegment())) {
+
+					// overlapping has no sense if segment is going to finish
+					if((*i)->getSecondsLeft() < 10)
+						break;					
+
 					found = true;
 
 					// disconnect slow chunk
-					(*i)->getUserConnection().disconnect(true);
+					(*i)->getUserConnection().disconnect();
 					break;
 				}
 			}
@@ -1303,6 +1308,12 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 							if(aDownload->getType() == Transfer::TYPE_FILE) {
 								// For partial-share, abort upload first to move file correctly
 								UploadManager::getInstance()->abortUpload(q->getTempTarget());
+
+								// Disconnect all possible overlapped downloads
+								for(DownloadList::const_iterator i = q->getDownloads().begin(); i != q->getDownloads().end(); ++i) {
+									if(*i != aDownload)
+										(*i)->getUserConnection().disconnect();
+								}
 							}
 						
 							// Check if we need to move the file

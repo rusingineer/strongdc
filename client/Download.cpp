@@ -40,6 +40,8 @@ Download::Download(UserConnection& conn, QueueItem& qi, const string& path) thro
 		setType(TYPE_FULL_LIST);
 	}
 
+	if(qi.isSet(QueueItem::FLAG_USER_CHECK))
+		setFlag(FLAG_USER_CHECK);
 	if(source->isSet(QueueItem::Source::FLAG_PARTIAL))
 		setFlag(FLAG_PARTIAL);
 	

@@ -118,7 +118,7 @@ string ShareManager::findRealRoot(const string& virtualRoot, const string& virtu
 		if(stricmp(i->second, virtualRoot) == 0) {
 			std::string name = i->first + virtualPath;
 			dcdebug("Matching %s\n", name.c_str());
-			if(File::getSize(name) != -1) {
+			if(FileFindIter(name) != FileFindIter()) {
 				return name;
 			}
 		}
@@ -227,24 +227,17 @@ AdcCommand ShareManager::getFileInfo(const string& aFile) throw(ShareException) 
 	return cmd;
 }
 
-ShareManager::Directory::File::Set::const_iterator ShareManager::findFile(const string& virtualFile) const throw(ShareException) {
-	if(virtualFile.compare(0, 4, "TTH/") == 0) {
-		HashFileMap::const_iterator i = tthIndex.find(TTHValue(virtualFile.substr(4)));
-		if(i == tthIndex.end()) {
-			throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
-		}
-		return i->second;
-	} else if(virtualFile.empty() || virtualFile[0] != '/') {
+pair<ShareManager::Directory::Ptr, string> ShareManager::splitVirtual(const string& virtualPath) const throw(ShareException) {
+	if(virtualPath.empty() || virtualPath[0] != '/') {
 		throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
 	}
 
-	string::size_type i = virtualFile.find('/', 1);
+	string::size_type i = virtualPath.find('/', 1);
 	if(i == string::npos || i == 1) {
 		throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
 	}
 
-	string virtualName = virtualFile.substr(1, i-1);
-	DirList::const_iterator dmi = getByVirtual(virtualName);
+	DirList::const_iterator dmi = getByVirtual( virtualPath.substr(1, i - 1));
 	if(dmi == directories.end()) {
 		throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
 	}
@@ -252,16 +245,30 @@ ShareManager::Directory::File::Set::const_iterator ShareManager::findFile(const 
 	Directory::Ptr d = *dmi;
 
 	string::size_type j = i + 1;
-	while( (i = virtualFile.find('/', j)) != string::npos) {
-		Directory::MapIter mi = d->directories.find(virtualFile.substr(j, i-j));
+	while((i = virtualPath.find('/', j)) != string::npos) {
+		Directory::MapIter mi = d->directories.find(virtualPath.substr(j, i - j));
 		j = i + 1;
 		if(mi == d->directories.end())
 			throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
 		d = mi->second;
 	}
 	
-	Directory::File::Set::const_iterator it = find_if(d->files.begin(), d->files.end(), Directory::File::StringComp(virtualFile.substr(j)));
-	if(it == d->files.end())
+	return make_pair(d, virtualPath.substr(j));
+}
+
+ShareManager::Directory::File::Set::const_iterator ShareManager::findFile(const string& virtualFile) const throw(ShareException) {
+	if(virtualFile.compare(0, 4, "TTH/") == 0) {
+		HashFileMap::const_iterator i = tthIndex.find(TTHValue(virtualFile.substr(4)));
+		if(i == tthIndex.end()) {
+			throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
+		}
+		return i->second;
+	}
+
+	pair<Directory::Ptr, string> v = splitVirtual(virtualFile);
+	Directory::File::Set::const_iterator it = find_if(v.first->files.begin(), v.first->files.end(),
+		Directory::File::StringComp(v.second));
+	if(it == v.first->files.end())
 		throw ShareException(UserConnection::FILE_NOT_AVAILABLE);
 	return it;
 }
@@ -611,152 +618,6 @@ size_t ShareManager::getSharedFiles() const throw() {
 	Lock l(cs);
 	return tthIndex.size();
 }
-
-class FileFindIter {
-#ifdef _WIN32
-public:
-	/** End iterator constructor */
-	FileFindIter() : handle(INVALID_HANDLE_VALUE) { }
-	/** Begin iterator constructor, path in utf-8 */
-	FileFindIter(const string& path) : handle(INVALID_HANDLE_VALUE) { 
-		handle = ::FindFirstFile(Text::toT(path).c_str(), &data);
-	}
-
-	~FileFindIter() {
-		if(handle != INVALID_HANDLE_VALUE) {
-			::FindClose(handle);
-		}
-	}
-
-	FileFindIter& operator++() {
-		if(!::FindNextFile(handle, &data)) {
-			::FindClose(handle);
-			handle = INVALID_HANDLE_VALUE;
-		}
-		return *this;
-	}
-	bool operator!=(const FileFindIter& rhs) const { return handle != rhs.handle; }
-
-	struct DirData : public WIN32_FIND_DATA {
-		string getFileName() {
-			return Text::fromT(cFileName);
-		}
-
-		bool isDirectory() {
-			return (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) > 0;
-		}
-
-		bool isHidden() {
-			return ((dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) || (cFileName[0] == L'.'));
-		}
-
-		bool isLink() {
-			return false;
-		}
-
-		int64_t getSize() {
-			return (int64_t)nFileSizeLow | ((int64_t)nFileSizeHigh)<<32;
-		}
-
-		uint32_t getLastWriteTime() {
-			return File::convertTime(&ftLastWriteTime);
-		}
-	};
-
-
-private:
-	HANDLE handle;
-#else
-// This code has been cleaned up/fixed a little.
-public:
-	FileFindIter() {
-		dir = NULL;
-		data.ent = NULL;
-	}
-	
-	~FileFindIter() {
-		if (dir) closedir(dir);
-	}
-
-	FileFindIter(const string& name) {
-		string filename = Text::fromUtf8(name);
-		dir = opendir(filename.c_str());
-		if (!dir)
-			return;
-		data.base = filename;
-		data.ent = readdir(dir);
-		if (!data.ent) {
-			closedir(dir);
-			dir = NULL;
-		}
-	}
-	
-	FileFindIter& operator++() {
-		if (!dir) 
-			return *this;
-		data.ent = readdir(dir);
-		if (!data.ent) {
-			closedir(dir);
-			dir = NULL;
-		}
-		return *this;
-	}
-	
-	// good enough to say if it's null
-	bool operator !=(const FileFindIter& rhs) const {
-		return dir != rhs.dir;
-	}
-
-	struct DirData {
-		DirData() : ent(NULL) {}
-		string getFileName() {
-			if (!ent) return Util::emptyString;
-			return Text::toUtf8(ent->d_name);
-		}
-		bool isDirectory() {
-			struct stat inode;
-			if (!ent) return false;
-			if (stat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return false;
-			return S_ISDIR(inode.st_mode);
-		}
-		bool isHidden() {
-			if (!ent) return false;
-			return ent->d_name[0] == '.';
-		}
-		bool isLink() {
-			struct stat inode;
-			if (!ent) return false;
-			if (lstat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return false;
-			return S_ISLNK(inode.st_mode);
-		}
-		int64_t getSize() {
-			struct stat inode;
-			if (!ent) return false;
-			if (stat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return 0;
-			return inode.st_size;
-		}
-		uint32_t getLastWriteTime() {
-			struct stat inode;
-			if (!ent) return false;
-			if (stat((base + PATH_SEPARATOR + ent->d_name).c_str(), &inode) == -1) return 0;
-			return inode.st_mtime;
-		}
-		struct dirent* ent;
-		string base;
-	};
-private:
-	DIR* dir;
-#endif
-
-public:
-
-	DirData& operator*() { return data; }
-	DirData* operator->() { return &data; }
-
-private:
-	DirData data;
-
-};
 
 ShareManager::Directory::Ptr ShareManager::buildTree(const string& aName, const Directory::Ptr& aParent) {
 	Directory::Ptr dir = Directory::create(Util::getLastDir(aName), aParent);

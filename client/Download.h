@@ -18,13 +18,14 @@ class Download : public Transfer, public Flags {
 public:
 
 	enum {
-		FLAG_ZDOWNLOAD			= 0x01,
-		FLAG_CHUNKED			= 0x02,
-		FLAG_TTH_CHECK			= 0x04,
-		FLAG_SLOWUSER			= 0x08,
-		FLAG_XML_BZ_LIST		= 0x10,
-		FLAG_PARTIAL			= 0x20,
-		FLAG_OVERLAP			= 0x40
+		FLAG_ZDOWNLOAD		= 0x01,
+		FLAG_CHUNKED		= 0x02,
+		FLAG_TTH_CHECK		= 0x04,
+		FLAG_SLOWUSER		= 0x08,
+		FLAG_XML_BZ_LIST	= 0x10,
+		FLAG_PARTIAL		= 0x20,
+		FLAG_OVERLAP		= 0x40,
+		FLAG_USER_CHECK		= 0x80
 	};
 
 	Download(UserConnection& conn, QueueItem& qi, const string& path) throw();

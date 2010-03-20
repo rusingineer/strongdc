@@ -220,7 +220,7 @@ void ADLSearchManager::MatchesFile(DestDirList& destDirVector, DirectoryListing:
 				char buf[128];
 				snprintf(buf, sizeof(buf), CSTRING(CHECK_FORBIDDEN), currentFile->getName().c_str());
 				
-				ClientManager::getInstance()->setCheating(user, buf, is->raw, false);
+				ClientManager::getInstance()->setClientStatus(user, buf, is->raw, false);
 
 				setSentRaw(true);
 			}

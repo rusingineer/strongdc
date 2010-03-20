@@ -1,3 +1,9 @@
+** svn491
+	slow chunks overlapping is applied on very slow sources too
+	fixed potentional race condition in slow chunks overlapping
+	DC++ BZR merge
+	update client type when filelist check fails
+
 ** svn490
 	fixed that SVN revision number was autoupdated in x64 release only
 	some DC++ BZR merge

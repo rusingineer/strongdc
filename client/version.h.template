@@ -20,7 +20,7 @@
 #define VERSIONSTRING "2.41"
 #define VERSIONFLOAT 2.41
 
-#define DCVERSIONSTRING "0.760"
+#define DCVERSIONSTRING "0.761"
 #define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
 
 #define SVNVERSION "svn$WCREV$"
