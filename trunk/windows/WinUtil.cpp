@@ -813,7 +813,7 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 		string name = uc.getCommand().substr(i, j-i);
 		if(done.find(name) == done.end()) {
 			LineDlg dlg;
-			dlg.title = Text::toT(uc.getName());
+			dlg.title = Text::toT(Util::toString(" > ", uc.getDisplayName()));
 			dlg.description = Text::toT(name);
 			dlg.line = Text::toT(sm["line:" + name]);
 
@@ -841,7 +841,7 @@ bool WinUtil::getUCParams(HWND parent, const UserCommand& uc, StringMap& sm) thr
 		string name = uc.getCommand().substr(i, j-i);
 		if(done.find(name) == done.end()) {
 			KickDlg dlg;
-			dlg.title = Text::toT(uc.getName());
+			dlg.title = Text::toT(Util::toString(" > ", uc.getDisplayName()));
 			dlg.description = Text::toT(name);
 
 			if(uc.adc()) {

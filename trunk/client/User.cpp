@@ -256,6 +256,11 @@ string Identity::updateClientType(const OnlineUser& ou) {
 		DETECTION_DEBUG("\tChecking profile: " + entry.name);
 
 		for(DetectionEntry::INFMap::const_iterator j = INFList.begin(); j != INFList.end(); ++j) {
+
+			// TestSUR not supported anymore, so ignore it to be compatible with older profiles
+			if(j->first == "TS")
+				continue;
+
 			string aPattern = Util::formatRegExp(j->second, params);
 			string aField = getDetectionField(j->first);
 			DETECTION_DEBUG("Pattern: " + aPattern + " Field: " + aField);
@@ -351,9 +356,14 @@ void Identity::getDetectionParams(StringMap& p) {
 
 string Identity::getPkVersion() const {
 	string pk = get("PK");
-	if(pk.find("DCPLUSPLUS") != string::npos && pk.find("ABCABC") != string::npos) {
-		return pk.substr(10, pk.length() - 16);
-	}
+
+	string::const_iterator begin = pk.begin();
+	string::const_iterator end = pk.end();
+	boost::match_results<string::const_iterator> result;
+	boost::regex reg("[0-9]+\\.[0-9]+", boost::regex_constants::icase);
+	if(boost::regex_search(begin, end, result, reg, boost::match_default))
+		return result.str();
+
 	return Util::emptyString;
 }
 

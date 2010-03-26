@@ -423,6 +423,14 @@ void FavoriteManager::save() {
 		}
 		xml.stepOut();
 
+		xml.addTag("IgnoredUsers");
+		xml.stepIn();
+		for(unordered_set<CID>::const_iterator i = ignoredUsers.begin(), iend = ignoredUsers.end(); i != iend; ++i) {
+			xml.addTag("User");
+			xml.addChildAttrib("CID", i->toBase32());
+		}
+		xml.stepOut();
+
 		xml.addTag("UserCommands");
 		xml.stepIn();
 		for(UserCommand::List::const_iterator i = userCommands.begin(), iend = userCommands.end(); i != iend; ++i) {
@@ -616,6 +624,15 @@ void FavoriteManager::load(SimpleXML& aXml) {
 			i->second.setLastSeen((uint32_t)aXml.getIntChildAttrib("LastSeen"));
 			i->second.setDescription(aXml.getChildAttrib("UserDescription"));
 
+		}
+		aXml.stepOut();
+	}
+
+	aXml.resetCurrentChild();
+	if(aXml.findChild("IgnoredUsers")) {
+		aXml.stepIn();
+		while(aXml.findChild("User")) {
+			ignoredUsers.insert(CID(aXml.getChildAttrib("CID")));
 		}
 		aXml.stepOut();
 	}

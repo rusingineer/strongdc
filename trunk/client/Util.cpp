@@ -605,6 +605,30 @@ static wchar_t utf8ToLC(ccp& str) {
 	return Text::toLower(c);
 }
 
+string Util::toString(const string& sep, const StringList& lst) {
+	string ret;
+	for(StringList::const_iterator i = lst.begin(), iend = lst.end(); i != iend; ++i) {
+		ret += *i;
+		if(i + 1 != iend)
+			ret += sep;
+	}
+	return ret;
+}
+
+string Util::toString(const StringList& lst) {
+	if(lst.size() == 1)
+		return lst[0];
+	string tmp("[");
+	for(StringList::const_iterator i = lst.begin(), iend = lst.end(); i != iend; ++i) {
+		tmp += *i + ',';
+	}
+	if(tmp.length() == 1)
+		tmp.push_back(']');
+	else
+		tmp[tmp.length()-1] = ']';
+	return tmp;
+}
+
 string::size_type Util::findSubString(const string& aString, const string& aSubString, string::size_type start) throw() {
 	if(aString.length() < start)
 		return (string::size_type)string::npos;

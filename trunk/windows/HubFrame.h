@@ -236,7 +236,7 @@ public:
 		int i=-1;
 		if(client->isConnected()) {
 			while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				ignoreList.insert(((OnlineUser*)ctrlUsers.getItemData(i))->getUser());
+				FavoriteManager::getInstance()->addIgnoredUser(((OnlineUser*)ctrlUsers.getItemData(i))->getUser()->getCID());
 			}
 		}
 		return 0;
@@ -246,16 +246,13 @@ public:
 		int i=-1;
 		if(client->isConnected()) {
 			while( (i = ctrlUsers.GetNextItem(i, LVNI_SELECTED)) != -1) {
-				ignoreList.erase(((OnlineUser*)ctrlUsers.getItemData(i))->getUser());
+				FavoriteManager::getInstance()->removeIgnoredUser(((OnlineUser*)ctrlUsers.getItemData(i))->getUser()->getCID());
 			}
 		}
 		return 0;
 	}
 
 	TypedListViewCtrl<OnlineUser, IDC_USERS>& getUserList() { return ctrlUsers; }
-
-	typedef unordered_set<UserPtr, User::Hash> IgnoreMap;
-	static IgnoreMap ignoreList;
 
 	static ResourceManager::Strings columnNames[OnlineUser::COLUMN_LAST];
 

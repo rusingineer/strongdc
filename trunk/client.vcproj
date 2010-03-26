@@ -583,6 +583,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client\UserCommand.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client\UserConnection.cpp"
 				>
 			</File>

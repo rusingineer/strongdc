@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,30 +16,31 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define APPNAME "StrongDC++"
-#define VERSIONSTRING "2.41"
-#define VERSIONFLOAT 2.41
+#include "stdinc.h"
+#include "DCPlusPlus.h"
 
-#define DCVERSIONSTRING "0.761"
-#define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
+#include "UserCommand.h"
 
-#define SVNVERSION "svn491"
+#include "StringTokenizer.h"
 
-#ifdef _WIN64
-# define CONFIGURATION_TYPE "x86-64"
-#else
-# define CONFIGURATION_TYPE "x86-32"
-#endif
+namespace dcpp {
 
-#ifdef SVNVERSION
-# define COMPLETEVERSIONSTRING	_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(" ") _T(CONFIGURATION_TYPE) _T(" ") _T(SVNVERSION) _T(" / ") _T(DCVERSIONSTRING)
-#else
-# define COMPLETEVERSIONSTRING	_T(APPNAME) _T(" ") _T(VERSIONSTRING) _T(" ") _T(CONFIGURATION_TYPE)
-#endif
+bool UserCommand::adc(const string& h) {
+	return h.compare(0, 6, "adc://") == 0 || h.compare(0, 7, "adcs://") == 0;
+}
 
-/* Update the .rc file as well... */
+const StringList& UserCommand::getDisplayName() const {
+	return displayName;
+}
 
-/**
- * @file
- * $Id$
- */
+void UserCommand::setDisplayName() {
+	string name_ = name;
+	Util::replace("//", "\t", name_);
+	StringTokenizer<string> t(name_, '/');
+	for(StringList::const_iterator i = t.getTokens().begin(), iend = t.getTokens().end(); i != iend; ++i) {
+		displayName.push_back(*i);
+		Util::replace("\t", "/", displayName.back());
+	}
+}
+
+} // namespace dcpp

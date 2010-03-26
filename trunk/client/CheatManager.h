@@ -27,7 +27,7 @@ void fileListDisconnected(const UserPtr& p) {
 	{
 		Lock l(cs);
 		OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-		if(i != onlineUsers.end() || i->second->getClientBase().type == ClientBase::DHT) {
+		if(i != onlineUsers.end() && i->second->getClientBase().type != ClientBase::DHT) {
 			OnlineUser& ou = *i->second;
 	
 			int fileListDisconnects = Util::toInt(ou.getIdentity().get("FD")) + 1;
@@ -55,7 +55,7 @@ void connectionTimeout(const UserPtr& p) {
 	{
 		Lock l(cs);
 		OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-		if(i != onlineUsers.end() || i->second->getClientBase().type == ClientBase::DHT) {
+		if(i != onlineUsers.end() && i->second->getClientBase().type != ClientBase::DHT) {
 			OnlineUser& ou = *i->second;
 	
 			int connectionTimeouts = Util::toInt(ou.getIdentity().get("TO")) + 1;
@@ -144,7 +144,8 @@ void setClientStatus(const UserPtr& p, const string& aCheatString, const int aRa
 	{
 		Lock l(cs);
 		OnlineIterC i = onlineUsers.find(const_cast<CID*>(&p->getCID()));
-		if(i == onlineUsers.end() || i->second->getClientBase().type == ClientBase::DHT) return;
+		if(i == onlineUsers.end() || i->second->getClientBase().type == ClientBase::DHT) 
+			return;
 		
 		ou = i->second;
 		report = ou->getIdentity().updateClientType(*ou);
@@ -198,7 +199,8 @@ void reportUser(const HintedUser& user) {
 	{
 		Lock l(cs);
 		OnlineUser* ou = findOnlineUser(user.user->getCID(), user.hint, priv);
-		if(!ou || ou->getClientBase().type == ClientBase::DHT) return;
+		if(!ou || ou->getClientBase().type == ClientBase::DHT) 
+			return;
 
 		ou->getClient().reportUser(ou->getIdentity());
 	}

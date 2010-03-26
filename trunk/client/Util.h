@@ -352,19 +352,8 @@ public:
 		return buf;
 	}
 
-	static string toString(const StringList& lst) {
-		if(lst.size() == 1)
-			return lst[0];
-		string tmp("[");
-		for(StringList::const_iterator i = lst.begin(); i != lst.end(); ++i) {
-			tmp += *i + ',';
-		}
-		if(tmp.length() == 1)
-			tmp.push_back(']');
-		else
-			tmp[tmp.length()-1] = ']';
-		return tmp;
-	}
+	static string toString(const string& sep, const StringList& lst);
+	static string toString(const StringList& lst);
 
 	static wstring toStringW( int32_t val ) {
 		wchar_t buf[32];
