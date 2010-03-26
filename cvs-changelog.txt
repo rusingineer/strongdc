@@ -1,3 +1,10 @@
+** svn492
+	TS field in client profiles is ignored
+	improved PK version detection
+	ignored users are saved on exit
+	fixed crash on user check
+	small DC++ BZR merge (usercommands stuff)
+
 ** svn491
 	slow chunks overlapping is applied on very slow sources too
 	fixed potentional race condition in slow chunks overlapping
@@ -15,7 +22,7 @@
 	hopefully autoupdating SVN revision numbers
 	[ADC] fixed compatibility with older clients in passive mode
 	hopefully fixed some crashes
-	fixed deadlock in DTH FW check vs ClientManager
+	fixed deadlock in DHT FW check vs ClientManager
 	adding OPs to ignore list is allowed
 	correctly displaying finished status in queue frame
 

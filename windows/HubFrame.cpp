@@ -39,7 +39,6 @@
 #include "../client/NmdcHub.h"
 
 HubFrame::FrameMap HubFrame::frames;
-HubFrame::IgnoreMap HubFrame::ignoreList;
 
 int HubFrame::columnSizes[] = { 100, 75, 75, 75, 100, 75, 100, 100, 50, 40, 40, 40, 300 };
 int HubFrame::columnIndexes[] = { OnlineUser::COLUMN_NICK, OnlineUser::COLUMN_SHARED, OnlineUser::COLUMN_EXACT_SHARED,
@@ -328,8 +327,9 @@ void HubFrame::onEnter() {
 				WinUtil::openLink(_T("http://www.ripe.net/perl/whois?form_type=simple&full_query_string=&searchtext=") + Text::toT(Util::encodeURI(Text::fromT(param))));
 			} else if(stricmp(cmd.c_str(), _T("ignorelist"))==0) {
 				tstring ignorelist = _T("Ignored users:");
-				for(IgnoreMap::const_iterator i = ignoreList.begin(); i != ignoreList.end(); ++i)
-					ignorelist += _T(" ") + Text::toT(ClientManager::getInstance()->getNicks((*i)->getCID(), Util::emptyString)[0]); // ignore user isn't hub dependent
+				unordered_set<CID> ignoredUsers = FavoriteManager::getInstance()->getIgnoredUsers();
+				for(unordered_set<CID>::const_iterator i = ignoredUsers.begin(); i != ignoredUsers.end(); ++i)
+					ignorelist += _T(" ") + Text::toT(ClientManager::getInstance()->getNicks(*i, client->getHubUrl())[0]);
 				addLine(ignorelist, WinUtil::m_ChatTextSystem);
 			} else if(stricmp(cmd.c_str(), _T("log")) == 0) {
 				StringMap params;
@@ -637,7 +637,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			}
 		} else if(i->first == ADD_CHAT_LINE) {
     		const MessageTask& msg = *static_cast<MessageTask*>(i->second);
-        	if(!msg.from.getUser() || (ignoreList.find(msg.from.getUser()) == ignoreList.end())) {
+			if(!msg.from.getUser() || (!FavoriteManager::getInstance()->isIgnoredUser(msg.from.getUser()->getCID()))) {
 				  addLine(msg.from, Text::toT(msg.str), WinUtil::m_ChatTextGeneral);
         	}
 		} else if(i->first == ADD_STATUS_LINE) {
@@ -703,7 +703,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 		} else if(i->first == PRIVATE_MESSAGE) {
 			const MessageTask& pm = *static_cast<MessageTask*>(i->second);
 			tstring nick = Text::toT(pm.from.getNick());
-			if(!pm.from.getUser() || (ignoreList.find(pm.from.getUser()) == ignoreList.end())) {
+			if(!pm.from.getUser() || (!FavoriteManager::getInstance()->isIgnoredUser(pm.from.getUser()->getCID()))) {
 				bool myPM = pm.replyTo == ClientManager::getInstance()->getMe();
 				const UserPtr& user = myPM ? pm.to : pm.replyTo;
 				if(pm.hub) {
@@ -1940,14 +1940,12 @@ bool HubFrame::PreparePopupMenu(CWindow* /*pCtrl*/, OMenu& menu) {
 
 		if(count == 1) {
 			const OnlineUserPtr ou = ctrlUsers.getItemData(ctrlUsers.GetNextItem(-1, LVNI_SELECTED));
-			if (client->isOp() || !ou->getIdentity().isOp()) {
-				if(ignoreList.find(ou->getUser()) == ignoreList.end()) {
-					menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
-				} else {    
-					menu.AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
-				}
-				menu.AppendMenu(MF_SEPARATOR);
+			if(!FavoriteManager::getInstance()->isIgnoredUser(ou->getUser()->getCID())) {
+				menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
+			} else {    
+				menu.AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
 			}
+			menu.AppendMenu(MF_SEPARATOR);
 		}
 	}
 	
@@ -2131,7 +2129,7 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 				cd->clrText = SETTING(FAVORITE_COLOR);
 			} else if (UploadManager::getInstance()->hasReservedSlot(ui->getUser())) {
 				cd->clrText = SETTING(RESERVED_SLOT_COLOR);
-			} else if (ignoreList.find(ui->getUser()) != ignoreList.end()) {
+			} else if (FavoriteManager::getInstance()->isIgnoredUser(ui->getUser()->getCID())) {
 				cd->clrText = SETTING(IGNORED_COLOR);
 			} else if(ui->getIdentity().getStatus() & Identity::FIREBALL) {
 				cd->clrText = SETTING(FIREBALL_COLOR);

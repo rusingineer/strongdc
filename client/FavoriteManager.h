@@ -172,6 +172,11 @@ public:
 	void load();
 	void save();
 	void recentsave();
+
+	void addIgnoredUser(const CID& cid) { Lock l(cs); ignoredUsers.insert(cid); }
+	void removeIgnoredUser(const CID& cid) { Lock l(cs); ignoredUsers.erase(cid); }
+	bool isIgnoredUser(const CID& cid) const { Lock l(cs); return ignoredUsers.find(cid) != ignoredUsers.end(); }
+	unordered_set<CID> getIgnoredUsers() const { Lock l(cs); return ignoredUsers; }
 	
 private:
 	FavoriteHubEntryList favoriteHubs;
@@ -181,6 +186,8 @@ private:
 	PreviewApplication::List previewApplications;
 	UserCommand::List userCommands;
 	int lastId;
+
+	unordered_set<CID> ignoredUsers;
 
 	FavoriteMap users;
 

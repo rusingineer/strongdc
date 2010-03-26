@@ -52,17 +52,23 @@ public:
 
 	UserCommand() : cid(0), type(0), ctx(0) { }
 	UserCommand(int aId, int aType, int aCtx, Flags::MaskType aFlags, const string& aName, const string& aCommand, const string& aTo, const string& aHub) throw()
-		: Flags(aFlags), cid(aId), type(aType), ctx(aCtx), name(aName), command(aCommand), to(aTo), hub(aHub) { }
+		: Flags(aFlags), cid(aId), type(aType), ctx(aCtx), name(aName), command(aCommand), to(aTo), hub(aHub) 
+	{ 
+		setDisplayName();
+	}
 	
 	UserCommand(const UserCommand& rhs) : Flags(rhs), cid(rhs.cid), type(rhs.type), 
 		ctx(rhs.ctx), name(rhs.name), command(rhs.command), to(rhs.to), hub(rhs.hub)
 	{
+		setDisplayName();
 	}
 
 	UserCommand& operator=(const UserCommand& rhs) {
 		cid = rhs.cid; type = rhs.type; ctx = rhs.ctx;
 		name = rhs.name; command = rhs.command; to = rhs.to; hub = rhs.hub;
 		*((Flags*)this) = rhs;
+		displayName.clear();
+		setDisplayName();
 		return *this;
 	}
 
@@ -76,10 +82,11 @@ public:
 		return type == TYPE_RAW_ONCE || type == TYPE_CHAT_ONCE;
 	}
 
-	static bool adc(const string& h) {
-		return h.compare(0, 6, "adc://") == 0 || h.compare(0, 7, "adcs://") == 0;
-	}
-	bool adc() const { return adc(hub); }
+	static bool adc(const string& h);
+	inline bool adc() const { return adc(hub); }
+
+	const StringList& getDisplayName() const;
+	void setDisplayName();
 
 	GETSET(int, cid, Id);
 	GETSET(int, type, Type);
@@ -88,6 +95,9 @@ public:
 	GETSET(string, command, Command);
 	GETSET(string, to, To);
 	GETSET(string, hub, Hub);
+
+private:
+	StringList displayName;
 };
 
 } // namespace dcpp

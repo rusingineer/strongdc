@@ -827,7 +827,7 @@ void AdcHub::info(bool /*alwaysSend*/) {
 	addParam(lastInfoMap, c, "VE", getStealth() ? ("++ " DCVERSIONSTRING) : ("StrgDC++ " VER));
 	addParam(lastInfoMap, c, "AW", Util::getAway() ? "1" : Util::emptyString);
 	
-	int limit = BOOLSETTING(THROTTLE_ENABLE) ? ThrottleManager::getInstance()->getDownloadLimit() : 0;
+	int64_t limit = BOOLSETTING(THROTTLE_ENABLE) ? ThrottleManager::getInstance()->getDownloadLimit() : 0;
 	if (limit > 0) {
 		addParam(lastInfoMap, c, "DS", Util::toString(limit));
 	} else {

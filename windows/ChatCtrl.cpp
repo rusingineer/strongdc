@@ -628,14 +628,12 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 			menu.AppendMenu(MF_SEPARATOR);
 			
 			const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
-			if (client->isOp() || !ou->getIdentity().isOp()) {
-				if(HubFrame::ignoreList.find(ou->getUser()) == HubFrame::ignoreList.end()) {
-					menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
-				} else {    
-					menu.AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
-				}
-				menu.AppendMenu(MF_SEPARATOR);
+			if(!FavoriteManager::getInstance()->isIgnoredUser(ou->getUser()->getCID())) {
+				menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
+			} else {    
+				menu.AppendMenu(MF_STRING, IDC_UNIGNORE, CTSTRING(UNIGNORE_USER));
 			}
+			menu.AppendMenu(MF_SEPARATOR);
 		}
 		
 		menu.AppendMenu(MF_POPUP, (UINT)(HMENU)copyMenu, CTSTRING(COPY));
@@ -865,7 +863,7 @@ LRESULT ChatCtrl::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 LRESULT ChatCtrl::onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/){
 	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
-		HubFrame::ignoreList.insert(ou->getUser());
+		FavoriteManager::getInstance()->addIgnoredUser(ou->getUser()->getCID());
 
 	return 0;
 }
@@ -873,7 +871,7 @@ LRESULT ChatCtrl::onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BO
 LRESULT ChatCtrl::onUnignore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/){
 	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
 	if(ou)
-		HubFrame::ignoreList.erase(ou->getUser());
+		FavoriteManager::getInstance()->removeIgnoredUser(ou->getUser()->getCID());
 
 	return 0;
 }
