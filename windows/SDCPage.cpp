@@ -28,7 +28,6 @@
 PropPage::TextItem SDCPage::texts[] = {
 	{ IDC_SETTINGS_WRITE_BUFFER, ResourceManager::SETTINGS_WRITE_BUFFER },
 	{ IDC_SETTINGS_KB, ResourceManager::KB },
-	{ IDC_SETTINGS_MAX_TAB_ROWS, ResourceManager::SETTINGS_MAX_TAB_ROWS },
 	{ IDC_SETTINGS_SEARCH_HISTORY, ResourceManager::SETTINGS_SEARCH_HISTORY },
 	{ IDC_SETSTRONGDC_PM_LINES, ResourceManager::SETTINGS_PM_HISTORY },
 	{ IDC_SETTINGS_AUTO_SEARCH_LIMIT, ResourceManager::SETTINGS_AUTO_SEARCH_LIMIT },
@@ -49,7 +48,6 @@ PropPage::TextItem SDCPage::texts[] = {
 
 PropPage::Item SDCPage::items[] = {
 	{ IDC_BUFFERSIZE, SettingsManager::BUFFER_SIZE, PropPage::T_INT },
-	{ IDC_MAX_TAB_ROWS, SettingsManager::MAX_TAB_ROWS, PropPage::T_INT },
 	{ IDC_SOCKET_IN_BUFFER, SettingsManager::SOCKET_IN_BUFFER, PropPage::T_INT },
 	{ IDC_SOCKET_OUT_BUFFER, SettingsManager::SOCKET_OUT_BUFFER, PropPage::T_INT },
 	{ IDC_PM_LINES, SettingsManager::SHOW_LAST_LINES_LOG, PropPage::T_INT },
@@ -80,7 +78,6 @@ LRESULT SDCPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	setMinMax(IDC_BUFFER_SPIN, 0, 4096);
 	setMinMax(IDC_READ_SPIN, 1024, 1024*1024);
 	setMinMax(IDC_WRITE_SPIN, 1024, 1024*1024);
-	setMinMax(IDC_TAB_SPIN, 1, 10);
 	setMinMax(IDC_PM_LINESSPIN, 0, 999);
 	setMinMax(IDC_SEARCH_HISTORY_SPIN, 1, 100);
 	setMinMax(IDC_SHUTDOWN_SPIN , 1, 3600);

@@ -1,3 +1,8 @@
+** svn493
+	tabs can be places on right and left side too
+	fixed crashes on TTH inconsistency
+	fix to transferview
+
 ** svn492
 	TS field in client profiles is ignored
 	improved PK version detection

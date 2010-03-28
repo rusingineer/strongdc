@@ -26,12 +26,15 @@
 #include "WindowsPage.h"
 #include "WinUtil.h"
 
-PropPage::Item WindowsPage::items[] = { { 0, 0, PropPage::T_END } };
+PropPage::Item WindowsPage::items[] = { 
+	{ IDC_MAX_TAB_ROWS, SettingsManager::MAX_TAB_ROWS, PropPage::T_INT },
+	{ 0, 0, PropPage::T_END } 
+};
 
 PropPage::TextItem WindowsPage::textItem[] = {
 	{ IDC_SETTINGS_AUTO_OPEN, ResourceManager::SETTINGS_AUTO_OPEN },
 	{ IDC_SETTINGS_WINDOWS_OPTIONS, ResourceManager::SETTINGS_WINDOWS_OPTIONS },
-	{ IDC_SETTINGS_CONFIRM_OPTIONS, ResourceManager::SETTINGS_CONFIRM_DIALOG_OPTIONS },
+	{ IDC_SETTINGS_MAX_TAB_ROWS, ResourceManager::SETTINGS_MAX_TAB_ROWS },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 
@@ -61,10 +64,6 @@ WindowsPage::ListItem WindowsPage::optionItems[] = {
 	{ SettingsManager::IGNORE_BOT_PMS, ResourceManager::SETTINGS_IGNORE_BOT_PMS },
 	{ SettingsManager::TOGGLE_ACTIVE_WINDOW, ResourceManager::SETTINGS_TOGGLE_ACTIVE_WINDOW },
 	{ SettingsManager::PROMPT_PASSWORD, ResourceManager::SETTINGS_PROMPT_PASSWORD },
-	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
-};
-
-WindowsPage::ListItem WindowsPage::confirmItems[] = {
 	{ SettingsManager::CONFIRM_EXIT, ResourceManager::SETTINGS_CONFIRM_EXIT },
 	{ SettingsManager::CONFIRM_HUB_REMOVAL, ResourceManager::SETTINGS_CONFIRM_HUB_REMOVAL },
 	{ SettingsManager::CONFIRM_DELETE, ResourceManager::SETTINGS_CONFIRM_ITEM_REMOVAL },
@@ -76,16 +75,33 @@ LRESULT WindowsPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 	PropPage::translate((HWND)(*this), textItem);
 	PropPage::read((HWND)*this, items, listItems, GetDlgItem(IDC_WINDOWS_STARTUP));
 	PropPage::read((HWND)*this, items, optionItems, GetDlgItem(IDC_WINDOWS_OPTIONS));
-	PropPage::read((HWND)*this, items, confirmItems, GetDlgItem(IDC_CONFIRM_OPTIONS));
 
 	// Do specialized reading here
+	CUpDownCtrl updown;
+	updown.Attach(GetDlgItem(IDC_TAB_SPIN));
+	updown.SetRange32(1, 10);
+	updown.Detach();
+
+	CComboBox tabsPosition;
+	tabsPosition.Attach(GetDlgItem(IDC_TABSCOMBO));
+	tabsPosition.AddString(CTSTRING(TABS_TOP));
+	tabsPosition.AddString(CTSTRING(TABS_BOTTOM));
+	tabsPosition.AddString(CTSTRING(TABS_LEFT));
+	tabsPosition.AddString(CTSTRING(TABS_RIGHT));
+	tabsPosition.SetCurSel(SETTING(TABS_POS));
+	tabsPosition.Detach();
+
 	return TRUE;
 }
 
 void WindowsPage::write() {
 	PropPage::write((HWND)*this, items, listItems, GetDlgItem(IDC_WINDOWS_STARTUP));
 	PropPage::write((HWND)*this, items, optionItems, GetDlgItem(IDC_WINDOWS_OPTIONS));
-	PropPage::write((HWND)*this, items, confirmItems, GetDlgItem(IDC_CONFIRM_OPTIONS));
+
+	CComboBox tabsPosition;
+	tabsPosition.Attach(GetDlgItem(IDC_TABSCOMBO));
+	settings->set(SettingsManager::TABS_POS, tabsPosition.GetCurSel());
+	tabsPosition.Detach();
 }
 
 /**

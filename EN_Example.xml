@@ -607,7 +607,6 @@
 		<String Name="SettingsCommand">Command</String>
 		<String Name="SettingsCompressTransfers">Enable safe and compressed transfers</String>
 		<String Name="SettingsConfigureHubLists">Configure Public Hub Lists</String>
-		<String Name="SettingsConfirmDialogOptions">Confirm dialog options</String>
 		<String Name="SettingsConfirmExit">Confirm application exit</String>
 		<String Name="SettingsConfirmHubRemoval">Confirm favorite hub removal</String>
 		<String Name="SettingsConfirmItemRemoval">Confirm item removal in download queue</String>
@@ -803,7 +802,10 @@
 		<String Name="StringNotFound">String not found:</String>
 		<String Name="Supports">Supports</String>
 		<String Name="Suspend">Suspend</String>
-		<String Name="TabsOnTop">Tabs on top</String>
+		<String Name="TabsBottom">Bottom</String>
+		<String Name="TabsLeft">Left</String>
+		<String Name="TabsRight">Right</String>
+		<String Name="TabsTop">Top</String>
 		<String Name="Tag">Tag</String>
 		<String Name="TargetFileExists">File already exists at the target location</String>
 		<String Name="TargetFilenameTooLong">Target filename too long</String>

@@ -53,7 +53,6 @@ protected:
 	static Item items[];
 	static ListItem listItems[];
 	static ListItem optionItems[];
-	static ListItem confirmItems[];
 
 	TCHAR* title;
 };

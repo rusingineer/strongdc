@@ -48,7 +48,8 @@ public:
 	int64_t getPos() const { return pos; }
 
 	int64_t getStartPos() const { return getSegment().getStart(); }
-
+	
+	void resetPos() { pos = getStartPos(); };
 	void addPos(int64_t aBytes, int64_t aActual) { pos += aBytes; actual+= aActual; }
 
 	enum { MIN_SAMPLES = 15, MIN_SECS = 15 };

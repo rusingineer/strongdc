@@ -340,6 +340,7 @@ void DownloadManager::endData(UserConnection* aSource) {
 		try {
 			d->getFile()->flush();
 		} catch(const FileException& e) {
+			d->resetPos();
 			failDownload(aSource, e.getError());
 			return;
 		}
