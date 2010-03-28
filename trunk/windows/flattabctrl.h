@@ -64,7 +64,12 @@ public:
 		TabInfo* i = new TabInfo(hWnd, color, icon, (stateIcon != 0) ? stateIcon : icon);
 		dcassert(getTabInfo(hWnd) == NULL);
 		tabs.push_back(i);
-		viewOrder.push_back(hWnd);
+
+		if(SETTING(TABS_POS) == 0 || SETTING(TABS_POS) == 1)
+			viewOrder.push_back(hWnd);
+		else
+			viewOrder.push_front(hWnd);
+
 		nextTab = --viewOrder.end();
 		active = i;
 		calcRows(false);
@@ -350,7 +355,7 @@ public:
 		for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
 			TabInfo* ti = *i;
 			if( (r != 0) && ((w + ti->getWidth()) > rc.Width()) ) {
-				if(r >= SETTING(MAX_TAB_ROWS)) {
+				if(r >= ((SETTING(TABS_POS) == 0 || SETTING(TABS_POS) == 1) ? SETTING(MAX_TAB_ROWS) : (rc.Height() / getTabHeight()))) {
 					notify |= (rows != r);
 					rows = r;
 					r = 0;
@@ -359,7 +364,7 @@ public:
 					r++;
 					w = 0;
 				}
-			} 
+			}
 			ti->xpos = w;
 			needInval |= (ti->row != (r-1));
 			ti->row = r-1;
@@ -391,8 +396,8 @@ public:
 		CDC dc(::GetDC(m_hWnd));
 		HFONT oldfont = dc.SelectFont(WinUtil::font);
 		height = WinUtil::getTextHeight(dc) + 2;
-		if (height < 16)
-			height = 16;
+		if (height < 17)
+			height = 17;
 		dc.SelectFont(oldfont);
 		::ReleaseDC(m_hWnd, dc);
 		
@@ -402,7 +407,10 @@ public:
 	LRESULT onSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/) { 
 		calcRows();
 		SIZE sz = { LOWORD(lParam), HIWORD(lParam) };
-		chevron.MoveWindow(sz.cx-14, 1, 14, getHeight());
+		if(SETTING(TABS_POS) == 0 || SETTING(TABS_POS) == 1)
+			chevron.MoveWindow(sz.cx-14, 1, 14, getHeight());
+		else
+			chevron.MoveWindow(0, sz.cy - 15, 150, 15);
 		return 0;
 	}
 		
@@ -530,6 +538,14 @@ public:
 		}
 		return 0;
 	}
+
+	void updateTabs() {
+		for(TabInfo::ListIter i = tabs.begin(); i != tabs.end(); ++i) {
+			TabInfo* t = *i;
+			t->update(true);
+		}
+	}
+
 private:
 	class TabInfo {
 	public:
@@ -574,7 +590,7 @@ private:
 		HICON hStateIcon;
 		bool bState;
 
-		bool update() {
+		bool update(bool always = false) {
 			TCHAR name2[MAX_LENGTH];
 			len = (size_t)::GetWindowTextLength(hWnd);
 			if(len >= MAX_LENGTH) {
@@ -587,17 +603,23 @@ private:
 			} else {
 				::GetWindowText(hWnd, name2, MAX_LENGTH);
 			}
-			if(_tcscmp(name, name2) == 0) {
+			if(!always && _tcscmp(name, name2) == 0) {
 				return false;
 			}
 			_tcscpy(name, name2);
-			CDC dc(::GetDC(hWnd));
-			HFONT f = dc.SelectFont(WinUtil::font);
-			dc.GetTextExtent(name, len, &size);
-			dc.SelectFont(WinUtil::boldFont);
-			dc.GetTextExtent(name, len, &boldSize);
-			dc.SelectFont(f);		
-			::ReleaseDC(hWnd, dc);
+
+			if(SETTING(TABS_POS) == 0 || SETTING(TABS_POS) == 1) {
+				CDC dc(::GetDC(hWnd));
+				HFONT f = dc.SelectFont(WinUtil::font);
+				dc.GetTextExtent(name, len, &size);
+				dc.SelectFont(WinUtil::boldFont);
+				dc.GetTextExtent(name, len, &boldSize);
+				dc.SelectFont(f);		
+				::ReleaseDC(hWnd, dc);
+			} else {
+				size.cx = 150;
+				boldSize.cx = 150;
+			}
 			return true;
 		}
 
@@ -613,13 +635,19 @@ private:
 			} else {
 				_tcscpy(name, text);
 			}
-			CDC dc(::GetDC(hWnd));
-			HFONT f = dc.SelectFont(WinUtil::font);
-			dc.GetTextExtent(name, len, &size);
-			dc.SelectFont(WinUtil::boldFont);
-			dc.GetTextExtent(name, len, &boldSize);
-			dc.SelectFont(f);		
-			::ReleaseDC(hWnd, dc);
+
+			if(SETTING(TABS_POS) == 0 || SETTING(TABS_POS) == 1) {
+				CDC dc(::GetDC(hWnd));
+				HFONT f = dc.SelectFont(WinUtil::font);
+				dc.GetTextExtent(name, len, &size);
+				dc.SelectFont(WinUtil::boldFont);
+				dc.GetTextExtent(name, len, &boldSize);
+				dc.SelectFont(f);		
+				::ReleaseDC(hWnd, dc);
+			} else {
+				size.cx = 150;
+				boldSize.cx = 150;
+			}
 			return true;
 		}
 
@@ -701,9 +729,9 @@ private:
 		POINT p[4];
 		dc.BeginPath();
 		dc.MoveTo(pos, ypos);
-		p[0].x = pos + tab->getWidth();
+		p[0].x = pos + tab->getWidth() - ((SETTING(TABS_POS) == 2 || SETTING(TABS_POS) == 3) ? 29 : 0);
 		p[0].y = ypos;
-		p[1].x = pos + tab->getWidth();
+		p[1].x = pos + tab->getWidth() - ((SETTING(TABS_POS) == 2 || SETTING(TABS_POS) == 3) ? 29 : 0);
 		p[1].y = ypos + getTabHeight();
 		p[2].x = pos;
 		p[2].y = ypos + getTabHeight();
@@ -749,7 +777,7 @@ private:
 			dc.TextOut(pos, ypos + 2, tab->name, tab->len);
 		}
 		if (tab->hIcon != 0) {
-			DrawIconEx(dc.m_hDC, pos - 18, ypos, tab->bState ? tab->hStateIcon : tab->hIcon, 16, 16, NULL, hBr, DI_NORMAL | DI_COMPAT);
+			DrawIconEx(dc.m_hDC, pos - 18, ypos + 1, tab->bState ? tab->hStateIcon : tab->hIcon, 16, 16, NULL, hBr, DI_NORMAL | DI_COMPAT);
 		}
 		dc.SetTextColor(oldclr);
 	}

@@ -571,7 +571,9 @@
 #define IDC_BW_SIMPLE                   1324
 #define IDC_NAME_STATIC                 1324
 #define IDC_BW_BOTH                     1325
+#define IDC_TABSTEXT                    1325
 #define IDC_SETTINGS_NOMINALBW          1326
+#define IDC_TABSCOMBO                   1326
 #define IDC_HELP_TRANSLATIONS           1327
 #define IDC_BACK                        1333
 #define IDC_OTHER_QUEUE_OPTIONS         1400
@@ -828,7 +830,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        313
 #define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         1325
+#define _APS_NEXT_CONTROL_VALUE         1327
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

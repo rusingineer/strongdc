@@ -615,7 +615,7 @@ LRESULT TransferView::onSpeaker(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 					if(ui->type == Transfer::TYPE_FILE || ui->type == Transfer::TYPE_TREE)
 					{
 						/* parent item must be updated with correct info about whole file */
-						if(ui->status == ItemInfo::STATUS_RUNNING && parent->hits == -1)
+						if(ui->status == ItemInfo::STATUS_RUNNING && parent->status == ItemInfo::STATUS_RUNNING && parent->hits == -1)
 						{
 							ui->updateMask &= ~UpdateInfo::MASK_POS;
 							ui->updateMask &= ~UpdateInfo::MASK_ACTUAL;
