@@ -3,7 +3,11 @@
 ; You need the ANSI version of the MoreInfo plugin installed in NSIS to be able to compile this script
 ; Its available from http://nsis.sourceforge.net/MoreInfo_plug-in
 
+; Uncomment the above line if you want to build installer for the 64-bit version
+; !define X64
+
 !include "Sections.nsh"
+
 
 SetCompressor "lzma"
 
@@ -24,7 +28,12 @@ UninstPage instfiles
 OutFile "Sdcxxx.exe"
 
 ; The default installation directory
-InstallDir $PROGRAMFILES\StrongDC++
+!ifdef X64
+  InstallDir $PROGRAMFILES64\StrongDC++
+!else
+  InstallDir $PROGRAMFILES\StrongDC++
+!endif
+
 ; Registry key to check for directory (so if you install again, it will 
 ; overwrite the old one automatically)
 InstallDirRegKey HKLM SOFTWARE\StrongDC++ "Install_Dir"
@@ -36,10 +45,19 @@ LicenseForceSelection checkbox
 ; The text to prompt the user to enter a directory
 ComponentText "Welcome to the StrongDC++ installer."
 ; The text to prompt the user to enter a directory
-DirText "Choose a directory to install in to:"
+DirText "Choose a directory to install StrongDC++ into. If you upgrade select the same directory where your old version resides and your existing settings will be imported."
 
 ; The stuff to install
 Section "StrongDC++ (required)" dcpp
+
+!ifdef X64
+  ;Check if we have a valid PROGRAMFILES64 enviroment variable
+  StrCmp $PROGRAMFILES64 $PROGRAMFILES32 0 _64_ok
+  MessageBox MB_YESNO|MB_ICONEXCLAMATION "This installer will try to install the 64-bit version of StrongDC++ but this doesn't seem to be 64-bit operating system. Do you want to continue?" IDYES _64_ok
+  Quit
+  _64_ok:
+!endif
+
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
 
@@ -52,10 +70,19 @@ Section "StrongDC++ (required)" dcpp
 
 check_programdir:
   ; Maybe we're upgrading from an older version so lets check the old Settings directory
-  IfFileExists "$INSTDIR\Settings\*.xml" 0 no_backup
+  IfFileExists "$INSTDIR\Settings\*.xml" 0 check_dcpp
   MessageBox MB_YESNO|MB_ICONQUESTION "A previous installation of StrongDC++ has been found in the target folder, do you want to backup settings and queue? (You can find them in $INSTDIR\Settings\BACKUP later)" IDNO no_backup
   CreateDirectory "$INSTDIR\Settings\BACKUP\"
   CopyFiles "$INSTDIR\Settings\*.xml" "$INSTDIR\Settings\BACKUP\"
+
+check_dcpp:
+  ; Lets check the profile for possible DC++ settings to import
+  IfFileExists "$APPDATA\DC++\*.xml" 0 no_backup
+  MessageBox MB_YESNO|MB_ICONQUESTION "Settings of an existing DC++ installation has been found in the user profile, do you want to import settings and queue?" IDNO no_backup
+  CreateDirectory "$DOCUMENTS\StrongDC++\"
+  CopyFiles "$APPDATA\DC++\*.xml" "$DOCUMENTS\StrongDC++\"
+  CopyFiles "$APPDATA\DC++\*.dat" "$DOCUMENTS\StrongDC++\"
+  CopyFiles "$APPDATA\DC++\*.txt" "$DOCUMENTS\StrongDC++\"
 
 no_backup:
   ; Put file there
@@ -65,6 +92,8 @@ no_backup:
   File "StrongDC.pdb"
   File "StrongDC.exe"
   File "License.txt"
+  File "License-GeoIP.txt"
+  File "License-OpenSSL.txt"
   File "EN_Example.xml"
   File "unicows.dll"
   
@@ -171,7 +200,7 @@ FunctionEnd
 
 ; uninstall stuff
 
-UninstallText "This will uninstall StrongDC++. Hit next to continue."
+UninstallText "This will uninstall StrongDC++. Hit the Uninstall button to continue."
 
 ; special uninstall section.
 Section "un.Uninstall"
@@ -185,6 +214,8 @@ Section "un.Uninstall"
   Delete "$INSTDIR\StrongDC.pdb"
   Delete "$INSTDIR\StrongDC.exe"
   Delete "$INSTDIR\License.txt"
+  Delete "$INSTDIR\License-GeoIP.txt"
+  Delete "$INSTDIR\License-OpenSSL.txt"
   Delete "$INSTDIR\CZ_Example.xml"
   Delete "$INSTDIR\EN_Example.xml"
   Delete "$INSTDIR\unicows.dll"

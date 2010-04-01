@@ -1,5 +1,8 @@
+** svn494
+	updated installer script
+
 ** svn493
-	tabs can be places on right and left side too
+	tabs can be placed on right and left side too
 	fixed crashes on TTH inconsistency
 	fix to transferview
 
