@@ -803,6 +803,7 @@ enum Strings { // @DontAdd
 	SUSPEND, // "Suspend"
 	TABS_BOTTOM, // "Bottom"
 	TABS_LEFT, // "Left"
+	TABS_POSITION, // "Tabs position"
 	TABS_RIGHT, // "Right"
 	TABS_TOP, // "Top"
 	TAG, // "Tag"

@@ -1,3 +1,18 @@
+  -- StrongDC++ 2.41 --
+
+* opravena kompatibilita se staršími ADC klienty v pasivním režimu
+* oprava pádù
+* opraven deadlock
+* je dovoleno dávat OPy do seznamu ignorovaných uživatelù
+* ve frontì se správnì zobrazuje stav dokonèených stahování
+* opraven pád na Win2000, pokud byly zapnuty vlajky státù
+* vlajky státù pøidány do seznamu uživatelù
+* pøekrývání pomalù segmentù je aplikovány i s velmi pomalými zdroji
+* vylepšena detekce klientù
+* seznam ignorovaných uživatelù je uložen pøi ukonèení
+* záložky mohou být umístìny na jakoukoli stranu okna
+
+
   -- StrongDC++ 2.40 --
 
 * poprvé 64-bit release

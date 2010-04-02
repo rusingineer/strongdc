@@ -1,3 +1,18 @@
+  -- StrongDC++ 2.41 --
+
+* fixed compatibility with older ADC clients in passive mode
+* crash fixes
+* deadlock fix
+* adding OPs to ignore list is allowed
+* correctly displaying finished status in queue frame
+* fixed country flags crash under win2000
+* added country flags into userlist
+* slow chunks overlapping is applied on very slow sources too
+* improved clients detection
+* ignored users are saved on exit
+* tabs can be placed on all sides of window
+
+
   -- StrongDC++ 2.40 --
 
 * the first 64-bit release

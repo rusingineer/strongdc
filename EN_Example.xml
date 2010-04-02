@@ -804,6 +804,7 @@
 		<String Name="Suspend">Suspend</String>
 		<String Name="TabsBottom">Bottom</String>
 		<String Name="TabsLeft">Left</String>
+		<String Name="TabsPosition">Tabs position</String>
 		<String Name="TabsRight">Right</String>
 		<String Name="TabsTop">Top</String>
 		<String Name="Tag">Tag</String>

@@ -34,6 +34,7 @@ PropPage::Item WindowsPage::items[] = {
 PropPage::TextItem WindowsPage::textItem[] = {
 	{ IDC_SETTINGS_AUTO_OPEN, ResourceManager::SETTINGS_AUTO_OPEN },
 	{ IDC_SETTINGS_WINDOWS_OPTIONS, ResourceManager::SETTINGS_WINDOWS_OPTIONS },
+	{ IDC_TABSTEXT, ResourceManager::TABS_POSITION },
 	{ IDC_SETTINGS_MAX_TAB_ROWS, ResourceManager::SETTINGS_MAX_TAB_ROWS },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
