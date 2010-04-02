@@ -1,3 +1,7 @@
+** svn495
+	updated changelog
+	updated Czech language
+
 ** svn494
 	updated installer script
 

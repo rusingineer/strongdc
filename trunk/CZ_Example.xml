@@ -209,7 +209,6 @@
 		<String Name="Gb">GiB</String>
 		<String Name="GenerateCertificates">Vygenerovat certifikáty</String>		
 		<String Name="GetFileList">Stáhnout seznam souborů</String>
-		<String Name="GetUserResponses">Zjistit odezvu uživatele</String>
 		<String Name="GoToDirectory">Jít do složky</String>
 		<String Name="GrantExtraSlot">Dát extraslot (10 minut)</String>
 		<String Name="GrantExtraSlotDay">Dát extraslot (den)</String>
@@ -258,7 +257,6 @@
 		<String Name="CheckMismatchedShareSize">Velikost podvodného sdílení - </String>
 		<String Name="CheckOnConnect">Kontroluj uživatele po připojení</String>
 		<String Name="CheckShowRealShare">, hlášené sdílení = %[shareshort], opravdové sdílení = %[realshareformat]</String>
-		<String Name="CheckingClient">Kontroluji klienta...</String>
 		<String Name="ChooseFolder">Zvolte složku</String>
 		<String Name="IgnoreTthSearches">Ignorovat hledání TTH</String>
 		<String Name="IgnoreUser">Ignorovat uživatele</String>
@@ -609,7 +607,6 @@
 		<String Name="SettingsCommand">Příkaz</String>
 		<String Name="SettingsCompressTransfers">Povolit bezpečné a komprimované přenosy</String>
 		<String Name="SettingsConfigureHubLists">Seznamy veřejných hubů</String>
-		<String Name="SettingsConfirmDialogOptions">Potvrzovat dialogy nastavení</String>
 		<String Name="SettingsConfirmExit">Potvrzovat ukončení StrongDC++</String>
 		<String Name="SettingsConfirmHubRemoval">Potvrzovat odebrání hubu z oblíbených</String>
 		<String Name="SettingsConfirmItemRemoval">Potvrzovat při odebírání položek z fronty stahování</String>
@@ -789,14 +786,15 @@
 		<String Name="SoundException">Nečekaná chyba</String>
 		<String Name="SoundFakerFound">Nalezen FAKER</String>
 		<String Name="SoundSourceAdded">Alternativní zdroj přidán</String>
-		<String Name="SourceTooOld">Vzdálený klient nepodporuje TTH úplně - nelze stahovat</String>
 		<String Name="SoundTthInvalid">Soubor je poškozen</String>
 		<String Name="SoundTypingNotify">Zvuk při stisknutí klávesy</String>
 		<String Name="SoundUploadFinished">Odesílání dokončeno</String>
+		<String Name="SourceTooOld">Vzdálený klient nepodporuje TTH úplně - nelze stahovat</String>
 		<String Name="SourceType">Typ zdroje</String>
 		<String Name="SpecifySearchString">Specifikujte hledaný výraz</String>
 		<String Name="SpecifyServer">Specifikujte server k připojení</String>
 		<String Name="Speed">Rychlost</String>
+		<String Name="SslError">Chyba SSL</String>
 		<String Name="Started">Spuštěno</String>
 		<String Name="Status">Stav</String>
 		<String Name="StealthMode">Emulovat DC++ v tomto hubu</String>		
@@ -804,7 +802,10 @@
 		<String Name="StringNotFound">Výraz nenalezen: </String>
 		<String Name="Supports">Supports</String>
 		<String Name="Suspend">Režim spánku</String>
-		<String Name="TabsOnTop">Záložky nahoře</String>
+		<String Name="TabsBottom">Dole</String>
+		<String Name="TabsLeft">Vlevo</String>
+		<String Name="TabsRight">Vpravo</String>
+		<String Name="TabsTop">Nahoře</String>
 		<String Name="Tag">Tag</String>
 		<String Name="TargetRemoved">Cílový soubor odstraněn</String>		
 		<String Name="TargetFilenameTooLong">Cílový soubor je příliš dlouhý</String>

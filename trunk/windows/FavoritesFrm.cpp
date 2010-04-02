@@ -421,7 +421,7 @@ void FavoriteHubsFrame::fillList()
 	// sort groups
 	TStringList groups(getSortedGroups());
 	
-	for(int i = 0; i < groups.size(); ++i) {
+	for(size_t i = 0; i < groups.size(); ++i) {
 		// insert groups
 		LVGROUP lg = {0};
 		lg.cbSize = sizeof(lg);
