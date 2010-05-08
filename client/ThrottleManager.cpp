@@ -64,10 +64,11 @@ namespace dcpp
 
 		boost::unique_lock<boost::mutex> lock(downMutex);
 
+
 		if(downTokens > 0)
 		{
 			size_t slice = getDownloadLimit() / downs;
-			size_t readSize = min(slice, min(len, static_cast<size_t>(downTokens)));
+			size_t readSize = min(slice, min(len, downTokens));
 				
 			// read from socket
 			readSize = sock->read(buffer, readSize);
@@ -79,7 +80,7 @@ namespace dcpp
 			lock.unlock();
 
 			// give a chance to other transfers to get a token
-			Thread::yield(); 
+			boost::thread::yield();
 			return readSize;
 		}
 
@@ -103,7 +104,7 @@ namespace dcpp
 		if(upTokens > 0)
 		{
 			size_t slice = getUploadLimit() / ups;
-			len = min(slice, min(len, static_cast<size_t>(upTokens)));
+			len = min(slice, min(len, upTokens));
 			upTokens -= len;
 
 			// next code can't be in critical section, so we must unlock here
@@ -113,7 +114,7 @@ namespace dcpp
 			int sent = sock->write(buffer, len);
 
 			// give a chance to other transfers to get a token
-			Thread::yield(); 
+			boost::thread::yield();
 			return sent;
 		}
 		
@@ -125,7 +126,7 @@ namespace dcpp
 	/*
 	 * Returns current download limit.
 	 */
-	int64_t ThrottleManager::getDownloadLimit() const
+	size_t ThrottleManager::getDownloadLimit() const
 	{
 		return downLimit;
 	}
@@ -133,7 +134,7 @@ namespace dcpp
 	/*
 	 * Returns current upload limit.
 	 */
-	int64_t ThrottleManager::getUploadLimit() const
+	size_t ThrottleManager::getUploadLimit() const
 	{
 		return upLimit;
 	}
@@ -148,9 +149,6 @@ namespace dcpp
 			return;
 		}
 			
-		downLimit	= SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024;
-		upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
-		
 		// limiter restrictions: up_limit >= 5 * slots + 4, up_limit >= 7 * down_limit
 		if(SETTING(MAX_UPLOAD_SPEED_LIMIT) < MIN_UPLOAD_SPEED_LIMIT)
 		{
@@ -171,6 +169,9 @@ namespace dcpp
 		{
 			SettingsManager::getInstance()->set(SettingsManager::MAX_DOWNLOAD_SPEED_LIMIT_TIME, MAX_LIMIT_RATIO * SETTING(MAX_UPLOAD_SPEED_LIMIT_TIME));
 		}
+
+		downLimit	= SETTING(MAX_DOWNLOAD_SPEED_LIMIT) * 1024;
+		upLimit		= SETTING(MAX_UPLOAD_SPEED_LIMIT) * 1024;
 
 		// alternative limiter
 		if(BOOLSETTING(TIME_DEPENDENT_THROTTLE))

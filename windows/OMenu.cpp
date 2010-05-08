@@ -156,7 +156,7 @@ LRESULT OMenu::onMeasureItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM
 	return S_OK;
 }
 
-LRESULT OMenu::onDrawItem(HWND hWnd, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
+LRESULT OMenu::onDrawItem(HWND /*hWnd*/, UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled) {
 	bHandled = FALSE;
 	if (wParam == NULL) {
 		DRAWITEMSTRUCT dis = *(DRAWITEMSTRUCT*)lParam;

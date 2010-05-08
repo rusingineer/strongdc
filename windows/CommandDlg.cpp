@@ -70,34 +70,6 @@ LRESULT CommandDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	ATTACH(IDC_COMMAND, ctrlCommand);
 
 	WinUtil::translate(*this, texts);
-	SetDlgItemText(IDC_COMMAND_DESCRIPTION, _T("\
-Command Types:\r\n\
-Separator: Adds a separator to the menu\r\n\
-Raw: Sends raw command to the hub (experts only, end it with '|'!)\r\n\
-Chat: Sends command as if you were typing it in the chat\r\n\
-PM: Sends command as if you sent it by pm\r\n\
-Contexts determine where the command is shown:\r\n\
-Hub Menu: Hub tab (at the bottom of the screen) right-click menu\r\n\
-Chat Menu: User right-click menu in chat and PM tab menu\r\n\
-Search Menu: Search right-click menu\r\n\
-Parameters:\r\n\
-Name: Name (use '\\' to create submenus)\r\n\
-Command: Command text (may contain parameters)\r\n")
-_T("Hub: Hub ip as typed when connecting (empty = all hubs, \"op\" = hubs where you're op)\r\n\
-To: PM recipient\r\n\
-Only once: Send only once per user from search frame\r\n\
-In the parameters, you can use %[xxx] variables and date/time specifiers (%Y, %m, ...). The following are available:\r\n\
-%[myNI]: your own nick\r\n\
-%[userNI]: the users nick (user && search context only)\r\n\
-%[userTAG]: user tag (user && search context only)\r\n\
-%[userDE]: user description (user && search context only)\r\n\
-%[userEM]: user email (user && search context only)\r\n\
-%[userSS]: user shared bytes (exact) (user && search context only)\r\n\
-%[userSSshort]: user shared bytes (formatted) (user && search context only)\r\n\
-%[userI4]: user ip (if supported by hub)\r\n\
-%[fileFN]: filename (search context only)\r\n\
-%[line:reason]: opens up a window asking for \"reason\"\
-"));
 
 	int newType = 0;
 	if(type == UserCommand::TYPE_SEPARATOR) {
@@ -186,7 +158,7 @@ LRESULT CommandDlg::onChange(WORD , WORD , HWND , BOOL& ) {
 	return 0;
 }
 
-LRESULT CommandDlg::onHub(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT CommandDlg::onHub(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	updateHub();
 	return 0;
@@ -265,6 +237,12 @@ void CommandDlg::updateControls() {
 			ctrlNick.EnableWindow(TRUE);
 			break;
 	}
+}
+
+LRESULT CommandDlg::onHelp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+{
+	WinUtil::openLink(_T("http://dcplusplus.sourceforge.net/webhelp/dialog_user_command.html"));
+	return 0;
 }
 
 /**

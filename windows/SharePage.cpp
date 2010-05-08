@@ -249,7 +249,7 @@ LRESULT SharePage::onClickedRename(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 LRESULT SharePage::onClickedShareHidden(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	// Save the checkbox state so that ShareManager knows to include/exclude hidden files
-	Item i = items[1]; // The checkbox. Explicit index used - bad!
+	Item i = items[0]; // The checkbox. Explicit index used - bad!
 	if(::IsDlgButtonChecked((HWND)* this, i.itemID) == BST_CHECKED){
 		settings->set((SettingsManager::IntSetting)i.setting, true);
 	} else {

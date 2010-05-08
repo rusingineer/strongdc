@@ -143,7 +143,7 @@ private:
 	void fillList();
 	void openSelected();
 
-	void on(FavoriteAdded, const FavoriteHubEntry* e)  throw() { StateKeeper keeper(ctrlHubs); fillList(); }
+	void on(FavoriteAdded, const FavoriteHubEntry* /*e*/)  throw() { StateKeeper keeper(ctrlHubs); fillList(); }
 	void on(FavoriteRemoved, const FavoriteHubEntry* e) throw() { ctrlHubs.DeleteItem(ctrlHubs.find((LPARAM)e)); }
 	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
 };

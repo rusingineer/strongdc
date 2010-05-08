@@ -303,6 +303,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			aSource->setLineMode(0);
 		}
 	} catch(const Exception& e) {
+		d->resetPos(); // is there a better way than resetting the position?
 		failDownload(aSource, e.getError());
 	}
 }

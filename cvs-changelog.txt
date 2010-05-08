@@ -1,3 +1,16 @@
+** svn497
+	fixed possible crashes on exception at the end of segment
+	user command's help opens DC++ webhelp
+	updated zlib to 1.2.4
+	migrated to MSVS2010
+	added option to disable Explorer theming in listviews and treeviews
+	added temporary workaround for possible DHT search spam
+	first try to fix throttling with very large speeds
+	updated boost to 1.43
+
+** svn496
+	released 2.41
+
 ** svn495
 	updated changelog
 	updated Czech language

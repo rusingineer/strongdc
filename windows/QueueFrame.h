@@ -209,12 +209,12 @@ private:
 	class QueueItemInfo : public FastAlloc<QueueItemInfo> {
 	public:
 
-		QueueItemInfo(const QueueItem* aQI) : qi(aQI)	{
-			const_cast<QueueItem*>(qi)->inc();
+		QueueItemInfo(QueueItem* aQI) : qi(aQI)	{
+			qi->inc();
 		}
 
 		~QueueItemInfo() { 
-			const_cast<QueueItem*>(qi)->dec();
+			qi->dec();
 		}
 
 		void remove() { QueueManager::getInstance()->remove(getTarget()); }
@@ -253,7 +253,7 @@ private:
 		bool getAutoPriority() const { return qi->getAutoPriority(); }
 
 	private:
-		const QueueItem* qi;
+		QueueItem* qi;
 
 		QueueItemInfo(const QueueItemInfo&);
 		QueueItemInfo& operator=(const QueueItemInfo&);
@@ -361,7 +361,7 @@ private:
 	
 	const string& getDir(HTREEITEM ht) const { dcassert(ht != NULL); return *reinterpret_cast<string*>(ctrlDirs.GetItemData(ht)); }
 
-	void on(QueueManagerListener::Added, const QueueItem* aQI) throw();
+	void on(QueueManagerListener::Added, QueueItem* aQI) throw();
 	void on(QueueManagerListener::Moved, const QueueItem* aQI, const string& oldTarget) throw();
 	void on(QueueManagerListener::Removed, const QueueItem* aQI) throw();
 	void on(QueueManagerListener::SourcesUpdated, const QueueItem* aQI) throw();

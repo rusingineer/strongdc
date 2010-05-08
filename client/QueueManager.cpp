@@ -1359,6 +1359,9 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 							downloaded -= downloaded % aDownload->getTigerTree().getBlockSize();
 
 							if(downloaded > 0) {
+								// since download is not finished, it should never happen that downloaded size is same segment size
+								dcassert(downloaded < aDownload->getSize());
+								
 								q->addSegment(Segment(aDownload->getStartPos(), downloaded));
 								setDirty();
 							}

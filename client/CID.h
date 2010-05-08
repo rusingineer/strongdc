@@ -64,7 +64,7 @@ private:
 
 namespace std { 
 #if !defined(_STLPORT_VERSION)
-	namespace tr1 {
+	//namespace tr1 {
 #endif
 template<>
 struct hash<dcpp::CID> {
@@ -82,7 +82,7 @@ struct hash<dcpp::CID*> {
 	}
 };
 #if !defined(_STLPORT_VERSION)
-}
+//}
 #endif
 
 template<>

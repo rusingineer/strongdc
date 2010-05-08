@@ -101,7 +101,7 @@ DWORD WINAPI MainFrame::stopper(void* p) {
 		}
 	}
 
-	mf->PostMessage(WM_CLOSE);	
+	mf->PostMessage(WM_CLOSE);
 	return 0;
 }
 

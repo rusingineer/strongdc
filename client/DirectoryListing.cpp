@@ -254,6 +254,10 @@ string DirectoryListing::getPath(const Directory* d) const {
 }
 
 void DirectoryListing::download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio) {
+/* TODO
+	if(!aDir->getComplete())
+		QueueManager::getInstance()->addDirectory(
+*/	
 	string tmp;
 	string target = (aDir == getRoot()) ? aTarget : aTarget + aDir->getName() + PATH_SEPARATOR;
 	// First, recurse over the directories

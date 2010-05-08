@@ -61,7 +61,8 @@ PropPage::ListItem AppearancePage::listItems[] = {
 	{ SettingsManager::CZCHARS_DISABLE, ResourceManager::SETSTRONGDC_CZCHARS_DISABLE },
 	{ SettingsManager::USE_OLD_SHARING_UI, ResourceManager::SETTINGS_USE_OLD_SHARING_UI },
 	{ SettingsManager::SUPPRESS_MAIN_CHAT, ResourceManager::SETTINGS_ADVANCED_SUPPRESS_MAIN_CHAT },
-	{ SettingsManager::UC_SUBMENU, ResourceManager::UC_SUBMENU },	
+	{ SettingsManager::UC_SUBMENU, ResourceManager::UC_SUBMENU },
+	{ SettingsManager::USE_EXPLORER_THEME, ResourceManager::USE_EXPLORER_THEME },
 	{ 0, ResourceManager::SETTINGS_AUTO_AWAY }
 };
 

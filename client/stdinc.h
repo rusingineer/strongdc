@@ -102,13 +102,13 @@
 #include <stdint.h>
 #endif
 
-#ifndef _WIN64
+/*#ifndef _WIN64
 # undef memcpy
 # undef memset
 # undef memzero
 # define memcpy memcpy2
 # define memset memset2
-#endif
+#endif*/
 
 #ifdef _MSC_VER
 #include <crtdbg.h>

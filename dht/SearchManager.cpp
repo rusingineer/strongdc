@@ -93,6 +93,10 @@ namespace dht
 	 */
 	void SearchManager::findNode(const CID& cid)
 	{
+		// temporary fix to prevent UDP flood (search queue would be better here)
+		if(GET_TICK() - lastSearchFile > 10000)
+			return;
+
 		if(isAlreadySearchingFor(cid.toBase32()))
 			return;
 			
@@ -102,6 +106,8 @@ namespace dht
 		s->token = Util::toString(Util::rand());
 		
 		search(*s);
+
+		lastSearchFile = GET_TICK();
 	}
 	
 	/*

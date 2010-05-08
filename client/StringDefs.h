@@ -854,6 +854,7 @@ enum Strings { // @DontAdd
 	UPNP_FAILED_TO_GET_EXTERNAL_IP, // "Failed to get external IP via  UPnP. Please set it yourself."
 	UPNP_FAILED_TO_REMOVE_MAPPINGS, // "Failed to remove port mappings"
 	USE_DHT, // "Publish shared files on DHT and use it for searching alternate sources"
+	USE_EXPLORER_THEME, // "Use Explorer theme in listviews and treeviews"
 	USER, // "User"
 	USER_CMD_COMMAND, // "Command"
 	USER_CMD_CONTEXT, // "Context"

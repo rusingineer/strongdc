@@ -177,6 +177,7 @@ void BufferedSocket::threadRead() throw(Exception) {
 		return;
 
 	int left = (mode == MODE_DATA) ? ThrottleManager::getInstance()->read(sock.get(), &inbuf[0], (int)inbuf.size()) : sock->read(&inbuf[0], (int)inbuf.size());
+
 	if(left == -1) {
 		// EWOULDBLOCK, no data received...
 		return;
