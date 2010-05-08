@@ -128,7 +128,7 @@ const string SettingsManager::settingTags[] =
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
 	"UcSubMenu", "AutoSlots", "Coral", "UseDHT", "DHTPort", "UpdateIP", "KeepFinishedFiles",
-	"AllowNATTraversal",
+	"AllowNATTraversal", "UseExplorerTheme",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -549,6 +549,7 @@ SettingsManager::SettingsManager()
 	setDefault(USE_DHT, true);
 	setDefault(UPDATE_IP, false);
 	setDefault(ALLOW_NAT_TRAVERSAL, true);
+	setDefault(USE_EXPLORER_THEME, true);
 	
 #ifdef _WIN32
 	OSVERSIONINFO ver;

@@ -330,8 +330,7 @@ void PropPageTextStyles::TextStyleSettings::Init(
 	SettingsManager::IntSetting iBack, SettingsManager::IntSetting iFore, 
 	SettingsManager::IntSetting iBold, SettingsManager::IntSetting iItalic) {
 
-	CHARFORMAT2 cf;
-	cbSize = sizeof( cf );
+	cbSize = sizeof(CHARFORMAT2);
 	dwMask = CFM_COLOR | CFM_BOLD | CFM_ITALIC | CFM_BACKCOLOR;
 	dwReserved = 0;
   

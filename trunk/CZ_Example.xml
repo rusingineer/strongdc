@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Language Name="Czech Language" Author="Gigadisk" Version="2.00" Revision="1">
+<Language Name="Czech Language" Author="Gigadisk + Big Muscle" Version="2.00" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Akceptovaných odpojení</String>
 		<String Name="AcceptedTimeouts">Akceptovaných timeoutů</String>
@@ -804,11 +804,13 @@
 		<String Name="Suspend">Režim spánku</String>
 		<String Name="TabsBottom">Dole</String>
 		<String Name="TabsLeft">Vlevo</String>
+		<String Name="TabsPosition">Pozice záložek</String>
 		<String Name="TabsRight">Vpravo</String>
 		<String Name="TabsTop">Nahoře</String>
 		<String Name="Tag">Tag</String>
-		<String Name="TargetRemoved">Cílový soubor odstraněn</String>		
+		<String Name="TargetFileExists">Soubor již v cílovém umístění existuje</String>
 		<String Name="TargetFilenameTooLong">Cílový soubor je příliš dlouhý</String>
+		<String Name="TargetRemoved">Cílový soubor odstraněn</String>
 		<String Name="Tb">TiB</String>
 		<String Name="TcpPortBusy">Nepořilo se otevřít TCP port. Přenos souborů nebude správě fungovat, dokud nezměníte TCP port v nastavení, nebo nerestartujete aplikaci.</String>
 		<String Name="TextFakepercent">Akceptovat procent fake sdílení</String>

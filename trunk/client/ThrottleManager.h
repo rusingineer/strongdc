@@ -51,24 +51,24 @@ namespace dcpp
 		/*
 		 * Returns current download limit.
 		 */
-		int64_t getDownloadLimit() const;
+		size_t getDownloadLimit() const;
 
 		/*
 		 * Returns current download limit.
 		 */
-		int64_t getUploadLimit() const;
+		size_t getUploadLimit() const;
 		
 	private:
 		
 		// download limiter
-		int							downLimit;
-		int64_t						downTokens;
+		size_t						downLimit;
+		size_t						downTokens;
 		boost::condition_variable	downCond;
 		boost::mutex				downMutex;
 		
 		// upload limiter
-		int							upLimit;
-		int64_t						upTokens;
+		size_t						upLimit;
+		size_t						upTokens;
 		boost::condition_variable	upCond;
 		boost::mutex				upMutex;
 			

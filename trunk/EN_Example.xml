@@ -879,6 +879,7 @@ Default: %H:%M:%S</String>
 		<String Name="UpnpFailedToGetExternalIp">Failed to get external IP via  UPnP. Please set it yourself.</String>
 		<String Name="UpnpFailedToRemoveMappings">Failed to remove port mappings</String>
 		<String Name="UseDht">Publish shared files on DHT and use it for searching alternate sources</String>
+		<String Name="UseExplorerTheme">Use Explorer theme in listviews and treeviews</String>
 		<String Name="User">User</String>
 		<String Name="UserCmdCommand">Command</String>
 		<String Name="UserCmdContext">Context</String>

@@ -165,9 +165,12 @@ public:
 		T* pThis = (T*)this;
 		_Module.AddSettingChangeNotify(pThis->m_hWnd);
 
-		if((WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1) //WinXP & WinSvr2003
-			|| (WinUtil::getOsMajor() >= 6)) //Vista & Win7
+		if(BOOLSETTING(USE_EXPLORER_THEME) &&
+			((WinUtil::getOsMajor() >= 5 && WinUtil::getOsMinor() >= 1) //WinXP & WinSvr2003
+			|| (WinUtil::getOsMajor() >= 6))) //Vista & Win7
+		{
 			SetWindowTheme(pThis->m_hWnd, L"explorer", NULL);
+		}
 
 		bHandled = FALSE;
 		return 0;
