@@ -44,15 +44,21 @@ namespace dht
 	DHT::DHT(void) : bucket(NULL), lastPacket(0), dirty(false), requestFWCheck(true), firewalled(true)
 	{
 		lastExternalIP = Util::getLocalIp(); // hack
+
+		IndexManager::newInstance();
 	}
 
 	DHT::~DHT(void)
 	{
 		// when DHT is disabled, we shouldn't try to perform exit cleanup
-		if(bucket == NULL)
+		if(bucket == NULL) {
+			IndexManager::deleteInstance();
 			return;
+		}
 			
 		stop(true);
+
+		IndexManager::deleteInstance();
 	}
 	
 	/*
@@ -76,7 +82,6 @@ namespace dht
 				
 			BootstrapManager::newInstance();
 			SearchManager::newInstance();
-			IndexManager::newInstance();
 			TaskManager::newInstance();
 			ConnectionManager::newInstance();
 					
@@ -102,7 +107,6 @@ namespace dht
 
 			ConnectionManager::deleteInstance();		
 			TaskManager::deleteInstance();
-			IndexManager::deleteInstance();
 			SearchManager::deleteInstance();
 			BootstrapManager::deleteInstance();
 

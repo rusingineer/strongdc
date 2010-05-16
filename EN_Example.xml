@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Language Name="Example Language" Author="BigMuscle" Version="2.41" Revision="1">
+<Language Name="Example Language" Author="BigMuscle" Version="2.42" Revision="1">
 	<Strings>
 		<String Name="AcceptedDisconnects">Accepted Disconnects</String>
 		<String Name="AcceptedTimeouts">Accepted Timeouts</String>
@@ -596,10 +596,8 @@
 		<String Name="SettingsColorAlternate">Search Alternate</String>
 		<String Name="SettingsColorBadClient">Bad client</String>
 		<String Name="SettingsColorBadFilelist">Bad filelist/fakeshare</String>
-		<String Name="SettingsColorClientChecked">Client checked</String>
 		<String Name="SettingsColorFavorite">Favorite</String>
-		<String Name="SettingsColorFilelistChecked">File list checked</String>
-		<String Name="SettingsColorFullChecked">Full checked</String>
+		<String Name="SettingsColorFullChecked">User check completed</String>
 		<String Name="SettingsColorIgnored">Ignored</String>
 		<String Name="SettingsColorNormal">Normal</String>
 		<String Name="SettingsColorReserved">Has reserved slot</String>

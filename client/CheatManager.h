@@ -126,7 +126,7 @@ void checkCheating(const UserPtr& p, DirectoryListing* dl) {
 			report = ou->getIdentity().setCheat(ou->getClientBase(), detectString, false);
 			sendRawCommand(*ou.get(), SETTING(FAKESHARE_RAW));
 		}
-		ou->getIdentity().set("FC", Util::toString(Util::toInt(ou->getIdentity().get("FC")) | Identity::LIST_CHECKED));
+		ou->getIdentity().set("FC", Util::toString(Util::toInt(ou->getIdentity().get("FC")) | Identity::CHECKED));
 
 		if(report.empty())
 			report = ou->getIdentity().updateClientType(*ou);
