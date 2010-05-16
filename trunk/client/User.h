@@ -107,11 +107,10 @@ public:
 	};
 
 	enum FakeFlags {
-		NOT_CHECKED		= 0x01,
-		CLIENT_CHECKED	= 0x02,
-		LIST_CHECKED	= 0x04,
-		BAD_CLIENT		= 0x08,
-		BAD_LIST		= 0x10
+		NOT_CHECKED	= 0x01,
+		CHECKED		= 0x02,
+		BAD_CLIENT	= 0x04,
+		BAD_LIST	= 0x08
 	};
 	
 	Identity() { }

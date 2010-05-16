@@ -1,3 +1,11 @@
+** svn499
+	fixed LP bug #556853
+	removed obsolete client/filelist checked color settings
+	fixed "Offline" translation in some cases
+	fixed DHT bootstrap
+	fixed DHT file publishing
+	some DC++ BZR merge
+
 ** svn497
 	fixed possible crashes on exception at the end of segment
 	user command's help opens DC++ webhelp

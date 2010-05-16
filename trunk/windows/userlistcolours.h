@@ -49,8 +49,6 @@ private:
 	int serverColour;
 	int pasiveColour;
 	int opColour; 
-	int clientCheckedColour;
-	int fileListCheckedColour;
 	int fullCheckedColour;
 	int badClientColour;
 	int badFilelistColour;

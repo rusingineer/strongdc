@@ -2148,16 +2148,8 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 					cd->clrText = SETTING(BAD_CLIENT_COLOUR);
 				} else if(Util::toInt(ui->getIdentity().get("FC")) & Identity::BAD_LIST) {
 					cd->clrText = SETTING(BAD_FILELIST_COLOUR);
-				} else if(BOOLSETTING(SHOW_SHARE_CHECKED_USERS)) {
-					bool cClient = (Util::toInt(ui->getIdentity().get("FC")) & Identity::CLIENT_CHECKED) == Identity::CLIENT_CHECKED;
-					bool cFilelist = (Util::toInt(ui->getIdentity().get("FC")) & Identity::LIST_CHECKED) == Identity::LIST_CHECKED;
-					if(cClient && cFilelist) {
-						cd->clrText = SETTING(FULL_CHECKED_COLOUR);
-					} else if(cClient) {
-						cd->clrText = SETTING(CLIENT_CHECKED_COLOUR);
-					} else if(cFilelist) {
-						cd->clrText = SETTING(FILELIST_CHECKED_COLOUR);
-					}
+				} else if(BOOLSETTING(SHOW_SHARE_CHECKED_USERS) && (Util::toInt(ui->getIdentity().get("FC")) & Identity::CHECKED) == Identity::CHECKED) {
+					cd->clrText = SETTING(FULL_CHECKED_COLOUR);
 				}
 			}
 			return CDRF_NEWFONT | CDRF_NOTIFYSUBITEMDRAW;

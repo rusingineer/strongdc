@@ -1512,7 +1512,7 @@ tstring WinUtil::getNicks(const CID& cid, const string& hintUrl, bool priv) {
 
 static pair<tstring, bool> formatHubNames(const StringList& hubs) {
 	if(hubs.empty()) {
-		return make_pair(_T("Offline"), false);
+		return make_pair(CTSTRING(OFFLINE), false);
 	} else {
 		return make_pair(Text::toT(Util::toString(hubs)), true);
 	}

@@ -697,7 +697,13 @@ ShareManager::Directory::Ptr ShareManager::buildTree(const string& aName, const 
 }
 
 bool ShareManager::checkHidden(const string& aName) const {
-	return (BOOLSETTING(SHARE_HIDDEN) || !FileFindIter(aName.substr(0, aName.size() - 1))->isHidden());
+	FileFindIter ff = FileFindIter(aName.substr(0, aName.size() - 1));
+
+	if (ff != FileFindIter()) {
+		return (BOOLSETTING(SHARE_HIDDEN) || !ff->isHidden());
+	}
+
+	return true;
 }
 
 void ShareManager::updateIndices(Directory& dir) {

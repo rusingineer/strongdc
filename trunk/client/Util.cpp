@@ -782,40 +782,6 @@ string Util::formatParams(const string& msg, const StringMap& params, bool filte
 	return result;
 }
 
-/** Fix for wide formatting bug in wcsftime in the ms c lib for multibyte encodings of unicode in singlebyte locales */
-string fixedftime(const string& format, struct tm* t) {
-	string ret = format;
-	const char codes[] = "aAbBcdHIjmMpSUwWxXyYzZ%";
-
-	char tmp[4];
-	tmp[0] = '%';
-	tmp[1] = tmp[2] = tmp[3] = 0;
-
-	StringMap sm;
-	static const size_t BUF_SIZE = 1024;
-	boost::scoped_array<char> buf(new char[BUF_SIZE]);
-	for(size_t i = 0; i < strlen(codes); ++i) {
-		tmp[1] = codes[i];
-		tmp[2] = 0;
-		strftime(&buf[0], BUF_SIZE-1, tmp, t);
-		sm[tmp] = &buf[0];
-
-		tmp[1] = '#';
-		tmp[2] = codes[i];
-		strftime(&buf[0], BUF_SIZE-1, tmp, t);
-		sm[tmp] = &buf[0]; 
-	}
-
-	for(StringMapIter i = sm.begin(); i != sm.end(); ++i) {
-		for(string::size_type j = ret.find(i->first); j != string::npos; j = ret.find(i->first, j)) {
-			ret.replace(j, i->first.length(), i->second);
-			j += i->second.length() - i->first.length();
-		}
-	}
-
-	return ret;
-}
-
 string Util::formatRegExp(const string& msg, const StringMap& params) {
 	string result = msg;
 	string::size_type i, j, k;
@@ -899,19 +865,7 @@ string Util::formatTime(const string &msg, const time_t t) {
 		if(!loc) {
 			return Util::emptyString;
 		}
-#if _WIN32
-		tstring buf(bufsize, 0);
 
-		buf.resize(_tcsftime(&buf[0], buf.size()-1, Text::toT(msg).c_str(), loc));
-
-		if(buf.empty()) {
-			return fixedftime(msg, loc);
-		}
-
-		return Text::fromT(buf);
-#else
-		// will this give wide representations for %a and %A?
-		// surely win32 can't have a leg up on linux/unixen in this area. - Todd
 		string buf(bufsize, 0);
 
 		buf.resize(strftime(&buf[0], bufsize-1, msg.c_str(), loc));
@@ -922,8 +876,13 @@ string Util::formatTime(const string &msg, const time_t t) {
 			buf.resize(strftime(&buf[0], bufsize-1, msg.c_str(), loc));
 		}
 
-		return Text::toUtf8(buf);
+#ifdef _WIN32
+		if(!Text::validateUtf8(buf))
 #endif
+		{
+			buf = Text::toUtf8(buf);
+		}
+		return buf;
 	}
 	return Util::emptyString;
 }
