@@ -44,6 +44,7 @@ namespace dht
 	DHT::DHT(void) : bucket(NULL), lastPacket(0), dirty(false), requestFWCheck(true), firewalled(true)
 	{
 		lastExternalIP = Util::getLocalIp(); // hack
+		type = ClientBase::DHT;
 
 		IndexManager::newInstance();
 	}

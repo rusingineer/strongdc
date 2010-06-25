@@ -16,7 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
-#pragma once
+#ifndef _BOOTSTRAPMANAGER_H
+#define _BOOTSTRAPMANAGER_H
 
 #include "Constants.h"
 #include "KBucket.h"
@@ -70,3 +71,5 @@ namespace dht
 	};
 
 }
+
+#endif	// _BOOTSTRAPMANAGER_H

@@ -24,7 +24,7 @@
 #include "SearchFrm.h"
 #include "WinUtil.h"
 #include "MainFrm.h"
-#include "AGEmotionSetup.h"
+#include "EmoticonsManager.h"
 
 #include "../client/Client.h"
 #include "../client/ClientManager.h"
@@ -40,7 +40,7 @@ PrivateFrame::FrameMap PrivateFrame::frames;
 tstring pSelectedLine = Util::emptyStringT;
 tstring pSelectedURL = Util::emptyStringT;
 
-extern EmoticonSetup* g_pEmotionsSetup;
+extern EmoticonsManager* emoticonsManager;
 
 LRESULT PrivateFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -711,8 +711,8 @@ LRESULT PrivateFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWn
 	emoMenu.GetMenuString(wID, buf, 256, MF_BYCOMMAND);
 	if (buf!=Text::toT(SETTING(EMOTICONS_FILE))) {
 		SettingsManager::getInstance()->set(SettingsManager::EMOTICONS_FILE, Text::fromT(buf));
-		g_pEmotionsSetup->Unload();
-		g_pEmotionsSetup->Load();
+		emoticonsManager->Unload();
+		emoticonsManager->Load();
 	}
 	return 0;
 }

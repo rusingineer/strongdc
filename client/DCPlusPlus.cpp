@@ -33,6 +33,7 @@
 #include "SettingsManager.h"
 #include "FinishedManager.h"
 #include "ADLSearch.h"
+#include "UPnPManager.h"
 
 #include "StringTokenizer.h"
 
@@ -87,6 +88,7 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	FavoriteManager::newInstance();
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
+	UPnPManager::newInstance();
 	DebugManager::newInstance();
 	DetectionManager::newInstance();	
 	PopupManager::newInstance();
@@ -122,14 +124,13 @@ void shutdown() {
 	TimerManager::getInstance()->shutdown();
 	HashManager::getInstance()->shutdown();
 	ConnectionManager::getInstance()->shutdown();
-
+	UPnPManager::getInstance()->close();
 	BufferedSocket::waitShutdown();
 	
 	QueueManager::getInstance()->saveQueue(true);
 	SettingsManager::getInstance()->save();
-
 	DHT::deleteInstance();
-	
+	UPnPManager::deleteInstance();
 	DebugManager::deleteInstance();
 	WebServerManager::deleteInstance();
 	DetectionManager::deleteInstance();	

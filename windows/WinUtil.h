@@ -455,12 +455,14 @@ public:
 	static int SetupPreviewMenu(CMenu &previewMenu, string extension);
 	static void RunPreviewCommand(unsigned int index, const string& target);
 	static string formatTime(uint64_t rest);
-	static uint8_t getFlagIndex(const char* countryIdentifier, bool useCode = true);
 	static string generateStats();
 	static const tstring& disableCzChars(tstring& message);
 	static bool shutDown(int action);
 	static int getFirstSelectedIndex(CListViewCtrl& list);
 	static int setButtonPressed(int nID, bool bPressed = true);
+
+	static uint8_t getFlagIndexByCode(const char* countryCode);
+	static uint8_t getFlagIndexByName(const char* countryName);
 
 	static string getReport(const Identity& identity, HWND hwnd);
 private:

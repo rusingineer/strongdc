@@ -24,13 +24,11 @@
 #include "WinUtil.h"
 #include <math.h>
 
-#ifndef AGEMOTIONSETUP_H__
-#include "AGEmotionSetup.h"
-#endif
+#include "EmoticonsManager.h"
 
 #define EMOTICONS_ICONMARGIN 8
 
-extern EmoticonSetup* g_pEmotionsSetup;
+extern EmoticonsManager* emoticonsManager;
 
 WNDPROC EmoticonsDlg::m_MFCWndProc = 0;
 EmoticonsDlg* EmoticonsDlg::m_pDialog = NULL;
@@ -42,12 +40,12 @@ LRESULT EmoticonsDlg::onEmoticonClick(WORD /*wNotifyCode*/, WORD /*wID*/, HWND h
 	result = buf;
 	// pro ucely testovani emoticon packu...
 	if ((GetKeyState(VK_SHIFT) & 0x8000) && (GetKeyState(VK_CONTROL) & 0x8000)) {
-		const Emoticon::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
+		const Emoticon::List& Emoticons = emoticonsManager->getEmoticonsList();
 		result = _T("");
 		string lastEmotionPath = "";
 		for(Emoticon::Iter pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); ++pEmotion) {
-			if (lastEmotionPath != (*pEmotion)->getEmotionBmpPath()) result += (*pEmotion)->getEmotionText() + _T(" ");
-			lastEmotionPath = (*pEmotion)->getEmotionBmpPath();
+			if (lastEmotionPath != (*pEmotion)->getEmoticonBmpPath()) result += (*pEmotion)->getEmoticonText() + _T(" ");
+			lastEmotionPath = (*pEmotion)->getEmoticonBmpPath();
 		}
 	}
 	PostMessage(WM_CLOSE);
@@ -61,9 +59,9 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 	m_pDialog = this;
 	::EnableWindow(WinUtil::mainWnd, true);
 
-	if(g_pEmotionsSetup->getUseEmoticons() && SETTING(EMOTICONS_FILE)!="Disabled") {
+	if(emoticonsManager->getUseEmoticons() && SETTING(EMOTICONS_FILE)!="Disabled") {
 
-		const Emoticon::List& Emoticons = g_pEmotionsSetup->getEmoticonsList();
+		const Emoticon::List& Emoticons = emoticonsManager->getEmoticonsList();
 
 		if(Emoticons.empty()) {
 			PostMessage(WM_CLOSE);
@@ -75,8 +73,8 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		Emoticon::Iter pEmotion;
 		for(pEmotion = Emoticons.begin(); pEmotion != Emoticons.end(); pEmotion++)
 		{
-			if ((*pEmotion)->getEmotionBmpPath() != lastEmotionPath) pocet++;
-			lastEmotionPath = (*pEmotion)->getEmotionBmpPath();
+			if ((*pEmotion)->getEmoticonBmpPath() != lastEmotionPath) pocet++;
+			lastEmotionPath = (*pEmotion)->getEmoticonBmpPath();
 		}
 
 		// x, y jen pro for cyklus
@@ -106,7 +104,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 		}
 
 		BITMAP bm = {0};
-		HBITMAP hbm = (*Emoticons.begin())->getEmotionBmp(GetSysColor(COLOR_BTNFACE));
+		HBITMAP hbm = (*Emoticons.begin())->getEmoticonBmp(GetSysColor(COLOR_BTNFACE));
 		GetObject(hbm, sizeof(BITMAP), &bm);
 		int bW = bm.bmWidth;
 		DeleteObject(hbm);
@@ -133,15 +131,15 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 			if ((iY*nXfor)+iX+1 > Emoticons.size()) break;
 
 			// dve stejne emotikony za sebou nechceme
-			if ((*pEmotion)->getEmotionBmpPath() != lastEmotionPath) {
+			if ((*pEmotion)->getEmoticonBmpPath() != lastEmotionPath) {
 				try {
 					CButton emoButton;
-					emoButton.Create(EmoticonsDlg::m_hWnd, pos, (*pEmotion)->getEmotionText().c_str(), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER);
-					HBITMAP b = (*pEmotion)->getEmotionBmp(GetSysColor(COLOR_BTNFACE));
+					emoButton.Create(EmoticonsDlg::m_hWnd, pos, (*pEmotion)->getEmoticonText().c_str(), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | BS_FLAT | BS_BITMAP | BS_CENTER);
+					HBITMAP b = (*pEmotion)->getEmoticonBmp(GetSysColor(COLOR_BTNFACE));
 					emoButton.SetBitmap(b);
 					bitmapList.push_back(b);
 
-					tstring smajl = (*pEmotion)->getEmotionText();
+					tstring smajl = (*pEmotion)->getEmoticonText();
 					CToolInfo ti(TTF_SUBCLASS, emoButton.m_hWnd, 0, 0, const_cast<LPTSTR>(smajl.c_str()));
 					ctrlToolTip.AddTool(&ti);
 
@@ -158,7 +156,7 @@ LRESULT EmoticonsDlg::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
 				}
 			}
 
-			lastEmotionPath = (*pEmotion)->getEmotionBmpPath();
+			lastEmotionPath = (*pEmotion)->getEmoticonBmpPath();
 			try { pEmotion++; }
 			catch (...) {}
 		}

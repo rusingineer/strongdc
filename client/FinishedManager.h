@@ -73,7 +73,7 @@ public:
 			default:			return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 		}
 	}
-	int imageIndex() const;
+	int getImageIndex() const;
 
 	GETSET(string, target, Target);
 	GETSET(string, tth, TTH);

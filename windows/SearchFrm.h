@@ -168,6 +168,7 @@ public:
 	LRESULT onPurge(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT onPause(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void runUserCommand(UserCommand& uc);
@@ -238,24 +239,9 @@ public:
 	}
 
 	void SearchFrame::setInitial(const tstring& str, LONGLONG size, SearchManager::SizeModes mode, SearchManager::TypeModes type) {
-		initialString = str; initialSize = size; initialMode = mode; initialType = type; bPaused = false;
+		initialString = str; initialSize = size; initialMode = mode; initialType = type; running = true;
 	}
 
-	LRESULT onPause(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-		if(bPaused == true) {
-			bPaused = false;
-			for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
-				PostMessage(WM_SPEAKER, ADD_RESULT, (LPARAM)(*i));
-			}
-			PausedResults.clear();
-			ctrlStatus.SetText(3, (Util::toStringW(ctrlResults.GetItemCount()) + _T(" ") + TSTRING(FILES)).c_str());			
-			ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
-		} else {
-			bPaused = true;
-			ctrlPauseSearch.SetWindowText(CTSTRING(CONTINUE_SEARCH));
-		}
-		return 0;
-	}
 	
 	static const std::set<tstring>& getLastSearches() { return lastSearches; }
 	
@@ -314,7 +300,7 @@ private:
 				// Only attempt to grab a country mapping if we actually have an IP address
 				string tmpCountry = Util::getIpCountry(sr->getIP());
 				if(!tmpCountry.empty()) {
-					flagIndex = WinUtil::getFlagIndex(tmpCountry.c_str());
+					flagIndex = WinUtil::getFlagIndexByCode(tmpCountry.c_str());
 				}
 			}
 		}
@@ -435,7 +421,7 @@ private:
 			}
 		}
 
-		int imageIndex() const {
+		int getImageIndex() const {
 			int image = 0;
 			if (BOOLSETTING(USE_SYSTEM_ICONS)) {
 				image = sr->getType() == SearchResult::TYPE_FILE ? WinUtil::getIconIndex(Text::toT(sr->getFile())) : WinUtil::getDirIconIndex();
@@ -479,7 +465,7 @@ private:
 		inline static int compareItems(const HubInfo* a, const HubInfo* b, uint8_t col) {
 			return (col == 0) ? lstrcmpi(a->name.c_str(), b->name.c_str()) : 0;
 		}
-		uint8_t imageIndex() const { return 0; }
+		uint8_t getImageIndex() const { return 0; }
 
 		tstring url;
 		tstring name;
@@ -544,7 +530,7 @@ private:
 	TStringList search;
 	StringList targets;
 	StringList wholeTargets;
-	SearchInfo::List PausedResults;
+	SearchInfo::List pausedResults;
 
 	CEdit ctrlFilter;
 	CComboBox ctrlFilterSel;
@@ -552,7 +538,7 @@ private:
 	bool onlyFree;
 	bool isHash;
 	bool expandSR;
-	bool bPaused;
+	bool running;
 	bool exactSize1;
 	bool useGrouping;
 	bool waiting;
@@ -606,6 +592,7 @@ private:
 	bool matchFilter(SearchInfo* si, int sel, bool doSizeCompare = false, FilterModes mode = NONE, int64_t size = 0);
 	bool parseFilter(FilterModes& mode, int64_t& size);
 	void updateSearchList(SearchInfo* si = NULL);
+	void addSearchResult(SearchInfo* si);
 
 	LRESULT onItemChangedHub(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 

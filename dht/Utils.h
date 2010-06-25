@@ -16,7 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
-#pragma once
+#ifndef _UTILS_H
+#define _UTILS_H
 
 #include "../client/AdcCommand.h"
 #include "../client/CID.h"
@@ -25,50 +26,52 @@
 namespace dht
 {
 
-// all members must be static!
-class Utils
-{
-public:
-	/** Returns distance between two nodes */
-	static CID getDistance(const CID& cid1, const CID& cid2);
-	
-	/** Returns distance between node and file */
-	static TTHValue getDistance(const CID& cid, const TTHValue& tth)
+	// all members must be static!
+	class Utils
 	{
-		return TTHValue(const_cast<uint8_t*>(getDistance(cid, CID(tth.data)).data()));
-	}
+	public:
+		/** Returns distance between two nodes */
+		static CID getDistance(const CID& cid1, const CID& cid2);
 	
-	/** Detect whether it is correct to use IP:port in DHT network */
-	static bool isGoodIPPort(const string& ip, uint16_t port);
+		/** Returns distance between node and file */
+		static TTHValue getDistance(const CID& cid, const TTHValue& tth)
+		{
+			return TTHValue(const_cast<uint8_t*>(getDistance(cid, CID(tth.data)).data()));
+		}
 	
-	/** General flooding protection */
-	static bool checkFlood(const string& ip, const AdcCommand& cmd);
+		/** Detect whether it is correct to use IP:port in DHT network */
+		static bool isGoodIPPort(const string& ip, uint16_t port);
 	
-	/** Removes tracked packets. Called once a minute. */
-	static void cleanFlood();
+		/** General flooding protection */
+		static bool checkFlood(const string& ip, const AdcCommand& cmd);
 	
-	/** Stores outgoing request to avoid receiving invalid responses */
-	static void trackOutgoingPacket(const string& ip, const AdcCommand& cmd);
+		/** Removes tracked packets. Called once a minute. */
+		static void cleanFlood();
 	
-	/** Generates UDP key for specified IP address */
-	static CID getUdpKey(const string& targetIp);
+		/** Stores outgoing request to avoid receiving invalid responses */
+		static void trackOutgoingPacket(const string& ip, const AdcCommand& cmd);
+	
+		/** Generates UDP key for specified IP address */
+		static CID getUdpKey(const string& targetIp);
 
-	static const string& compressXML(string& xml);
+		static const string& compressXML(string& xml);
 	
-private:
-	Utils(void) { }
-	~Utils(void) { }
+	private:
+		Utils(void) { }
+		~Utils(void) { }
 	
-	struct OutPacket
-	{
-		string		ip;
-		uint64_t	time;
-		uint32_t	cmd;
+		struct OutPacket
+		{
+			string		ip;
+			uint64_t	time;
+			uint32_t	cmd;
+		};
+	
+		static CriticalSection cs;
+		static std::tr1::unordered_map<string, std::tr1::unordered_multiset<uint32_t>> receivedPackets;
+		static std::list<OutPacket> sentPackets;
 	};
-	
-	static CriticalSection cs;
-	static std::tr1::unordered_map<string, std::tr1::unordered_multiset<uint32_t>> receivedPackets;
-	static std::list<OutPacket> sentPackets;
-};
 
 } // namespace dht
+
+#endif	// _UTILS_H

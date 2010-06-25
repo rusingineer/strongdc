@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2006 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +32,11 @@
 #include "../client/DCPlusPlus.h"
 #include "SingleInstance.h"
 #include "WinUtil.h"
+#include "UPnP_COM.h"
+#include "UPnP_MiniUPnPc.h"
 
 #include "../client/MerkleTree.h"
+#include "../client/UPnPManager.h"
 
 #include "Resource.h"
 #include "ExtendedTrace.h"
@@ -393,6 +396,9 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 		SetProcessDefaultLayout(LAYOUT_RTL);
 	}
 
+	UPnPManager::getInstance()->addImplementation(new UPnP_MiniUPnPc());
+	UPnPManager::getInstance()->addImplementation(new UPnP_COM());
+
 	MainFrame wndMain;
 
 	rc = wndMain.rcDefault;
@@ -468,7 +474,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	}
 	
 	
-	// For SHBrowseForFolder, UPnP
+	// For SHBrowseForFolder, UPnP_COM
 	HRESULT hRes = ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED); 
 #ifdef _DEBUG
 	EXTENDEDTRACEINITIALIZE(Util::getPath(Util::PATH_RESOURCES).c_str());

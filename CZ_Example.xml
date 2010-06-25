@@ -91,7 +91,7 @@
 		<String Name="ConnectionClosed">Připojení uzavřeno</String>
 		<String Name="ConnectionError">Nastala chyba při připojování</String>
 		<String Name="ConnectionTimeout">Vypršel čas pro připojení</String>
-		<String Name="ContinueSearch">Hledat další</String>
+		<String Name="ContinueSearch">Pokračovat v hledání</String>
 		<String Name="Copy">Kopírovat</String>
 		<String Name="CopyHub">Kopírovat adresu(hub)</String>
 		<String Name="CopyLine">Kopírovat celý řádek</String>

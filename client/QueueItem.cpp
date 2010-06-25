@@ -159,7 +159,7 @@ Segment QueueItem::getNextSegment(int64_t  blockSize, int64_t wantedSize, int64_
 		
 	if(targetSize > blockSize) {
 		// Round off to nearest block size
-	targetSize = Util::roundDown(targetSize, blockSize);
+		targetSize = Util::roundDown(targetSize, blockSize);
 	} else {
 		targetSize = blockSize;
 	}		

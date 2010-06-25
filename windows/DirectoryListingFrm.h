@@ -335,7 +335,7 @@ private:
 				}
 			}
 		}
-		int imageIndex() const {
+		int getImageIndex() const {
 			if(type == DIRECTORY)
 				return WinUtil::getDirIconIndex();
 			else

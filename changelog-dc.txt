@@ -1,3 +1,43 @@
+* [L#550300] Catch more potential file corruptions (thanks bigmuscle)
+* [ADC] NAT traversal to allow passive-passive connections (thanks cologic)
+* Reduce donwload reconnect attempts after connection failures (poy)
+* Fix crashes related to file lists (poy)
+* [L#230973] Add MiniUPnPc for UPnP mappings and make it threaded (poy)
+* Be stricter when parsing list-looking %[line:] params (poy)
+
+-- 0.762 2010-05-16 --
+* Stability improvement related to menus (poy)
+* [L#539992] Shell menus for directories when browsing own file list (poy)
+* Parse separators in titles of user command param boxes (poy)
+* Fix painting issues with /clear (poy)
+* Smooth text-box menus (poy)
+* Add user commands to the chat menu (poy)
+* OpenSSL 0.9.8n - defends against a remote crash (poy)
+* [L#548743] Fix broken share regression on non-Windows systems (steven sheehy)
+* Fix 'Share hidden files' checkbox value saved to a wrong setting (emtee)
+* [L#562099] Fix encoding problems (poy)
+* [L#556011] Respect the font style in chat windows
+* [L#551319] Add %[fileMN] to user command params (thanks darkklor)
+* Magnet links are now produced with a size (xl) param
+* [L#505450] Extend %[line:] to create combo boxes (thanks sulan)
+* Compilation fixes for OpenSolaris (thanks andrew browne)
+* Help updates (poy, emtee)
+* [L#550300] Fix a possible file corruption (thanks bigmuscle)
+* [L#551184] Fix unnecessary move of downloaded filelists (emtee)
+* [L#556853] Fix sharing a whole drive (root folder) was impossible in random cases (emtee)
+* [L#559544] Don't clear multiline boxes with Ctrl+Alt+A (poy)
+* [L#545264] Correct ADC hub counts (emtee)
+* Add an "Elapsed" column in finished transfer windows (poy)
+* [L#539841] Network settings arrangements (poy)
+* [L#556799] Fix positioning and possible queue problems with downloaded file lists (emtee)
+* Refresh open file lists when they are being opened again (poy)
+
+-- 0.761 2010-03-14 --
+* [L#533840] Fix crashes with themed menus (poy)
+* Fix showing settings from the tray menu (poy)
+* Prevent a crash when the app is closed while a modal dialog is up (poy)
+
+-- 0.760 2010-03-11 --
 * [L#263390] Fix main icon format (poy)
 * Help updates (emtee, poy)
 * Handle file lists better in finished windows (emtee, poy)
@@ -8,7 +48,7 @@
 * Fix menu title size (poy)
 * [L#239895] Display ISTA
 * "Recent windows" button in the toolbar (poy)
-* Upgraded to OpenSSL 1.0.0-beta3 (poy)
+* Upgraded to OpenSSL 0.9.8m-beta1 (poy)
 * [L#350585] Fix sorting issues in finished windows (poy)
 * [L#339872] Fix crash when decompression initialization fails (steven sheehy)
 * Restore check-boxes in the "Context" user command group (poy)
@@ -24,13 +64,63 @@
 * [L#384558] Don't share the temporary download directory (poy)
 * [L#385818] More native menu colors (poy)
 * [L#385821] Apply the font to check-boxes and tabs (poy)
-* [L#213213] Implement bandwidth throttling (cologic)
-* New icon (thanks radox)
+* [L#213213] Implement bandwidth throttling (cologic, bigmuscle)
+* New icons (thanks radox)
 * Fix dialog focus issues (poy)
 * Fix a crash in queue frame
 * Move finished downloads functionality into queue frame
-* [L#351393] Fix memory leak when indexing shared files (steven sheehy)
 * [L#415965] Hashing can be paused (bigmuscle, emtee, poy)
+* [L#414068] No 35-characters limit to nick and description (ullner)
+* [ADC] Support the TS param of MSG (poy)
+* Convert language codes to real names in settings (poy)
+* Improve user command support in ADC hubs (poy)
+* Improve context-sensitive help (poy)
+* Fix Ctrl+Shift+Tab (poy)
+* Readded WTL exception to the license (for mod developers)
+* Update to boost 1.40
+* [L#463723] Fixed download directory path on non-win32 (thanks razzloss)
+* Favorite hub groups (poy)
+* [L#206778] Fix issues related to users online in multiple hubs (poy)
+* [L#460724] [ADC] Handle self-QUI when sent before INF (thanks sulan)
+* [L#431045] Don't overwrite downloaded files in some cases (thanks emtee)
+* Fix splitter positioning (poy)
+* [ADC] Don't send commands that the hub has forbidden via STA (poy)
+* [L#458498] Fix bad bloom error message causing disconnects
+* Fix coloring of drop-down controls (poy)
+* Show last main chat lines, add a "History" settings category (poy)
+* [L#483323] Fix share files instantly after downloaded (emtee)
+* Toolbar customization (shift+drag, double-click, right-click) (poy)
+* [L#338888] Fix sharing hidden directories (emtee)
+* Auto-resize the message editing box when composing a multiline message (poy)
+* Remove flicker when opening a window (poy)
+* Re-try UPnP mappings after closing settings (poy)
+* [L#485018] Handle adcs:// links (thanks emtee)
+* [L#484247] Fix memory usage when parsing (unreasonably) large file lists
+* [L#242259] Fix a few more cases when adding sources to the queue (emtee)
+* [ADC] Filter some status messages
+* Drop support for non-xml hub lists
+* [L#351393] Fix memory leak during share update
+* [L#400080] Improve hub list status messages (emtee)
+* [ADC] Allow hubs to send IPs of passive users via INF (poy)
+* [L#473173] Fix crash when hashing files on non-Windows systems (thanks razzloss)
+* Update list-view filters more often (poy)
+* Show multiple user-command params in the same dialog (poy)
+* [L#509456] Fix pressing Tab in the notepad (poy)
+* Register in HKCU instead of HKLM to avoid UAC warnings; ditch magnet.exe (poy)
+* Don't use the Vista download dir when running in local mode
+* When a static window is opened, check its menu & toolbar buttons (poy)
+* [L#321246] Fix crash with debug builds on non-Windows systems (steven sheehy)
+* [L#510314] Fix a possible crash in rechecker (thanks poy)
+* Don't move files <= 10 MB to weird places
+* [L#515646] Remove ADC 0.10 compatibility (not ADCS 0.10) (cologic)
+* Change the tray icon on private messages (poy)
+* [L#195209] Revise keyboard shortcuts (poy)
+* Error message when loading the notepad file fails (poy)
+* Remove obsolete default hublists (emtee)
+* Chat actions should work better when the user list is hidden (poy)
+* Icons and tooltips in status bars (radox, poy)
+* Update the installer to cope with new settings directories (emtee)
+* [L#512032] Guard against out-of-screen window placement
 
 -- 0.75 2009-03-06 --
 * [L#243727] "Merge results for the same file" check-box in search (poy)

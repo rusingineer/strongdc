@@ -200,9 +200,14 @@ namespace dht
 	 */
 	int UDPSocket::run() 
 	{
-		// fix receiving when sending fails
+#ifdef _WIN32
+		// Try to avoid the Win2000/XP problem where recvfrom reports 
+		// WSAECONNRESET after sendto gets "ICMP port unreachable" 
+		// when sent to port that wasn't listening.
+		// See MSDN - Q263823
 		DWORD value = FALSE;
 		ioctlsocket(socket->sock, SIO_UDP_CONNRESET, &value);
+#endif
 		
 		// antiflood variables
 		uint64_t timer = GET_TICK();

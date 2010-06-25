@@ -16,7 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#pragma once
+#ifndef _TASKMANAGER_H
+#define _TASKMANAGER_H
 
 #include "../client/Singleton.h"
 #include "../client/TimerManager.h"
@@ -53,3 +54,5 @@ namespace dht
 	};
 
 }
+
+#endif	// _TASKMANAGER_H

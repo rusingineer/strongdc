@@ -48,14 +48,16 @@ const string UserConnection::DOWNLOAD = "Download";
 
 void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw () {
 
-	if(aLine.length() < 2)
-		return;
-
 	COMMAND_DEBUG(aLine, DebugManager::CLIENT_IN, getRemoteIp());
 	
+	if(aLine.length() < 2) {
+		fire(UserConnectionListener::ProtocolError(), this, "Invalid data"); // TODO: translate
+		return;
+	}
+
 	if(aLine[0] == 'C' && !isSet(FLAG_NMDC)) {
 		if(!Text::validateUtf8(aLine)) {
-			// @todo Report to user?
+			fire(UserConnectionListener::ProtocolError(), this, "Non-UTF-8 data in an ADC connection");  // TODO: translate
 			return;
 		}
 		dispatch(aLine);
@@ -66,10 +68,11 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 		// We shouldn't be here?
 		if(getUser() && aLine.length() < 255)
 			ClientManager::getInstance()->setUnknownCommand(getUser(), aLine);
-		dcdebug("Unknown UserConnection command: %.50s\n", aLine.c_str());
-		disconnect(true);
+
+		fire(UserConnectionListener::ProtocolError(), this, "Invalid data");  // TODO: translate
 		return;
 	}
+
 	string cmd;
 	string param;
 
@@ -95,9 +98,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 			param.rfind(/*path/file*/" no more exists") != string::npos) { 
     		fire(UserConnectionListener::FileNotAvailable(), this);
     	} else {
-			dcdebug("Unknown $Error %s\n", param.c_str());
-			fire(UserConnectionListener::Failed(), this, param);
-			disconnect(true);
+			fire(UserConnectionListener::ProtocolError(), this, param);
 	    }
 	} else if(cmd == "GetListLen") {
     	fire(UserConnectionListener::GetListLength(), this);
@@ -142,8 +143,7 @@ void UserConnection::on(BufferedSocketListener::Line, const string& aLine) throw
 		if(getUser() && aLine.length() < 255)
 			ClientManager::getInstance()->setUnknownCommand(getUser(), aLine);
 		
-		dcdebug("Unknown NMDC command: %.50s\n", aLine.c_str());
-		unsetFlag(FLAG_NMDC);
+		fire(UserConnectionListener::ProtocolError(), this, "Invalid data"); // TODO: translate
 	}
 }
 
@@ -184,6 +184,18 @@ void UserConnection::supports(const StringList& feat) {
 		x+= *i + ' ';
 	}
 	send("$Supports " + x + '|');
+}
+
+void UserConnection::handle(AdcCommand::STA t, const AdcCommand& c) {
+	if(c.getParameters().size() >= 2) {
+		const string& code = c.getParam(0);
+		if(!code.empty() && code[0] - '0' == AdcCommand::SEV_FATAL) {
+			fire(UserConnectionListener::ProtocolError(), this, c.getParam(1));
+			return;
+		}
+	}
+
+	fire(t, this, c);
 }
 
 void UserConnection::on(Connected) throw() {

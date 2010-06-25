@@ -73,7 +73,7 @@ public:
 	};
 		
 	const tstring getText(uint8_t col) const;
-	int imageIndex() const;
+	int getImageIndex() const;
 
 	const string& getFile() const { return file; }
 	const UserPtr& getUser() const { return user.user; }

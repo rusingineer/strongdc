@@ -46,13 +46,15 @@ public:
 	typedef X<16> MyNick;
 	typedef X<17> TransmitDone;
 	typedef X<18> Supports;
-	typedef X<19> FileNotAvailable;
-	typedef X<23> ListLength; 
+	typedef X<19> ProtocolError;
+	typedef X<20> FileNotAvailable;
+	typedef X<21> ListLength; 
 
 	virtual void on(BytesSent, UserConnection*, size_t, size_t) throw() { }
 	virtual void on(Connected, UserConnection*) throw() { }
 	virtual void on(Data, UserConnection*, const uint8_t*, size_t) throw() { }
 	virtual void on(Failed, UserConnection*, const string&) throw() { }
+	virtual void on(ProtocolError, UserConnection*, const string&) throw() { }
 	virtual void on(CLock, UserConnection*, const string&, const string&) throw() { }
 	virtual void on(Key, UserConnection*, const string&) throw() { }
 	virtual void on(Direction, UserConnection*, const string&, const string&) throw() { }

@@ -16,7 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
-#pragma once
+#ifndef _CONNECTIONMANAGER_H
+#define _CONNECTIONMANAGER_H
 
 #include "KBucket.h"
 
@@ -46,3 +47,5 @@ namespace dht
 	};
 
 }
+
+#endif	// _CONNECTIONMANAGER_H

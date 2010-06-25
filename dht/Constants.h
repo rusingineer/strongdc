@@ -16,7 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
-#pragma once
+#ifndef _CONSTANTS_H
+#define _CONSTANTS_H
 
 namespace dht
 {
@@ -66,7 +67,11 @@ namespace dht
 #define TCP4_FEATURE				"TCP4"							// support for active TCP
 #define UDP4_FEATURE				"UDP4"							// support for active UDP
 #define DHT_FEATURE					"DHT0"
-	
+
+const std::string NetworkName =		"DHT";
+
 using namespace dcpp;
 
 }
+
+#endif	// _CONSTANTS_H

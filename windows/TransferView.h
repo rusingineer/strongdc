@@ -222,7 +222,7 @@ private:
 		const tstring getText(uint8_t col) const;
 		static int compareItems(const ItemInfo* a, const ItemInfo* b, uint8_t col);
 
-		uint8_t imageIndex() const { return static_cast<uint8_t>(!download ? IMAGE_UPLOAD : (!parent ? IMAGE_DOWNLOAD : IMAGE_SEGMENT)); }
+		uint8_t getImageIndex() const { return static_cast<uint8_t>(!download ? IMAGE_UPLOAD : (!parent ? IMAGE_DOWNLOAD : IMAGE_SEGMENT)); }
 
 		ItemInfo* createParent() {
 	  		ItemInfo* ii = new ItemInfo(HintedUser(NULL, Util::emptyString), true);

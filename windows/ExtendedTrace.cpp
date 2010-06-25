@@ -28,7 +28,7 @@
 #include "ExtendedTrace.h"
 
 #define BUFFERSIZE		0x200
-#define LIBCOUNT		46
+#define LIBCOUNT		47
 
 TCHAR* crashLibs[LIBCOUNT][2] = {
 	{ L"Vlsp", L"V-One Smartpass" },
@@ -76,7 +76,8 @@ TCHAR* crashLibs[LIBCOUNT][2] = {
 	{ L"ftp34", L"Troj/Agent-GZF" },
 	{ L"imonlsp", L"Internet Monitor Layered Service provider" },
 	{ L"McVSSkt", L"McAfee VirusScan Winsock Helper" },
-	{ L"adguard", L"Sir AdGuard" }
+	{ L"adguard", L"Sir AdGuard" },
+	{ L"msjetoledb40", L"Microsoft Jet 4.0" }
 };
 
 static void checkBuggyLibrary(PCSTR library) {

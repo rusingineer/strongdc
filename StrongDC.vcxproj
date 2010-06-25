@@ -375,7 +375,7 @@
     <ClCompile Include="windows\ADLSearchFrame.cpp" />
     <ClCompile Include="windows\ADLSProperties.cpp" />
     <ClCompile Include="windows\AdvancedPage.cpp" />
-    <ClCompile Include="windows\AGEmotionSetup.cpp" />
+    <ClCompile Include="windows\EmoticonsManager.cpp" />
     <ClCompile Include="windows\AppearancePage.cpp" />
     <ClCompile Include="windows\AVIPreview.cpp" />
     <ClCompile Include="windows\BarShader.cpp" />
@@ -442,8 +442,8 @@
     <ClCompile Include="windows\UpdateDlg.cpp" />
     <ClCompile Include="windows\UploadPage.cpp" />
     <ClCompile Include="windows\UploadQueueFrame.cpp" />
-    <ClCompile Include="windows\upnp.cpp" />
     <ClCompile Include="windows\UPnP_COM.cpp" />
+    <ClCompile Include="windows\UPnP_MiniUPnPc.cpp" />
     <ClCompile Include="windows\UserListColours.cpp" />
     <ClCompile Include="windows\UsersFrame.cpp" />
     <ClCompile Include="windows\WindowsPage.cpp" />
@@ -454,7 +454,7 @@
     <ClInclude Include="windows\ADLSearchFrame.h" />
     <ClInclude Include="windows\ADLSProperties.h" />
     <ClInclude Include="windows\AdvancedPage.h" />
-    <ClInclude Include="windows\AGEmotionSetup.h" />
+    <ClInclude Include="windows\EmoticonsManager.h" />
     <ClInclude Include="windows\AppearancePage.h" />
     <ClInclude Include="windows\AVIPreview.h" />
     <ClInclude Include="windows\BarShader.h" />
@@ -529,8 +529,8 @@
     <ClInclude Include="windows\UpdateDlg.h" />
     <ClInclude Include="windows\UploadPage.h" />
     <ClInclude Include="windows\UploadQueueFrame.h" />
-    <ClInclude Include="windows\upnp.h" />
     <ClInclude Include="windows\UPnP_COM.h" />
+    <ClInclude Include="windows\UPnP_MiniUPnPc.h" />
     <ClInclude Include="windows\UserListColours.h" />
     <ClInclude Include="windows\UsersFrame.h" />
     <ClInclude Include="windows\Winamp.h" />
@@ -557,6 +557,9 @@
     <ProjectReference Include="MakeDefs\MakeDefs.vcxproj">
       <Project>{aef82786-9da2-4cdf-8602-02643cafc727}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="miniupnpc\miniupnpc.vcxproj">
+      <Project>{51015502-c27c-43cf-9fa4-12ab9db5d36e}</Project>
     </ProjectReference>
     <ProjectReference Include="zlib.vcxproj">
       <Project>{dfbbe42a-45f4-4188-89c2-17f5dfe50673}</Project>

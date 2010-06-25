@@ -873,9 +873,11 @@ Default: %H:%M:%S</String>
 		<String Name="UploadStarting">Upload starting...</String>
 		<String Name="UploadedBytes">Uploaded %s (%.01f%%) in %s</String>
 		<String Name="UploadedTo">uploaded to</String>
-		<String Name="UpnpFailedToCreateMappings">Failed to create port mappings. Please set up your NAT yourself.</String>
-		<String Name="UpnpFailedToGetExternalIp">Failed to get external IP via  UPnP. Please set it yourself.</String>
+		<String Name="UpnpFailedToCreateMappings">Failed to create port mappings.</String>
+		<String Name="UpnpFailedToGetExternalIp">Failed to get external IP.</String>
 		<String Name="UpnpFailedToRemoveMappings">Failed to remove port mappings</String>
+		<String Name="UpnpNoImplementation">No UPnP implementation available</String>
+		<String Name="UpnpSuccessfullyCreatedMappings">Successfully created port mappings</String>
 		<String Name="UseDht">Publish shared files on DHT and use it for searching alternate sources</String>
 		<String Name="UseExplorerTheme">Use Explorer theme in listviews and treeviews</String>
 		<String Name="User">User</String>

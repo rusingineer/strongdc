@@ -21,10 +21,10 @@
 #include "../client/UploadManager.h"
 
 #include "ChatCtrl.h"
-#include "AGEmotionSetup.h"
+#include "EmoticonsManager.h"
 #include "PrivateFrame.h"
 
-EmoticonSetup* g_pEmotionsSetup = NULL;
+EmoticonsManager* emoticonsManager = NULL;
 
 #define MAX_EMOTICONS 48
 
@@ -33,19 +33,19 @@ static const tstring protocols[] = { _T("http://"), _T("https://"), _T("www."), 
 	_T("adc://"), _T("adcs://"), _T("nmdcs://"), _T("svn://") };
 
 ChatCtrl::ChatCtrl() : ccw(_T("edit"), this), client(NULL), m_bPopupMenu(false) {
-	if(g_pEmotionsSetup == NULL) {
-		g_pEmotionsSetup = new EmoticonSetup();
+	if(emoticonsManager == NULL) {
+		emoticonsManager = new EmoticonsManager();
 	}
 	
-	g_pEmotionsSetup->inc();
+	emoticonsManager->inc();
 }
 
 ChatCtrl::~ChatCtrl() {
-	if(g_pEmotionsSetup->unique()) {
-		g_pEmotionsSetup->dec();
-		g_pEmotionsSetup = NULL;
+	if(emoticonsManager->unique()) {
+		emoticonsManager->dec();
+		emoticonsManager = NULL;
 	} else {
-		g_pEmotionsSetup->dec();
+		emoticonsManager->dec();
 	}
 }
 	
@@ -303,8 +303,8 @@ void ChatCtrl::FormatEmoticonsAndLinks(const tstring& sMsg, const tstring& sMsgL
 	}
 
 	// insert emoticons
-	if(bUseEmo && g_pEmotionsSetup->getUseEmoticons()) {
-		const Emoticon::List& emoticonsList = g_pEmotionsSetup->getEmoticonsList();
+	if(bUseEmo && emoticonsManager->getUseEmoticons()) {
+		const Emoticon::List& emoticonsList = emoticonsManager->getEmoticonsList();
 		tstring::size_type lastReplace = 0;
 		uint8_t smiles = 0;
 
@@ -313,7 +313,7 @@ void ChatCtrl::FormatEmoticonsAndLinks(const tstring& sMsg, const tstring& sMsgL
 			Emoticon* foundEmoticon = NULL;
 
 			for(Emoticon::Iter emoticon = emoticonsList.begin(); emoticon != emoticonsList.end(); ++emoticon) {
-				tstring::size_type idxFound = sMsg.find((*emoticon)->getEmotionText(), lastReplace);
+				tstring::size_type idxFound = sMsg.find((*emoticon)->getEmoticonText(), lastReplace);
 				if(idxFound < curReplace || curReplace == tstring::npos) {
 					curReplace = idxFound;
 					foundEmoticon = (*emoticon);
@@ -325,18 +325,18 @@ void ChatCtrl::FormatEmoticonsAndLinks(const tstring& sMsg, const tstring& sMsgL
 				cfSel.cbSize = sizeof(cfSel);
 
 				lSelBegin += (curReplace - lastReplace);
-				lSelEnd = lSelBegin + foundEmoticon->getEmotionText().size();
+				lSelEnd = lSelBegin + foundEmoticon->getEmoticonText().size();
 				SetSel(lSelBegin, lSelEnd);
 
 				GetSelectionCharFormat(cfSel);
 				if(!(cfSel.dwEffects & CFE_LINK)) {
 					CImageDataObject::InsertBitmap(GetOleInterface(), 
-						foundEmoticon->getEmotionBmp(cfSel.crBackColor));
+						foundEmoticon->getEmoticonBmp(cfSel.crBackColor));
 
 					++smiles;
 					++lSelBegin;
 				} else lSelBegin = lSelEnd;
-				lastReplace = curReplace + foundEmoticon->getEmotionText().size();
+				lastReplace = curReplace + foundEmoticon->getEmoticonText().size();
 			} else break;
 		}
 	}
