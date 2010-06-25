@@ -1,3 +1,12 @@
+** svn500
+	added "Microsoft Jet 4.0" to libraries that could cause crash
+	finally fixed crashes on TTH inconsistencies
+	some refactoring
+	fixed PostMessage limitation in paused search state (see MSDN)
+	faster O(logN) searching in country codes when displaying country flags
+	DC++ BZR merge (procotol error, NAT-T searching, miniupnp)
+	fixed relocker warning in boost's code
+
 ** svn499
 	fixed LP bug #556853
 	removed obsolete client/filelist checked color settings

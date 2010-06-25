@@ -303,7 +303,7 @@ void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, 
 			aSource->setLineMode(0);
 		}
 	} catch(const Exception& e) {
-		d->resetPos(); // is there a better way than resetting the position?
+		//d->resetPos(); // is there a better way than resetting the position?
 		failDownload(aSource, e.getError());
 	}
 }
@@ -340,7 +340,7 @@ void DownloadManager::endData(UserConnection* aSource) {
 		// First, finish writing the file (flushing the buffers and closing the file...)
 		try {
 			d->getFile()->flush();
-		} catch(const FileException& e) {
+		} catch(const Exception& e) {
 			d->resetPos();
 			failDownload(aSource, e.getError());
 			return;
@@ -386,7 +386,7 @@ void DownloadManager::noSlots(UserConnection* aSource, string param) {
 	failDownload(aSource, STRING(NO_SLOTS_AVAILABLE) + extra);
 }
 
-void DownloadManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) throw() {
+void DownloadManager::onFailed(UserConnection* aSource, const string& aError) {
 	{
 		Lock l(cs);
  		idlers.erase(remove(idlers.begin(), idlers.end(), aSource), idlers.end());

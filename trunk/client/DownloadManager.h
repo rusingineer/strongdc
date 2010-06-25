@@ -84,9 +84,12 @@ private:
 	void startData(UserConnection* aSource, int64_t start, int64_t newSize, bool z);
 	void endData(UserConnection* aSource);
 
+	void onFailed(UserConnection* aSource, const string& aError);
+
 	// UserConnectionListener
 	void on(Data, UserConnection*, const uint8_t*, size_t) throw();
-	void on(Failed, UserConnection*, const string&) throw();
+	void on(Failed, UserConnection* aSource, const string& aError) throw() { onFailed(aSource, aError); }
+	void on(ProtocolError, UserConnection* aSource, const string& aError) throw() { onFailed(aSource, aError); }
 	void on(MaxedOut, UserConnection*, string param = Util::emptyString) throw();
 	void on(FileNotAvailable, UserConnection*) throw();
 	void on(ListLength, UserConnection* aSource, const string& aListLength);

@@ -874,7 +874,7 @@ void TransferView::starting(UpdateInfo* ui, const Transfer* t) {
 	if(country.empty()) {
 		ui->setIP(Text::toT(ip), 0);
 	} else {
-		ui->setIP(Text::toT(country + " (" + ip + ")"), WinUtil::getFlagIndex(country.c_str()));
+		ui->setIP(Text::toT(country + " (" + ip + ")"), WinUtil::getFlagIndexByCode(country.c_str()));
 	}
 }
 
@@ -1109,7 +1109,7 @@ void TransferView::CollapseAll() {
 }
 
 void TransferView::ExpandAll() {
-	for(ItemInfoList::ParentMap::const_iterator i = ctrlTransfers.parents.begin(); i != ctrlTransfers.parents.end(); ++i) {
+	for(ItemInfoList::ParentMap::const_iterator i = ctrlTransfers.getParents().begin(); i != ctrlTransfers.getParents().end(); ++i) {
 		ItemInfo* l = (*i).second.parent;
 		if(l->collapsed) {
 			ctrlTransfers.Expand(l, ctrlTransfers.findItem(l));

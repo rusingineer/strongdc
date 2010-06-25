@@ -423,11 +423,10 @@ void SearchFrame::onEnter() {
 
 	int64_t llsize = (int64_t)lsize;
 
-	for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
-		delete *i;
-	}
-	
-	PausedResults.clear();
+	// delete all results which came in paused state
+	for_each(pausedResults.begin(), pausedResults.end(), DeleteFunction());
+	pausedResults.clear();
+
 	ctrlResults.deleteAllItems();	
 	
 	::EnableWindow(GetDlgItem(IDC_SEARCH_PAUSE), TRUE);
@@ -470,7 +469,7 @@ void SearchFrame::onEnter() {
 
 	droppedResults = 0;
 	resultsCount = 0;
-	bPaused = false;
+	running = true;
 
 	isHash = (ftype == SearchManager::TYPE_TTH);
 	
@@ -798,9 +797,9 @@ LRESULT SearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		ctrlResults.deleteAllItems();
 		ctrlResults.SetRedraw(TRUE);
 
-		for(SearchInfo::Iter i = PausedResults.begin(); i != PausedResults.end(); ++i) {
-			delete *i;
-		}
+		// delete all results which came in paused state
+		for_each(pausedResults.begin(), pausedResults.end(), DeleteFunction());
+
 		for(int i = 0; i < ctrlHubs.GetItemCount(); i++) {
 			delete ctrlHubs.getItemData(i);
 		}
@@ -1095,71 +1094,72 @@ LRESULT SearchFrame::onBitziLookup(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 	return 0;
 }
 
+void SearchFrame::addSearchResult(SearchInfo* si) {
+	const SearchResultPtr& sr = si->sr;
+    // Check previous search results for dupes
+	if(!si->getText(COLUMN_TTH).empty() && useGrouping) {
+		SearchInfoList::ParentPair* pp = ctrlResults.findParentPair(sr->getTTH());
+		if(pp) {
+			if((sr->getUser()->getCID() == pp->parent->getUser()->getCID()) && (sr->getFile() == pp->parent->sr->getFile())) {	 	
+				delete si;
+				return;	 	
+			} 	
+			for(vector<SearchInfo*>::const_iterator k = pp->children.begin(); k != pp->children.end(); k++){	 	
+				if((sr->getUser()->getCID() == (*k)->getUser()->getCID()) && (sr->getFile() == (*k)->sr->getFile())) {	 	
+					delete si;
+					return;	 	
+				} 	
+			}	 	
+		}
+	} else {
+		for(SearchInfoList::ParentMap::const_iterator s = ctrlResults.getParents().begin(); s != ctrlResults.getParents().end(); ++s) {
+			SearchInfo* si2 = (*s).second.parent;
+	        const SearchResultPtr& sr2 = si2->sr;
+			if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
+				delete si;	 	
+				return;	 	
+			}
+		}	 	
+    }
+
+	if(running) {
+		bool resort = false;
+		resultsCount++;
+
+		if(ctrlResults.getSortColumn() == COLUMN_HITS && resultsCount % 15 == 0) {
+			resort = true;
+		}
+
+		if(!si->getText(COLUMN_TTH).empty() && useGrouping) {
+			ctrlResults.insertGroupedItem(si, expandSR);
+		} else {
+			SearchInfoList::ParentPair pp = { si, SearchInfoList::emptyVector };
+			ctrlResults.insertItem(si, si->getImageIndex());
+			ctrlResults.getParents().insert(make_pair(const_cast<TTHValue*>(&sr->getTTH()), pp));
+		}
+
+		if(!filter.empty())
+			updateSearchList(si);
+
+		if (BOOLSETTING(BOLD_SEARCH)) {
+			setDirty();
+		}
+		ctrlStatus.SetText(3, (Util::toStringW(resultsCount) + _T(" ") + TSTRING(FILES)).c_str());
+
+		if(resort) {
+			ctrlResults.resort();
+		}
+	} else {
+		// searching is paused, so store the result but don't show it in the GUI (show only information: visible/all results)
+		pausedResults.push_back(si);
+		ctrlStatus.SetText(3, (Util::toStringW(resultsCount) + _T("/") + Util::toStringW(pausedResults.size() + resultsCount) + _T(" ") + WSTRING(FILES)).c_str());
+	}
+}
+
 LRESULT SearchFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
  	switch(wParam) {
 	case ADD_RESULT:
-		{
-			SearchInfo* si = (SearchInfo*)lParam;
-			const SearchResultPtr& sr = si->sr;
-            // Check previous search results for dupes
-			if(!si->getText(COLUMN_TTH).empty() && useGrouping) {
-				SearchInfoList::ParentPair* pp = ctrlResults.findParentPair(sr->getTTH());
-				if(pp) {
-					if((sr->getUser()->getCID() == pp->parent->getUser()->getCID()) && (sr->getFile() == pp->parent->sr->getFile())) {	 	
-						delete si;
-						return 0;	 	
-					} 	
-					for(vector<SearchInfo*>::const_iterator k = pp->children.begin(); k != pp->children.end(); k++){	 	
-						if((sr->getUser()->getCID() == (*k)->getUser()->getCID()) && (sr->getFile() == (*k)->sr->getFile())) {	 	
-							delete si;
-							return 0;	 	
-						} 	
-					}	 	
-				}
-			} else {
-				for(SearchInfoList::ParentMap::const_iterator s = ctrlResults.parents.begin(); s != ctrlResults.parents.end(); ++s) {
-					SearchInfo* si2 = (*s).second.parent;
-	                const SearchResultPtr& sr2 = si2->sr;
-					if((sr->getUser()->getCID() == sr2->getUser()->getCID()) && (sr->getFile() == sr2->getFile())) {
-						delete si;	 	
-				        return 0;	 	
-					}
-				}	 	
-            }
-			if(!bPaused) {
-				bool resort = false;
-				resultsCount++;
-
-				if(ctrlResults.getSortColumn() == COLUMN_HITS && resultsCount % 15 == 0) {
-					//ctrlResults.SetRedraw(FALSE);
-					resort = true;
-				}
-
-				if(!si->getText(COLUMN_TTH).empty() && useGrouping) {
-					ctrlResults.insertGroupedItem(si, expandSR);
-				} else {
-					SearchInfoList::ParentPair pp = { si, SearchInfoList::emptyVector };
-					ctrlResults.insertItem(si, si->imageIndex());
-					ctrlResults.parents.insert(make_pair(const_cast<TTHValue*>(&sr->getTTH()), pp));
-				}
-
-				if(!filter.empty())
-					updateSearchList(si);
-
-				if (BOOLSETTING(BOLD_SEARCH)) {
-					setDirty();
-				}
-				ctrlStatus.SetText(3, (Util::toStringW(resultsCount) + _T(" ") + TSTRING(FILES)).c_str());
-
-				if(resort) {
-					ctrlResults.resort();
-					//ctrlResults.SetRedraw(TRUE);
-				}
-			} else {
-				PausedResults.push_back(si);
-				ctrlStatus.SetText(3, (Util::toStringW(resultsCount-PausedResults.size()) + _T("/") + Util::toStringW(resultsCount) + _T(" ") + WSTRING(FILES)).c_str());
-			}
-		}
+		addSearchResult((SearchInfo*)(lParam));
 		break;
 	case FILTER_RESULT:
 		ctrlStatus.SetText(4, (Util::toStringW(droppedResults) + _T(" ") + TSTRING(FILTERED)).c_str());
@@ -1376,6 +1376,27 @@ LRESULT SearchFrame::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 
 LRESULT SearchFrame::onBrowseList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	ctrlResults.forEachSelected(&SearchInfo::browseList);
+	return 0;
+}
+
+LRESULT SearchFrame::onPause(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if(!running) {
+		running = true;
+
+		// readd all results which came during pause state
+		while(!pausedResults.empty()) {
+			// start from the end because erasing front elements from vector is not efficient
+			addSearchResult(pausedResults.back());
+			pausedResults.pop_back();
+		}
+
+		// update controls texts
+		ctrlStatus.SetText(3, (Util::toStringW(ctrlResults.GetItemCount()) + _T(" ") + TSTRING(FILES)).c_str());			
+		ctrlPauseSearch.SetWindowText(CTSTRING(PAUSE_SEARCH));
+	} else {
+		running = false;
+		ctrlPauseSearch.SetWindowText(CTSTRING(CONTINUE_SEARCH));
+	}
 	return 0;
 }
 
@@ -1636,12 +1657,12 @@ void SearchFrame::updateSearchList(SearchInfo* si) {
 		ctrlResults.SetRedraw(FALSE);
 		ctrlResults.DeleteAllItems();
 
-		for(SearchInfoList::ParentMap::const_iterator i = ctrlResults.parents.begin(); i != ctrlResults.parents.end(); ++i) {
+		for(SearchInfoList::ParentMap::const_iterator i = ctrlResults.getParents().begin(); i != ctrlResults.getParents().end(); ++i) {
 			SearchInfo* si = (*i).second.parent;
 			si->collapsed = true;
 			if(matchFilter(si, sel, doSizeCompare, mode, size)) {
 				dcassert(ctrlResults.findItem(si) == -1);
-				int k = ctrlResults.insertItem(si, si->imageIndex());
+				int k = ctrlResults.insertItem(si, si->getImageIndex());
 
 				const vector<SearchInfo*>& children = ctrlResults.findChildren(si->getGroupCond());
 				if(!children.empty()) {

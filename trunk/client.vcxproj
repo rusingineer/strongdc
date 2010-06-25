@@ -275,6 +275,8 @@
     <ClCompile Include="client\Transfer.cpp" />
     <ClCompile Include="client\Upload.cpp" />
     <ClCompile Include="client\UploadManager.cpp" />
+    <ClCompile Include="client\UPnP.cpp" />
+    <ClCompile Include="client\UPnPManager.cpp" />
     <ClCompile Include="client\User.cpp" />
     <ClCompile Include="client\UserCommand.cpp" />
     <ClCompile Include="client\UserConnection.cpp" />
@@ -356,6 +358,7 @@
     <ClInclude Include="client\SSLSocket.h" />
     <ClInclude Include="client\stdinc.h" />
     <ClInclude Include="client\Streams.h" />
+    <ClInclude Include="client\UPnP.h" />
     <CustomBuild Include="client\StringDefs.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building StringDefs.cpp and Example.xml from StringDefs.h...</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(SolutionDir)vc10\$(Platform)\$(Configuration)\MakeDefs\MakeDefs.exe" .\client\StringDefs.h .\client\StringDefs.cpp .\EN_Example.xml</Command>
@@ -383,6 +386,7 @@
     <ClInclude Include="client\Upload.h" />
     <ClInclude Include="client\UploadManager.h" />
     <ClInclude Include="client\UploadManagerListener.h" />
+    <ClInclude Include="client\UPnPManager.h" />
     <ClInclude Include="client\User.h" />
     <ClInclude Include="client\UserCommand.h" />
     <ClInclude Include="client\UserConnection.h" />

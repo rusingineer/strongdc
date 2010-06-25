@@ -334,7 +334,7 @@ void UploadQueueFrame::AddFile(UploadQueueItem* aUQI) {
 			return;
 		}
 	}
-	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, aUQI->imageIndex());
+	ctrlList.insertItem(ctrlList.GetItemCount(), aUQI, aUQI->getImageIndex());
 }
 
 void UploadQueueFrame::updateStatus() {
@@ -367,7 +367,7 @@ void UploadQueueFrame::updateStatus() {
 	}
 }
 
-int UploadQueueItem::imageIndex() const {
+int UploadQueueItem::getImageIndex() const {
 	return WinUtil::getIconIndex(Text::toT(file));
 }
 

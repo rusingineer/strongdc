@@ -231,7 +231,7 @@ private:
 				default: return lstrcmpi(a->getText(col).c_str(), b->getText(col).c_str());
 			}
 		}
-		int imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}
+		int getImageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget()));	}
 
 		const QueueItem* getQueueItem() const { return qi; }
 		string getPath() const { return Util::getFilePath(getTarget()); }

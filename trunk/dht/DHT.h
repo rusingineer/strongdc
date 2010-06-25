@@ -16,7 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#pragma once
+#ifndef _DHT_H
+#define _DHT_H
 
 #include "BootstrapManager.h"
 #include "Constants.h"
@@ -33,7 +34,7 @@ namespace dht
 {
 
 	class DHT :	
-		public Singleton<DHT>, public Speaker<ClientListener>
+		public Singleton<DHT>, public Speaker<ClientListener>, public ClientBase
 	{
 	public:
 		DHT(void);
@@ -41,6 +42,11 @@ namespace dht
 		
 		enum InfType { NONE = 0, PING = 1, MAKE_ONLINE = 2 };
 		
+		/** ClientBase derived functions */
+		const string& getHubUrl() const { return NetworkName; }
+		string getHubName() const { return NetworkName; }
+		bool isOp() const { return false; }
+
 		/** Starts DHT. */
 		void start();
 		void stop(bool exiting = false);
@@ -60,7 +66,7 @@ namespace dht
 		bool addNode(const Node::Ptr& node, bool makeOnline);
 		
 		/** Returns counts of nodes available in k-buckets */
-		unsigned int getNodesCount() { Lock l(cs); return bucket->getNodes().size(); }
+		size_t getNodesCount() { Lock l(cs); return bucket->getNodes().size(); }
 		
 		/** Removes dead nodes */
 		void checkExpiration(uint64_t aTick);
@@ -147,3 +153,5 @@ namespace dht
 	};
 
 }
+
+#endif	// _DHT_H

@@ -42,7 +42,6 @@
 #include "UploadQueueFrame.h"
 #include "LineDlg.h"
 #include "HashProgressDlg.h"
-#include "UPnP_COM.h"
 #include "PrivateFrame.h"
 #include "WinUtil.h"
 #include "CDMDebugFrame.h"
@@ -60,6 +59,7 @@
 #include "../client/WebServerManager.h"
 #include "../client/Thread.h"
 #include "../client/ThrottleManager.h"
+#include "../client/UPnPManager.h"
 
 #include "../dht/dht.h"
 
@@ -488,74 +488,12 @@ void MainFrame::startSocket() {
 		} catch(const Exception&) {
 			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
 		}
+
+		// must be done after listen calls; otherwise ports won't be set
+		if(SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_UPNP)
+			UPnPManager::getInstance()->open();
 	//}
 
-	startUPnP();
-}
-
-void MainFrame::startUPnP() {
-	stopUPnP();
-
-	if(SETTING(INCOMING_CONNECTIONS) != SettingsManager::INCOMING_FIREWALL_UPNP)
-		return;
-
-	pUPnP.reset(new UPnP_COM());
-
-	if(!initUPnP()) {
-		/// @todo try again with a different impl if we have one
-
-		/// @todo the UPnP impl might return a meaningful error, show it to the user
-		LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
-		MessageBox(CTSTRING(UPNP_FAILED_TO_CREATE_MAPPINGS), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONWARNING);
-
-		stopUPnP();
-	}
-}
-
-bool MainFrame::initUPnP() {
-	if(!pUPnP->init())
-		return false;
-
-	uint16_t port = ConnectionManager::getInstance()->getPort();
-	if(port != 0 && !pUPnP->open(port, UPnP::PROTOCOL_TCP, APPNAME " Transfer Port (" + Util::toString(port) + " TCP)"))
-		return false;
-
-	port = ConnectionManager::getInstance()->getSecurePort();
-	if(port != 0 && !pUPnP->open(port, UPnP::PROTOCOL_TCP, APPNAME " Encrypted Transfer Port (" + Util::toString(port) + " TCP)"))
-		return false;
-
-	port = SearchManager::getInstance()->getPort();
-	if(port != 0 && !pUPnP->open(port, UPnP::PROTOCOL_UDP, APPNAME " Search Port (" + Util::toString(port) + " TCP)"))
-		return false;
-
-	port = DHT::getInstance()->getPort();
-	if(port != 0 && !pUPnP->open(port, UPnP::PROTOCOL_UDP, APPNAME " DHT Port (" + Util::toString(port) + " UDP)"))
-		return false;
-
-	if(!BOOLSETTING(NO_IP_OVERRIDE)) {
-		// now lets configure the external IP (connect to me) address
-		string ExternalIP = pUPnP->getExternalIP();
-		if(!ExternalIP.empty()) {
-			// woohoo, we got the external IP from the UPnP framework
-			SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, ExternalIP);
-		} else {
-			//:-( Looks like we have to rely on the user setting the external IP manually
-			// no need to do cleanup here because the mappings work
-			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_GET_EXTERNAL_IP));
-			MessageBox(CTSTRING(UPNP_FAILED_TO_GET_EXTERNAL_IP), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_OK | MB_ICONWARNING);
-		}
-	}
-
-	return true;
-}
-
-void MainFrame::stopUPnP() {
-	if(pUPnP.get()) {
-		if(!pUPnP->close()) {
-			LogManager::getInstance()->message(STRING(UPNP_FAILED_TO_REMOVE_MAPPINGS));
-		}
-		pUPnP.reset();
-	}
 }
 
 HWND MainFrame::createToolbar() {
@@ -804,12 +742,14 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		if(	SETTING(INCOMING_CONNECTIONS) != lastConn || SETTING(TCP_PORT) != lastTCP || SETTING(UDP_PORT) != lastUDP || SETTING(TLS_PORT) != lastTLS ||
 			SETTING(DHT_PORT) != lastDHT || BOOLSETTING(USE_DHT) != lastDHTConn)
 		{
+			if(SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_UPNP || lastConn == SettingsManager::INCOMING_FIREWALL_UPNP)
+				UPnPManager::getInstance()->close(); 
 			startSocket();
-		} else if(SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_UPNP && !pUPnP.get()) {
+		} else if(SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_UPNP && !UPnPManager::getInstance()->getOpened()) {
 			// previous UPnP mappings had failed; try again
-			startUPnP();
-		} 
-
+			UPnPManager::getInstance()->open();
+		}
+ 
 		if(BOOLSETTING(SORT_FAVUSERS_FIRST) != lastSortFavUsersFirst)
 			HubFrame::resortUsers();
 
@@ -1118,8 +1058,6 @@ LRESULT MainFrame::OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, 
 			SearchManager::getInstance()->disconnect();
 			ConnectionManager::getInstance()->disconnect();
 			listQueue.shutdown();
-
-			stopUPnP();
 
 			DWORD id;
 			stopperThread = CreateThread(NULL, 0, stopper, this, 0, &id);

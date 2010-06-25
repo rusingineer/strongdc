@@ -42,7 +42,6 @@
 #include "FlatTabCtrl.h"
 #include "SingleInstance.h"
 #include "TransferView.h"
-#include "UPnP.h"
 #include "WinUtil.h"
 
 #define QUICK_SEARCH_MAP 20
@@ -233,10 +232,6 @@ public:
 	static DWORD WINAPI stopper(void* p);
 	void UpdateLayout(BOOL bResizeBars = TRUE);
 	void parseCommandLine(const tstring& cmdLine);
-
-	void startUPnP();
-	bool initUPnP();
-	void stopUPnP();
 
 	LRESULT onWhereAreYou(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 		return WMU_WHERE_ARE_YOU;
@@ -484,8 +479,6 @@ private:
 	// QueueManagerListener
 	void on(QueueManagerListener::Finished, const QueueItem* qi, const string& dir, const Download*) throw();
 	void on(PartialList, const HintedUser&, const string& text) throw();
-
-	std::auto_ptr<UPnP> pUPnP;
 };
 
 #endif // !defined(MAIN_FRM_H)

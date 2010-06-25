@@ -16,7 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
-#pragma once
+#ifndef _KBUCKET_H
+#define _KBUCKET_H
 
 #include "Constants.h"
 
@@ -30,20 +31,6 @@
 
 namespace dht
 {
-
-	const string DHTName = "DHT";
-	
-	struct DHTClient : public ClientBase
-	{
-		DHTClient() { type = DHT; }
-		
-		const string& getHubUrl() const { return DHTName; }
-		string getHubName() const { return DHTName; }
-		bool isOp() const { return false; }
-		void connect(const OnlineUser& user, const string& token);
-		void privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson = false);
-	};
-
 	struct UDPKey
 	{
 		string	ip;
@@ -126,3 +113,5 @@ namespace dht
 	};
 	
 }
+
+#endif	// _KBUCKET_H

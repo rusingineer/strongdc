@@ -24,7 +24,7 @@
 #include "LineDlg.h"
 #include "SearchFrm.h"
 #include "PrivateFrame.h"
-#include "AGEmotionSetup.h"
+#include "EmoticonsManager.h"
 
 #include "../client/ChatMessage.h"
 #include "../client/QueueManager.h"
@@ -48,7 +48,7 @@ ResourceManager::Strings HubFrame::columnNames[] = { ResourceManager::NICK, Reso
 	ResourceManager::DESCRIPTION, ResourceManager::TAG, ResourceManager::CONNECTION, ResourceManager::IP_BARE, ResourceManager::EMAIL,
 	ResourceManager::VERSION, ResourceManager::MODE, ResourceManager::HUBS, ResourceManager::SLOTS, ResourceManager::CID };
 
-extern EmoticonSetup* g_pEmotionsSetup;
+extern EmoticonsManager* emoticonsManager;
 
 LRESULT HubFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 {
@@ -2207,7 +2207,7 @@ LRESULT HubFrame::onCustomDraw(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 					// Only attempt to grab a country mapping if we actually have an IP address
 					string tmpCountry = Util::getIpCountry(ip);
 					if(!tmpCountry.empty()) {
-						flagIndex = WinUtil::getFlagIndex(tmpCountry.c_str());
+						flagIndex = WinUtil::getFlagIndexByCode(tmpCountry.c_str());
 					}
 				}
 
@@ -2229,8 +2229,8 @@ LRESULT HubFrame::onEmoPackChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl
 	emoMenu.GetMenuString(wID, buf, 256, MF_BYCOMMAND);
 	if (buf != Text::toT(SETTING(EMOTICONS_FILE))) {
 		SettingsManager::getInstance()->set(SettingsManager::EMOTICONS_FILE, Text::fromT(buf));
-		g_pEmotionsSetup->Unload();
-		g_pEmotionsSetup->Load();
+		emoticonsManager->Unload();
+		emoticonsManager->Load();
 	}
 	return 0;
 }

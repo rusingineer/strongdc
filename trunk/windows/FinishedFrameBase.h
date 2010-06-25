@@ -412,7 +412,7 @@ static ResourceManager::Strings columnNames[] = { ResourceManager::FILENAME, Res
 ResourceManager::NICK, ResourceManager::HUB, ResourceManager::SIZE, ResourceManager::SPEED
 };
 
-int FinishedItem::imageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget())); }
+int FinishedItem::getImageIndex() const { return WinUtil::getIconIndex(Text::toT(getTarget())); }
 
 #endif // !defined(FINISHED_FRAME_BASE_H)
 

@@ -254,29 +254,31 @@ string DirectoryListing::getPath(const Directory* d) const {
 }
 
 void DirectoryListing::download(Directory* aDir, const string& aTarget, bool highPrio, QueueItem::Priority prio) {
-/* TODO
-	if(!aDir->getComplete())
-		QueueManager::getInstance()->addDirectory(
-*/	
-	string tmp;
+
 	string target = (aDir == getRoot()) ? aTarget : aTarget + aDir->getName() + PATH_SEPARATOR;
-	// First, recurse over the directories
-	Directory::List& lst = aDir->directories;
-	sort(lst.begin(), lst.end(), Directory::DirSort());
-	for(Directory::Iter j = lst.begin(); j != lst.end(); ++j) {
-		download(*j, target, highPrio, prio);
-	}
-	// Then add the files
-	File::List& l = aDir->files;
-	sort(l.begin(), l.end(), File::FileSort());
-	for(File::Iter i = aDir->files.begin(); i != aDir->files.end(); ++i) {
-		File* file = *i;
-		try {
-			download(file, target + file->getName(), false, highPrio, prio);
-		} catch(const QueueException&) {
-			// Catch it here to allow parts of directories to be added...
-		} catch(const FileException&) {
-			//..
+
+	if(!aDir->getComplete()) {
+		// folder is not completed (partial list?), so we need to download it first
+		QueueManager::getInstance()->addDirectory("", hintedUser, target, prio);
+	} else {	
+		// First, recurse over the directories
+		Directory::List& lst = aDir->directories;
+		sort(lst.begin(), lst.end(), Directory::DirSort());
+		for(Directory::Iter j = lst.begin(); j != lst.end(); ++j) {
+			download(*j, target, highPrio, prio);
+		}
+		// Then add the files
+		File::List& l = aDir->files;
+		sort(l.begin(), l.end(), File::FileSort());
+		for(File::Iter i = aDir->files.begin(); i != aDir->files.end(); ++i) {
+			File* file = *i;
+			try {
+				download(file, target + file->getName(), false, highPrio, prio);
+			} catch(const QueueException&) {
+				// Catch it here to allow parts of directories to be added...
+			} catch(const FileException&) {
+				//..
+			}
 		}
 	}
 }

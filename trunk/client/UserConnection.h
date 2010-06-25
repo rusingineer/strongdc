@@ -174,7 +174,7 @@ public:
 	void handle(AdcCommand::INF t, const AdcCommand& c) { fire(t, this, c); }
 	void handle(AdcCommand::GET t, const AdcCommand& c) { fire(t, this, c); }
 	void handle(AdcCommand::SND t, const AdcCommand& c) { fire(t, this, c);	}
-	void handle(AdcCommand::STA t, const AdcCommand& c) { fire(t, this, c);	}
+	void handle(AdcCommand::STA t, const AdcCommand& c);
 	void handle(AdcCommand::RES t, const AdcCommand& c) { fire(t, this, c); }
 	void handle(AdcCommand::GFI t, const AdcCommand& c) { fire(t, this, c);	}
 
@@ -188,9 +188,8 @@ public:
 	GETSET(string, token, Token);
 	GETSET(int64_t, speed, Speed);
 	GETSET(uint64_t, lastActivity, LastActivity);
-	GETSET(States, state, State);
-
 	GETSET(string*, encoding, Encoding);
+	GETSET(States, state, State);
 	GETSET(uint8_t, slotType, SlotType);
 	
 	BufferedSocket const* getSocket() { return socket; } 

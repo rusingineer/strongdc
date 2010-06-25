@@ -16,7 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
-#pragma once
+#ifndef _UDPSOCKET_H
+#define _UDPSOCKET_H
 
 #include "../client/AdcCommand.h"
 #include "../client/CID.h"
@@ -115,3 +116,5 @@ namespace dht
 	};
 
 }
+
+#endif // _UDPSOCKET_H

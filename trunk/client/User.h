@@ -224,7 +224,7 @@ public:
 
 	/* UserInfo */
 	bool update(int sortCol, const tstring& oldText = Util::emptyStringT);
-	uint8_t imageIndex() const { return UserInfoBase::getImage(identity, &getClient()); }
+	uint8_t getImageIndex() const { return UserInfoBase::getImage(identity, &getClient()); }
 	static int compareItems(const OnlineUser* a, const OnlineUser* b, uint8_t col);
 	bool isHidden() const { return identity.isHidden(); }
 	

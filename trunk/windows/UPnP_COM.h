@@ -19,7 +19,7 @@
 #ifndef DCPLUSPLUS_WIN32_UPNP_COM_H
 #define DCPLUSPLUS_WIN32_UPNP_COM_H
 
-#include "UPnP.h"
+#include "../client/UPnP.h"
 
 // for mingw64
 #ifndef interface
@@ -33,14 +33,14 @@ class UPnP_COM : public UPnP
 public:
 	UPnP_COM() : UPnP(), pUN(0), lastPort(0) { }
 
+private:
 	bool init();
 
-	bool open(const unsigned short port, const Protocol protocol, const string& description);
-	bool close(const unsigned short port, const Protocol protocol);
+	bool add(const unsigned short port, const Protocol protocol, const string& description);
+	bool remove(const unsigned short port, const Protocol protocol);
 
 	string getExternalIP();
 
-private:
 	IUPnPNAT* pUN;
 	// this one can become invalidated so we can't cache it
 	IStaticPortMappingCollection* getStaticPortMappingCollection();

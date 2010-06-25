@@ -16,25 +16,23 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "stdafx.h"
+#ifndef DCPLUSPLUS_WIN32_UPNP_MINIUPNPC_H
+#define DCPLUSPLUS_WIN32_UPNP_MINIUPNPC_H
 
-#include "UPnP.h"
+#include "../client/UPnP.h"
 
-const char* UPnP::protocols[PROTOCOL_LAST] = {
-	"TCP",
-	"UDP"
+class UPnP_MiniUPnPc : public UPnP
+{
+public:
+	UPnP_MiniUPnPc() : UPnP() { }
+
+private:
+	bool init();
+
+	bool add(const unsigned short port, const Protocol protocol, const string& description);
+	bool remove(const unsigned short port, const Protocol protocol);
+
+	string getExternalIP();
 };
 
-void UPnP::open(const unsigned short port, const Protocol protocol) {
-	rules.push_back(make_pair(port, protocol));
-}
-
-bool UPnP::close() {
-	bool ret = true;
-
-	for(std::vector<rule>::const_iterator i = rules.begin(), iend = rules.end(); i != iend; ++i)
-		ret &= close(i->first, i->second);
-	rules.clear();
-
-	return ret;
-}
+#endif

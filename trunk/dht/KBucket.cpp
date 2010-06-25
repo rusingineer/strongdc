@@ -28,21 +28,9 @@
 namespace dht
 {
 
-	static DHTClient client;
-	
-	void DHTClient::connect(const OnlineUser& user, const string& token) 
-	{ 
-		DHT::getInstance()->connect(user, token); 
-	}
-
-	void DHTClient::privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson) 
-	{ 
-		DHT::getInstance()->privateMessage(user, aMessage, thirdPerson); 
-	}
-
 	// Set all new nodes' type to 3 to avoid spreading dead nodes..
 	Node::Node(const UserPtr& u) : 
-		OnlineUser(u, dht::client, 0), created(GET_TICK()), type(3), expires(0), ipVerified(false), online(false)
+		OnlineUser(u, *DHT::getInstance(), 0), created(GET_TICK()), type(3), expires(0), ipVerified(false), online(false)
 	{
 	}
 

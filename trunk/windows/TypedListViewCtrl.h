@@ -421,7 +421,7 @@ public:
 				lvItem.iSubItem = 0;
 				lvItem.mask = LVIF_IMAGE | LVIF_PARAM;
 				GetItem(&lvItem);
-				lvItem.iImage = ((T*)lvItem.lParam)->imageIndex();
+				lvItem.iImage = ((T*)lvItem.lParam)->getImageIndex();
 				SetItem(&lvItem);
 				updateItem(i);
 			}
@@ -585,7 +585,7 @@ private:
 					lvItem.iSubItem = 0;
 					lvItem.mask = LVIF_PARAM | LVIF_IMAGE;
 					GetItem(&lvItem);
-					lvItem.iImage = ((T*)lvItem.lParam)->imageIndex();
+					lvItem.iImage = ((T*)lvItem.lParam)->getImageIndex();
 					SetItem(&lvItem);
 				}
 				break;
@@ -714,7 +714,7 @@ public:
 		lvi.iSubItem = 0;
 		lvi.iIndent = 1;
 		lvi.pszText = LPSTR_TEXTCALLBACK;
-		lvi.iImage = item->imageIndex();
+		lvi.iImage = item->getImageIndex();
 		lvi.lParam = (LPARAM)item;
 		lvi.state = 0;
 		lvi.stateMask = 0;
@@ -750,7 +750,7 @@ public:
 			parents.insert(make_pair(const_cast<K*>(&parent->getGroupCond()), newPP));
 
 			parent->parent = NULL; // ensure that parent of this item is really NULL
-			insertItem(getSortPos(parent), parent, parent->imageIndex());
+			insertItem(getSortPos(parent), parent, parent->getImageIndex());
 			return;
 		} else if(pp->children.empty()) {
 			T* oldParent = pp->parent;
@@ -768,7 +768,7 @@ public:
 				pp->children.push_back(oldParent); // mark old parent item as a child
 				parent->hits++;
 
-				pos = insertItem(getSortPos(parent), parent, parent->imageIndex());
+				pos = insertItem(getSortPos(parent), parent, parent->getImageIndex());
 			} else {
 				uniqueParent = false;
 				pos = findItem(parent);
@@ -843,7 +843,7 @@ public:
 
 					parent->parent = NULL; // ensure that parent of this item is really NULL
 					deleteItem(parent);
-					insertItem(getSortPos(parent), parent, parent->imageIndex());
+					insertItem(getSortPos(parent), parent, parent->getImageIndex());
 				}
 			} else {
 				if(pp->children.empty()) {
@@ -945,11 +945,18 @@ public:
 		return mid;
 	}
 
-   	ParentMap parents;
+	ParentMap& getParents() { return parents; }
 
 private:
-	CImageList states;
-	bool uniqueParent;
+
+   	/** map of all parent items with their associated children */
+	ParentMap	parents;
+
+	/** +/- images */
+	CImageList	states;
+
+	/** is extra item needed for parent items? */
+	bool		uniqueParent;
 
 	static int CALLBACK compareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort) {
 		thisClass* t = (thisClass*)lParamSort;
