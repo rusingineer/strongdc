@@ -202,7 +202,7 @@ public:
 	/**
 	 * Is specified parts needed by this download?
 	 */
-	bool isSource(const PartsInfo& partsInfo, int64_t blockSize);
+	bool isNeededPart(const PartsInfo& partsInfo, int64_t blockSize);
 
 	/**
 	 * Get shared parts info, max 255 parts range pairs

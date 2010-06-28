@@ -202,7 +202,7 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 
 	SetSel(lSelBeginSaved, lSelEndSaved);
 	if(	isMyMessage || ((si.nPage == 0 || (size_t)si.nPos >= (size_t)si.nMax - si.nPage - 5) &&
-		(lSelBeginSaved == lSelEndSaved || !sSelectedUser.empty() || !sSelectedIP.empty() || !sSelectedURL.empty())))
+		(lSelBeginSaved == lSelEndSaved || !selectedUser.empty() || !selectedIP.empty() || !selectedURL.empty())))
 	{
 		PostMessage(EM_SCROLL, SB_BOTTOM, 0);
 	} else {
@@ -330,8 +330,7 @@ void ChatCtrl::FormatEmoticonsAndLinks(const tstring& sMsg, const tstring& sMsgL
 
 				GetSelectionCharFormat(cfSel);
 				if(!(cfSel.dwEffects & CFE_LINK)) {
-					CImageDataObject::InsertBitmap(GetOleInterface(), 
-						foundEmoticon->getEmoticonBmp(cfSel.crBackColor));
+					CImageDataObject::InsertBitmap(GetOleInterface(), foundEmoticon->getEmoticonBmp(cfSel.crBackColor));
 
 					++smiles;
 					++lSelBegin;
@@ -387,7 +386,7 @@ bool ChatCtrl::HitNick(const POINT& p, tstring& sNick, int& iBegin, int& iEnd) {
 	}
 
 	tstring sN = sText.substr(iLeft, iCRLF);
-	if(sN.size() == 0)
+	if(sN.empty())
 		return false;
 
 	if(client->findUser(Text::fromT(sN)) != NULL) {
@@ -450,46 +449,41 @@ bool ChatCtrl::HitIP(const POINT& p, tstring& sIP, int& iBegin, int& iEnd) {
 
 	sText += _T('.');
 	size_t iFindBegin = 0, iPos = tstring::npos, iEnd2 = 0;
-	bool boOK = true;
-	for(int i = 0; i < 4; i++) {
+
+	for(int i = 0; i < 4; ++i) {
 		iPos = sText.find(_T('.'), iFindBegin);
 		if(iPos == tstring::npos) {
-			boOK = false;
-			break;
+			return false;
 		}
 		iEnd2 = atoi(Text::fromT(sText.substr(iFindBegin)).c_str());
 		if((iEnd2 < 0) || (iEnd2 > 255)) {
-			boOK = false;
-			break;
+			return false;
 		}
 		iFindBegin = iPos + 1;
 	}
 
-	if(boOK) {
-		sIP = sText.substr(0, iPos);
-		iBegin = lPosBegin;
-		iEnd = lPosEnd;
-	}
-	return boOK;
+	sIP = sText.substr(0, iPos);
+	iBegin = lPosBegin;
+	iEnd = lPosEnd;
+
+	return true;
 }
 
 bool ChatCtrl::HitURL() {
 	long lSelBegin = 0, lSelEnd = 0;
 	GetSel(lSelBegin, lSelEnd);
-	bool boOK = false;
 
 	CHARFORMAT2 cfSel;
 	cfSel.cbSize = sizeof(cfSel);
-    
-	GetSelectionCharFormat(cfSel);
-	if(cfSel.dwEffects & CFE_LINK) {
-		boOK = true;
-	}
-	return boOK;
+    GetSelectionCharFormat(cfSel);
+
+	return (cfSel.dwEffects & CFE_LINK) == CFE_LINK;
 }
 
 tstring ChatCtrl::LineFromPos(const POINT& p) const {
-	int iCharPos = CharFromPos(p), line = LineFromChar(iCharPos), len = LineLength(iCharPos);
+	int iCharPos = CharFromPos(p);
+	int len = LineLength(iCharPos);
+
 	if(len < 3) {
 		return Util::emptyStringT;
 	}
@@ -497,39 +491,31 @@ tstring ChatCtrl::LineFromPos(const POINT& p) const {
 	tstring tmp;
 	tmp.resize(len);
 
-	GetLine(line, &tmp[0], len);
+	GetLine(LineFromChar(iCharPos), &tmp[0], len);
 
 	return tmp;
 }
 
 LRESULT ChatCtrl::OnRButtonDown(POINT pt) {
-	long lSelBegin = 0, lSelEnd = 0; tstring sSel;
-
-	sSelectedLine = LineFromPos(pt);
-	sSelectedUser = Util::emptyStringT;
-	sSelectedIP = Util::emptyStringT;
+	selectedLine = LineFromPos(pt);
+	selectedUser.clear();
+	selectedIP.clear();
 
 	// Po kliku dovnitr oznaceneho textu si zkusime poznamenat pripadnej nick ci ip...
 	// jinak by nam to neuznalo napriklad druhej klik na uz oznaceny nick =)
+	long lSelBegin = 0, lSelEnd = 0;
 	GetSel(lSelBegin, lSelEnd);
+
 	int iCharPos = CharFromPos(pt), iBegin = 0, iEnd = 0;
 	if((lSelEnd > lSelBegin) && (iCharPos >= lSelBegin) && (iCharPos <= lSelEnd)) {
-		if(HitIP(pt, sSel, iBegin, iEnd)) {
-			sSelectedIP = sSel;
-		} else if(HitNick(pt, sSel, iBegin, iEnd)) {
-			sSelectedUser = sSel;
-		}
+		if(!HitIP(pt, selectedIP, iBegin, iEnd))
+			HitNick(pt, selectedUser, iBegin, iEnd);
+
 		return 1;
 	}
 
-	// Po kliku do IP oznacit IP
-	if(HitIP(pt, sSel, iBegin, iEnd)) {
-		sSelectedIP = sSel;
-		SetSel(iBegin, iEnd);
-		InvalidateRect(NULL);
-	// Po kliku na Nick oznacit Nick
-	} else if(HitNick(pt, sSel, iBegin, iEnd)) {
-		sSelectedUser = sSel;
+	// hightlight IP or nick when clicking on it
+	if(HitIP(pt, selectedIP, iBegin, iEnd) || HitNick(pt, selectedUser, iBegin, iEnd)) {
 		SetSel(iBegin, iEnd);
 		InvalidateRect(NULL);
 	}
@@ -569,7 +555,7 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 
 	bool boHitURL = HitURL();
 	if (!boHitURL)
-		sSelectedURL = Util::emptyStringT;
+		selectedURL.clear();
 
 	OMenu menu;
 	menu.CreatePopupMenu();
@@ -580,16 +566,16 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		copyMenu.m_hMenu = NULL;
 	}
 
-	if(sSelectedUser.empty()) {
+	if(selectedUser.empty()) {
 
-		if(!sSelectedIP.empty()) {
-			menu.InsertSeparatorFirst(sSelectedIP);
-			menu.AppendMenu(MF_STRING, IDC_WHOIS_IP, (TSTRING(WHO_IS) + _T(" ") + sSelectedIP).c_str() );
+		if(!selectedIP.empty()) {
+			menu.InsertSeparatorFirst(selectedIP);
+			menu.AppendMenu(MF_STRING, IDC_WHOIS_IP, (TSTRING(WHO_IS) + _T(" ") + selectedIP).c_str() );
 			if (client && client->isOp()) {
 				menu.AppendMenu(MF_SEPARATOR);
-				menu.AppendMenu(MF_STRING, IDC_BAN_IP, (_T("!banip ") + sSelectedIP).c_str());
+				menu.AppendMenu(MF_STRING, IDC_BAN_IP, (_T("!banip ") + selectedIP).c_str());
 				menu.SetMenuDefaultItem(IDC_BAN_IP);
-				menu.AppendMenu(MF_STRING, IDC_UNBAN_IP, (_T("!unban ") + sSelectedIP).c_str());
+				menu.AppendMenu(MF_STRING, IDC_UNBAN_IP, (_T("!unban ") + selectedIP).c_str());
 				menu.AppendMenu(MF_SEPARATOR);
 			}
 		} else {
@@ -599,10 +585,10 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 		menu.AppendMenu(MF_STRING, ID_EDIT_COPY, CTSTRING(COPY));
 		menu.AppendMenu(MF_STRING, IDC_COPY_ACTUAL_LINE,  CTSTRING(COPY_LINE));
 
-		if(!sSelectedURL.empty()) 
+		if(!selectedURL.empty()) 
   			menu.AppendMenu(MF_STRING, IDC_COPY_URL, CTSTRING(COPY_URL));
 	} else {
-		bool isMe = (sSelectedUser == Text::toT(client->getMyNick()));
+		bool isMe = (selectedUser == Text::toT(client->getMyNick()));
 
 		// click on nick
 		copyMenu.CreatePopupMenu();
@@ -612,7 +598,7 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 			copyMenu.AppendMenu(MF_STRING, IDC_COPY + j, CTSTRING_I(HubFrame::columnNames[j]));
 		}
 
-		menu.InsertSeparatorFirst(sSelectedUser);
+		menu.InsertSeparatorFirst(selectedUser);
 
 		if(BOOLSETTING(LOG_PRIVATE_CHAT)) {
 			menu.AppendMenu(MF_STRING, IDC_OPEN_USER_LOG,  CTSTRING(OPEN_USER_LOG));
@@ -627,7 +613,7 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 			menu.AppendMenu(MF_STRING, IDC_PRIVATEMESSAGE, CTSTRING(SEND_PRIVATE_MESSAGE));
 			menu.AppendMenu(MF_SEPARATOR);
 			
-			const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+			const OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 			if(!FavoriteManager::getInstance()->isIgnoredUser(ou->getUser()->getCID())) {
 				menu.AppendMenu(MF_STRING, IDC_IGNORE, CTSTRING(IGNORE_USER));
 			} else {    
@@ -693,41 +679,34 @@ LRESULT ChatCtrl::onSize(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHan
 }
 
 LRESULT ChatCtrl::onLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled) {
-	sSelectedLine = Util::emptyStringT;
-	sSelectedIP = Util::emptyStringT;
-	sSelectedUser = Util::emptyStringT;
-	sSelectedURL = Util::emptyStringT;
+	selectedLine.clear();
+	selectedIP.clear();
+	selectedUser.clear();
+	selectedURL.clear();
 
 	bHandled = FALSE;
 	return 0;
 }
 
 LRESULT ChatCtrl::onClientEnLink(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/) {
-	ENLINK* pEL = (ENLINK*)pnmh;
-
-	if ( pEL->msg == WM_LBUTTONUP ) {
-		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
-		if(sURLTemp) {
-			GetTextRange(lBegin, lEnd, sURLTemp);
-			tstring sURL = sURLTemp;
-
-			WinUtil::openLink(sURL);
-
-			delete[] sURLTemp;
+	ENLINK* enlink = (ENLINK*)pnmh;
+	switch(enlink->msg) {
+		case WM_LBUTTONUP:
+		{
+			tstring url;
+			url.resize((enlink->chrg.cpMax - enlink->chrg.cpMin) + 1);
+			GetTextRange(enlink->chrg.cpMin, enlink->chrg.cpMax, &url[0]);
+			WinUtil::openLink(url);
+			break;
 		}
-	} else if(pEL->msg == WM_RBUTTONUP) {
-		sSelectedURL = Util::emptyStringT;
-		long lBegin = pEL->chrg.cpMin, lEnd = pEL->chrg.cpMax;
-		TCHAR* sURLTemp = new TCHAR[(lEnd - lBegin)+1];
-		if(sURLTemp) {
-			GetTextRange(lBegin, lEnd, sURLTemp);
-			sSelectedURL = sURLTemp;
-			delete[] sURLTemp;
+		case WM_RBUTTONUP:
+		{
+			selectedURL.resize((enlink->chrg.cpMax - enlink->chrg.cpMin) + 1);
+			GetTextRange(enlink->chrg.cpMin, enlink->chrg.cpMax, &selectedURL[0]);
+			SetSel(enlink->chrg.cpMin, enlink->chrg.cpMax);
+			InvalidateRect(NULL);
+			break;
 		}
-
-		SetSel(lBegin, lEnd);
-		InvalidateRect(NULL);
 	}
 
 	return 0;
@@ -744,49 +723,49 @@ LRESULT ChatCtrl::onEditSelectAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 }
 
 LRESULT ChatCtrl::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	SetWindowText(Util::emptyStringT.c_str());
+	SetWindowText(_T(""));
 	return 0;
 }
 
 LRESULT ChatCtrl::onCopyActualLine(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(!sSelectedLine.empty()) {
-		WinUtil::setClipboard(sSelectedLine);
+	if(!selectedLine.empty()) {
+		WinUtil::setClipboard(selectedLine);
 	}
 	return 0;
 }
 
 LRESULT ChatCtrl::onBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(!sSelectedIP.empty()) {
-		tstring s = _T("!banip ") + sSelectedIP;
+	if(!selectedIP.empty()) {
+		tstring s = _T("!banip ") + selectedIP;
 		client->hubMessage(Text::fromT(s));
 	}
 	return 0;
 }
 
 LRESULT ChatCtrl::onUnBanIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(!sSelectedIP.empty()) {
-		tstring s = _T("!unban ") + sSelectedIP;
+	if(!selectedIP.empty()) {
+		tstring s = _T("!unban ") + selectedIP;
 		client->hubMessage(Text::fromT(s));
 	}
 	return 0;
 }
 
 LRESULT ChatCtrl::onCopyURL(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(!sSelectedURL.empty()) {
-		WinUtil::setClipboard(sSelectedURL);
+	if(!selectedURL.empty()) {
+		WinUtil::setClipboard(selectedURL);
 	}
 	return 0;
 }
 
 LRESULT ChatCtrl::onWhoisIP(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if(!sSelectedIP.empty()) {
- 		WinUtil::openLink(_T("http://www.ripe.net/perl/whois?form_type=simple&full_query_string=&searchtext=") + sSelectedIP);
+	if(!selectedIP.empty()) {
+ 		WinUtil::openLink(_T("http://www.ripe.net/perl/whois?form_type=simple&full_query_string=&searchtext=") + selectedIP);
  	}
 	return 0;
 }
 
 LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou) {
 		StringMap params;
 
@@ -808,7 +787,7 @@ LRESULT ChatCtrl::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndC
 }
 
 LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou)
 		PrivateFrame::openWindow(HintedUser(ou->getUser(), client->getHubUrl()), Util::emptyStringT, client);
 
@@ -816,7 +795,7 @@ LRESULT ChatCtrl::onPrivateMessage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT ChatCtrl::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou)
 		ou->getList(client->getHubUrl());
 
@@ -824,7 +803,7 @@ LRESULT ChatCtrl::onGetList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/
 }
 
 LRESULT ChatCtrl::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou)
 		ou->matchQueue(client->getHubUrl());
 
@@ -832,7 +811,7 @@ LRESULT ChatCtrl::onMatchQueue(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 }
 
 LRESULT ChatCtrl::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou) {
 		uint64_t time = 0;
 		switch(wID) {
@@ -853,7 +832,7 @@ LRESULT ChatCtrl::onGrantSlot(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, 
 }
 
 LRESULT ChatCtrl::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou)
 		ou->addFav();
 
@@ -861,7 +840,7 @@ LRESULT ChatCtrl::onAddToFavorites(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 LRESULT ChatCtrl::onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/){
-	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou)
 		FavoriteManager::getInstance()->addIgnoredUser(ou->getUser()->getCID());
 
@@ -869,7 +848,7 @@ LRESULT ChatCtrl::onIgnore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BO
 }
 
 LRESULT ChatCtrl::onUnignore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, BOOL& /*bHandled*/){
-	OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou)
 		FavoriteManager::getInstance()->removeIgnoredUser(ou->getUser()->getCID());
 
@@ -879,7 +858,7 @@ LRESULT ChatCtrl::onUnignore(UINT /*uMsg*/, WPARAM /*wParam*/, HWND /*lParam*/, 
 LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	tstring sCopy;
 	
-	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou) {
 		sCopy = ou->getText(static_cast<uint8_t>(wID - IDC_COPY));
 	}
@@ -891,7 +870,7 @@ LRESULT ChatCtrl::onCopyUserInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*
 }
 
 LRESULT ChatCtrl::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 		
 	if(ou) {
 			CHARFORMAT2 cf;
@@ -908,7 +887,7 @@ LRESULT ChatCtrl::onReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/,
 }
 
 LRESULT ChatCtrl::onCheckList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou) {
 		try {
 			QueueManager::getInstance()->addList(HintedUser(ou->getUser(), client->getHubUrl()), QueueItem::FLAG_USER_CHECK, client->getHubUrl());
@@ -929,7 +908,7 @@ void ChatCtrl::runUserCommand(UserCommand& uc) {
 	client->getMyIdentity().getParams(ucParams, "my", true);
 	client->getHubIdentity().getParams(ucParams, "hub", false);
 
-	const OnlineUserPtr ou = client->findUser(Text::fromT(sSelectedUser));
+	const OnlineUserPtr ou = client->findUser(Text::fromT(selectedUser));
 	if(ou != NULL) {
 		StringMap tmp = ucParams;
 		ou->getIdentity().getParams(tmp, "user", true);

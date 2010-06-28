@@ -122,8 +122,8 @@ public:
 
 	void AppendText(const Identity& i, const tstring& sMyNick, const tstring& sTime, tstring sMsg, CHARFORMAT2& cf, bool bUseEmo = true);
 
-	void setSelectedUser(const tstring& s) { sSelectedUser = s; }
-	const tstring& getSelectedUser() { return sSelectedUser; }
+	void setSelectedUser(const tstring& s) { selectedUser = s; }
+	const tstring& getSelectedUser() { return selectedUser; }
 
 	void Subclass() {
 		ccw.SubclassWindow(this->CRichEditCtrl::m_hWnd);
@@ -156,10 +156,10 @@ private:
 
 	CContainedWindow ccw;
 
-	tstring sSelectedLine;
-	tstring sSelectedIP;
-	tstring sSelectedUser;
-	tstring sSelectedURL;
+	tstring selectedLine;
+	tstring selectedIP;
+	tstring selectedUser;
+	tstring selectedURL;
 };
 
 
