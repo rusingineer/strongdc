@@ -200,9 +200,6 @@
     <ClCompile Include="windows\AdvancedPage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="windows\AGEmotionSetup.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="windows\AppearancePage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -386,9 +383,6 @@
     <ClCompile Include="windows\UploadQueueFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="windows\upnp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="windows\UPnP_COM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -404,6 +398,12 @@
     <ClCompile Include="windows\WinUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="windows\EmoticonsManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\UPnP_MiniUPnPc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windows\AboutDlg.h">
@@ -416,9 +416,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="windows\AdvancedPage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="windows\AGEmotionSetup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="windows\AppearancePage.h">
@@ -643,9 +640,6 @@
     <ClInclude Include="windows\UploadQueueFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="windows\upnp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="windows\UPnP_COM.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -662,6 +656,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="windows\WinUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\EmoticonsManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\UPnP_MiniUPnPc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

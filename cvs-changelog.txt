@@ -1,3 +1,7 @@
+** svn501
+	new partial sources aren't added to finished files
+	updated OpenSSL
+
 ** svn500
 	added "Microsoft Jet 4.0" to libraries that could cause crash
 	finally fixed crashes on TTH inconsistencies

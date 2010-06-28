@@ -31,11 +31,21 @@
 # include <openssl/bn.h>
 # include <openssl/err.h>
 # ifdef _DEBUG
-#  pragma comment(lib, "libeay32d.lib")
-#  pragma comment(lib, "ssleay32d.lib")
+#  ifndef _WIN64
+#   pragma comment(lib, "libeay32d.lib")
+#   pragma comment(lib, "ssleay32d.lib")
+#  else
+#   pragma comment(lib, "libeay64d.lib")
+#   pragma comment(lib, "ssleay64d.lib")
+#  endif
 # else
-#  pragma comment(lib, "libeay32.lib")
-#  pragma comment(lib, "ssleay32.lib")
+#  ifndef _WIN64
+#   pragma comment(lib, "libeay32.lib")
+#   pragma comment(lib, "ssleay32.lib")
+#  else
+#   pragma comment(lib, "libeay64.lib")
+#   pragma comment(lib, "ssleay64.lib")
+#  endif
 # endif
 #elif defined YASSL_VERSION
 # pragma comment(lib, "taocrypt.lib")

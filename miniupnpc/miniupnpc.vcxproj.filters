@@ -24,9 +24,6 @@
     <ClCompile Include="minisoap.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="minissdpc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="miniupnpc.c">
       <Filter>Source Files</Filter>
     </ClCompile>

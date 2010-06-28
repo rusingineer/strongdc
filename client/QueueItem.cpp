@@ -310,7 +310,7 @@ void QueueItem::addSegment(const Segment& segment) {
 	}
 }
 
-bool QueueItem::isSource(const PartsInfo& partsInfo, int64_t blockSize)
+bool QueueItem::isNeededPart(const PartsInfo& partsInfo, int64_t blockSize)
 {
 	dcassert(partsInfo.size() % 2 == 0);
 	

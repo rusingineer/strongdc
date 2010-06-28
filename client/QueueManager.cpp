@@ -2039,9 +2039,15 @@ bool QueueManager::handlePartialResult(const HintedUser& aUser, const TTHValue& 
 			dcdebug("Not found in download queue\n");
 			return false;
 		}
+		
+		QueueItem::Ptr qi = ql[0];
+
+		// don't add sources to finished files
+		// this could happen when "Keep finished files in queue" is enabled
+		if(qi->isFinished())
+			return false;
 
 		// Check min size
-		QueueItem::Ptr qi = ql[0];
 		if(qi->getSize() < PARTIAL_SHARE_MIN_SIZE){
 			dcassert(0);
 			return false;
@@ -2054,7 +2060,7 @@ bool QueueManager::handlePartialResult(const HintedUser& aUser, const TTHValue& 
 		qi->getPartialInfo(outPartialInfo, blockSize);
 		
 		// Any parts for me?
-		wantConnection = qi->isSource(partialSource.getPartialInfo(), blockSize);
+		wantConnection = qi->isNeededPart(partialSource.getPartialInfo(), blockSize);
 
 		// If this user isn't a source and has no parts needed, ignore it
 		QueueItem::SourceIter si = qi->getSource(aUser);
