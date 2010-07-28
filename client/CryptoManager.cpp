@@ -180,12 +180,25 @@ CryptoManager::CryptoManager()
 }
 
 CryptoManager::~CryptoManager() {
-	ERR_free_strings();
 
 #ifdef HEADER_OPENSSLV_H
 	CRYPTO_set_locking_callback(NULL);
 	delete[] cs;
 #endif
+
+	/* thread-local cleanup */ 
+	ERR_remove_state(0); 
+
+	clientContext.reset();
+	clientVerContext.reset();
+	serverContext.reset();
+	serverVerContext.reset();
+	dh.reset();
+
+	/* global application exit cleanup (after all SSL activity is shutdown) */ 
+	ERR_free_strings(); 
+	EVP_cleanup(); 
+	CRYPTO_cleanup_all_ex_data();
 }
 
 bool CryptoManager::TLSOk() const throw() { 

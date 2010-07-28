@@ -21,8 +21,9 @@
 
 #include "memcpy_amd.h"
 
+#define _SECURE_SCL  0
+
 #ifndef _DEBUG
-# define _SECURE_SCL  0
 # define BOOST_DISABLE_ASSERTS 1
 #endif
 
@@ -99,7 +100,6 @@
 
 #else
 #include <unistd.h>
-#include <stdint.h>
 #endif
 
 /*#ifndef _WIN64
@@ -116,13 +116,15 @@
 #include <assert.h>
 #endif
 
-#include <ctype.h>
-#include <stdio.h>
-#include <stdarg.h>
+#include <cctype>
+#include <clocale>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
+#include <ctime>
+
 #include <memory.h>
 #include <sys/types.h>
-#include <time.h>
-#include <locale.h>
 
 #include <algorithm>
 #include <vector>
@@ -136,6 +138,8 @@
 #include <memory>
 #include <numeric>
 #include <limits>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -147,35 +151,8 @@
 #include <boost/regex.hpp>
 //#include <regex>
 
-#if defined(_MSC_VER) || defined(_STLPORT_VERSION)
-
-#include <unordered_map>
-#include <unordered_set>
-
-#elif defined(__GLIBCPP__) || defined(__GLIBCXX__)  // Using GNU C++ library?
-
-#include <tr1/unordered_set>
-#include <tr1/unordered_map>
-
-#else
-#error "Unknown STL, please configure accordingly"
-#endif
-
-#if (!defined(_STLPORT_VERSION)) || (_STLPORT_VERSION < 0x600)	// current STLPort GIT implements this
-	typedef signed __int8 int8_t;
-	typedef signed __int16 int16_t;
-	typedef signed __int32 int32_t;
-	typedef signed __int64 int64_t;
-
-	typedef unsigned __int8 uint8_t;
-	typedef unsigned __int16 uint16_t;
-	typedef unsigned __int32 uint32_t;
-	typedef unsigned __int64 uint64_t;
-#endif
-
 namespace dcpp {
 	using namespace std;
-	using namespace std::tr1;
 }
 
 #endif // !defined(STDINC_H)

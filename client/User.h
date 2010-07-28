@@ -169,7 +169,7 @@ public:
 	UserPtr& getUser() { return user; }
 	GETSET(UserPtr, user, User);
 private:
-	typedef std::tr1::unordered_map<short, std::string> InfMap;
+	typedef std::unordered_map<short, std::string> InfMap;
 	typedef InfMap::const_iterator InfIter;
 	InfMap info;
 

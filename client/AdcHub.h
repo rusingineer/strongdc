@@ -82,7 +82,7 @@ private:
 	string salt;
 	uint32_t sid;
 
-	std::tr1::unordered_set<uint32_t> forbiddenCommands;
+	std::unordered_set<uint32_t> forbiddenCommands;
 
 	static const string CLIENT_PROTOCOL;
 	static const string SECURE_CLIENT_PROTOCOL_TEST;

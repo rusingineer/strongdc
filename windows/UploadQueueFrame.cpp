@@ -400,7 +400,7 @@ LRESULT UploadQueueFrame::onSpeaker(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam,
 	}
 	case REMOVE:
 	{
-		std::auto_ptr<UserItem> item((UserItem*)lParam);
+		std::unique_ptr<UserItem> item((UserItem*)lParam);
 		RemoveUser(item->getUser());
 		updateStatus();
 		if(BOOLSETTING(BOLD_UPLOAD_QUEUE))

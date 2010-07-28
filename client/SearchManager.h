@@ -66,7 +66,7 @@ public:
 
 	uint64_t search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL);
 	uint64_t search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL) {
-		search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aOwner);
+		return search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aOwner);
  	}
 	static string clean(const string& aSearchString);
 	
@@ -116,7 +116,7 @@ private:
 	} queue;
 
 	CriticalSection cs;
-	std::auto_ptr<Socket> socket;
+	std::unique_ptr<Socket> socket;
 	uint16_t port;
 	bool stop;
 	friend class Singleton<SearchManager>;
