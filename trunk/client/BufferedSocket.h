@@ -152,9 +152,9 @@ private:
 
 	Modes mode;
 	State state;
-	
-	std::auto_ptr<UnZFilter> filterIn;
-	std::auto_ptr<Socket> sock;
+
+	std::unique_ptr<UnZFilter> filterIn;
+	std::unique_ptr<Socket> sock;
 
 	bool disconnecting;
 	
@@ -172,7 +172,7 @@ private:
 	bool checkEvents() throw(Exception);
 	void checkSocket() throw(Exception);
 
-	void setSocket(std::auto_ptr<Socket> s);
+	void setSocket(std::unique_ptr<Socket> s);
 	void shutdown();
 	void addTask(Tasks task, TaskData* data);
 };

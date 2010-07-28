@@ -26,6 +26,13 @@
 #include "TimerManager.h"
 #include "LogManager.h"
 
+/// @todo remove when MinGW has this
+#ifdef __MINGW32__
+#ifndef EADDRNOTAVAIL
+#define EADDRNOTAVAIL WSAEADDRNOTAVAIL
+#endif
+#endif
+
 namespace dcpp {
 
 string Socket::udpServer;

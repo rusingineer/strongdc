@@ -30,7 +30,7 @@ namespace dht
 {
 
 	CriticalSection Utils::cs;
-	std::tr1::unordered_map<string, std::tr1::unordered_multiset<uint32_t>> Utils::receivedPackets;
+	std::unordered_map<string, std::unordered_multiset<uint32_t>> Utils::receivedPackets;
 	std::list<Utils::OutPacket> Utils::sentPackets;
 
 	CID Utils::getDistance(const CID& cid1, const CID& cid2)
@@ -108,7 +108,7 @@ namespace dht
 		}
 		
 		Lock l(cs);
-		std::tr1::unordered_multiset<uint32_t>& packetsPerIp = receivedPackets[ip];
+		std::unordered_multiset<uint32_t>& packetsPerIp = receivedPackets[ip];
 		packetsPerIp.insert(cmd.getCommand());
 		
 		if(packetsPerIp.count(cmd.getCommand()) > maxAllowedPacketsPerMinute)

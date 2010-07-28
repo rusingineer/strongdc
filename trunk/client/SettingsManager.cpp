@@ -506,7 +506,7 @@ SettingsManager::SettingsManager()
 	setDefault(TEXT_OP_ITALIC, false);
 
 	setDefault(TEXT_URL_BACK_COLOR, RGB(242,245,255));
-	setDefault(TEXT_URL_FORE_COLOR, RGB(0,0,255));
+	setDefault(TEXT_URL_FORE_COLOR, RGB(0,102,204));
 	setDefault(TEXT_URL_BOLD, false);
 	setDefault(TEXT_URL_ITALIC, false);
 

@@ -32,83 +32,77 @@ public:
 	Speaker() throw() { }
 	virtual ~Speaker() throw() { }
 
+	/// @todo simplify when we have variadic templates
+
 	template<typename T0>
-	void fire(T0 type) throw() {
+	void fire(T0&& type) throw() {
 		Lock l(listenerCS);
 		tmp = listeners;
-		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			(*i)->on(type);
+		for(auto i = tmp.begin(); i != tmp.end(); ++i) {
+			(*i)->on(forward<T0>(type));
 		}
 	}
 
-	template<typename T0, class T1>
-	void fire(T0 type, const T1& p1) throw() {
+	template<typename T0, typename T1>
+	void fire(T0&& type, T1&& p1) throw() {
 		Lock l(listenerCS);
 		tmp = listeners;
-		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			(*i)->on(type, p1);
-		}
-	}
-	template<typename T0, class T1>
-	void fire(T0 type, T1& p1) throw() {
-		Lock l(listenerCS);
-		tmp = listeners;
-		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			(*i)->on(type, p1);
+		for(auto i = tmp.begin(); i != tmp.end(); ++i) {
+			(*i)->on(forward<T0>(type), forward<T1>(p1));
 		}
 	}
 
-	template<typename T0, class T1, class T2>
-	void fire(T0 type, const T1& p1, const T2& p2) throw() {
+	template<typename T0, typename T1, typename T2>
+	void fire(T0&& type, T1&& p1, T2&& p2) throw() {
 		Lock l(listenerCS);
 		tmp = listeners;
-		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			(*i)->on(type, p1, p2);
+		for(auto i = tmp.begin(); i != tmp.end(); ++i) {
+			(*i)->on(forward<T0>(type), forward<T1>(p1), forward<T2>(p2));
 		}
 	}
 
-	template<typename T0, class T1, class T2, class T3>
-	void fire(T0 type, const T1& p1, const T2& p2, const T3& p3) throw() {
+	template<typename T0, typename T1, typename T2, typename T3>
+	void fire(T0&& type, T1&& p1, T2&& p2, T3&& p3) throw() {
 		Lock l(listenerCS);
 		tmp = listeners;
-		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			(*i)->on(type, p1, p2, p3);
+		for(auto i = tmp.begin(); i != tmp.end(); ++i) {
+			(*i)->on(forward<T0>(type), forward<T1>(p1), forward<T2>(p2), forward<T3>(p3));
 		}
 	}
 
-	template<typename T0, class T1, class T2, class T3, class T4>
-	void fire(T0 type, const T1& p1, const T2& p2, const T3& p3, const T4& p4) throw() {
+	template<typename T0, typename T1, typename T2, typename T3, typename T4>
+	void fire(T0&& type, T1&& p1, T2&& p2, T3&& p3, T4&& p4) throw() {
 		Lock l(listenerCS);
 		tmp = listeners;
-		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			(*i)->on(type, p1, p2, p3, p4);
+		for(auto i = tmp.begin(); i != tmp.end(); ++i) {
+			(*i)->on(forward<T0>(type), forward<T1>(p1), forward<T2>(p2), forward<T3>(p3), forward<T4>(p4));
 		}
 	}
 
-	template<typename T0, class T1, class T2, class T3, class T4, class T5>
-	void fire(T0 type, const T1& p1, const T2& p2, const T3& p3, const T4& p4, const T5& p5) throw() {
+	template<typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
+	void fire(T0&& type, T1&& p1, T2&& p2, T3&& p3, T4&& p4, T5&& p5) throw() {
 		Lock l(listenerCS);
 		tmp = listeners;
-		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			(*i)->on(type, p1, p2, p3, p4, p5);
+		for(auto i = tmp.begin(); i != tmp.end(); ++i) {
+			(*i)->on(forward<T0>(type), forward<T1>(p1), forward<T2>(p2), forward<T3>(p3), forward<T4>(p4), forward<T5>(p5));
 		}
 	}
 
-	template<typename T0, class T1, class T2, class T3, class T4, class T5, class T6>
-	void fire(T0 type, const T1& p1, const T2& p2, const T3& p3, const T4& p4, const T5& p5, const T6& p6) throw() {
+	template<typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+	void fire(T0&& type, T1&& p1, T2&& p2, T3&& p3, T4&& p4, T5&& p5, T6&& p6) throw() {
 		Lock l(listenerCS);
 		tmp = listeners;
-		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			(*i)->on(type, p1, p2, p3, p4, p5, p6);
+		for(auto i = tmp.begin(); i != tmp.end(); ++i) {
+			(*i)->on(forward<T0>(type), forward<T1>(p1), forward<T2>(p2), forward<T3>(p3), forward<T4>(p4), forward<T5>(p5), forward<T6>(p6));
 		}
 	}
 
-	template<typename T0, class T1, class T2, class T3, class T4, class T5, class T6, class T7>
-	void fire(T0 type, const T1& p1, const T2& p2, const T3& p3, const T4& p4, const T5& p5, const T6& p6, const T7& p7) throw() {
+	template<typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+	void fire(T0&& type, T1&& p1, T2&& p2, T3&& p3, T4&& p4, T5&& p5, T6&& p6, T7&& p7) throw() {
 		Lock l(listenerCS);
 		tmp = listeners;
-		for(ListenerIter i=tmp.begin(); i != tmp.end(); ++i ) {
-			(*i)->on(type, p1, p2, p3, p4, p5, p6, p7);
+		for(auto i = tmp.begin(); i != tmp.end(); ++i) {
+			(*i)->on(forward<T0>(type), forward<T1>(p1), forward<T2>(p2), forward<T3>(p3), forward<T4>(p4), forward<T5>(p5), forward<T6>(p6), forward<T7>(p7));
 		}
 	}
 
@@ -120,7 +114,7 @@ public:
 
 	void removeListener(Listener* aListener) {
 		Lock l(listenerCS);
-		ListenerList::iterator it = find(listeners.begin(), listeners.end(), aListener);
+		auto it = find(listeners.begin(), listeners.end(), aListener);
 		if(it != listeners.end())
 			listeners.erase(it);
 	}

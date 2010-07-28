@@ -1,3 +1,9 @@
+** $Rev$
+	enabled multiCPU compilation
+	fixed memory leak in DHT code
+	using C++0x specifics (don't use STLPort now)
+	removed 0.698-imposed empty token workaround (DC++ BZR)
+
 ** svn501
 	new partial sources aren't added to finished files
 	updated OpenSSL
