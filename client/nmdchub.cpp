@@ -887,8 +887,6 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	
 	reloadSettings(false);
 	
-	lastCounts = counts;
-
 	char StatusMode = Identity::NORMAL;
 
 	char modeChar = '?';

@@ -1356,6 +1356,9 @@ LRESULT MainFrame::onQuickConnect(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 }
 
 void MainFrame::on(TimerManagerListener::Second, uint64_t aTick) throw() {
+	if(aTick == lastUpdate)	// FIXME: temp fix for new TimerManager
+		return;
+
 	int64_t diff = (int64_t)((lastUpdate == 0) ? aTick - 1000 : aTick - lastUpdate);
 	int64_t updiff = Socket::getTotalUp() - lastUp;
 	int64_t downdiff = Socket::getTotalDown() - lastDown;

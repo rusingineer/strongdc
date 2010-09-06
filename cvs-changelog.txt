@@ -1,4 +1,8 @@
 ** $Rev$
+	some DC++ BZR merge
+	updated boost library
+
+** svn536
 	enabled multiCPU compilation
 	fixed memory leak in DHT code
 	using C++0x specifics (don't use STLPort now)

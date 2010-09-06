@@ -42,7 +42,6 @@
 #include "../dht/IndexManager.h"
 
 #ifndef _WIN32
-#include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -54,7 +53,7 @@
 namespace dcpp {
 
 ShareManager::ShareManager() : hits(0), xmlListLen(0), bzXmlListLen(0),
-	xmlDirty(true), forceXmlRefresh(false), refreshDirs(false), update(false), initial(true), listN(0), refreshing(0),
+	xmlDirty(true), forceXmlRefresh(false), refreshDirs(false), update(false), initial(true), listN(0), refreshing(false),
 	lastXmlUpdate(0), lastFullUpdate(GET_TICK()), bloom(1<<20), sharedSize(0)
 { 
 	SettingsManager::getInstance()->addListener(this);
@@ -750,7 +749,7 @@ void ShareManager::updateIndices(Directory& dir, const Directory::File::Set::ite
 }
 
 void ShareManager::refresh(bool dirs /* = false */, bool aUpdate /* = true */, bool block /* = false */) throw() {
-	if(Thread::safeExchange(refreshing, 1) == 1) {
+	if(refreshing.test_and_set()) {
 		LogManager::getInstance()->message(STRING(FILE_LIST_REFRESH_IN_PROGRESS));
 		return;
 	}
@@ -830,7 +829,7 @@ int ShareManager::run() {
 	if(im && im->isTimeForPublishing())
 		im->setNextPublishing();
 	
-	refreshing = 0;
+	refreshing.clear();
 	return 0;
 }
 		
@@ -892,7 +891,7 @@ void ShareManager::generateXmlList() {
 			} catch(const FileException&) {
 				// Ignore, this is for caching only...
 			}
-			bzXmlRef = auto_ptr<File>(new File(newXmlName, File::READ, File::OPEN));
+			bzXmlRef = unique_ptr<File>(new File(newXmlName, File::READ, File::OPEN));
 			setBZXmlFile(newXmlName);
 			bzXmlListLen = File::getSize(newXmlName);
 		} catch(const Exception&) {
@@ -1146,13 +1145,13 @@ void ShareManager::Directory::search(SearchResultList& aResults, StringSearch::L
 		return;
 
 	StringSearch::List* cur = &aStrings;
-	auto_ptr<StringSearch::List> newStr;
+	unique_ptr<StringSearch::List> newStr;
 
 	// Find any matches in the directory name
 	for(StringSearch::List::const_iterator k = aStrings.begin(); k != aStrings.end(); ++k) {
 		if(k->match(name)) {
 			if(!newStr.get()) {
-				newStr = auto_ptr<StringSearch::List>(new StringSearch::List(aStrings));
+				newStr = unique_ptr<StringSearch::List>(new StringSearch::List(aStrings));
 			}
 			newStr->erase(remove(newStr->begin(), newStr->end(), *k), newStr->end());
 		}
@@ -1277,13 +1276,13 @@ void ShareManager::Directory::search(SearchResultList& aResults, AdcSearch& aStr
 	StringSearch::List* cur = aStrings.include;
 	StringSearch::List* old = aStrings.include;
 
-	auto_ptr<StringSearch::List> newStr;
+	unique_ptr<StringSearch::List> newStr;
 
 	// Find any matches in the directory name
 	for(StringSearch::List::const_iterator k = cur->begin(); k != cur->end(); ++k) {
 		if(k->match(name) && !aStrings.isExcluded(name)) {
 			if(!newStr.get()) {
-				newStr = auto_ptr<StringSearch::List>(new StringSearch::List(*cur));
+				newStr = unique_ptr<StringSearch::List>(new StringSearch::List(*cur));
 			}
 			newStr->erase(remove(newStr->begin(), newStr->end(), *k), newStr->end());
 		}

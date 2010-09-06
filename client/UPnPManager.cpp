@@ -34,16 +34,23 @@ void UPnPManager::addImplementation(UPnP* impl) {
 	impls.push_back(impl);
 }
 
-void UPnPManager::open() {
+bool UPnPManager::open() {
 	if(opened)
-		return;
+		return false;
 
 	if(impls.empty()) {
 		log(STRING(UPNP_NO_IMPLEMENTATION));
-		return;
+		return false;
 	}
 
+	if(portMapping.test_and_set()) {
+		//log(_("Another UPnP port mapping attempt is in progress..."));
+		return false;
+	} 
+
 	start();
+
+	return true;
 }
 
 void UPnPManager::close() {
@@ -103,6 +110,7 @@ int UPnPManager::run() {
 		log(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
 	}
 
+	portMapping.clear();
 	return 0;
 }
 

@@ -33,6 +33,8 @@
 #include "MerkleTree.h"
 #include "Pointer.h"
 
+#include <atomic>
+
 namespace dht
 {
 	class IndexManager;
@@ -250,7 +252,7 @@ private:
 	TTHValue xmlRoot;
 	int64_t bzXmlListLen;
 	TTHValue bzXmlRoot;
-	auto_ptr<File> bzXmlRef;
+	unique_ptr<File> bzXmlRef;
 
 	bool xmlDirty;
 	bool forceXmlRefresh; /// bypass the 15-minutes guard
@@ -260,7 +262,7 @@ private:
 
 	int listN;
 
-	volatile long refreshing;
+	atomic_flag refreshing;
 	
 	uint64_t lastXmlUpdate;
 	uint64_t lastFullUpdate;
