@@ -26,7 +26,6 @@ namespace dcpp {
 template<typename Listener>
 class Speaker {
 	typedef vector<Listener*> ListenerList;
-	typedef typename ListenerList::const_iterator ListenerIter;
 
 public:
 	Speaker() throw() { }

@@ -21,52 +21,53 @@
 
 #include "TimerManager.h"
 
+#include <boost/date_time/posix_time/ptime.hpp>
+
 namespace dcpp {
 
-#ifdef _WIN32
-DWORD TimerManager::lastTick = 0;
-uint32_t TimerManager::cycles = 0;
-FastCriticalSection TimerManager::cs;
-#else
-timeval TimerManager::tv;
-#endif
+using namespace boost::posix_time;
+
+TimerManager::TimerManager() {
+	// This mutex will be unlocked only upon shutdown
+	mtx.lock();
+}
+
+TimerManager::~TimerManager() throw() {
+	dcassert(listeners.size() == 0);
+}
+
+void TimerManager::shutdown() {
+	mtx.unlock();
+	join();
+}
 
 int TimerManager::run() {
 	int nextMin = 0;
 
-	uint64_t x = getTick();
-	uint64_t nextTick = x + 1000;
+	ptime now = microsec_clock::universal_time();
+	ptime nextSecond = now + seconds(1);
+	while(!mtx.timed_lock(nextSecond)) {
+		uint64_t t = getTick();
+		now = microsec_clock::universal_time();
+		nextSecond += seconds(1);
+		if(nextSecond < now) {
+			nextSecond = now;
+		}
 
-	while(!s.wait(nextTick > x ? static_cast<uint32_t>(nextTick - x) : 0)) {
-		uint64_t z = getTick();
-		nextTick = z + 1000;
-		fire(TimerManagerListener::Second(), z);
+		fire(TimerManagerListener::Second(), t);
 		if(nextMin++ >= 60) {
-			fire(TimerManagerListener::Minute(), z);
+			fire(TimerManagerListener::Minute(), t);
 			nextMin = 0;
 		}
-		x = getTick();
 	}
 
+	dcdebug("TimerManager done\n");
 	return 0;
 }
 
 uint64_t TimerManager::getTick() {
-#ifdef _WIN32
-	FastLock l(cs);
-
-	DWORD tick = ::GetTickCount();
-	if(tick < lastTick) {
-		cycles++;
-	}
-	lastTick = tick;
-	return static_cast<uint64_t>(cycles) * (static_cast<uint64_t>(std::numeric_limits<DWORD>::max()) + 1) + static_cast<uint64_t>(tick);
-#else
-	timeval tv2;
-	gettimeofday(&tv2, NULL);
-	/// @todo check conversions to use uint64_t fully
-	return static_cast<uint64_t>(((tv2.tv_sec - tv.tv_sec) * 1000 ) + ( (tv2.tv_usec - tv.tv_usec) / 1000));
-#endif
+	static ptime start = microsec_clock::universal_time();
+	return (microsec_clock::universal_time() - start).total_milliseconds();
 }
 
 } // namespace dcpp

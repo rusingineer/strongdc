@@ -20,9 +20,10 @@
 #define TIMER_MANAGER_H
 
 #include "Thread.h"
-#include "Semaphore.h"
 #include "Speaker.h"
 #include "Singleton.h"
+
+#include <boost/thread/mutex.hpp>
 
 #ifndef _WIN32
 #include <sys/time.h>
@@ -38,7 +39,6 @@ public:
 	typedef X<0> Second;
 	typedef X<1> Minute;
 
-	// We expect everyone to implement this...
 	virtual void on(Second, uint64_t) throw() { }
 	virtual void on(Minute, uint64_t) throw() { }
 };
@@ -46,38 +46,18 @@ public:
 class TimerManager : public Speaker<TimerManagerListener>, public Singleton<TimerManager>, public Thread
 {
 public:
-	void shutdown() {
-		s.signal();
-		join();
-	}
+	void shutdown();
 
 	static time_t getTime() { return (time_t)time(NULL); }
 	static uint64_t getTick();
 private:
-
-	Semaphore s;
-
 	friend class Singleton<TimerManager>;
-	TimerManager() { 
-#ifndef _WIN32
-		gettimeofday(&tv, NULL);
-#endif
-	}
-	
-	~TimerManager() throw() {
-		dcassert(listeners.empty());
-		shutdown();
-	}
+	boost::timed_mutex mtx;
+
+	TimerManager();
+	~TimerManager() throw();
 	
 	int run();
-	
-#ifdef _WIN32
-	static DWORD lastTick;
-	static uint32_t cycles;
-	static FastCriticalSection cs;
-#else
-	static timeval tv;
-#endif
 };
 
 #define GET_TICK() TimerManager::getTick()

@@ -25,6 +25,8 @@
 #include "../client/ShareManager.h"
 #include "../client/Singleton.h"
 
+#include <atomic>
+
 namespace dht
 {
 
@@ -76,8 +78,8 @@ namespace dht
 		void saveIndexes(SimpleXML& xml);
 		
 		/** How many files is currently being published */
-		void incPublishing() { Thread::safeInc(publishing); }
-		void decPublishing() { Lock l(cs); Thread::safeDec(publishing); }
+		void incPublishing() { ++publishing; }
+		void decPublishing() { --publishing; }
 	
 		/** Is publishing allowed? */
 		void setPublish(bool _publish) { publish = _publish; }
@@ -115,7 +117,7 @@ namespace dht
 		bool publish;
 	
 		/** How many files is currently being published */
-		volatile long publishing;
+		atomic<long> publishing;
 	
 		/** Time when our sharelist should be republished */
 		uint64_t nextRepublishTime;	

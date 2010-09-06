@@ -26,6 +26,7 @@
 #include "Speaker.h"
 #include "Util.h"
 #include "Socket.h"
+#include <atomic>
 
 namespace dcpp {
 
@@ -60,7 +61,7 @@ public:
 	}
 
 	static void waitShutdown() {
-		while(sockets)
+		while(sockets > 0)
 			Thread::sleep(100);
 	}
 
@@ -141,7 +142,7 @@ private:
 	CriticalSection cs;
 
 	Semaphore taskSem;
-	deque<pair<Tasks, boost::shared_ptr<TaskData> > > tasks;
+	deque<pair<Tasks, shared_ptr<TaskData> > > tasks;
 	ByteVector inbuf;
 	ByteVector writeBuf;
 	ByteVector sendBuf;
@@ -167,7 +168,7 @@ private:
 	void threadSendData() throw(Exception);
 
 	void fail(const string& aError);	
-	static volatile long sockets;
+	static atomic<long> sockets;
 
 	bool checkEvents() throw(Exception);
 	void checkSocket() throw(Exception);

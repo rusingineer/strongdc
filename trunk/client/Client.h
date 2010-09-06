@@ -29,6 +29,8 @@
 #include "DebugManager.h"
 #include "SearchQueue.h"
 
+#include <atomic>
+
 namespace dcpp {
 
 class ClientBase
@@ -98,12 +100,13 @@ public:
 	void updated(const OnlineUserPtr& aUser) { fire(ClientListener::UserUpdated(), this, aUser); }
 
 	static int getTotalCounts() {
-		return counts.normal + counts.registered + counts.op;
+		return counts[COUNT_NORMAL] + counts[COUNT_REGISTERED] + counts[COUNT_OP];
 	}
 
 	static string getCounts() {
 		char buf[128];
-		return string(buf, snprintf(buf, sizeof(buf), "%ld/%ld/%ld", counts.normal, counts.registered, counts.op));
+		return string(buf, snprintf(buf, sizeof(buf), "%ld/%ld/%ld",
+				counts[COUNT_NORMAL].load(), counts[COUNT_REGISTERED].load(), counts[COUNT_OP].load()));
 	}
 
 	const string& getRawCommand(const int aRawCommand) const {
@@ -183,13 +186,15 @@ protected:
 	friend class ClientManager;
 	Client(const string& hubURL, char separator, bool secure_);
 	virtual ~Client() throw();
-	struct Counts {
-		Counts(long n = 0, long r = 0, long o = 0) : normal(n), registered(r), op(o) { }
-		volatile long normal;
-		volatile long registered;
-		volatile long op;
-		bool operator !=(const Counts& rhs) { return normal != rhs.normal || registered != rhs.registered || op != rhs.op; }
+
+	enum CountType {
+		COUNT_NORMAL,
+		COUNT_REGISTERED,
+		COUNT_OP,
+		COUNT_UNCOUNTED,
 	};
+
+	static atomic<long> counts[COUNT_UNCOUNTED];
 
 	enum States {
 		STATE_CONNECTING,	///< Waiting for socket to connect
@@ -202,9 +207,6 @@ protected:
 
 	SearchQueue searchQueue;
 	BufferedSocket* sock;
-
-	static Counts counts;
-	Counts lastCounts;
 
 	int64_t availableBytes;
 
@@ -227,17 +229,9 @@ protected:
 
 private:
 
-	enum CountType {
-		COUNT_UNCOUNTED,
-		COUNT_NORMAL,
-		COUNT_REGISTERED,
-		COUNT_OP
-	};
-
 	Client(const Client&);
 	Client& operator=(const Client&);
 
-	CountType countType;
 	string hubUrl;
 	string address;
 	string ip;
@@ -245,6 +239,7 @@ private:
 	uint16_t port;
 	char separator;
 	bool secure;
+	CountType countType;
 };
 
 } // namespace dcpp

@@ -30,7 +30,7 @@
 
 namespace dcpp {
 
-Client::Counts Client::counts;
+atomic<long> Client::counts[COUNT_UNCOUNTED];
 
 Client::Client(const string& hubURL, char separator_, bool secure_) : 
 	myIdentity(ClientManager::getInstance()->getMe(), 0),
@@ -175,27 +175,20 @@ std::string Client::getCipherName() const {
 
 void Client::updateCounts(bool aRemove) {
 	// We always remove the count and then add the correct one if requested...
-	if(countType == COUNT_NORMAL) {
-		Thread::safeDec(counts.normal);
-	} else if(countType == COUNT_REGISTERED) {
-		Thread::safeDec(counts.registered);
-	} else if(countType == COUNT_OP) {
-		Thread::safeDec(counts.op);
+	if(countType != COUNT_UNCOUNTED) {
+		--counts[countType];
+		countType = COUNT_UNCOUNTED;
 	}
-
-	countType = COUNT_UNCOUNTED;
 
 	if(!aRemove) {
 		if(getMyIdentity().isOp()) {
-			Thread::safeInc(counts.op);
 			countType = COUNT_OP;
 		} else if(getMyIdentity().isRegistered()) {
-			Thread::safeInc(counts.registered);
 			countType = COUNT_REGISTERED;
 		} else {
-			Thread::safeInc(counts.normal);
 			countType = COUNT_NORMAL;
 		}
+		++counts[countType];
 	}
 }
 

@@ -696,7 +696,7 @@ bool HashManager::Hasher::fastHash(const string& filename, uint8_t* , TigerTree&
 			break;
 		}
 
-		if(madvise(buf, size_read, MADV_SEQUENTIAL | MADV_WILLNEED) == -1) {
+		if (posix_madvise(buf, size_read, POSIX_MADV_SEQUENTIAL | POSIX_MADV_WILLNEED) == -1) {
 			dcdebug("Error calling madvise for file %s: %s\n", filename.c_str(), Util::translateError(errno).c_str());
 			break;
 		}

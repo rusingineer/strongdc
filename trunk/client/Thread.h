@@ -69,19 +69,8 @@ public:
 	void setThreadPriority(Priority p) throw() { ::SetThreadPriority(threadHandle, p); }
 	
 	static void sleep(uint64_t millis) { ::Sleep(static_cast<DWORD>(millis)); }
-	static void yield() { ::Sleep(1); }
+	static void yield() { ::Sleep(0); }
 	
-#ifdef __MINGW32__
-	static long safeInc(volatile long& v) { return InterlockedIncrement((long*)&v); }
-	static long safeDec(volatile long& v) { return InterlockedDecrement((long*)&v); }
-	static long safeExchange(volatile long& target, long value) { return InterlockedExchange((long*)&target, value); }
-
-#else
-	static long safeInc(volatile long& v) { return InterlockedIncrement(&v); }
-	static long safeDec(volatile long& v) { return InterlockedDecrement(&v); }
-	static long safeExchange(volatile long& target, long value) { return InterlockedExchange(&target, value); }
-#endif
-
 #else
 
 	enum Priority {
@@ -107,25 +96,6 @@ public:
 	void setThreadPriority(Priority p) { setpriority(PRIO_PROCESS, 0, p); }
 	static void sleep(uint32_t millis) { ::usleep(millis*1000); }
 	static void yield() { ::sched_yield(); }
-	static long safeInc(volatile long& v) { 
-		pthread_mutex_lock(&mtx);
-		long ret = ++v;
-		pthread_mutex_unlock(&mtx);
-		return ret;
-	}
-	static long safeDec(volatile long& v) { 
-		pthread_mutex_lock(&mtx);
-		long ret = --v;
-		pthread_mutex_unlock(&mtx);
-		return ret;
-	}
-	static long safeExchange(volatile long& target, long value) {
-		pthread_mutex_lock(&mtx);
-		long ret = target;
-		target = value;
-		pthread_mutex_unlock(&mtx);
-		return ret;
-	}
 #endif
 
 protected:
@@ -167,7 +137,6 @@ protected:
 		return 0;
 	}
 #else
-	static pthread_mutex_t mtx;
 	pthread_t threadHandle;
 	static void* starter(void* p) {
 		Thread* t = (Thread*)p;
