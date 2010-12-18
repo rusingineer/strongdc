@@ -38,7 +38,7 @@ public:
 	void hubMessage(const string& aMessage, bool thirdPerson = false);
 	void privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson = false);
 	void sendUserCmd(const UserCommand& command, const StringMap& params);
-	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken);
+	void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, const StringList& aExtList);
 	void password(const string& pwd);
 	void info(bool alwaysSend);
 	void refreshUserList(bool);	
@@ -49,6 +49,24 @@ public:
 	void send(const AdcCommand& cmd);
 
 	string getMySID() { return AdcCommand::fromSID(sid); }
+
+	static const vector<StringList>& getSearchExts();
+	static StringList parseSearchExts(int flag);
+
+	static const string CLIENT_PROTOCOL;
+	static const string SECURE_CLIENT_PROTOCOL_TEST;
+	static const string ADCS_FEATURE;
+	static const string TCP4_FEATURE;
+	static const string UDP4_FEATURE;
+	static const string NAT0_FEATURE;
+	static const string SEGA_FEATURE;
+	static const string BASE_SUPPORT;
+	static const string BAS0_SUPPORT;
+	static const string TIGR_SUPPORT;
+	static const string UCM0_SUPPORT;
+	static const string BLO0_SUPPORT;
+	static const string DHT0_SUPPORT;
+
 private:
 	friend class ClientManager;
 	friend class CommandHandler<AdcHub>;
@@ -84,18 +102,7 @@ private:
 
 	std::unordered_set<uint32_t> forbiddenCommands;
 
-	static const string CLIENT_PROTOCOL;
-	static const string SECURE_CLIENT_PROTOCOL_TEST;
-	static const string ADCS_FEATURE;
-	static const string TCP4_FEATURE;
-	static const string UDP4_FEATURE;
-	static const string NAT0_FEATURE;
-	static const string BASE_SUPPORT;
-	static const string BAS0_SUPPORT;
-	static const string TIGR_SUPPORT;
-	static const string UCM0_SUPPORT;
-	static const string BLO0_SUPPORT;
-	static const string DHT0_SUPPORT;
+	static const vector<StringList> searchExts;
 
 	string checkNick(const string& nick);
 
@@ -137,6 +144,7 @@ private:
 
 	template<typename T> void handle(T, AdcCommand&) { }
 
+	void sendSearch(AdcCommand& c);
 	void sendUDP(const AdcCommand& cmd) throw();
 	void unknownProtocol(uint32_t target, const string& protocol, const string& token);
 	bool secureAvail(uint32_t target, const string& protocol, const string& token);

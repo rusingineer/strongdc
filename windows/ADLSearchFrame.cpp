@@ -129,7 +129,7 @@ LRESULT ADLSearchFrame::onClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 {	
 	if(!closed) {
 		closed = true;		
-		ADLSearchManager::getInstance()->Save();
+		ADLSearchManager::getInstance()->save();
 		SettingsManager::getInstance()->removeListener(this);
 		WinUtil::setButtonPressed(IDC_FILE_ADL_SEARCH, false);
 		PostMessage(WM_CLOSE);

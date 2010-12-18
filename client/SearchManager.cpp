@@ -32,6 +32,21 @@
 
 namespace dcpp {
 
+const char* SearchManager::types[TYPE_LAST] = {
+	CSTRING(ANY),
+	CSTRING(AUDIO),
+	CSTRING(COMPRESSED),
+	CSTRING(DOCUMENT),
+	CSTRING(EXECUTABLE),
+	CSTRING(PICTURE),
+	CSTRING(VIDEO),
+	CSTRING(DIRECTORY),
+	"TTH"
+};
+const char* SearchManager::getTypeStr(int type) {
+	return types[type];
+}
+
 SearchManager::SearchManager() :
 	port(0),
 	stop(false)
@@ -49,12 +64,22 @@ SearchManager::~SearchManager() throw() {
 	}
 }
 
-void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, void* aOwner /* = NULL */) {
-	ClientManager::getInstance()->search(aSizeMode, aSize, aTypeMode, aName, aToken, aOwner);
+string SearchManager::normalizeWhitespace(const string& aString){
+	string::size_type found = 0;
+	string normalized = aString;
+	while((found = normalized.find_first_of("\t\n\r", found)) != string::npos) {
+		normalized[found] = ' ';
+		found++;
+	}
+	return normalized;
 }
 
-uint64_t SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, void* aOwner /* = NULL */) {
-	return ClientManager::getInstance()->search(who, aSizeMode, aSize, aTypeMode, aName, aToken, aOwner);
+void SearchManager::search(const string& aName, int64_t aSize, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, void* aOwner /* = NULL */) {
+	ClientManager::getInstance()->search(aSizeMode, aSize, aTypeMode, normalizeWhitespace(aName), aToken, aOwner);
+}
+
+uint64_t SearchManager::search(StringList& who, const string& aName, int64_t aSize /* = 0 */, TypeModes aTypeMode /* = TYPE_ANY */, SizeModes aSizeMode /* = SIZE_ATLEAST */, const string& aToken /* = Util::emptyString */, const StringList& aExtList, void* aOwner /* = NULL */) {
+	return ClientManager::getInstance()->search(who, aSizeMode, aSize, aTypeMode, normalizeWhitespace(aName), aToken, aExtList, aOwner);
 }
 
 void SearchManager::listen() throw(SocketException) {
@@ -460,7 +485,7 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from, bool isUdpAc
 		ClientManager::getInstance()->send(cmd, from);
 	}
 }
-
+/*
 string SearchManager::clean(const string& aSearchString) {
 	static const char* badChars = "$|.[]()-_+";
 	string::size_type i = aSearchString.find_first_of(badChars);
@@ -475,7 +500,7 @@ string SearchManager::clean(const string& aSearchString) {
 
 	return tmp;
 }
-
+*/
 string SearchManager::getPartsString(const PartsInfo& partsInfo) const {
 	string ret;
 

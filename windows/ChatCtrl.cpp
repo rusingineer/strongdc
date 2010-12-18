@@ -105,6 +105,13 @@ void ChatCtrl::AppendText(const Identity& i, const tstring& sMyNick, const tstri
 	SetSel(lSelBegin, lSelEnd);
 	setText(sLine);
 
+	CHARFORMAT2 enc;
+	enc.bCharSet = RUSSIAN_CHARSET;
+	enc.dwMask = CFM_CHARSET;
+
+	SetSel(0, sLine.length());
+	SetSelectionCharFormat(enc);
+
 	// Format TimeStamp
 	if(!sTime.empty()) {
 		lSelEnd += sTime.size();

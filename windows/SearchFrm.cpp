@@ -496,13 +496,16 @@ void SearchFrame::onEnter() {
 	// stop old search
 	ClientManager::getInstance()->cancelSearch((void*)this);	
 
+	// TODO: Get ADC searchtype extensions if any is selected
+	StringList extList;
+
 	{
 		Lock l(cs);
 		
 		searchStartTime = GET_TICK();
 		// more 5 seconds for transfering results
 		searchEndTime = searchStartTime + SearchManager::getInstance()->search(clients, Text::fromT(s), llsize, 
-			(SearchManager::TypeModes)ftype, mode, token, (void*)this) + 5000;
+			(SearchManager::TypeModes)ftype, mode, token, extList, (void*)this) + 5000;
 
 		waiting = true;
 	}

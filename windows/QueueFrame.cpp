@@ -193,7 +193,7 @@ const tstring QueueFrame::QueueItemInfo::getText(int col) const {
 				case QueueItem::NORMAL: priority = TSTRING(NORMAL); break;
 				case QueueItem::HIGH: priority = TSTRING(HIGH); break;
 				case QueueItem::HIGHEST: priority = TSTRING(HIGHEST); break;
-				default: dcasserta(0); break;
+				default: dcassert(0); break;
 			}
 			if(getAutoPriority()) {
 				priority += _T(" (") + TSTRING(AUTO) + _T(")");

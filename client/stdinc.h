@@ -22,6 +22,8 @@
 #include "memcpy_amd.h"
 
 #define _SECURE_SCL  0
+#define _ITERATOR_DEBUG_LEVEL 0
+#define _HAS_ITERATOR_DEBUGGING 0
 
 #ifndef _DEBUG
 # define BOOST_DISABLE_ASSERTS 1

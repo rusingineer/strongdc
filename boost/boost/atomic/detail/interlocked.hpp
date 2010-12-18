@@ -22,8 +22,8 @@ static inline void full_fence(void)
 	BOOST_INTERLOCKED_EXCHANGE(&tmp, 0);
 }
 
-template<typename T>
-void platform_atomic_thread_fence(memory_order order)
+template<>
+inline void platform_atomic_thread_fence(memory_order order)
 {
 	switch(order) {
 		case memory_order_seq_cst:
@@ -86,7 +86,7 @@ public:
 	{
 		return (T)BOOST_INTERLOCKED_EXCHANGE((long *)&i, (long)r);
 	}
-	T fetch_add(T c, memory_order order=memory_order_seq_cst) volatile
+	T fetch_add(T c, memory_order /*order*/=memory_order_seq_cst) volatile
 	{
 		return (T)BOOST_INTERLOCKED_EXCHANGE_ADD((long *)&i, c);
 	}

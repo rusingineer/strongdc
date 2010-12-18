@@ -150,7 +150,10 @@ public:
 			token = Util::toString(Util::rand());
 			
 			SearchManager::getInstance()->addListener(this);
-			searchInterval = SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE, token, (void*)this);
+
+			// TODO: Get ADC searchtype extensions if any is selected
+			StringList extList;
+			searchInterval = SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE, token, extList, (void*)this);
 			results = Util::emptyString;
 			row = 0;
 			sended_search = true;

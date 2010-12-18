@@ -26,7 +26,10 @@
 #include "Util.h"
 #include "File.h"
 #include "version.h"
+#include "AdcHub.h"
 #include "CID.h"
+#include "SearchManager.h"
+#include "StringTokenizer.h"
 
 #include "../dht/dht.h"
 
@@ -606,6 +609,28 @@ void SettingsManager::load(string const& aFileName)
 			xml.stepOut();
 		}
 
+		xml.resetCurrentChild();
+		if(xml.findChild("SearchTypes")) {
+			try {
+				searchTypes.clear();
+				xml.stepIn();
+				while(xml.findChild("SearchType")) {
+					const string& extensions = xml.getChildData();
+					if(extensions.empty()) {
+						continue;
+					}
+					const string& name = xml.getChildAttrib("Id");
+					if(name.empty()) {
+						continue;
+					}
+					searchTypes[name] = StringTokenizer<string>(extensions, ';').getTokens();
+				}
+				xml.stepOut();
+			} catch(const SimpleXMLException&) {
+				setSearchTypeDefaults();
+			}
+		}
+
 		double v = Util::toDouble(SETTING(CONFIG_VERSION));
 		// if(v < 0.x) { // Fix old settings here }
 
@@ -691,6 +716,14 @@ void SettingsManager::save(string const& aFileName) {
 	}
 	xml.stepOut();
 	
+	xml.addTag("SearchTypes");
+	xml.stepIn();
+	for(SearchTypesIterC i = searchTypes.begin(); i != searchTypes.end(); ++i) {
+		xml.addTag("SearchType", Util::toString(";", i->second));
+		xml.addChildAttrib("Id", i->first);
+	}
+	xml.stepOut();
+
 	fire(SettingsManagerListener::Save(), xml);
 
 	try {
@@ -705,6 +738,71 @@ void SettingsManager::save(string const& aFileName) {
 	} catch(...) {
 		// ...
 	}
+}
+
+void SettingsManager::validateSearchTypeName(const string& name) const {
+	if(name.empty() || (name.size() == 1 && name[0] >= '1' && name[0] <= '6')) {
+		throw SearchTypeException("Invalid search type name"); // TODO: localize
+	}
+	for(int type = SearchManager::TYPE_ANY; type != SearchManager::TYPE_LAST; ++type) {
+		if(SearchManager::getTypeStr(type) == name) {
+			throw SearchTypeException("This search type already exists"); // TODO: localize
+		}
+	}
+}
+
+void SettingsManager::setSearchTypeDefaults() {
+	searchTypes.clear();
+
+	// for conveniency, the default search exts will be the same as the ones defined by SEGA.
+	const auto& searchExts = AdcHub::getSearchExts();
+	for(size_t i = 0, n = searchExts.size(); i < n; ++i)
+		searchTypes[string(1, '1' + i)] = searchExts[i];
+
+	fire(SettingsManagerListener::SearchTypesChanged());
+}
+
+void SettingsManager::addSearchType(const string& name, const StringList& extensions, bool validated) {
+	if(!validated) {
+		validateSearchTypeName(name);
+	}
+
+	if(searchTypes.find(name) != searchTypes.end()) {
+		throw SearchTypeException("This search type already exists"); // TODO: localize
+	}
+
+	searchTypes[name] = extensions;
+	fire(SettingsManagerListener::SearchTypesChanged());
+}
+
+void SettingsManager::delSearchType(const string& name) {
+	validateSearchTypeName(name);
+	searchTypes.erase(name);
+	fire(SettingsManagerListener::SearchTypesChanged());
+}
+
+void SettingsManager::renameSearchType(const string& oldName, const string& newName) {
+	validateSearchTypeName(newName);
+	StringList exts = getSearchType(oldName)->second;
+	addSearchType(newName, exts, true);
+	searchTypes.erase(oldName);
+}
+
+void SettingsManager::modSearchType(const string& name, const StringList& extensions) {
+	getSearchType(name)->second = extensions;
+	fire(SettingsManagerListener::SearchTypesChanged());
+}
+
+const StringList& SettingsManager::getExtensions(const string& name) {
+	return getSearchType(name)->second;
+}
+
+SettingsManager::SearchTypesIter SettingsManager::getSearchType(const string& name) {
+	SearchTypesIter ret = searchTypes.find(name);
+	if(ret == searchTypes.end()) {
+		throw SearchTypeException("No such search type"); // TODO: localize
+	}
+	return ret;
 }
 
 } // namespace dcpp

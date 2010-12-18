@@ -216,28 +216,14 @@ private:
 	struct AdcSearch {
 		AdcSearch(const StringList& params);
 
-		bool isExcluded(const string& str) const {
-			for(StringSearch::List::const_iterator i = exclude.begin(); i != exclude.end(); ++i) {
-				if(i->match(str))
-					return true;
-			}
-			return false;
-		}
-
-		bool hasExt(const string& name) const {
-			if(ext.empty())
-				return true;
-			for(StringIterC i = ext.begin(); i != ext.end(); ++i) {
-				if(name.length() >= i->length() && stricmp(name.c_str() + name.length() - i->length(), i->c_str()) == 0)
-					return true;
-			}
-			return false;
-		}
+		bool isExcluded(const string& str);
+		bool hasExt(const string& name);
 
 		StringSearch::List* include;
 		StringSearch::List includeX;
 		StringSearch::List exclude;
 		StringList ext;
+		StringList noExt;
 
 		int64_t gt;
 		int64_t lt;
@@ -309,7 +295,7 @@ private:
 	int run();
 
 	// QueueManagerListener
-	virtual void on(QueueManagerListener::Finished, QueueItem* qi, const string& dir, int64_t speed) throw();
+	void on(QueueManagerListener::FileMoved, const string& n) throw();
 
 	// HashManagerListener
 	void on(HashManagerListener::TTHDone, const string& fname, const TTHValue& root) throw();

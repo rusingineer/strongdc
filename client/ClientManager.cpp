@@ -539,12 +539,12 @@ void ClientManager::search(int aSizeMode, int64_t aSize, int aFileType, const st
 	for(Client::Iter i = clients.begin(); i != clients.end(); ++i) {
 		Client* c = i->second;
 		if(c->isConnected()) {
-			c->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
+			c->search(aSizeMode, aSize, aFileType, aString, aToken, StringList() /*ExtList*/, aOwner);
 		}
 	}
 }
 
-uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* aOwner) {
+uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, const StringList& aExtList, void* aOwner) {
 	if(BOOLSETTING(USE_DHT) && aFileType == SearchManager::TYPE_TTH)
 		dht::DHT::getInstance()->findFile(aString, aToken);
 
@@ -557,7 +557,7 @@ uint64_t ClientManager::search(StringList& who, int aSizeMode, int64_t aSize, in
 		
 		Client::Iter i = clients.find(const_cast<string*>(&client));
 		if(i != clients.end() && i->second->isConnected()) {
-			uint64_t ret = i->second->search(aSizeMode, aSize, aFileType, aString, aToken, aOwner);
+			uint64_t ret = i->second->search(aSizeMode, aSize, aFileType, aString, aToken, aExtList, aOwner);
 			estimateSearchSpan = max(estimateSearchSpan, ret);			
 		}
 	}

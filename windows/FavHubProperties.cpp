@@ -79,6 +79,30 @@ LRESULT FavHubProperties::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 
 	combo.Detach();
 
+	// TODO: add more encoding into wxWidgets version, this is enough now
+	// FIXME: following names are Windows only!
+	combo.Attach(GetDlgItem(IDC_ENCODING));
+	combo.AddString(_T("System default"));
+	combo.AddString(_T("English_United Kingdom.1252"));
+	combo.AddString(_T("Czech_Czech Republic.1250"));
+	combo.AddString(_T("Russian_Russia.1251"));
+	combo.AddString(Text::toT(Text::utf8).c_str());
+
+	if(strnicmp("adc://", entry->getServer().c_str(), 6) == 0 || strnicmp("adcs://", entry->getServer().c_str(), 7) == 0)
+	{
+		combo.SetCurSel(4); // select UTF-8 for ADC hubs
+		combo.EnableWindow(false);
+	}
+	else
+	{
+		if(entry->getEncoding().empty())
+			combo.SetCurSel(0);
+		else
+			combo.SetWindowText(Text::toT(entry->getEncoding()).c_str());
+	}
+
+	combo.Detach();
+
 	if(entry->getMode() == 0)
 		CheckRadioButton(IDC_ACTIVE, IDC_DEFAULT, IDC_DEFAULT);
 	else if(entry->getMode() == 1)
@@ -146,6 +170,14 @@ LRESULT FavHubProperties::OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 		entry->setIP(Text::fromT(buf));
 		GetDlgItemText(IDC_FAV_SEARCH_INTERVAL_BOX, buf, 512);
 		entry->setSearchInterval(Util::toUInt32(Text::fromT(buf)));
+		
+		GetDlgItemText(IDC_ENCODING, buf, 512);
+		if(_tcschr(buf, _T('.')) == NULL && _tcscmp(buf, Text::toT(Text::utf8).c_str()) != 0 && _tcscmp(buf, _T("System default")) != 0)
+		{
+			MessageBox(_T("Invalid encoding!"), _T(""), MB_ICONWARNING | MB_OK);
+			return 0;
+		}
+		entry->setEncoding(Text::fromT(buf));
 		
 		CComboBox combo;
 		combo.Attach(GetDlgItem(IDC_FAV_DLG_GROUP));

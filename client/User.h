@@ -37,16 +37,15 @@ public:
 	/** Each flag is set if it's true in at least one hub */
 	enum UserFlags {
 		ONLINE					= 0x01,
-		DCPLUSPLUS				= 0x02,
-		PASSIVE					= 0x04,
-		NMDC					= 0x08,
-		BOT						= 0x10,
-		TLS						= 0x20,		//< Client supports TLS
-		OLD_CLIENT				= 0x40,		//< Can't download - old client
-		NO_ADC_1_0_PROTOCOL		= 0x80,		//< Doesn't support "ADC/1.0" (dc++ <=0.703)
-		NO_ADCS_0_10_PROTOCOL	= 0x100,	//< Doesn't support "ADCS/0.10"
-		DHT						= 0x200,
-		NAT_TRAVERSAL			= 0x400,	//< Client supports NAT Traversal
+		PASSIVE					= 0x02,
+		NMDC					= 0x04,
+		BOT						= 0x08,
+		TLS						= 0x10,		//< Client supports TLS
+		OLD_CLIENT				= 0x20,		//< Can't download - old client
+		NO_ADC_1_0_PROTOCOL		= 0x40,		//< Doesn't support "ADC/1.0" (dc++ <=0.703)
+		NO_ADCS_0_10_PROTOCOL	= 0x80,		//< Doesn't support "ADCS/0.10"
+		DHT						= 0x100,
+		NAT_TRAVERSAL			= 0x200,	//< Client supports NAT Traversal
 	};
 
 	struct Hash {
@@ -94,7 +93,8 @@ public:
 		CT_OP = 4,
 		CT_SU = 8,
 		CT_OWNER = 16,
-		CT_HUB = 32
+		CT_HUB = 32,
+		CT_HIDDEN = 64
 	};
 	
 	enum StatusFlags {
@@ -119,6 +119,11 @@ public:
 	Identity& operator=(const Identity& rhs) { FastLock l(cs); user = rhs.user; info = rhs.info; return *this; }
 	~Identity() { }
 
+// GS is already defined on some systems (e.g. OpenSolaris)
+#ifdef GS
+#undef GS
+#endif
+
 #define GS(n, x) string get##n() const { return get(x); } void set##n(const string& v) { set(x, v); }
 	GS(Nick, "NI")
 	GS(Description, "DE")
@@ -142,7 +147,7 @@ public:
 	bool isHub() const { return isClientType(CT_HUB) || isSet("HU"); }
 	bool isOp() const { return isClientType(CT_OP) || isSet("OP"); }
 	bool isRegistered() const { return isClientType(CT_REGGED) || isSet("RG"); }
-	bool isHidden() const { return isSet("HI"); }
+	bool isHidden() const { return isClientType(CT_HIDDEN) || isSet("HI"); }
 	bool isBot() const { return isClientType(CT_BOT) || isSet("BO"); }
 	bool isAway() const { return (getStatus() & AWAY) || isSet("AW"); }
 	bool isTcpActive(const Client* = NULL) const;

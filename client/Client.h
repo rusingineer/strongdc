@@ -66,7 +66,7 @@ public:
 	virtual void privateMessage(const OnlineUserPtr& user, const string& aMessage, bool thirdPerson = false) = 0;
 	virtual void sendUserCmd(const UserCommand& command, const StringMap& params) = 0;
 
-	uint64_t search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* owner);
+	uint64_t search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, const StringList& aExtList, void* owner);
 	void cancelSearch(void* aOwner) { searchQueue.cancelSearch(aOwner); }
 	
 	virtual void password(const string& pwd) = 0;
@@ -80,6 +80,7 @@ public:
 	virtual string escape(string const& str) const { return str; }
 
 	bool isConnected() const { return state != STATE_DISCONNECTED; }
+	bool isReady() const { return state != STATE_CONNECTING && state != STATE_DISCONNECTED; }
 	bool isSecure() const;
 	bool isTrusted() const;
 	std::string getCipherName() const;
@@ -217,7 +218,7 @@ protected:
 	void reloadSettings(bool updateNick);
 
 	virtual string checkNick(const string& nick) = 0;
-	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken) = 0;
+	virtual void search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, const StringList& aExtList) = 0;
 
 	// TimerManagerListener
 	virtual void on(Second, uint64_t aTick) throw();

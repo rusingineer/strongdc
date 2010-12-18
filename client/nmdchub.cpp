@@ -671,7 +671,6 @@ void NmdcHub::onLine(const string& aLine) throw() {
 			OnlineUser& u = getUser(param);
 
 			if(u.getUser() == getMyIdentity().getUser()) {
-				u.getUser()->setFlag(User::DCPLUSPLUS);
 				if(isActive())
 					u.getUser()->unsetFlag(User::PASSIVE);
 				else
@@ -951,7 +950,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	}
 }
 
-void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string&){
+void NmdcHub::search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string&, const StringList&){
 	checkstate(); 
 	char c1 = (aSizeType == SearchManager::SIZE_DONTCARE || aSizeType == SearchManager::SIZE_EXACT) ? 'F' : 'T';
 	char c2 = (aSizeType == SearchManager::SIZE_ATLEAST) ? 'F' : 'T';

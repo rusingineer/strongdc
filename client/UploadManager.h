@@ -143,6 +143,8 @@ private:
 	UploadList uploads;
 	UploadList delayUploads;
 	CriticalSection cs;
+
+	int lastFreeSlots; /// amount of free slots at the previous minute
 	
 	typedef unordered_map<UserPtr, uint64_t, User::Hash> SlotMap;
 	typedef SlotMap::iterator SlotIter;

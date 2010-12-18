@@ -72,6 +72,12 @@ extern "C" void bz_internal_error(int errcode) {
 	dcdebug("bzip2 internal error: %d\n", errcode); 
 }
 
+#if (_MSC_VER == 1400 || _MSC_VER == 1500)
+void WINAPI invalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t) {
+	//do nothing, this exist because vs2k5 crt needs it not to crash on errors.
+}
+#endif
+
 #ifdef _WIN32
 
 typedef HRESULT (WINAPI* _SHGetKnownFolderPath)(GUID& rfid, DWORD dwFlags, HANDLE hToken, PWSTR *ppszPath);
@@ -109,6 +115,10 @@ void Util::initialize() {
 	Text::initialize();
 
 	sgenrand((unsigned long)time(NULL));
+
+#if _MSC_VER == 1400 || _MSC_VER == 1500
+	_set_invalid_parameter_handler(reinterpret_cast<_invalid_parameter_handler>(invalidParameterHandler));
+#endif
 
 #ifdef _WIN32
 	TCHAR buf[MAX_PATH+1] = { 0 };

@@ -43,7 +43,7 @@ namespace dcpp {
 
 static const string UPLOAD_AREA = "Uploads";
 
-UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0),
+UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), lastFreeSlots(-1),
 	m_iHighSpeedStartTick(0), isFireball(false), isFileServer(false), extraPartial(0) {	
 	ClientManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
@@ -650,6 +650,14 @@ void UploadManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	for(UserList::const_iterator i = disconnects.begin(); i != disconnects.end(); ++i) {
 		LogManager::getInstance()->message(STRING(DISCONNECTED_USER) + " " + Util::toString(ClientManager::getInstance()->getNicks((*i)->getCID(), Util::emptyString)));
 		ConnectionManager::getInstance()->disconnect(*i, false);
+	}
+
+	int freeSlots = getFreeSlots();
+	if(freeSlots != lastFreeSlots) {
+		lastFreeSlots = freeSlots;
+		/* I don't like spamming every minute so disabled it for now
+			ClientManager::getInstance()->infoUpdated();
+		*/
 	}
 }
 

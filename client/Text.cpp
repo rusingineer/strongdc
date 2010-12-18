@@ -55,6 +55,17 @@ void initialize() {
 #endif
 }
 
+int getCodePage(const string& charset) {
+	if(charset.empty())
+		return CP_ACP;
+
+	string::size_type pos = charset.find('.');
+	if(pos == string::npos)
+		return CP_ACP;
+
+	return atoi(charset.c_str() + pos + 1);
+}
+
 bool isAscii(const char* str) throw() {
 	for(const uint8_t* p = (const uint8_t*)str; *p; ++p) {
 		if(*p & 0x80)
@@ -141,22 +152,22 @@ void wcToUtf8(wchar_t c, string& str) {
 	}
 }
 
-const string& acpToUtf8(const string& str, string& tmp) throw() {
+const string& acpToUtf8(const string& str, string& tmp, const string& fromCharset) throw() {
 	wstring wtmp;
-	return wideToUtf8(acpToWide(str, wtmp), tmp);
+	return wideToUtf8(acpToWide(str, wtmp, fromCharset), tmp);
 }
 
-const wstring& acpToWide(const string& str, wstring& tmp) throw() {
+const wstring& acpToWide(const string& str, wstring& tmp, const string& fromCharset) throw() {
 	if(str.empty())
 		return Util::emptyStringW;
 #ifdef _WIN32
-	int n = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str.c_str(), (int)str.length(), NULL, 0);
+	int n = MultiByteToWideChar(getCodePage(fromCharset), MB_PRECOMPOSED, str.c_str(), (int)str.length(), NULL, 0);
 	if(n == 0) {
 		return Util::emptyStringW;
 	}
 
 	tmp.resize(n);
-	n = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str.c_str(), (int)str.length(), &tmp[0], n);
+	n = MultiByteToWideChar(getCodePage(fromCharset), MB_PRECOMPOSED, str.c_str(), (int)str.length(), &tmp[0], n);
 	if(n == 0) {
 		return Util::emptyStringW;
 	}
@@ -215,17 +226,17 @@ const string& wideToUtf8(const wstring& str, string& tgt) throw() {
 #endif
 }
 
-const string& wideToAcp(const wstring& str, string& tmp) throw() {
+const string& wideToAcp(const wstring& str, string& tmp, const string& toCharset) throw() {
 	if(str.empty())
 		return Util::emptyString;
 #ifdef _WIN32
-	int n = WideCharToMultiByte(CP_ACP, 0, str.c_str(), (int)str.length(), NULL, 0, NULL, NULL);
+	int n = WideCharToMultiByte(getCodePage(toCharset), 0, str.c_str(), (int)str.length(), NULL, 0, NULL, NULL);
 	if(n == 0) {
 		return Util::emptyString;
 	}
 
 	tmp.resize(n);
-	n = WideCharToMultiByte(CP_ACP, 0, str.c_str(), (int)str.length(), &tmp[0], n, NULL, NULL);
+	n = WideCharToMultiByte(getCodePage(toCharset), 0, str.c_str(), (int)str.length(), &tmp[0], n, NULL, NULL);
 	if(n == 0) {
 		return Util::emptyString;
 	}
@@ -258,9 +269,9 @@ bool validateUtf8(const string& str) throw() {
 	return true;
 }
 
-const string& utf8ToAcp(const string& str, string& tmp) throw() {
+const string& utf8ToAcp(const string& str, string& tmp, const string& toCharset) throw() {
 	wstring wtmp;
-	return wideToAcp(utf8ToWide(str, wtmp), tmp);
+	return wideToAcp(utf8ToWide(str, wtmp), tmp, toCharset);
 }
 
 const wstring& utf8ToWide(const string& str, wstring& tgt) throw() {
@@ -336,7 +347,7 @@ const string& toUtf8(const string& str, const string& fromCharset, string& tmp) 
 		return str;
 	}
 
-	return acpToUtf8(str, tmp);
+	return acpToUtf8(str, tmp, fromCharset);
 #else
 	return convert(str, tmp, fromCharset, utf8);
 #endif
@@ -352,7 +363,7 @@ const string& fromUtf8(const string& str, const string& toCharset, string& tmp) 
 		return str;
 	}
 
-	return utf8ToAcp(str, tmp);
+	return utf8ToAcp(str, tmp, toCharset);
 #else
 	return convert(str, tmp, utf8, toCharset);
 #endif

@@ -56,19 +56,24 @@ public:
 		TYPE_PICTURE,
 		TYPE_VIDEO,
 		TYPE_DIRECTORY,
-		TYPE_TTH
+		TYPE_TTH,
+		TYPE_LAST
 	};
+private:
+	static const char* types[TYPE_LAST];
+public:
+	static const char* getTypeStr(int type);
 	
 	void search(const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL);
 	void search(const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL) {
 		search(aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aOwner);
 	}
 
-	uint64_t search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL);
-	uint64_t search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, void* aOwner = NULL) {
-		return search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aOwner);
+	uint64_t search(StringList& who, const string& aName, int64_t aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const StringList& aExtList, void* aOwner = NULL);
+	uint64_t search(StringList& who, const string& aName, const string& aSize, TypeModes aTypeMode, SizeModes aSizeMode, const string& aToken, const StringList& aExtList, void* aOwner = NULL) {
+		return search(who, aName, Util::toInt64(aSize), aTypeMode, aSizeMode, aToken, aExtList, aOwner);
  	}
-	static string clean(const string& aSearchString);
+	//static string clean(const string& aSearchString);
 	
 	void respond(const AdcCommand& cmd, const CID& cid, bool isUdpActive, const string& hubIpPort);
 
@@ -123,10 +128,10 @@ private:
 
 	SearchManager();
 
+	static std::string normalizeWhitespace(const std::string& aString);
 	int run();
 
 	~SearchManager() throw();
-
 	void onData(const uint8_t* buf, size_t aLen, const string& address);
 
 	string getPartsString(const PartsInfo& partsInfo) const;
