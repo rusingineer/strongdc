@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Czech resources
+// Czech (Czech Republic) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CSY)
-#ifdef _WIN32
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 #pragma code_page(1250)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -532,7 +530,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_FAKEDETECT, DIALOG
     BEGIN
@@ -722,18 +720,16 @@ IDR_RECENTS             ICON                    "res\\Recents.ico"
 IDR_UPDATE              ICON                    "res\\Update.ico"
 IDB_SHUTDOWN            ICON                    "res\\shutdown.ico"
 IDI_MAGNET              ICON                    "res\\magnet.ico"
-#endif    // Czech resources
+#endif    // Czech (Czech Republic) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Polish resources
+// Polish (Poland) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_PLK)
-#ifdef _WIN32
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 #pragma code_page(1250)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -820,7 +816,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_DETECTION_LIST_PAGE, DIALOG
     BEGIN
@@ -863,18 +859,16 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Polish resources
+#endif    // Polish (Poland) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1122,13 +1116,13 @@ BEGIN
     PUSHBUTTON      "&Remove",IDC_REMOVE_MENU,215,204,50,14,WS_DISABLED
 END
 
-IDD_FAVORITEHUB DIALOGEX 0, 0, 463, 218
+IDD_FAVORITEHUB DIALOGEX 0, 0, 463, 234
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
 CAPTION "Favorite Hub Properties"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,345,196,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,406,196,50,14
+    DEFPUSHBUTTON   "OK",IDOK,345,212,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,406,212,50,14
     GROUPBOX        "Raw commands",IDC_STATIC,203,7,253,100
     EDITTEXT        IDC_RAW_ONE,209,19,211,12,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL
     EDITTEXT        IDC_RAW_TWO,209,36,211,12,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL
@@ -1161,12 +1155,14 @@ BEGIN
     CONTROL         "Passive (behind a firewall)",IDC_PASSIVE,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,211,145,159,10
     CONTROL         "Default",IDC_DEFAULT,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,211,121,117,10
     CONTROL         "Emulate DC++ in this hub",IDC_STEALTH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,136,175,10
-    GROUPBOX        "",IDC_OTHER_BORDER,7,162,449,31
+    GROUPBOX        "",IDC_OTHER_BORDER,7,162,449,46
     RTEXT           "Minimum search interval",IDC_FAV_SEARCH_INTERVAL,12,175,129,8
     EDITTEXT        IDC_FAV_SEARCH_INTERVAL_BOX,149,173,37,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_FAV_SEARCH_INTERVAL_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,175,172,11,14
-    COMBOBOX        IDC_FAVGROUP_BOX,264,173,156,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    RTEXT           "Group:",IDC_FAVGROUP,211,175,44,8
+    COMBOBOX        IDC_FAVGROUP_BOX,270,173,150,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    RTEXT           "Group:",IDC_FAVGROUP,211,175,51,8
+    RTEXT           "Hub encoding:",IDC_ENCODINGTEXT,203,192,59,8
+    COMBOBOX        IDC_ENCODING,270,190,150,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_TEXT_STYLES DIALOGEX 0, 0, 275, 234
@@ -1284,7 +1280,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -1422,9 +1418,11 @@ BEGIN
         VERTGUIDE, 186
         VERTGUIDE, 203
         VERTGUIDE, 211
+        VERTGUIDE, 262
+        VERTGUIDE, 270
         VERTGUIDE, 420
         TOPMARGIN, 7
-        BOTTOMMARGIN, 210
+        BOTTOMMARGIN, 226
     END
 
     IDD_TEXT_STYLES, DIALOG
@@ -1559,7 +1557,7 @@ END
 // Accelerator
 //
 
-IDR_MAINFRAME ACCELERATORS 
+IDR_MAINFRAME ACCELERATORS
 BEGIN
     "P",            ID_FILE_CONNECT,        VIRTKEY, CONTROL, NOINVERT
     "Q",            ID_FILE_QUICK_CONNECT,  VIRTKEY, CONTROL, NOINVERT
@@ -1582,14 +1580,14 @@ BEGIN
     "Z",            IDC_OPEN_DOWNLOADS,     VIRTKEY, CONTROL, NOINVERT
 END
 
-IDR_PUBLICHUBS ACCELERATORS 
+IDR_PUBLICHUBS ACCELERATORS
 BEGIN
     "C",            IDC_PUB_LIST_CONFIG,    VIRTKEY, ALT, NOINVERT
     "I",            IDC_FILTER_FOCUS,       VIRTKEY, ALT, NOINVERT
     "R",            IDC_REFRESH,            VIRTKEY, ALT, NOINVERT
 END
 
-IDR_ADLSEARCH ACCELERATORS 
+IDR_ADLSEARCH ACCELERATORS
 BEGIN
     "N",            IDC_ADD,                VIRTKEY, ALT, NOINVERT
     "P",            IDC_EDIT,               VIRTKEY, ALT, NOINVERT
@@ -1599,7 +1597,7 @@ BEGIN
     "R",            IDC_REMOVE,             VIRTKEY, ALT, NOINVERT
 END
 
-IDR_FAVORITES ACCELERATORS 
+IDR_FAVORITES ACCELERATORS
 BEGIN
     "N",            IDC_NEWFAV,             VIRTKEY, ALT, NOINVERT
     "P",            IDC_EDIT,               VIRTKEY, ALT, NOINVERT
@@ -1609,7 +1607,7 @@ BEGIN
     "C",            IDC_CONNECT,            VIRTKEY, ALT, NOINVERT
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

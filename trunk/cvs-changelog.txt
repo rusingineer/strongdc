@@ -1,5 +1,11 @@
 ** $Rev$
 	some DC++ BZR merge
+	added support to set favorite hub encoding (last change into WTL GUI, so without translations now)
+	DC++ emulation is off by default (for non-favorite hubs)
+	updated OpenSSL, ZLIB, BZip2
+
+**svn548
+	some DC++ BZR merge
 	updated boost library
 
 ** svn536

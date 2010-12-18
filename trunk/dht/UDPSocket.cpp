@@ -236,6 +236,7 @@ namespace dht
 						socket->disconnect();
 						socket->create(Socket::TYPE_UDP);
 						socket->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
+						socket->setSocketOpt(SO_REUSEADDR, 1);
 						socket->bind(port, SETTING(BIND_ADDRESS));
 						if(failed)
 						{

@@ -24,18 +24,20 @@ namespace dcpp {
 
 struct Search
 {
-	int32_t   sizeType;
-	int64_t   size;
-	int32_t   fileType;
-	string    query;
-	string    token;
-	set<void*> owners;
+	int32_t		sizeType;
+	int64_t		size;
+	int32_t		fileType;
+	string		query;
+	string		token;
+	StringList	exts;
+	set<void*>	owners;
 	
 	bool operator==(const Search& rhs) const {
 		 return this->sizeType == rhs.sizeType && 
 		 		this->size == rhs.size && 
 		 		this->fileType == rhs.fileType && 
-		 		this->query == rhs.query;
+		 		this->query == rhs.query &&
+				this->token == rhs.token;
 	}
 };
 

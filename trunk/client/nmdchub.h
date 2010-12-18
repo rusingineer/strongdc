@@ -45,7 +45,7 @@ public:
 	void hubMessage(const string& aMessage, bool /*thirdPerson*/ = false);
 	void privateMessage(const OnlineUserPtr& aUser, const string& aMessage, bool /*thirdPerson*/ = false);
 	void sendUserCmd(const UserCommand& command, const StringMap& params);
-	void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken);
+	void search(int aSizeType, int64_t aSize, int aFileType, const string& aString, const string& aToken, const StringList& aExtList);
 	void password(const string& aPass) { send("$MyPass " + fromUtf8(aPass) + "|"); }
 	void info(bool force) { myInfo(force); }
 
@@ -105,7 +105,8 @@ private:
 	OnlineUserPtr findUser(const string& aNick) const;
 	void putUser(const string& aNick);
 	
-	string toUtf8(const string& str) const { return Text::toUtf8(str, *getEncoding()); }
+	// don't convert to UTF-8 if string is already in this encoding
+	string toUtf8(const string& str) const { return Text::validateUtf8(str) ? str : Text::toUtf8(str, *getEncoding()); }
 	string fromUtf8(const string& str) const { return Text::fromUtf8(str, *getEncoding()); }
 
 	void privateMessage(const string& nick, const string& aMessage, bool thirdPerson);

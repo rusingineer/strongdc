@@ -84,6 +84,9 @@ void Client::reloadSettings(bool updateNick) {
 		setStealth(hub->getStealth());
 		setFavIp(hub->getIP());
 		
+		if(!hub->getEncoding().empty())
+			setEncoding(const_cast<string*>(&hub->getEncoding()));
+		
 		if(hub->getSearchInterval() < 10)
 			setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL) * 1000);
 		else
@@ -93,7 +96,7 @@ void Client::reloadSettings(bool updateNick) {
 			setCurrentNick(checkNick(SETTING(NICK)));
 		}
 		setCurrentDescription(SETTING(DESCRIPTION));
-		setStealth(true);
+		setStealth(false);
 		setFavIp(Util::emptyString);
 		setSearchInterval(SETTING(MINIMUM_SEARCH_INTERVAL) * 1000);
 	}
@@ -123,19 +126,18 @@ void Client::connect() {
 		sock->addListener(this);
 		sock->connect(address, port, secure, BOOLSETTING(ALLOW_UNTRUSTED_HUBS), true);
 	} catch(const Exception& e) {
-		if(sock) {
-			BufferedSocket::putSocket(sock);
-			sock = 0;
-		}
+		shutdown();
+		/// @todo at this point, this hub instance is completely useless
 		fire(ClientListener::Failed(), this, e.getError());
 	}
 	updateActivity();
 }
 
 void Client::send(const char* aMessage, size_t aLen) {
-	dcassert(sock);
-	if(!sock)
+	if(!isReady()) {
+		dcassert(0);
 		return;
+	}
 	updateActivity();
 	sock->write(aMessage, aLen);
 	COMMAND_DEBUG(aMessage, DebugManager::HUB_OUT, getIpPort());
@@ -162,15 +164,15 @@ void Client::disconnect(bool graceLess) {
 }
 
 bool Client::isSecure() const {
-	return sock && sock->isSecure();
+	return isReady() && sock->isSecure();
 }
 
 bool Client::isTrusted() const {
-	return sock && sock->isTrusted();
+	return isReady() && sock->isTrusted();
 }
 
 std::string Client::getCipherName() const {
-	return sock ? sock->getCipherName() : Util::emptyString;
+	return isReady() ? sock->getCipherName() : Util::emptyString;
 }
 
 void Client::updateCounts(bool aRemove) {
@@ -213,16 +215,17 @@ string Client::getLocalIp() const {
 	return localIp;
 }
 
-uint64_t Client::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, void* owner){
+uint64_t Client::search(int aSizeMode, int64_t aSize, int aFileType, const string& aString, const string& aToken, const StringList& aExtList, void* owner){
 	dcdebug("Queue search %s\n", aString.c_str());
 
-	if(searchQueue.interval){
+	if(searchQueue.interval) {
 		Search s;
 		s.fileType = aFileType;
 		s.size     = aSize;
 		s.query    = aString;
 		s.sizeType = aSizeMode;
 		s.token    = aToken;
+		s.exts	   = aExtList;
 		s.owners.insert(owner);
 
 		searchQueue.add(s);
@@ -230,7 +233,7 @@ uint64_t Client::search(int aSizeMode, int64_t aSize, int aFileType, const strin
 		return searchQueue.getSearchTime(owner) - GET_TICK();
 	}
 
-	search(aSizeMode, aSize, aFileType , aString, aToken);
+	search(aSizeMode, aSize, aFileType , aString, aToken, aExtList);
 	return 0;
 
 }
@@ -252,7 +255,7 @@ void Client::on(Second, uint64_t aTick) throw() {
 		Search s;
 		
 		if(searchQueue.pop(s)){
-			search(s.sizeType, s.size, s.fileType , s.query, s.token);
+			search(s.sizeType, s.size, s.fileType , s.query, s.token, s.exts);
 		}
 	}
 

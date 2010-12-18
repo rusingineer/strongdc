@@ -39,22 +39,22 @@ namespace Text {
 
 	void initialize();
 
-	const string& acpToUtf8(const string& str, string& tmp) throw();
-	inline string acpToUtf8(const string& str) throw() {
+	const string& acpToUtf8(const string& str, string& tmp, const string& fromCharset = "") throw();
+	inline string acpToUtf8(const string& str, const string& fromCharset = "") throw() {
 		string tmp;
-		return acpToUtf8(str, tmp);
+		return acpToUtf8(str, tmp, fromCharset);
 	}
 
-	const wstring& acpToWide(const string& str, wstring& tmp) throw();
-	inline wstring acpToWide(const string& str) throw() {
+	const wstring& acpToWide(const string& str, wstring& tmp, const string& fromCharset = "") throw();
+	inline wstring acpToWide(const string& str, const string& fromCharset = "") throw() {
 		wstring tmp;
-		return acpToWide(str, tmp);
+		return acpToWide(str, tmp, fromCharset);
 	}
 
-	const string& utf8ToAcp(const string& str, string& tmp) throw();
-	inline string utf8ToAcp(const string& str) throw() {
+	const string& utf8ToAcp(const string& str, string& tmp, const string& toCharset = "") throw();
+	inline string utf8ToAcp(const string& str, const string& toCharset = "") throw() {
 		string tmp;
-		return utf8ToAcp(str, tmp);
+		return utf8ToAcp(str, tmp, toCharset);
 	}
 
 	const wstring& utf8ToWide(const string& str, wstring& tmp) throw();
@@ -63,10 +63,10 @@ namespace Text {
 		return utf8ToWide(str, tmp);
 	}
 
-	const string& wideToAcp(const wstring& str, string& tmp) throw();
-	inline string wideToAcp(const wstring& str) throw() {
+	const string& wideToAcp(const wstring& str, string& tmp, const string& toCharset = "") throw();
+	inline string wideToAcp(const wstring& str, const string& toCharset = "") throw() {
 		string tmp;
-		return wideToAcp(str, tmp);
+		return wideToAcp(str, tmp, toCharset);
 	}
 	
 	const string& wideToUtf8(const wstring& str, string& tmp) throw();

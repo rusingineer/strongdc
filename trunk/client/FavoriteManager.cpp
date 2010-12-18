@@ -905,13 +905,12 @@ void FavoriteManager::on(Failed, HttpConnection*, const string& aLine) throw() {
 }
 void FavoriteManager::on(Complete, HttpConnection*, const string& aLine, bool fromCoral) throw() {
 	bool parseSuccess = false;
-
 	c->removeListener(this);
 	if(useHttp) {
 		parseSuccess = onHttpFinished(true);
 	}	
 	running = false;
-	if(useHttp && parseSuccess) {
+	if(parseSuccess) {
 		fire(FavoriteManagerListener::DownloadFinished(), aLine, fromCoral);
 	}
 }
@@ -926,6 +925,10 @@ void FavoriteManager::on(TypeNormal, HttpConnection*) throw() {
 void FavoriteManager::on(TypeBZ2, HttpConnection*) throw() { 
 	if(useHttp)
 		listType = TYPE_BZIP2; 
+}
+void FavoriteManager::on(Retried, HttpConnection*, const bool Connected) throw() {
+	if (Connected)
+		downloadBuf = Util::emptyString;
 }
 
 void FavoriteManager::on(UserUpdated, const OnlineUser& user) throw() {

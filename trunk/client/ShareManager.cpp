@@ -28,6 +28,7 @@
 #include "HashManager.h"
 #include "QueueManager.h"
 
+#include "AdcHub.h"
 #include "SimpleXML.h"
 #include "StringTokenizer.h"
 #include "File.h"
@@ -634,6 +635,11 @@ ShareManager::Directory::Ptr ShareManager::buildTree(const string& aName, const 
 #endif
 		string name = i->getFileName();
 
+		if(name.empty()) {
+			// TODO: LogManager::getInstance()->message(str(F_("Invalid file name found while hashing folder %1%") % Util::addBrackets(aName)));
+			continue;
+		}
+
 		if(name == "." || name == "..")
 			continue;
 
@@ -1105,7 +1111,7 @@ static bool checkType(const string& aString, int aType) {
 		}
 		break;
 	default:
-		dcasserta(0);
+		dcassert(0);
 		break;
 	}
 	return false;
@@ -1260,6 +1266,11 @@ ShareManager::AdcSearch::AdcSearch(const StringList& params) : include(&includeX
 			exclude.push_back(StringSearch(p.substr(2)));
 		} else if(toCode('E', 'X') == cmd) {
 			ext.push_back(p.substr(2));
+		} else if(toCode('G', 'R') == cmd) {
+			auto exts = AdcHub::parseSearchExts(Util::toInt(p.substr(2)));
+			ext.insert(ext.begin(), exts.begin(), exts.end());
+		} else if(toCode('R', 'X') == cmd) {
+			noExt.push_back(p.substr(2));
 		} else if(toCode('G', 'E') == cmd) {
 			gt = Util::toInt64(p.substr(2));
 		} else if(toCode('L', 'E') == cmd) {
@@ -1270,6 +1281,28 @@ ShareManager::AdcSearch::AdcSearch(const StringList& params) : include(&includeX
 			isDirectory = (p[2] == '2');
 		}
 	}
+}
+
+bool ShareManager::AdcSearch::isExcluded(const string& str) {
+	for(StringSearch::List::iterator i = exclude.begin(); i != exclude.end(); ++i) {
+		if(i->match(str))
+			return true;
+	}
+	return false;
+}
+
+bool ShareManager::AdcSearch::hasExt(const string& name) {
+	if(ext.empty())
+		return true;
+	if(!noExt.empty()) {
+		ext = StringList(ext.begin(), set_difference(ext.begin(), ext.end(), noExt.begin(), noExt.end(), ext.begin()));
+		noExt.clear();
+	}
+	for(auto i = ext.cbegin(), iend = ext.cend(); i != iend; ++i) {
+		if(name.length() >= i->length() && stricmp(name.c_str() + name.length() - i->length(), i->c_str()) == 0)
+			return true;
+	}
+	return false;
 }
 
 void ShareManager::Directory::search(SearchResultList& aResults, AdcSearch& aStrings, StringList::size_type maxResults) const throw() {
@@ -1395,16 +1428,15 @@ ShareManager::Directory::Ptr ShareManager::getDirectory(const string& fname) {
 	return Directory::Ptr();
 }
 
-void ShareManager::on(QueueManagerListener::Finished, QueueItem* qi, const string& /*dir*/, int64_t /*speed*/) throw() {
+void ShareManager::on(QueueManagerListener::FileMoved, const string& n) throw() {
 	if(BOOLSETTING(ADD_FINISHED_INSTANTLY)) {
 		// Check if finished download is supposed to be shared
 		Lock l(cs);
-		const string& n = qi->getTarget();
 		for(StringMapIter i = shares.begin(); i != shares.end(); i++) {
 			if(strnicmp(i->first, n, i->first.size()) == 0 && n[i->first.size() - 1] == PATH_SEPARATOR) {
 				try {
 					// Schedule for hashing, it'll be added automatically later on...
-					HashManager::getInstance()->checkTTH(n, qi->getSize(), 0);
+					HashManager::getInstance()->checkTTH(n, File::getSize(n), 0);
 				} catch(const Exception&) {
 					// Not a vital feature...
 				}

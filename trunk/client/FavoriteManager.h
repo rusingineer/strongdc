@@ -226,6 +226,7 @@ private:
 	void on(Redirected, HttpConnection*, const string&) throw();
 	void on(TypeNormal, HttpConnection*) throw();
 	void on(TypeBZ2, HttpConnection*) throw();
+	void on(Retried, HttpConnection*, const bool) throw(); 
 
 	bool onHttpFinished(bool fromHttp) throw();
 

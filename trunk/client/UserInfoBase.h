@@ -21,6 +21,8 @@
 
 #include "forward.h"
 
+//#include "AdcHub.h"
+
 class UserInfoBase {
 public:
 	UserInfoBase() { }
@@ -42,17 +44,17 @@ public:
 	
 	virtual const UserPtr& getUser() const = 0;
 
-	static uint8_t getImage(const Identity& u, const Client* c) {
+	static uint8_t getImage(const Identity& identity, const Client* c) {
 		uint8_t image = 12;
 
-		if(u.isOp()) {
+		if(identity.isOp()) {
 			image = 0;
-		} else if(u.getStatus() & Identity::FIREBALL) {
+		} else if(identity.getStatus() & Identity::FIREBALL) {
 			image = 1;
-		} else if(u.getStatus() & Identity::SERVER) {
+		} else if(identity.getStatus() & Identity::SERVER) {
 			image = 2;
 		} else {
-			string conn = u.getConnection();
+			string conn = identity.getConnection();
 		
 			if(	(conn == "28.8Kbps") ||
 				(conn == "33.6Kbps") ||
@@ -72,7 +74,7 @@ public:
 			} else if( (strncmp(conn.c_str(), "NetLimiter", 10) == 0)) {
 				image = 3;
 			} else {
-				double us = conn.empty() ? (8 * Util::toDouble(u.get("US")) / 1024 / 1024): Util::toDouble(conn);
+				double us = conn.empty() ? (8 * Util::toDouble(identity.get("US")) / 1024 / 1024): Util::toDouble(conn);
 				if(us >= 10) {
 					image = 10;
 				} else if(us > 0.1) {
@@ -84,14 +86,19 @@ public:
 				}
 			}
 		}
-		if(u.isAway()) {
+
+		if(identity.isAway()) {
 			image += 13;
 		}
-		if(u.getUser()->isSet(User::DCPLUSPLUS)) {
+		
+		/* TODO string freeSlots = identity.get("FS");
+		if(!freeSlots.empty() && identity.supports(AdcHub::ADCS_FEATURE) && identity.supports(AdcHub::SEGA_FEATURE) &&
+			((identity.supports(AdcHub::TCP4_FEATURE) && identity.supports(AdcHub::UDP4_FEATURE)) || identity.supports(AdcHub::NAT0_FEATURE))) 
+		{
 			image += 26;
-		}
+		}*/
 
-		if(!u.isTcpActive(c)) {
+		if(!identity.isTcpActive(c)) {
 			// Users we can't connect to...
 			image += 52;
 		}		
