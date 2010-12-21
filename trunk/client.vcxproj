@@ -71,6 +71,7 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)vc10\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)vc10\$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)vc10\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">D:\Projekty\WTL;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -230,6 +231,7 @@
     <ClCompile Include="client\Client.cpp" />
     <ClCompile Include="client\ClientManager.cpp" />
     <ClCompile Include="client\ConnectionManager.cpp" />
+    <ClCompile Include="client\ConnectivityManager.cpp" />
     <ClCompile Include="client\CryptoManager.cpp" />
     <ClCompile Include="client\DCPlusPlus.cpp" />
     <ClCompile Include="client\DetectionManager.cpp" />
@@ -303,6 +305,7 @@
     <ClInclude Include="client\ClientManagerListener.h" />
     <ClInclude Include="client\ConnectionManager.h" />
     <ClInclude Include="client\ConnectionManagerListener.h" />
+    <ClInclude Include="client\ConnectivityManager.h" />
     <ClInclude Include="client\CryptoManager.h" />
     <ClInclude Include="client\DCPlusPlus.h" />
     <ClInclude Include="client\DebugManager.h" />

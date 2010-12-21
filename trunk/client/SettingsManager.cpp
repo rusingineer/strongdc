@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
@@ -130,7 +130,7 @@ const string SettingsManager::settingTags[] =
 	"HighestPrioSize", "HighPrioSize", "NormalPrioSize", "LowPrioSize", "LowestPrio",
 	"FilterEnter", "SortFavUsersFirst", "ShowShellMenu", "SendBloom", "OverlapChunks", "ShowQuickSearch",
 	"UcSubMenu", "AutoSlots", "Coral", "UseDHT", "DHTPort", "UpdateIP", "KeepFinishedFiles",
-	"AllowNATTraversal", "UseExplorerTheme",
+	"AllowNATTraversal", "UseExplorerTheme", "AutoDetectIncomingConnection",
 	"SENTRY",
 	// Int64
 	"TotalUpload", "TotalDownload",
@@ -157,15 +157,15 @@ SettingsManager::SettingsManager()
 	for(int i=0; i<SETTINGS_LAST; i++)
 		isSet[i] = false;
 
-	for(int j=0; j<INT_LAST-INT_FIRST; j++) {
-		intDefaults[j] = 0;
-		intSettings[j] = 0;
+	for(int i=0; i<INT_LAST-INT_FIRST; i++) {
+		intDefaults[i] = 0;
+		intSettings[i] = 0;
 	}
-	for(int k=0; k<INT64_LAST-INT64_FIRST; k++) {
-		int64Defaults[k] = 0;
-		int64Settings[k] = 0;
+	for(int i=0; i<INT64_LAST-INT64_FIRST; i++) {
+		int64Defaults[i] = 0;
+		int64Settings[i] = 0;
 	}
-	
+
 	setDefault(DOWNLOAD_DIRECTORY, Util::getPath(Util::PATH_DOWNLOADS));
 	setDefault(TEMP_DOWNLOAD_DIRECTORY, Util::getPath(Util::PATH_USER_LOCAL) + "Incomplete" PATH_SEPARATOR_STR);
 	setDefault(SLOTS, 2);
@@ -173,8 +173,9 @@ SettingsManager::SettingsManager()
 	setDefault(UDP_PORT, 0);
 	setDefault(TLS_PORT, 0);
 	setDefault(DHT_PORT, DHT_UDPPORT);
-	setDefault(INCOMING_CONNECTIONS, Util::isPrivateIp(Util::getLocalIp()) ? INCOMING_FIREWALL_PASSIVE : INCOMING_DIRECT);
+	setDefault(INCOMING_CONNECTIONS, INCOMING_DIRECT);
 	setDefault(OUTGOING_CONNECTIONS, OUTGOING_DIRECT);
+	setDefault(AUTO_DETECT_CONNECTION, true);
 	setDefault(AUTO_FOLLOW, true);
 	setDefault(CLEAR_SEARCH, true);
 	setDefault(SHARE_HIDDEN, false);
@@ -565,24 +566,24 @@ void SettingsManager::load(string const& aFileName)
 {
 	try {
 		SimpleXML xml;
-		
+
 		xml.fromXML(File(aFileName, File::READ, File::OPEN).read());
-		
+
 		xml.resetCurrentChild();
-		
+
 		xml.stepIn();
-		
+
 		if(xml.findChild("Settings"))
 		{
 			xml.stepIn();
 
 			int i;
-			
+
 			for(i=STR_FIRST; i<STR_LAST; i++)
 			{
 				const string& attr = settingTags[i];
 				dcassert(attr.find("SENTRY") == string::npos);
-				
+
 				if(xml.findChild(attr))
 					set(StrSetting(i), xml.getChildData());
 				xml.resetCurrentChild();
@@ -591,7 +592,7 @@ void SettingsManager::load(string const& aFileName)
 			{
 				const string& attr = settingTags[i];
 				dcassert(attr.find("SENTRY") == string::npos);
-				
+
 				if(xml.findChild(attr))
 					set(IntSetting(i), Util::toInt(xml.getChildData()));
 				xml.resetCurrentChild();
@@ -600,12 +601,12 @@ void SettingsManager::load(string const& aFileName)
 			{
 				const string& attr = settingTags[i];
 				dcassert(attr.find("SENTRY") == string::npos);
-				
+
 				if(xml.findChild(attr))
 					set(Int64Setting(i), Util::toInt64(xml.getChildData()));
 				xml.resetCurrentChild();
 			}
-			
+
 			xml.stepOut();
 		}
 
@@ -631,11 +632,14 @@ void SettingsManager::load(string const& aFileName)
 			}
 		}
 
+		if(SETTING(PRIVATE_ID).length() != 39 || CID(SETTING(PRIVATE_ID)).isZero()) {
+			set(PRIVATE_ID, CID::generate().toBase32());
+		}
+
 		double v = Util::toDouble(SETTING(CONFIG_VERSION));
 		// if(v < 0.x) { // Fix old settings here }
 
-		if(v <= 0.674 || SETTING(PRIVATE_ID).length() != 39 || CID(SETTING(PRIVATE_ID)).isZero()) {
-			set(PRIVATE_ID, CID::generate().toBase32());
+		if(v <= 0.674) {
 
 			// Formats changed, might as well remove these...
 			set(LOG_FORMAT_POST_DOWNLOAD, Util::emptyString);
@@ -652,10 +656,14 @@ void SettingsManager::load(string const& aFileName)
 			set(LOG_FILE_SYSTEM, Util::emptyString);
 		}
 
+		if(v <= 0.770 && SETTING(INCOMING_CONNECTIONS) != INCOMING_FIREWALL_PASSIVE) {
+			set(AUTO_DETECT_CONNECTION, false); //Don't touch if it works
+		}
+
 		setDefault(UDP_PORT, SETTING(TCP_PORT));
 
 		File::ensureDirectory(SETTING(TLS_TRUSTED_CERTIFICATES_PATH));
-		
+
 		fire(SettingsManagerListener::Load(), xml);
 
 		xml.stepOut();
@@ -685,7 +693,7 @@ void SettingsManager::save(string const& aFileName) {
 
 	int i;
 	string type("type"), curType("string");
-	
+
 	for(i=STR_FIRST; i<STR_LAST; i++)
 	{
 		if(i == CONFIG_VERSION) {

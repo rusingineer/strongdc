@@ -31,6 +31,7 @@
 
 static UPNPUrls urls;
 static IGDdatas data;
+const string UPnP_MiniUPnPc::name = "MiniUPnP";
 
 bool UPnP_MiniUPnPc::init() {
 	UPNPDev* devices = upnpDiscover(2000, 0, 0, 0);

@@ -496,8 +496,19 @@ void SearchFrame::onEnter() {
 	// stop old search
 	ClientManager::getInstance()->cancelSearch((void*)this);	
 
-	// TODO: Get ADC searchtype extensions if any is selected
+	// Get ADC searchtype extensions if any is selected
 	StringList extList;
+	try {
+		if(ftype == SearchManager::TYPE_ANY) {
+			// Custom searchtype
+			// disabled with current GUI extList = SettingsManager::getInstance()->getExtensions(Text::fromT(fileType->getText()));
+		} else if(ftype > SearchManager::TYPE_ANY && ftype < SearchManager::TYPE_DIRECTORY) {
+			// Predefined searchtype
+			extList = SettingsManager::getInstance()->getExtensions(string(1, '0' + ftype));
+		}
+	} catch(const SearchTypeException&) {
+		ftype = SearchManager::TYPE_ANY;
+	}
 
 	{
 		Lock l(cs);

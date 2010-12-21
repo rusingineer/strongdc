@@ -21,12 +21,8 @@
 
 #include "../client/UPnP.h"
 
-// for mingw64
-#ifndef interface
-#define interface struct
-#endif
-
-#include <natupnp.h>
+struct IUPnPNAT;
+struct IStaticPortMappingCollection;
 
 class UPnP_COM : public UPnP
 {
@@ -38,8 +34,12 @@ private:
 
 	bool add(const unsigned short port, const Protocol protocol, const string& description);
 	bool remove(const unsigned short port, const Protocol protocol);
+	const string& getName() const {
+		return name;
+	}
 
 	string getExternalIP();
+	static const string name;
 
 	IUPnPNAT* pUN;
 	// this one can become invalidated so we can't cache it

@@ -25,6 +25,11 @@
 
 #include <ole2.h>
 
+const string UPnP_COM::name = "Standard Windows";
+
+#ifdef HAVE_NATUPNP_H
+#include <natupnp.h>
+	
 bool UPnP_COM::init() {
 	// Lacking the __uuidof in mingw...
 	CLSID upnp;
@@ -37,7 +42,7 @@ bool UPnP_COM::init() {
 	HRESULT hr = CoCreateInstance(upnp, 0, CLSCTX_INPROC_SERVER, iupnp, reinterpret_cast<LPVOID*>(&pUN));
 	if(FAILED(hr))
 		pUN = 0;
-	return pUN != 0;
+	return pUN;
 }
 
 bool UPnP_COM::add(const unsigned short port, const Protocol protocol, const string& description) {
@@ -152,3 +157,27 @@ IStaticPortMappingCollection* UPnP_COM::getStaticPortMappingCollection() {
 		return 0;
 	return ret;
 }
+
+#else
+
+bool UPnP_COM::init() {
+	return false;
+}
+
+bool UPnP_COM::add(const unsigned short port, const Protocol protocol, const string& description) {
+	return false;
+}
+
+bool UPnP_COM::remove(const unsigned short port, const Protocol protocol) {
+	return false;
+}
+
+string UPnP_COM::getExternalIP() {
+	return Util::emptyString;
+}
+
+IStaticPortMappingCollection* UPnP_COM::getStaticPortMappingCollection() {
+	return 0;
+}
+
+#endif

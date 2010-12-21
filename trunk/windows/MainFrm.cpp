@@ -49,6 +49,7 @@
 #include "PopupManager.h"
 
 #include "../client/ConnectionManager.h"
+#include "../client/ConnectivityManager.h"
 #include "../client/DownloadManager.h"
 #include "../client/HashManager.h"
 #include "../client/UploadManager.h"
@@ -310,7 +311,11 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 		File::ensureDirectory(SETTING(LOG_DIRECTORY));
 	} catch (const FileException) {	}
 
-	startSocket();
+	try {
+		ConnectivityManager::getInstance()->setup(true, SettingsManager::INCOMING_DIRECT);
+	} catch (const Exception& e) {
+		// TODO showPortsError(e.getError());
+	}
 	
 	normalicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	pmicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_TRAY_PM), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
@@ -464,36 +469,6 @@ void MainFrame::updateQuickSearches() {
 	if(BOOLSETTING(CLEAR_SEARCH) && ::IsWindow(QuickSearchEdit.m_hWnd)) {
 		QuickSearchBox.SetWindowText(CTSTRING(QSEARCH_STR));
 	}
-}
-
-void MainFrame::startSocket() {
-	SearchManager::getInstance()->disconnect();
-	ConnectionManager::getInstance()->disconnect();
-	DHT::getInstance()->stop();
-
-	//if(ClientManager::getInstance()->isActive()) {
-		try {
-			ConnectionManager::getInstance()->listen();
-		} catch(const Exception&) {
-			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
-		}
-		try {
-			SearchManager::getInstance()->listen();
-		} catch(const Exception&) {
-			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
-		}
-		
-		try {
-			DHT::getInstance()->start();
-		} catch(const Exception&) {
-			MessageBox(CTSTRING(TCP_PORT_BUSY), _T(APPNAME) _T(" ") _T(VERSIONSTRING), MB_ICONSTOP | MB_OK);
-		}
-
-		// must be done after listen calls; otherwise ports won't be set
-		if(SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_UPNP)
-			UPnPManager::getInstance()->open();
-	//}
-
 }
 
 HWND MainFrame::createToolbar() {
@@ -739,15 +714,12 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		if(missedAutoConnect && !SETTING(NICK).empty()) {
 			PostMessage(WM_SPEAKER, AUTO_CONNECT);
 		}
-		if(	SETTING(INCOMING_CONNECTIONS) != lastConn || SETTING(TCP_PORT) != lastTCP || SETTING(UDP_PORT) != lastUDP || SETTING(TLS_PORT) != lastTLS ||
-			SETTING(DHT_PORT) != lastDHT || BOOLSETTING(USE_DHT) != lastDHTConn)
-		{
-			if(SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_UPNP || lastConn == SettingsManager::INCOMING_FIREWALL_UPNP)
-				UPnPManager::getInstance()->close(); 
-			startSocket();
-		} else if(SETTING(INCOMING_CONNECTIONS) == SettingsManager::INCOMING_FIREWALL_UPNP && !UPnPManager::getInstance()->getOpened()) {
-			// previous UPnP mappings had failed; try again
-			UPnPManager::getInstance()->open();
+
+		try {
+			ConnectivityManager::getInstance()->setup(SETTING(INCOMING_CONNECTIONS) != lastConn || SETTING(TCP_PORT) != lastTCP || SETTING(UDP_PORT) != lastUDP || SETTING(TLS_PORT) != lastTLS ||
+				SETTING(DHT_PORT) != lastDHT || BOOLSETTING(USE_DHT) != lastDHTConn, lastConn);
+		} catch (const Exception& e) {
+			// TODO: showPortsError(e.getError());
 		}
  
 		if(BOOLSETTING(SORT_FAVUSERS_FIRST) != lastSortFavUsersFirst)

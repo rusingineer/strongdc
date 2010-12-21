@@ -89,6 +89,7 @@
 		<String Name="ConnectingToServer">Connecting to server</String>
 		<String Name="Connection">Connection</String>
 		<String Name="ConnectionClosed">Connection closed</String>
+		<String Name="ConnectionDetection">Enable automatic incoming connection type detection</String>
 		<String Name="ConnectionError">Connection error</String>
 		<String Name="ConnectionTimeout">Connection timeout</String>
 		<String Name="ContinueSearch">Continue Search</String>

@@ -459,7 +459,6 @@ private:
 	}
 
 	void autoConnect(const FavoriteHubEntry::List& fl);
-	void startSocket();
 
 	MainFrame(const MainFrame&) { dcassert(0); }
 

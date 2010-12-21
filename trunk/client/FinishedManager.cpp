@@ -121,8 +121,9 @@ void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw
 	}
 }
 
-string FinishedManager::getTarget(const string& aTTH){
-	if(aTTH.empty()) return Util::emptyString;
+bool FinishedManager::getTarget(const string& aTTH, string& target) {
+	if(aTTH.empty()) 
+		return false;
 
 	{
 		Lock l(cs);
@@ -130,19 +131,21 @@ string FinishedManager::getTarget(const string& aTTH){
 		for(FinishedItemList::const_iterator i = downloads.begin(); i != downloads.end(); i++)
 		{
 			if((*i)->getTTH() == aTTH)
-				return (*i)->getTarget();
+			{
+				target = (*i)->getTarget();
+				return true;
+			}
 		}
 	}
 
-	return Util::emptyString;
+	return false;
 }
 
 bool FinishedManager::handlePartialRequest(const TTHValue& tth, vector<uint16_t>& outPartialInfo)
 {
-
-	string target = getTarget(tth.toBase32());
-
-	if(target.empty()) return false;
+	string target;
+	if(!getTarget(tth.toBase32(), target))
+		return false;
 
 	int64_t fileSize = File::getSize(target);
 

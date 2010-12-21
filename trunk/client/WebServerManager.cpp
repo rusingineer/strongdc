@@ -103,7 +103,7 @@ string WebServerManager::getLoginPage(){
 	pagehtml += "<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='cs'>";
 	pagehtml += "<head>";
 	pagehtml += "    	<title>Strongdc++ webserver - Login Page</title>";   
-	pagehtml += "	<meta http-equiv='Content-Type' content='text/html; charset=windows-1250' />";
+	pagehtml += "	<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />";
     pagehtml += "<meta http-equiv='pragma' content='no-cache'>";
     pagehtml += "   	<meta http-equiv='cache-control' content='no-cache, must-revalidate'>";
 	pagehtml += "	<link rel='stylesheet' href='http://strongdc.sf.net/webserver/strong.css' type='text/css' title='Default styl' media='screen' />";
@@ -120,7 +120,7 @@ string WebServerManager::getLoginPage(){
     pagehtml += "		</form>";
     pagehtml += "	</div>";
     pagehtml += "	<div id='paticka'>";
-    pagehtml += "		2004 | Big Muscle | <a href='http://strongdc.sf.net/'>StrongDC++</a>";
+    pagehtml += "		2004-2010 | Big Muscle | <a href='http://strongdc.sf.net/'>StrongDC++</a>";
     pagehtml += "	</div>";
     pagehtml += "</div>";                                
     pagehtml += "</body>";
@@ -137,14 +137,14 @@ string WebServerManager::getPage(const string& file, const string& IP) {
 	string pagehtml = "";
 
 	WebPageInfo *page = page404;
-	WebPages::const_iterator find = pages.find(file.c_str());
+	WebPages::const_iterator find = pages.find(file);
 	if(find != pages.end()) page = find->second;	
     pagehtml = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.1//EN' 'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd'>";
     pagehtml += "<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='cs'>";
     pagehtml += "<head>";
     pagehtml += "    <title>Strongdc++ webserver</title>";
 	
-    pagehtml += "	<meta http-equiv='Content-Type' content='text/html; charset=windows-1250' />";
+    pagehtml += "	<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />";
     pagehtml += "    <meta http-equiv='pragma' content='no-cache'>";
     pagehtml += "    <meta http-equiv='cache-control' content='no-cache, must-revalidate'>";
 	
@@ -241,7 +241,7 @@ string WebServerManager::getPage(const string& file, const string& IP) {
     pagehtml += "			<a href='shutdown.htm' id='shutdown'></a>";
     pagehtml += "	</div>";
     pagehtml += "	<div id='paticka'>";
-    pagehtml += "		2004 | Big Muscle | StrongDC++";
+    pagehtml += "		2004-2010 | Big Muscle | StrongDC++";
     pagehtml += "	</div>";
     pagehtml += "</div>";
                                   
@@ -356,7 +356,7 @@ string WebServerManager::getSearch() {
 		ret += "<tr><td align='center'><input type=\"submit\" name=\"stop\" value=\"cancel\"></td></tr></form></table>";
 		sended_search = false;
 	} else {
-		ret += "<br><table width='100%'><tr><td align='center'><b>Search for&nbsp;»</b>&nbsp;<input type=text name='search'>";
+		ret += "<br><table width='100%'><tr><td align='center'><b>Search for</b>&nbsp;<input type=text name='search'>";
 		ret += "<input type='submit' value='Search'></td></tr>";
 		ret += "<tr><td align='center'>";
 		ret += "<select name='type'>";
@@ -533,7 +533,7 @@ int WebServerSocket::run(){
 				toSend = WebServerManager::getInstance()->getLoginPage();
 			} else {
 				//if(!check || (WebServerManager::getInstance()->getResults() != Util::emptyString))
-					toSend = Text::utf8ToAcp(WebServerManager::getInstance()->getPage(header, IP));
+					toSend = WebServerManager::getInstance()->getPage(header, IP);
 				/*else
 					break;*/
 			}
@@ -558,10 +558,10 @@ void WebServerManager::on(SearchManagerListener::SR, const SearchResultPtr& aRes
 		}
 				
 		if(aResult->getType() == SearchResult::TYPE_FILE) {
-			results += "<form method='GET' name=\"form" + Util::toString(row) + "\" ACTION='search.html'>";
+			results += "<form method='GET' name=\"form" + Util::toString(row) + "\" ACTION='search.html' >";
 			//results += "<input type=\"hidden\" name='file' value='" + aResult->getFile() + "'>";
 			results += "<input type=\"hidden\" name='size' value='" + Util::toString(aResult->getSize()) + "'>";
-			results += "<input type='hidden' name='name' value='" + Util::encodeURI(aResult->getFileName()) + "'>";
+			results += "<input type='hidden' name='name' value='" + aResult->getFileName() + "'>";
 			results += "<input type='hidden' name='tth' value='" + aResult->getTTH().toBase32() + "'>";
 			results += "<input type='hidden' name='type' value='" + Util::toString(aResult->getType()) + "'>";
 			results += "<tr onmouseover=\"this.style.backgroundColor='#CC0099'; this.style.cursor='hand';\" onmouseout=\"this.style.backgroundColor='#EEEEEE'; this.style.cursor='hand';\" onclick=\"form" + Util::toString(row) + ".submit();\">";

@@ -89,6 +89,7 @@
 		<String Name="ConnectingToServer">Připojuji k serveru</String>
 		<String Name="Connection">Připojení</String>
 		<String Name="ConnectionClosed">Připojení uzavřeno</String>
+		<String Name="ConnectionDetection">Zapnout automatické zjišťování typu příchozích spojení</String>
 		<String Name="ConnectionError">Nastala chyba při připojování</String>
 		<String Name="ConnectionTimeout">Vypršel čas pro připojení</String>
 		<String Name="ContinueSearch">Pokračovat v hledání</String>

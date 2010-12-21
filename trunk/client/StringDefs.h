@@ -88,6 +88,7 @@ enum Strings { // @DontAdd
 	CONNECTING_TO_SERVER, // "Connecting to server"
 	CONNECTION, // "Connection"
 	CONNECTION_CLOSED, // "Connection closed"
+	CONNECTION_DETECTION, // "Enable automatic incoming connection type detection"
 	CONNECTION_ERROR, // "Connection error"
 	CONNECTION_TIMEOUT, // "Connection timeout"
 	CONTINUE_SEARCH, // "Continue Search"
