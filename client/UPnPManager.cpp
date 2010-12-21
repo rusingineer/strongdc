@@ -25,6 +25,7 @@
 #include "SearchManager.h"
 #include "LogManager.h"
 #include "version.h"
+#include "ConnectivityManager.h"
 
 #include "../dht/dht.h"
 
@@ -44,7 +45,7 @@ bool UPnPManager::open() {
 	}
 
 	if(portMapping.test_and_set()) {
-		//log(_("Another UPnP port mapping attempt is in progress..."));
+		log("Another UPnP port mapping attempt is in progress...");
 		return false;
 	} 
 
@@ -66,29 +67,41 @@ int UPnPManager::run() {
 		secure_port = ConnectionManager::getInstance()->getSecurePort(),
 		search_port = SearchManager::getInstance()->getPort(),
 		dht_port = dht::DHT::getInstance()->getPort();
-
+	
 	for(Impls::iterator i = impls.begin(); i != impls.end(); ++i) {
 		UPnP& impl = *i;
 
 		close(impl);
 
-		if(!impl.init())
+		if(!impl.init()) {
+			log("Failed to initalize the " + impl.getName() + " interface");
 			continue;
+		}
 
-		if(conn_port != 0 && !impl.open(conn_port, UPnP::PROTOCOL_TCP, APPNAME " Transfer Port (" + Util::toString(conn_port) + " TCP)"))
+		if(conn_port != 0 && !impl.open(conn_port, UPnP::PROTOCOL_TCP, APPNAME " Transfer Port (" + Util::toString(conn_port) + " TCP)")) {
+			log("The " + impl.getName() + " interface has failed to map the TCP " + Util::toString(conn_port) + " port");
 			continue;
+		}
+		
+		if(secure_port != 0 && !impl.open(secure_port, UPnP::PROTOCOL_TCP, APPNAME " Encrypted Transfer Port (" + Util::toString(secure_port) + " TCP)")) {
+			log("The " + impl.getName() + " interface has failed to map the TLS " + Util::toString(secure_port) + " port");
+			continue;
+		}
 
-		if(secure_port != 0 && !impl.open(secure_port, UPnP::PROTOCOL_TCP, APPNAME " Encrypted Transfer Port (" + Util::toString(secure_port) + " TCP)"))
+		if(search_port != 0 && !impl.open(search_port, UPnP::PROTOCOL_UDP, APPNAME " Search Port (" + Util::toString(search_port) + " UDP)")) {
+			log("The " + impl.getName() + " interface has failed to map the UDP " + Util::toString(search_port) + " port");
 			continue;
+		}
 
-		if(search_port != 0 && !impl.open(search_port, UPnP::PROTOCOL_UDP, APPNAME " Search Port (" + Util::toString(search_port) + " UDP)"))
+		if(dht_port != 0 && !impl.open(dht_port, UPnP::PROTOCOL_UDP, APPNAME " DHT Port (" + Util::toString(dht_port) + " UDP)")) {
+			log("The " + impl.getName() + " interface has failed to map the DHT " + Util::toString(dht_port) + " port");
 			continue;
-
-		if(dht_port != 0 && !impl.open(dht_port, UPnP::PROTOCOL_UDP, APPNAME " DHT Port (" + Util::toString(dht_port) + " UDP)"))
-			continue;
+		}
 
 		opened = true;
+
 		log(STRING(UPNP_SUCCESSFULLY_CREATED_MAPPINGS));
+		ConnectivityManager::getInstance()->mappingFinished(true);
 
 		if(!BOOLSETTING(NO_IP_OVERRIDE)) {
 			// now lets configure the external IP (connect to me) address
@@ -108,6 +121,7 @@ int UPnPManager::run() {
 
 	if(!opened) {
 		log(STRING(UPNP_FAILED_TO_CREATE_MAPPINGS));
+		ConnectivityManager::getInstance()->mappingFinished(false);
 	}
 
 	portMapping.clear();

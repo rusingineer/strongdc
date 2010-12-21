@@ -34,6 +34,7 @@
 #include "FinishedManager.h"
 #include "ADLSearch.h"
 #include "UPnPManager.h"
+#include "ConnectivityManager.h"
 
 #include "StringTokenizer.h"
 
@@ -88,6 +89,7 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	FavoriteManager::newInstance();
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
+	ConnectivityManager::newInstance();
 	UPnPManager::newInstance();
 	DebugManager::newInstance();
 	DetectionManager::newInstance();	
@@ -131,9 +133,10 @@ void shutdown() {
 	SettingsManager::getInstance()->save();
 	DHT::deleteInstance();
 	UPnPManager::deleteInstance();
+	ConnectivityManager::deleteInstance();
 	DebugManager::deleteInstance();
 	WebServerManager::deleteInstance();
-	DetectionManager::deleteInstance();	
+	DetectionManager::deleteInstance();
 	PopupManager::deleteInstance();
 	ADLSearchManager::deleteInstance();
 	FinishedManager::deleteInstance();
@@ -153,7 +156,7 @@ void shutdown() {
 	TimerManager::deleteInstance();
 	ResourceManager::deleteInstance();
 
-#ifdef _WIN32	
+#ifdef _WIN32
 	::WSACleanup();
 #endif
 }

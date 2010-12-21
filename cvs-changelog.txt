@@ -1,10 +1,17 @@
 ** $Rev$
+	added automatic incoming connection type detection (DC++, now without logging and translations, because we don't want GUI changes)
+	webserver encoding changed to utf-8
+	webserver session timeout changed to 10 minutes
+	support ADC search by file type group (no custom groups with this GUI)
+	fixed search spam from previous revision (THX eMTee)
+
+** svn551
 	some DC++ BZR merge
 	added support to set favorite hub encoding (last change into WTL GUI, so without translations now)
 	DC++ emulation is off by default (for non-favorite hubs)
 	updated OpenSSL, ZLIB, BZip2
 
-**svn548
+** svn548
 	some DC++ BZR merge
 	updated boost library
 

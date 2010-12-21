@@ -161,17 +161,14 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 			return false;
 		}
 	} catch(const ShareException& e) {
-		// -- Added by RevConnect : Partial file sharing upload
+		// Partial file sharing upload
 		if(aType == Transfer::names[Transfer::TYPE_FILE] && aFile.compare(0, 4, "TTH/") == 0) {
 
 			TTHValue fileHash(aFile.substr(4));
 
-			// find in download queue
-			string target;
-
-            if(QueueManager::getInstance()->isChunkDownloaded(fileHash, aStartPos, aBytes, target, fileSize)){
-				sourceFile = target;
-
+            if(	QueueManager::getInstance()->isChunkDownloaded(fileHash, aStartPos, aBytes, sourceFile) ||
+				FinishedManager::getInstance()->getTarget(fileHash.toBase32(), sourceFile))
+			{				
 				try {
 					File* f = new File(sourceFile, File::READ, File::OPEN | File::SHARED);
 					
@@ -196,45 +193,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 					type = Transfer::TYPE_FILE;
 					goto ok;
 				} catch(const Exception&) {
-					aSource.fileNotAvail();
-					//aSource.disconnect();
 					delete is;
-					return false;
-				}
-			} else {
-				// Share finished file
-				target = FinishedManager::getInstance()->getTarget(fileHash.toBase32());
-
-				if(!target.empty() && Util::fileExists(target)){
-					sourceFile = target;
-					try {
-						File* f = new File(sourceFile, File::READ, File::OPEN | File::SHARED);
-
-						start = aStartPos;
-						int64_t sz = f->getSize();
-						size = (aBytes == -1) ? sz - start : aBytes;
-						fileSize = sz;
-
-						if((start + size) > sz) {
-							aSource.fileNotAvail();
-							delete f;
-							return false;
-						}
-
-						f->setPos(start);
-						is = f;
-						if((start + size) < sz) {
-							is = new LimitedInputStream<true>(is, size);
-						}
-
-						partial = true;
-						type = Transfer::TYPE_FILE;
-						goto ok;
-					}catch(const Exception&){
-						aSource.fileNotAvail();
-						delete is;
-						return false;
-					}
 				}
 			}
 		}

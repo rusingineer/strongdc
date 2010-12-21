@@ -576,6 +576,8 @@
 #define IDC_HELP_TRANSLATIONS           1327
 #define IDC_ENCODINGTEXT                1327
 #define IDC_ENCODING                    1328
+#define IDC_CHECK3                      1329
+#define IDC_CONNECTION_DETECTION        1329
 #define IDC_BACK                        1333
 #define IDC_OTHER_QUEUE_OPTIONS         1400
 #define IDC_FILELIST_DIFF               1406
@@ -831,7 +833,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        313
 #define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         1329
+#define _APS_NEXT_CONTROL_VALUE         1330
 #define _APS_NEXT_SYMED_VALUE           134
 #endif
 #endif

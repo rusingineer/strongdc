@@ -107,7 +107,7 @@ private:
 		}
 	};
 
-	typedef unordered_map<const char *, WebPageInfo*, hash<const char *>, eqstr> WebPages;
+	typedef unordered_map<string, WebPageInfo*> WebPages;
 	WebPages pages;
 
 	string getDLQueue();
@@ -151,8 +151,20 @@ public:
 			
 			SearchManager::getInstance()->addListener(this);
 
-			// TODO: Get ADC searchtype extensions if any is selected
+			// Get ADC searchtype extensions if any is selected
 			StringList extList;
+			try {
+				if(search_type == SearchManager::TYPE_ANY) {
+					// Custom searchtype
+					// disabled with current GUI extList = SettingsManager::getInstance()->getExtensions(Text::fromT(fileType->getText()));
+				} else if(search_type > SearchManager::TYPE_ANY && search_type < SearchManager::TYPE_DIRECTORY) {
+					// Predefined searchtype
+					extList = SettingsManager::getInstance()->getExtensions(string(1, '0' + search_type));
+				}
+			} catch(const SearchTypeException&) {
+				search_type = SearchManager::TYPE_ANY;
+			}
+			
 			searchInterval = SearchManager::getInstance()->search(WebServerManager::getInstance()->sClients, search_str, 0, (SearchManager::TypeModes)search_type, SearchManager::SIZE_DONTCARE, token, extList, (void*)this);
 			results = Util::emptyString;
 			row = 0;
@@ -169,7 +181,7 @@ public:
 		map<string, uint64_t>::iterator i;
 		if((i = loggedin.find(ip)) != loggedin.end()) {
             uint64_t elapsed = (GET_TICK() - loggedin[ip]) / 1000;
-			if(elapsed > 300) {
+			if(elapsed > 600) {
 				loggedin.erase(i);
 				return false;
 			}

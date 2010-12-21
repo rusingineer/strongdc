@@ -30,6 +30,7 @@
 #pragma comment(lib, "iphlpapi.lib")
 
 PropPage::TextItem NetworkPage::texts[] = {
+	{ IDC_CONNECTION_DETECTION,			ResourceManager::CONNECTION_DETECTION		},
 	{ IDC_DIRECT,						ResourceManager::SETTINGS_DIRECT			},
 	{ IDC_DIRECT_OUT,					ResourceManager::SETTINGS_DIRECT			},
 	{ IDC_FIREWALL_UPNP,				ResourceManager::SETTINGS_FIREWALL_UPNP		},
@@ -58,21 +59,22 @@ PropPage::TextItem NetworkPage::texts[] = {
 };
 
 PropPage::Item NetworkPage::items[] = {
-	{ IDC_EXTERNAL_IP,		SettingsManager::EXTERNAL_IP,			PropPage::T_STR		}, 
-	{ IDC_PORT_TCP,			SettingsManager::TCP_PORT,				PropPage::T_INT		}, 
-	{ IDC_PORT_UDP,			SettingsManager::UDP_PORT,				PropPage::T_INT		}, 
-	{ IDC_PORT_TLS,			SettingsManager::TLS_PORT,				PropPage::T_INT		},
-	{ IDC_PORT_DHT,			SettingsManager::DHT_PORT,				PropPage::T_INT		},	
-	{ IDC_OVERRIDE,			SettingsManager::NO_IP_OVERRIDE,		PropPage::T_BOOL	},
-	{ IDC_UPDATE_IP,		SettingsManager::UPDATE_IP,				PropPage::T_BOOL	},	
-	{ IDC_SOCKS_SERVER,		SettingsManager::SOCKS_SERVER,			PropPage::T_STR		},
-	{ IDC_SOCKS_PORT,		SettingsManager::SOCKS_PORT,			PropPage::T_INT		},
-	{ IDC_SOCKS_USER,		SettingsManager::SOCKS_USER,			PropPage::T_STR		},
-	{ IDC_SOCKS_PASSWORD,	SettingsManager::SOCKS_PASSWORD,		PropPage::T_STR		},
-	{ IDC_SOCKS_RESOLVE,	SettingsManager::SOCKS_RESOLVE,			PropPage::T_BOOL	},
-	{ IDC_BIND_ADDRESS,		SettingsManager::BIND_ADDRESS,			PropPage::T_STR		},
-	{ IDC_NATT,				SettingsManager::ALLOW_NAT_TRAVERSAL,	PropPage::T_BOOL	},
-	{ 0,					0,										PropPage::T_END		}
+	{ IDC_CONNECTION_DETECTION,	SettingsManager::AUTO_DETECT_CONNECTION,	PropPage::T_BOOL	},
+	{ IDC_EXTERNAL_IP,			SettingsManager::EXTERNAL_IP,				PropPage::T_STR		}, 
+	{ IDC_PORT_TCP,				SettingsManager::TCP_PORT,					PropPage::T_INT		}, 
+	{ IDC_PORT_UDP,				SettingsManager::UDP_PORT,					PropPage::T_INT		}, 
+	{ IDC_PORT_TLS,				SettingsManager::TLS_PORT,					PropPage::T_INT		},
+	{ IDC_PORT_DHT,				SettingsManager::DHT_PORT,					PropPage::T_INT		},	
+	{ IDC_OVERRIDE,				SettingsManager::NO_IP_OVERRIDE,			PropPage::T_BOOL	},
+	{ IDC_UPDATE_IP,			SettingsManager::UPDATE_IP,					PropPage::T_BOOL	},	
+	{ IDC_SOCKS_SERVER,			SettingsManager::SOCKS_SERVER,				PropPage::T_STR		},
+	{ IDC_SOCKS_PORT,			SettingsManager::SOCKS_PORT,				PropPage::T_INT		},
+	{ IDC_SOCKS_USER,			SettingsManager::SOCKS_USER,				PropPage::T_STR		},
+	{ IDC_SOCKS_PASSWORD,		SettingsManager::SOCKS_PASSWORD,			PropPage::T_STR		},
+	{ IDC_SOCKS_RESOLVE,		SettingsManager::SOCKS_RESOLVE,				PropPage::T_BOOL	},
+	{ IDC_BIND_ADDRESS,			SettingsManager::BIND_ADDRESS,				PropPage::T_STR		},
+	{ IDC_NATT,					SettingsManager::ALLOW_NAT_TRAVERSAL,		PropPage::T_BOOL	},
+	{ 0,						0,											PropPage::T_END		}
 };
 
 void NetworkPage::write()
@@ -175,18 +177,26 @@ LRESULT NetworkPage::onInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPa
 }
 
 void NetworkPage::fixControls() {
+	BOOL auto_detect = IsDlgButtonChecked(IDC_CONNECTION_DETECTION) == BST_CHECKED;
 	BOOL direct = IsDlgButtonChecked(IDC_DIRECT) == BST_CHECKED;
 	BOOL upnp = IsDlgButtonChecked(IDC_FIREWALL_UPNP) == BST_CHECKED;
 	BOOL nat = IsDlgButtonChecked(IDC_FIREWALL_NAT) == BST_CHECKED;
 	BOOL nat_traversal = IsDlgButtonChecked(IDC_NATT) == BST_CHECKED;
 
-	::EnableWindow(GetDlgItem(IDC_EXTERNAL_IP), direct || upnp || nat || nat_traversal);
-	::EnableWindow(GetDlgItem(IDC_OVERRIDE), direct || upnp || nat || nat_traversal);
+	::EnableWindow(GetDlgItem(IDC_DIRECT), !auto_detect);
+	::EnableWindow(GetDlgItem(IDC_FIREWALL_UPNP), !auto_detect);
+	::EnableWindow(GetDlgItem(IDC_FIREWALL_NAT), !auto_detect);
+	::EnableWindow(GetDlgItem(IDC_FIREWALL_PASSIVE), !auto_detect);
+	::EnableWindow(GetDlgItem(IDC_UPDATE_IP), !auto_detect);
+	::EnableWindow(GetDlgItem(IDC_SETTINGS_IP), !auto_detect);
 
-	::EnableWindow(GetDlgItem(IDC_PORT_TCP), upnp || nat);
-	::EnableWindow(GetDlgItem(IDC_PORT_UDP), upnp || nat);
-	::EnableWindow(GetDlgItem(IDC_PORT_TLS), upnp || nat);
-	::EnableWindow(GetDlgItem(IDC_NATT), !direct && !upnp && !nat); // for pasive settings only
+	::EnableWindow(GetDlgItem(IDC_EXTERNAL_IP), !auto_detect && (direct || upnp || nat || nat_traversal));
+	::EnableWindow(GetDlgItem(IDC_OVERRIDE), !auto_detect && (direct || upnp || nat || nat_traversal));
+
+	::EnableWindow(GetDlgItem(IDC_PORT_TCP), !auto_detect && (upnp || nat));
+	::EnableWindow(GetDlgItem(IDC_PORT_UDP), !auto_detect && (upnp || nat));
+	::EnableWindow(GetDlgItem(IDC_PORT_TLS), !auto_detect && (upnp || nat));
+	::EnableWindow(GetDlgItem(IDC_NATT), !auto_detect && !direct && !upnp && !nat); // for passive settings only
 	// DHT port should be always settable
 	//::EnableWindow(GetDlgItem(IDC_PORT_DHT), upnp || nat);	
 
