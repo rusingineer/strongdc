@@ -560,6 +560,8 @@ SettingsManager::SettingsManager()
 
 	setDefault(USE_OLD_SHARING_UI, (ver.dwPlatformId == VER_PLATFORM_WIN32_NT) ? false : true);
 #endif
+
+	setSearchTypeDefaults();
 }
 
 void SettingsManager::load(string const& aFileName)
@@ -724,13 +726,13 @@ void SettingsManager::save(string const& aFileName) {
 	}
 	xml.stepOut();
 	
-	xml.addTag("SearchTypes");
+	/*xml.addTag("SearchTypes");
 	xml.stepIn();
 	for(SearchTypesIterC i = searchTypes.begin(); i != searchTypes.end(); ++i) {
 		xml.addTag("SearchType", Util::toString(";", i->second));
 		xml.addChildAttrib("Id", i->first);
 	}
-	xml.stepOut();
+	xml.stepOut();*/
 
 	fire(SettingsManagerListener::Save(), xml);
 

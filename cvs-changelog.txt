@@ -1,4 +1,8 @@
 ** $Rev$
+	DC++ merge (miniupnpc update)
+	added missing precompiler flag for NATUPnP
+
+** svn552
 	added automatic incoming connection type detection (DC++, now without logging and translations, because we don't want GUI changes)
 	webserver encoding changed to utf-8
 	webserver session timeout changed to 10 minutes

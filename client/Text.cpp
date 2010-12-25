@@ -55,6 +55,7 @@ void initialize() {
 #endif
 }
 
+#ifdef _WIN32
 int getCodePage(const string& charset) {
 	if(charset.empty())
 		return CP_ACP;
@@ -65,6 +66,7 @@ int getCodePage(const string& charset) {
 
 	return atoi(charset.c_str() + pos + 1);
 }
+#endif
 
 bool isAscii(const char* str) throw() {
 	for(const uint8_t* p = (const uint8_t*)str; *p; ++p) {
