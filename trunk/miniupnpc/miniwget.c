@@ -1,4 +1,4 @@
-/* $Id: miniwget.c,v 1.38 2010/12/09 15:54:25 nanard Exp $ */
+/* $Id: miniwget.c,v 1.41 2010/12/12 23:52:02 nanard Exp $ */
 /* Project : miniupnp
  * Author : Thomas Bernard
  * Copyright (c) 2005-2010 Thomas Bernard
@@ -17,6 +17,7 @@
 #define MAXHOSTNAMELEN 64
 #define MIN(x,y) (((x)<(y))?(x):(y))
 #define snprintf _snprintf
+#define socklen_t int
 #ifdef strncasecmp
 #undef strncasecmp
 #endif
@@ -25,7 +26,6 @@
 #else /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
 #define strncasecmp memicmp
 #endif /* defined(_MSC_VER) && (_MSC_VER >= 1400) */
-#define socklen_t int
 #else /* #ifdef WIN32 */
 #include <unistd.h>
 #include <sys/param.h>
@@ -63,6 +63,7 @@ getHTTPResponse(int s, int * size)
 	int chunked = 0;
 	int content_length = -1;
 	unsigned int chunksize = 0;
+	unsigned int bytestocopy = 0;
 	/* buffers : */
 	char * header_buf;
 	int header_buf_len = 2048;
@@ -137,6 +138,8 @@ getHTTPResponse(int s, int * size)
 					{
 						if(chunked)
 						{
+							while(i<header_buf_used)
+							{
 							while(i<header_buf_used && isxdigit(header_buf[i]))
 							{
 								if(header_buf[i] >= '0' && header_buf[i] <= '9')
@@ -155,25 +158,24 @@ getHTTPResponse(int s, int * size)
 							if(chunksize == 0)
 							{
 #ifdef DEBUG
-								printf("end of stream !\n");
+									printf("end of HTTP content !\n");
 #endif
 								goto end_of_stream;	
 							}
-							if(header_buf_used - i <= chunksize)
+								bytestocopy = ((int)chunksize < header_buf_used - i)?chunksize:(header_buf_used - i);
+#ifdef DEBUG
+								printf("chunksize=%u bytestocopy=%u (i=%d header_buf_used=%d)\n",
+								       chunksize, bytestocopy, i, header_buf_used);
+#endif
+								if(content_buf_len < (int)(content_buf_used + bytestocopy))
 							{
-								if(content_buf_len < header_buf_used - i)
-								{
-									content_buf = realloc(content_buf, header_buf_used - i);
-									content_buf_len = header_buf_used - i;
+									content_buf = realloc(content_buf, content_buf_used + bytestocopy);
+									content_buf_len = content_buf_used + bytestocopy;
 								}
-								memcpy(content_buf, header_buf + i, header_buf_used - i);
-								content_buf_used = header_buf_used - i;
-								chunksize -= (header_buf_used - i);
-								i = header_buf_used;
-							}
-							else
-							{
-								printf("arg ! chunksize < (header_buf_used - i)\n");
+								memcpy(content_buf + content_buf_used, header_buf + i, bytestocopy);
+								content_buf_used += bytestocopy;
+								chunksize -= bytestocopy;
+								i += bytestocopy;
 							}
 						}
 						else
@@ -185,6 +187,7 @@ getHTTPResponse(int s, int * size)
 							}
 							memcpy(content_buf, header_buf + i, header_buf_used - i);
 							content_buf_used = header_buf_used - i;
+							i = header_buf_used;
 						}
 					}
 				}
@@ -196,7 +199,6 @@ getHTTPResponse(int s, int * size)
 			if(chunked)
 			{
 				int i = 0;
-				unsigned bytestocopy;
 				while(i < n)
 				{
 					if(chunksize == 0)
@@ -221,14 +223,14 @@ getHTTPResponse(int s, int * size)
 						if(chunksize == 0)
 						{
 #ifdef DEBUG
-							printf("end of stream - %d %d\n", i, n);
+							printf("end of HTTP content - %d %d\n", i, n);
 							/*printf("'%.*s'\n", n-i, buf+i);*/
 #endif
 							goto end_of_stream;
 						}
 					}
-					bytestocopy = (chunksize < n - i)?chunksize:(n - i);
-					if(content_buf_used + bytestocopy > content_buf_len)
+					bytestocopy = ((int)chunksize < n - i)?chunksize:(n - i);
+					if((int)(content_buf_used + bytestocopy) > content_buf_len)
 					{
 						content_buf = (char *)realloc((void *)content_buf, 
 						                              content_buf_used + bytestocopy);
@@ -255,7 +257,7 @@ getHTTPResponse(int s, int * size)
 		if(content_length > 0 && content_buf_used >= content_length)
 		{
 #ifdef DEBUG
-			printf("termine!\n");
+			printf("End of HTTP content\n");
 #endif
 			break;
 		}
