@@ -1,3 +1,20 @@
+  -- StrongDC++ 2.42 --
+
+* synchronizace s jádrem DC++ 0.777
+* pøidána automatická detekce typu pøíchozích spojení
+* oprava stability
+* pøidáno nastavení pro vypnutí tématu Exploreru v seznamech a stromech
+* snad opraven omezovaè rychlosti pro velmi vysoké rychlosti
+* opravy DHT
+* aktualizace interních knihoven (OpenSSL, BZip2, ZLIB, boost) - opravuje pár bezpeènostních problémù
+* odstranìna závislost na STLPortu
+* zlepšen výkon
+* pøidána podpora pro nastavení kódování oblíbeného hubu
+* emulace DC++ je ve výchozím nastavení vypnuta (pro huby, které nejsou v oblíbených)
+* kódování webserveru zmìnìno na utf-8
+* session webserveru vyprší až po 10 minutách
+
+
   -- StrongDC++ 2.41 --
 
 * opravena kompatibilita se staršími ADC klienty v pasivním režimu
