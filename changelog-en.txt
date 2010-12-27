@@ -1,3 +1,20 @@
+  -- StrongDC++ 2.42 --
+
+* DC++ 0.777 core synchronization
+* added automatic incoming connection type detection
+* stability fixes
+* added option to disable Explorer theming in listviews and treeviews
+* hopefully fixed throttling with very large speeds
+* DHT fixes
+* updated internal libraries (OpenSSL, BZip2, ZLIB, boost) - fixes some security issues
+* removed STLPort dependency
+* performance tweaks
+* added support to set favorite hub encoding
+* DC++ emulation is off by default (for non-favorite hubs)
+* webserver encoding changed to utf-8
+* webserver session timeout changed to 10 minutes
+
+
   -- StrongDC++ 2.41 --
 
 * fixed compatibility with older ADC clients in passive mode
