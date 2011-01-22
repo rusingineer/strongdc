@@ -38,6 +38,7 @@
 #include "UserConnection.h"
 #include "version.h"
 #include "SearchResult.h"
+#include "SharedFileStream.h"
 #include "MerkleCheckOutputStream.h"
 
 #include "../dht/IndexManager.h"
@@ -1133,7 +1134,8 @@ void QueueManager::setFile(Download* d) {
 			File::ensureDirectory(target);
 		}
 
-		File* f = new File(target, File::WRITE, File::OPEN | File::CREATE | File::SHARED);
+		// open stream for both writing and reading, because UploadManager can request reading from it
+		SharedFileStream* f = new SharedFileStream(target, File::RW, File::OPEN | File::CREATE | File::NO_CACHE_HINT);
 
 		// Only use antifrag if we don't have a previous non-antifrag part
 		if(BOOLSETTING(ANTI_FRAG) && f->getSize() != qi->getSize()) {
