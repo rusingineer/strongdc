@@ -1,4 +1,10 @@
 ** $Rev$
+	improved segmented downloading performance by using shared file stream and not hinting sequential file access
+
+** svn557
+	released 2.42
+
+** svn555
 	DC++ merge (miniupnpc update)
 	added missing precompiler flag for NATUPnP
 

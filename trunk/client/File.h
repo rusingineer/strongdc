@@ -47,7 +47,8 @@ public:
 		OPEN = 0x01,
 		CREATE = 0x02,
 		TRUNCATE = 0x04,
-		SHARED = 0x08
+		SHARED = 0x08,
+		NO_CACHE_HINT = 0x10
 	};
 
 #ifdef _WIN32
@@ -101,7 +102,7 @@ public:
 	static void ensureDirectory(const string& aFile) throw();
 	static bool isAbsolute(const string& path) throw();
 
-	~File() throw() { File::close(); }
+	virtual ~File() throw() { File::close(); }
 
 	string read(size_t len) throw(FileException);
 	string read() throw(FileException);
@@ -144,6 +145,10 @@ public:
 		bool isLink();
 		int64_t getSize();
 		uint32_t getLastWriteTime();
+		#ifndef _WIN32
+			dirent *ent;
+			string base;
+		#endif
 	};
 
 	DirData& operator*() { return data; }
