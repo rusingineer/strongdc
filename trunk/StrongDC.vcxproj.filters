@@ -383,9 +383,6 @@
     <ClCompile Include="windows\UploadQueueFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="windows\UPnP_COM.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="windows\UserListColours.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -401,7 +398,10 @@
     <ClCompile Include="windows\EmoticonsManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="windows\UPnP_MiniUPnPc.cpp">
+    <ClCompile Include="windows\Mapper_WinUPnP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\Mapper_MiniUPnPc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -640,9 +640,6 @@
     <ClInclude Include="windows\UploadQueueFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="windows\UPnP_COM.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="windows\UserListColours.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -661,7 +658,10 @@
     <ClInclude Include="windows\EmoticonsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="windows\UPnP_MiniUPnPc.h">
+    <ClInclude Include="windows\Mapper_MiniUPnPc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\Mapper_WinUPnP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

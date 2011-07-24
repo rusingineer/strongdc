@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "BufferedSocket.h"
 
 #include "ResourceManager.h"
@@ -37,7 +35,7 @@ namespace dcpp {
 // Polling is used for tasks...should be fixed...
 #define POLL_TIMEOUT 250
 
-BufferedSocket::BufferedSocket(char aSeparator) throw(ThreadException) :
+BufferedSocket::BufferedSocket(char aSeparator) :
 separator(aSeparator), mode(MODE_LINE), dataBytes(0), rollback(0), state(STARTING),
 disconnecting(false)
 {
@@ -48,7 +46,7 @@ disconnecting(false)
 
 atomic<long> BufferedSocket::sockets(0);
 
-BufferedSocket::~BufferedSocket() throw() {
+BufferedSocket::~BufferedSocket() {
 	--sockets;
 }
 
@@ -84,7 +82,7 @@ void BufferedSocket::setSocket(std::unique_ptr<Socket> s) {
 	sock = move(s);
 }
 
-void BufferedSocket::accept(const Socket& srv, bool secure, bool allowUntrusted) throw(SocketException) {
+void BufferedSocket::accept(const Socket& srv, bool secure, bool allowUntrusted) {
 	dcdebug("BufferedSocket::accept() %p\n", (void*)this);
 	
 	std::unique_ptr<Socket> s(secure ? CryptoManager::getInstance()->getServerSocket(allowUntrusted) : new Socket);
@@ -97,11 +95,11 @@ void BufferedSocket::accept(const Socket& srv, bool secure, bool allowUntrusted)
 	addTask(ACCEPTED, 0);
 }
 
-void BufferedSocket::connect(const string& aAddress, uint16_t aPort, bool secure, bool allowUntrusted, bool proxy) throw(SocketException) {
+void BufferedSocket::connect(const string& aAddress, uint16_t aPort, bool secure, bool allowUntrusted, bool proxy) {
 	connect(aAddress, aPort, 0, NAT_NONE, secure, allowUntrusted, proxy);
 }
 
-void BufferedSocket::connect(const string& aAddress, uint16_t aPort, uint16_t localPort, NatRoles natRole, bool secure, bool allowUntrusted, bool proxy) throw(SocketException) {
+void BufferedSocket::connect(const string& aAddress, uint16_t aPort, uint16_t localPort, NatRoles natRole, bool secure, bool allowUntrusted, bool proxy) {
 	dcdebug("BufferedSocket::connect() %p\n", (void*)this);
 	std::unique_ptr<Socket> s(secure ? (natRole == NAT_SERVER ? CryptoManager::getInstance()->getServerSocket(allowUntrusted) : CryptoManager::getInstance()->getClientSocket(allowUntrusted)) : new Socket);
 
@@ -115,7 +113,7 @@ void BufferedSocket::connect(const string& aAddress, uint16_t aPort, uint16_t lo
 
 #define LONG_TIMEOUT 30000
 #define SHORT_TIMEOUT 1000
-void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t localPort, NatRoles natRole, bool proxy) throw(SocketException) {
+void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t localPort, NatRoles natRole, bool proxy) {
 	dcassert(state == STARTING);
 
 	dcdebug("threadConnect %s:%d/%d\n", aAddr.c_str(), (int)localPort, (int)aPort);
@@ -134,7 +132,7 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t
 			}
 	
 			bool connSucceeded;
-			while((connSucceeded = sock->waitConnected(POLL_TIMEOUT)) == false && endTime >= GET_TICK()) {
+			while(!(connSucceeded = sock->waitConnected(POLL_TIMEOUT)) && endTime >= GET_TICK()) {
 				if(disconnecting) return;
 			}
 	
@@ -154,7 +152,7 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t
 	throw SocketException(STRING(CONNECTION_TIMEOUT));
 }	
 
-void BufferedSocket::threadAccept() throw(SocketException) {
+void BufferedSocket::threadAccept() {
 	dcassert(state == STARTING);
 
 	dcdebug("threadAccept\n");
@@ -172,12 +170,11 @@ void BufferedSocket::threadAccept() throw(SocketException) {
 	}
 }
 
-void BufferedSocket::threadRead() throw(Exception) {
+void BufferedSocket::threadRead() {
 	if(state != RUNNING)
 		return;
 
 	int left = (mode == MODE_DATA) ? ThrottleManager::getInstance()->read(sock.get(), &inbuf[0], (int)inbuf.size()) : sock->read(&inbuf[0], (int)inbuf.size());
-
 	if(left == -1) {
 		// EWOULDBLOCK, no data received...
 		return;
@@ -278,7 +275,7 @@ void BufferedSocket::threadRead() throw(Exception) {
 	}	
 }
 
-void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
+void BufferedSocket::threadSendFile(InputStream* file) {
 	if(state != RUNNING)
 		return;
 	
@@ -373,7 +370,7 @@ void BufferedSocket::threadSendFile(InputStream* file) throw(Exception) {
 	}
 }
 
-void BufferedSocket::write(const char* aBuf, size_t aLen) throw() {
+void BufferedSocket::write(const char* aBuf, size_t aLen) noexcept {
 	if(!sock.get())
 		return;
 	Lock l(cs);
@@ -383,7 +380,7 @@ void BufferedSocket::write(const char* aBuf, size_t aLen) throw() {
 	writeBuf.insert(writeBuf.end(), aBuf, aBuf+aLen);
 }
 
-void BufferedSocket::threadSendData() throw(Exception) {
+void BufferedSocket::threadSendData() {
 	if(state != RUNNING)
 		return;
 
@@ -419,13 +416,13 @@ void BufferedSocket::threadSendData() throw(Exception) {
 	sendBuf.clear();
 }
 
-bool BufferedSocket::checkEvents() throw(Exception) {
+bool BufferedSocket::checkEvents() {
 	while(state == RUNNING ? taskSem.wait(0) : taskSem.wait()) {
-		pair<Tasks, shared_ptr<TaskData> > p;
+		pair<Tasks, unique_ptr<TaskData> > p;
 		{
 			Lock l(cs);
 			dcassert(tasks.size() > 0);
-			p = tasks.front();
+			p = move(tasks.front());
 			tasks.erase(tasks.begin());
 		}
 
@@ -460,7 +457,7 @@ bool BufferedSocket::checkEvents() throw(Exception) {
 	return true;
 }
 
-void BufferedSocket::checkSocket() throw(Exception) {
+void BufferedSocket::checkSocket() {
 	int waitFor = sock->wait(POLL_TIMEOUT, Socket::WAIT_READ);
 
 	if(waitFor & Socket::WAIT_READ) {
@@ -510,7 +507,7 @@ void BufferedSocket::shutdown() {
 
 void BufferedSocket::addTask(Tasks task, TaskData* data) { 
 	dcassert(task == DISCONNECT || task == SHUTDOWN || task == UPDATED || sock.get());
-	tasks.push_back(make_pair(task, data)); taskSem.signal();
+	tasks.push_back(make_pair(task, unique_ptr<TaskData>(data))); taskSem.signal();
 }
 
 } // namespace dcpp

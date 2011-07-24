@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 #ifndef DCPLUSPLUS_DCPP_LOG_MANAGER_H
 #define DCPLUSPLUS_DCPP_LOG_MANAGER_H
 
+#include "typedefs.h"
+
 #include "File.h"
 #include "Singleton.h"
 #include "TimerManager.h"
@@ -31,7 +33,7 @@ public:
 	template<int I>	struct X { enum { TYPE = I };  };
 
 	typedef X<0> Message;
-	virtual void on(Message, const string&) throw() { }
+	virtual void on(Message, const string&) noexcept { }
 };
 
 class LogManager : public Singleton<LogManager>, public Speaker<LogManagerListener>
@@ -40,7 +42,7 @@ public:
 	enum Area { CHAT, PM, DOWNLOAD, UPLOAD, SYSTEM, STATUS, WEBSERVER, LAST };
 	enum {FILE, FORMAT};
 
-	void log(Area area, StringMap& params) throw() {
+	void log(Area area, StringMap& params) noexcept {
 		string path = SETTING(LOG_DIRECTORY);
 		string msg;
 	
@@ -68,7 +70,7 @@ public:
 	}
 
 private:
-	void log(const string& area, const string& msg) throw() {
+	void log(const string& area, const string& msg) noexcept {
 		Lock l(cs);
 		try {
 			string aArea = Util::validateFileName(area);
@@ -105,7 +107,7 @@ private:
 		logOptions[WEBSERVER][FILE]		= SettingsManager::LOG_FILE_WEBSERVER;
 		logOptions[WEBSERVER][FORMAT]	= SettingsManager::WEBSERVER_FORMAT;
 	}
-	~LogManager() throw() { }
+	~LogManager() { }
 
 };
 

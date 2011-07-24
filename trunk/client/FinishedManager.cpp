@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "FinishedManager.h"
 
 #include "ClientManager.h"
@@ -38,7 +36,7 @@ FinishedManager::FinishedManager() {
 	UploadManager::getInstance()->addListener(this);
 }
 	
-FinishedManager::~FinishedManager() throw() {
+FinishedManager::~FinishedManager() {
 	QueueManager::getInstance()->removeListener(this);
 	UploadManager::getInstance()->removeListener(this);
 
@@ -69,7 +67,7 @@ void FinishedManager::removeAll(bool upload /* = false */) {
 	}
 }
 
-void FinishedManager::on(QueueManagerListener::Finished, const QueueItem* qi, const string&, const Download* d) throw()
+void FinishedManager::on(QueueManagerListener::Finished, const QueueItem* qi, const string&, const Download* d) noexcept
 {
 	bool isFile = !qi->isSet(QueueItem::FLAG_USER_LIST);
 
@@ -97,7 +95,7 @@ void FinishedManager::on(QueueManagerListener::Finished, const QueueItem* qi, co
 	}
 }
 
-void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) throw()
+void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) noexcept
 {
 	if(u->getType() == Transfer::TYPE_FILE || (u->getType() == Transfer::TYPE_FULL_LIST && BOOLSETTING(LOG_FILELIST_TRANSFERS))) {
 		if ((!SETTING(UPLOADFILE).empty() && (!BOOLSETTING(SOUNDS_DISABLED))))

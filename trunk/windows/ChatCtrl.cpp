@@ -639,7 +639,7 @@ LRESULT ChatCtrl::onContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam,
 			menu.AppendMenu(MF_STRING, IDC_ADD_TO_FAVORITES, CTSTRING(ADD_TO_FAVORITES));
 			
 			// add user commands
-			prepareMenu(menu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
+			prepareMenu(menu, ::UserCommand::CONTEXT_USER, client->getHubUrl());
 		}
 
 		// default doubleclick action

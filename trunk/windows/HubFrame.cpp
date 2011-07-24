@@ -574,11 +574,11 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 		ctrlUsers.SetRedraw(FALSE);
 	}
 
-	for(TaskQueue::Iter i = t.begin(); i != t.end(); ++i) {
+	for(auto i = t.begin(); i != t.end(); ++i) {
 		if(i->first == UPDATE_USER) {
-			updateUser(*static_cast<UserTask*>(i->second));
+			updateUser(static_cast<UserTask&>(*i->second));
 		} else if(i->first == UPDATE_USER_JOIN) {
-			UserTask& u = *static_cast<UserTask*>(i->second);
+			UserTask& u = static_cast<UserTask&>(*i->second);
 			if(updateUser(u)) {
 				bool isFavorite = FavoriteManager::getInstance()->isFavoriteUser(u.onlineUser->getUser());
 				if (isFavorite && (!SETTING(SOUND_FAVUSER).empty()) && (!BOOLSETTING(SOUNDS_DISABLED)))
@@ -604,7 +604,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				}
 			}
 		} else if(i->first == REMOVE_USER) {
-			const UserTask& u = *static_cast<UserTask*>(i->second);
+			const UserTask& u = static_cast<UserTask&>(*i->second);
 			removeUser(u.onlineUser);
 
 			if (showJoins || (favShowJoins && FavoriteManager::getInstance()->isFavoriteUser(u.onlineUser->getUser()))) {
@@ -636,15 +636,15 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				MainFrame::getMainFrame()->ShowBalloonTip(Text::toT(client->getAddress()), TSTRING(DISCONNECTED));
 			}
 		} else if(i->first == ADD_CHAT_LINE) {
-    		const MessageTask& msg = *static_cast<MessageTask*>(i->second);
+    		const MessageTask& msg = static_cast<MessageTask&>(*i->second);
 			if(!msg.from.getUser() || (!FavoriteManager::getInstance()->isIgnoredUser(msg.from.getUser()->getCID()))) {
 				  addLine(msg.from, Text::toT(msg.str), WinUtil::m_ChatTextGeneral);
         	}
 		} else if(i->first == ADD_STATUS_LINE) {
-			const StatusTask& status = *static_cast<StatusTask*>(i->second);
+			const StatusTask& status = static_cast<StatusTask&>(*i->second);
 			addStatus(Text::toT(status.str), WinUtil::m_ChatTextServer, status.inChat);
 		} else if(i->first == SET_WINDOW_TITLE) {
-			SetWindowText(Text::toT(static_cast<StatusTask*>(i->second)->str).c_str());
+			SetWindowText(Text::toT(static_cast<StatusTask&>(*i->second).str).c_str());
 			SetMDIFrameMenu();
 		} else if(i->first == STATS) {
 			size_t AllUsers = client->getUserCount();
@@ -701,7 +701,7 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 				}
 			}
 		} else if(i->first == PRIVATE_MESSAGE) {
-			const MessageTask& pm = *static_cast<MessageTask*>(i->second);
+			const MessageTask& pm = static_cast<MessageTask&>(*i->second);
 			tstring nick = Text::toT(pm.from.getNick());
 			if(!pm.from.getUser() || (!FavoriteManager::getInstance()->isIgnoredUser(pm.from.getUser()->getCID()))) {
 				bool myPM = pm.replyTo == ClientManager::getInstance()->getMe();
@@ -742,15 +742,13 @@ LRESULT HubFrame::onSpeaker(UINT /*uMsg*/, WPARAM /* wParam */, LPARAM /* lParam
 			cf.crBackColor = SETTING(BACKGROUND_COLOR);
 			cf.crTextColor = SETTING(ERROR_COLOR);
 
-			tstring msg = Text::toT(static_cast<StatusTask*>(i->second)->str);
+			tstring msg = Text::toT(static_cast<StatusTask&>(*i->second).str);
 			if(BOOLSETTING(POPUP_CHEATING_USER) && msg.length() < 256) {
 				MainFrame::getMainFrame()->ShowBalloonTip(msg, TSTRING(CHEATING_USER));
 			}
 
-			addLine(Text::toT(static_cast<StatusTask*>(i->second)->str), cf);
+			addLine(Text::toT(static_cast<StatusTask&>(*i->second).str), cf);
 		}
-
-		delete i->second;
 	}
 	
 	if(resort && showUsers) {
@@ -898,7 +896,7 @@ void HubFrame::clearTaskList() {
 	tasks.clear();
 }
 
-void HubFrame::findText(tstring const& needle) throw() {
+void HubFrame::findText(tstring const& needle) noexcept {
 	int max = ctrlClient.GetWindowTextLength();
 	// a new search? reset cursor to bottom
 	if(needle != currentNeedle || currentNeedlePos == -1) {
@@ -1145,7 +1143,7 @@ LRESULT HubFrame::onContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOO
 		}
 
 		if(PreparePopupMenu(&ctrlUsers, Mnu)) {
-			prepareMenu(Mnu, ::UserCommand::CONTEXT_CHAT, client->getHubUrl());
+			prepareMenu(Mnu, ::UserCommand::CONTEXT_USER, client->getHubUrl());
 			Mnu.AppendMenu(MF_SEPARATOR);
 			Mnu.AppendMenu(MF_STRING, IDC_REFRESH, CTSTRING(REFRESH_USER_LIST));
 			Mnu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, m_hWnd);
@@ -1558,10 +1556,10 @@ void HubFrame::closeDisconnected() {
 	}
 }
 
-void HubFrame::on(FavoriteManagerListener::UserAdded, const FavoriteUser& /*aUser*/) throw() {
+void HubFrame::on(FavoriteManagerListener::UserAdded, const FavoriteUser& /*aUser*/) noexcept {
 	resortForFavsFirst();
 }
-void HubFrame::on(FavoriteManagerListener::UserRemoved, const FavoriteUser& /*aUser*/) throw() {
+void HubFrame::on(FavoriteManagerListener::UserRemoved, const FavoriteUser& /*aUser*/) noexcept {
 	resortForFavsFirst();
 }
 
@@ -1572,7 +1570,7 @@ void HubFrame::resortForFavsFirst(bool justDoIt /* = false */) {
 	}
 }
 
-void HubFrame::on(Second, uint64_t /*aTick*/) throw() {
+void HubFrame::on(Second, uint64_t /*aTick*/) noexcept {
 	if(updateUsers) {
 		updateStatusBar();
 		updateUsers = false;
@@ -1580,31 +1578,31 @@ void HubFrame::on(Second, uint64_t /*aTick*/) throw() {
 	}
 }
 
-void HubFrame::on(Connecting, const Client*) throw() { 
+void HubFrame::on(Connecting, const Client*) noexcept { 
 	if(BOOLSETTING(SEARCH_PASSIVE) && ClientManager::getInstance()->isActive(client->getHubUrl())) {
 		addLine(TSTRING(ANTI_PASSIVE_SEARCH), WinUtil::m_ChatTextSystem);
 	}
 	speak(ADD_STATUS_LINE, STRING(CONNECTING_TO) + " " + client->getHubUrl() + "...");
 	speak(SET_WINDOW_TITLE, client->getHubUrl());
 }
-void HubFrame::on(Connected, const Client*) throw() { 
+void HubFrame::on(Connected, const Client*) noexcept { 
 	speak(CONNECTED);
 }
-void HubFrame::on(UserUpdated, const Client*, const OnlineUserPtr& user) throw() {
+void HubFrame::on(UserUpdated, const Client*, const OnlineUserPtr& user) noexcept {
 	speak(UPDATE_USER_JOIN, user);
 }
-void HubFrame::on(UsersUpdated, const Client*, const OnlineUserList& aList) throw() {
+void HubFrame::on(UsersUpdated, const Client*, const OnlineUserList& aList) noexcept {
 	for(OnlineUserList::const_iterator i = aList.begin(); i != aList.end(); ++i) {
-		tasks.add(UPDATE_USER, new UserTask(*i));
+		tasks.add(UPDATE_USER, unique_ptr<Task>(new UserTask(*i)));
 	}
 	updateUsers = true;
 }
 
-void HubFrame::on(ClientListener::UserRemoved, const Client*, const OnlineUserPtr& user) throw() {
+void HubFrame::on(ClientListener::UserRemoved, const Client*, const OnlineUserPtr& user) noexcept {
 	speak(REMOVE_USER, user);
 }
 
-void HubFrame::on(Redirect, const Client*, const string& line) throw() { 
+void HubFrame::on(Redirect, const Client*, const string& line) noexcept { 
 	if(ClientManager::getInstance()->isConnected(line)) {
 		speak(ADD_STATUS_LINE, STRING(REDIRECT_ALREADY_CONNECTED));
 		return;
@@ -1617,14 +1615,14 @@ void HubFrame::on(Redirect, const Client*, const string& line) throw() {
 		speak(ADD_STATUS_LINE, STRING(PRESS_FOLLOW) + " " + line);
 	}
 }
-void HubFrame::on(Failed, const Client*, const string& line) throw() { 
+void HubFrame::on(Failed, const Client*, const string& line) noexcept { 
 	speak(ADD_STATUS_LINE, line); 
 	speak(DISCONNECTED); 
 }
-void HubFrame::on(GetPassword, const Client*) throw() { 
+void HubFrame::on(GetPassword, const Client*) noexcept { 
 	speak(GET_PASSWORD);
 }
-void HubFrame::on(HubUpdated, const Client*) throw() {
+void HubFrame::on(HubUpdated, const Client*) noexcept {
 	string hubName;
 	if(client->isTrusted()) {
 		hubName = "[S] ";
@@ -1645,7 +1643,7 @@ void HubFrame::on(HubUpdated, const Client*) throw() {
 #endif
 	speak(SET_WINDOW_TITLE, hubName);
 }
-void HubFrame::on(Message, const Client*, const ChatMessage& message) throw() {
+void HubFrame::on(Message, const Client*, const ChatMessage& message) noexcept {
 	if(message.to && message.replyTo) {
 		speak(PRIVATE_MESSAGE, message.from, message.to, message.replyTo, message.format());
 	} else {
@@ -1655,16 +1653,16 @@ void HubFrame::on(Message, const Client*, const ChatMessage& message) throw() {
 void HubFrame::on(StatusMessage, const Client*, const string& line, int statusFlags) {
 	speak(ADD_STATUS_LINE, Text::toDOS(line), !BOOLSETTING(FILTER_MESSAGES) || !(statusFlags & ClientListener::FLAG_IS_SPAM));
 }
-void HubFrame::on(NickTaken, const Client*) throw() {
+void HubFrame::on(NickTaken, const Client*) noexcept {
 	speak(ADD_STATUS_LINE, STRING(NICK_TAKEN));
 }
-void HubFrame::on(SearchFlood, const Client*, const string& line) throw() {
+void HubFrame::on(SearchFlood, const Client*, const string& line) noexcept {
 	speak(ADD_STATUS_LINE, STRING(SEARCH_SPAM_FROM) + " " + line);
 }
-void HubFrame::on(CheatMessage, const Client*, const string& line) throw() {
+void HubFrame::on(CheatMessage, const Client*, const string& line) noexcept {
 	speak(CHEATING_USER, line);
 }
-void HubFrame::on(HubTopic, const Client*, const string& line) throw() {
+void HubFrame::on(HubTopic, const Client*, const string& line) noexcept {
 	speak(ADD_STATUS_LINE, STRING(HUB_TOPIC) + "\t" + line);
 }
 
@@ -2101,7 +2099,7 @@ LRESULT HubFrame::onStyleChanged(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	return 0;
 }
 
-void HubFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
+void HubFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) noexcept {
 	ctrlUsers.SetImageList(WinUtil::userImages, LVSIL_SMALL);
 	//ctrlUsers.Invalidate();
 	if(ctrlUsers.GetBkColor() != WinUtil::bgColor) {
@@ -2262,7 +2260,7 @@ LRESULT HubFrame::onEditClearAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWnd
 	return 0;
 }
 	
-void HubFrame::on(UserReport, const Client*, const Identity& i) throw()
+void HubFrame::on(UserReport, const Client*, const Identity& i) noexcept
 {
 	string report = WinUtil::getReport(i, ctrlClient.m_hWnd);
 	speak(CHEATING_USER, report);

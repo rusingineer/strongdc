@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,38 +16,37 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DCPLUSPLUS_WIN32_UPNP_COM_H
-#define DCPLUSPLUS_WIN32_UPNP_COM_H
+#ifndef DCPLUSPLUS_WIN32_MAPPER_MINIUPNPC_H
+#define DCPLUSPLUS_WIN32_MAPPER_MINIUPNPC_H
 
-#include "../client/UPnP.h"
+#include "../client/Mapper.h"
 
-struct IUPnPNAT;
-struct IStaticPortMappingCollection;
-
-class UPnP_COM : public UPnP
+class Mapper_MiniUPnPc : public Mapper
 {
 public:
-	UPnP_COM() : UPnP(), pUN(0), lastPort(0) { }
+	Mapper_MiniUPnPc() : Mapper(), initialized(false) { }
+
+	static const string name;
 
 private:
 	bool init();
+	void uninit();
 
 	bool add(const unsigned short port, const Protocol protocol, const string& description);
 	bool remove(const unsigned short port, const Protocol protocol);
-	const string& getName() const {
-		return name;
-	}
 
+	uint32_t renewal() const { return 0; }
+
+	string getDeviceName();
 	string getExternalIP();
-	static const string name;
 
-	IUPnPNAT* pUN;
-	// this one can become invalidated so we can't cache it
-	IStaticPortMappingCollection* getStaticPortMappingCollection();
+	const string& getName() const { return name; }
 
-	// need to save these to get the external IP...
-	unsigned short lastPort;
-	Protocol lastProtocol;
+	bool initialized;
+
+	string url;
+	string service;
+	string device;
 };
 
 #endif

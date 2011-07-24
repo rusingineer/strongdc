@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,10 +106,10 @@ private:
 	friend class Singleton<FinishedManager>;
 	
 	FinishedManager();
-	~FinishedManager() throw();
+	~FinishedManager();
 
-	void on(QueueManagerListener::Finished, const QueueItem*, const string&, const Download*) throw();
-	void on(UploadManagerListener::Complete, const Upload*) throw();
+	void on(QueueManagerListener::Finished, const QueueItem*, const string&, const Download*) noexcept;
+	void on(UploadManagerListener::Complete, const Upload*) noexcept;
 
 	CriticalSection cs;
 	FinishedItemList downloads, uploads;

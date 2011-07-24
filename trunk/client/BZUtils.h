@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(BZ_UTILS_H)
-#define BZ_UTILS_H
+#ifndef DCPLUSPLUS_DCPP_BZUTILS_H
+#define DCPLUSPLUS_DCPP_BZUTILS_H
 
-#ifdef _WIN32
-#include "../bzip2/bzlib.h"
-#else
 #include <bzlib.h>
-#endif
 
 namespace dcpp {
 
@@ -63,7 +59,7 @@ private:
 
 } // namespace dcpp
 
-#endif // !defined(BZ_UTILS_H)
+#endif // !defined(DCPLUSPLUS_DCPP_BZUTILS_H)
 
 /**
  * @file

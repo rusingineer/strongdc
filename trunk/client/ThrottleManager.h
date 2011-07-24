@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2009-2010 Big Muscle
+ * Copyright (C) 2009-2011 Big Muscle
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ namespace dcpp
 		~ThrottleManager(void);
 		
 		// TimerManagerListener
-		void on(TimerManagerListener::Second, uint64_t aTick) throw();
+		void on(TimerManagerListener::Second, uint64_t aTick) noexcept;
 				
 	};
 

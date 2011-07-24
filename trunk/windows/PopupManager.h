@@ -90,7 +90,7 @@ private:
 	uint32_t id;
  	
 	// TimerManagerListener
-	void on(TimerManagerListener::Second, uint64_t tick) throw();
+	void on(TimerManagerListener::Second, uint64_t tick) noexcept;
 
 };
 

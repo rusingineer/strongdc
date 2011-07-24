@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 #include "Singleton.h"
 #include "MerkleTree.h"
 #include "Speaker.h"
-#include "File.h"
 
 namespace dcpp {
 
@@ -78,7 +77,7 @@ private:
 	friend class Singleton<DownloadManager>;
 
 	DownloadManager();
-	~DownloadManager() throw();
+	~DownloadManager();
 
 	void checkDownloads(UserConnection* aConn);
 	void startData(UserConnection* aSource, int64_t start, int64_t newSize, bool z);
@@ -87,19 +86,19 @@ private:
 	void onFailed(UserConnection* aSource, const string& aError);
 
 	// UserConnectionListener
-	void on(Data, UserConnection*, const uint8_t*, size_t) throw();
-	void on(Failed, UserConnection* aSource, const string& aError) throw() { onFailed(aSource, aError); }
-	void on(ProtocolError, UserConnection* aSource, const string& aError) throw() { onFailed(aSource, aError); }
-	void on(MaxedOut, UserConnection*, string param = Util::emptyString) throw();
-	void on(FileNotAvailable, UserConnection*) throw();
+	void on(Data, UserConnection*, const uint8_t*, size_t) noexcept;
+	void on(Failed, UserConnection* aSource, const string& aError) noexcept { onFailed(aSource, aError); }
+	void on(ProtocolError, UserConnection* aSource, const string& aError) noexcept { onFailed(aSource, aError); }
+	void on(MaxedOut, UserConnection*, string param = Util::emptyString) noexcept;
+	void on(FileNotAvailable, UserConnection*) noexcept;
 	void on(ListLength, UserConnection* aSource, const string& aListLength);
-	void on(Updated, UserConnection*) throw();
+	void on(Updated, UserConnection*) noexcept;
 		
-	void on(AdcCommand::SND, UserConnection*, const AdcCommand&) throw();
-	void on(AdcCommand::STA, UserConnection*, const AdcCommand&) throw();
+	void on(AdcCommand::SND, UserConnection*, const AdcCommand&) noexcept;
+	void on(AdcCommand::STA, UserConnection*, const AdcCommand&) noexcept;
 
 	// TimerManagerListener
-	void on(TimerManagerListener::Second, uint64_t aTick) throw();
+	void on(TimerManagerListener::Second, uint64_t aTick) noexcept;
 };
 
 } // namespace dcpp

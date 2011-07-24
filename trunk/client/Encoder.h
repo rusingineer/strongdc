@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,14 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(ENCODER_H)
-#define ENCODER_H
+#ifndef DCPLUSPLUS_DCPP_ENCODER_H
+#define DCPLUSPLUS_DCPP_ENCODER_H
+
+#include <string>
 
 namespace dcpp {
+
+using std::string;
 
 class Encoder
 {
@@ -31,6 +35,7 @@ public:
 	}
 	static void fromBase32(const char* src, uint8_t* dst, size_t len);
 	static bool isBase32(const char* src);
+	static void fromBase16(const char* src, uint8_t *dst, size_t len);
 private:
 	static const int8_t base32Table[];
 	static const char base32Alphabet[];

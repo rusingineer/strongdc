@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2010 Big Muscle, http://strongdc.sf.net
+ * Copyright (C) 2009-2011 Big Muscle, http://strongdc.sf.net
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -429,7 +429,7 @@ namespace dht
 	 */
 
 	// user's info
-	void DHT::handle(AdcCommand::INF, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::INF, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		string ip = node->getIdentity().getIp();
 		string udpPort = node->getIdentity().getUdpPort();
@@ -470,38 +470,38 @@ namespace dht
 	}
 	
 	// incoming search request
-	void DHT::handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		SearchManager::getInstance()->processSearchRequest(node, c);
 	}
 	
 	// incoming search result
-	void DHT::handle(AdcCommand::RES, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::RES, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		SearchManager::getInstance()->processSearchResult(node, c);
 	}
 	
 	// incoming publish request
-	void DHT::handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		if(!isFirewalled()) // we should index this entry only if our UDP port is opened
 			IndexManager::getInstance()->processPublishSourceRequest(node, c);
 	}
 	
 	// connection request
-	void DHT::handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		ConnectionManager::getInstance()->connectToMe(node, c);
 	}
 	
 	// reverse connection request
-	void DHT::handle(AdcCommand::RCM, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::RCM, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		ConnectionManager::getInstance()->revConnectToMe(node, c);
 	}
 	
 	// status message
-	void DHT::handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		if(c.getParameters().size() < 3)
 			return;
@@ -617,14 +617,14 @@ namespace dht
 	}
 	
 	// partial file request
-	void DHT::handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		c.getParameters().erase(c.getParameters().begin());	 // remove CID from UDP command
 		dcpp::SearchManager::getInstance()->onPSR(c, node->getUser(), node->getIdentity().getIp());
 	}
 
 	// private message
-	void DHT::handle(AdcCommand::MSG, const Node::Ptr& /*node*/, AdcCommand& /*c*/) throw()
+	void DHT::handle(AdcCommand::MSG, const Node::Ptr& /*node*/, AdcCommand& /*c*/) noexcept
 	{
 		// not implemented yet
 		//fire(ClientListener::PrivateMessage(), this, *node, to, node, c.getParam(0), c.hasFlag("ME", 1));
@@ -632,7 +632,7 @@ namespace dht
 		//privateMessage(*node, "Sorry, private messages aren't supported yet!", false);
 	}
 	
-	void DHT::handle(AdcCommand::GET, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::GET, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		if(c.getParam(1) == "nodes" && c.getParam(2) == "dht.xml")
 		{
@@ -670,7 +670,7 @@ namespace dht
 		}
 	}
 	
-	void DHT::handle(AdcCommand::SND, const Node::Ptr& node, AdcCommand& c) throw()
+	void DHT::handle(AdcCommand::SND, const Node::Ptr& node, AdcCommand& c) noexcept
 	{
 		if(c.getParam(1) == "nodes" && c.getParam(2) == "dht.xml")
 		{

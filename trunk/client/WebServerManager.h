@@ -34,8 +34,8 @@ public:
 	typedef X<0> Setup;
 	typedef X<1> ShutdownPC;
 
-	virtual void on(Setup) throw() = 0;
-	virtual void on(ShutdownPC, int action) throw() = 0;
+	virtual void on(Setup) noexcept = 0;
+	virtual void on(ShutdownPC, int action) noexcept = 0;
 
 };
 
@@ -51,7 +51,7 @@ public:
 
 
 	// SettingsManagerListener
-	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) noexcept {
 		if(BOOLSETTING(WEBSERVER)){
 			Restart();
 		} else {
@@ -59,7 +59,7 @@ public:
 		}
 	}
 	// SearchManagerListener
-	void on(SearchManagerListener::SR, const SearchResultPtr& aResult) throw();
+	void on(SearchManagerListener::SR, const SearchResultPtr& aResult) noexcept;
 	
 	void Start();
 	void Restart(){		
@@ -123,7 +123,7 @@ private:
 	bool started;
 	CriticalSection cs;
 	// ServerSocketListener
-	void on(ServerSocketListener::IncomingConnection) throw();
+	void on(ServerSocketListener::IncomingConnection) noexcept;
 
 	ServerSocket socket;
 	HWND m_hWnd;

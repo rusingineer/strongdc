@@ -19,6 +19,8 @@
 #include "stdinc.h"
 #include "DCPlusPlus.h"
 
+#include "DCPlusPlus.h"
+
 #include "File.h"
 #include "DetectionManager.h"
 #include "FilteredFile.h"
@@ -471,7 +473,7 @@ void DetectionManager::validateItem(const DetectionEntry& e, bool checkIds) thro
 	if(e.name.empty()) throw Exception("Item's name can't be empty!");
 }
 
-void DetectionManager::removeDetectionItem(const uint32_t id) throw() {
+void DetectionManager::removeDetectionItem(const uint32_t id) noexcept {
 	Lock l(cs);
 	for(DetectionItems::iterator i = det.begin(); i != det.end(); ++i) {
 		if(i->Id == id) {
@@ -492,7 +494,7 @@ void DetectionManager::updateDetectionItem(const uint32_t aOrigId, const Detecti
 	}
 }
 
-bool DetectionManager::getDetectionItem(const uint32_t aId, DetectionEntry& e) throw() {
+bool DetectionManager::getDetectionItem(const uint32_t aId, DetectionEntry& e) noexcept {
 	Lock l(cs);
 	for(DetectionItems::iterator i = det.begin(); i != det.end(); ++i) {
 		if(i->Id == aId) {
@@ -503,7 +505,7 @@ bool DetectionManager::getDetectionItem(const uint32_t aId, DetectionEntry& e) t
 	return false;
 }
 
-bool DetectionManager::getNextDetectionItem(const uint32_t aId, int pos, DetectionEntry& e) throw() {
+bool DetectionManager::getNextDetectionItem(const uint32_t aId, int pos, DetectionEntry& e) noexcept {
 	Lock l(cs);
 	for(DetectionItems::iterator i = det.begin(); i != det.end(); ++i) {
 		if(i->Id == aId) {
@@ -529,7 +531,7 @@ bool DetectionManager::moveDetectionItem(const uint32_t aId, int pos) {
 	return false;
 }
 
-void DetectionManager::setItemEnabled(const uint32_t aId, bool enabled) throw() {
+void DetectionManager::setItemEnabled(const uint32_t aId, bool enabled) noexcept {
 	Lock l(cs);
 	for(DetectionItems::iterator i = det.begin(); i != det.end(); ++i) {
 		if(i->Id == aId) {

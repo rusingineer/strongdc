@@ -284,7 +284,7 @@ LRESULT UsersFrame::onOpenUserLog(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 		return 0;
 }
 
-void UsersFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw() {
+void UsersFrame::on(SettingsManagerListener::Save, SimpleXML& /*xml*/) noexcept {
 	bool refresh = false;
 	if(ctrlUsers.GetBkColor() != WinUtil::bgColor) {
 		ctrlUsers.SetBkColor(WinUtil::bgColor);

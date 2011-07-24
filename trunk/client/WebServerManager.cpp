@@ -17,6 +17,8 @@
 */
 
 #include "stdinc.h"
+#include "DCPlusPlus.h"
+
 #include "WebServerManager.h"
 #include "QueueManager.h"
 #include "FinishedManager.h"
@@ -91,7 +93,7 @@ void WebServerManager::Stop() {
 	socket.disconnect();
 }
 
-void WebServerManager::on(ServerSocketListener::IncomingConnection) throw() {
+void WebServerManager::on(ServerSocketListener::IncomingConnection) noexcept {
 	WebServerSocket *wss = new WebServerSocket();
 	wss->accept(&socket);	
 	wss->start();
@@ -548,7 +550,7 @@ int WebServerSocket::run(){
 
 } 
 
-void WebServerManager::on(SearchManagerListener::SR, const SearchResultPtr& aResult) throw() {
+void WebServerManager::on(SearchManagerListener::SR, const SearchResultPtr& aResult) noexcept {
 	// Check that this is really a relevant search result...
 	{
 		Lock l(cs);

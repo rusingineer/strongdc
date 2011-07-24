@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,13 +22,11 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "ADLSearch.h"
-#include "QueueManager.h"
-#include "ClientManager.h"
 
+#include "ClientManager.h"
 #include "File.h"
+#include "QueueManager.h"
 #include "SimpleXML.h"
 
 namespace dcpp {
@@ -483,7 +481,7 @@ void ADLSearchManager::finalizeDestinationDirectories(DestDirList& destDirVector
 	}		
 }
 
-void ADLSearchManager::matchListing(DirectoryListing& aDirList) throw() {
+void ADLSearchManager::matchListing(DirectoryListing& aDirList) noexcept {
 	StringMap params;
 	params["userNI"] = ClientManager::getInstance()->getNicks(aDirList.getHintedUser())[0];
 	params["userCID"] = aDirList.getUser()->getCID().toBase32();
@@ -511,6 +509,10 @@ void ADLSearchManager::matchRecurse(DestDirList &aDestList, DirectoryListing::Di
 		matchesFile(aDestList, *fileIt, aPath);
 	}
 	stepUpDirectory(aDestList);
+}
+
+string ADLSearchManager::getConfigFile() {
+	 return Util::getPath(Util::PATH_USER_CONFIG) + "ADLSearch.xml"; 
 }
 
 } // namespace dcpp
