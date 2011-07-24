@@ -73,7 +73,7 @@ private:
 	
 	tstring file;
 	CEdit ctrlPad;
-	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) throw();
+	void on(SettingsManagerListener::Save, SimpleXML& /*xml*/) noexcept;
 };
 
 #endif // !defined(TEXT_FRAME_H)

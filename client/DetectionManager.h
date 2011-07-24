@@ -30,7 +30,7 @@ public:
 	typedef vector<DetectionEntry> DetectionItems;
 
 	DetectionManager() : profileVersion("N/A"), profileMessage("N/A"), profileUrl("N/A"), lastId(0) { };
-	~DetectionManager() throw() { save(); det.clear(); };
+	~DetectionManager() noexcept { save(); det.clear(); };
 
 	void load();
 	void save();
@@ -40,19 +40,19 @@ public:
 
 	void addDetectionItem(DetectionEntry& e) throw(Exception);
 	void updateDetectionItem(const uint32_t aOrigId, const DetectionEntry& e) throw(Exception);
-	void removeDetectionItem(const uint32_t id) throw();
+	void removeDetectionItem(const uint32_t id) noexcept;
 
-	bool getNextDetectionItem(const uint32_t aId, int pos, DetectionEntry& e) throw();
-	bool getDetectionItem(const uint32_t aId, DetectionEntry& e) throw();
+	bool getNextDetectionItem(const uint32_t aId, int pos, DetectionEntry& e) noexcept;
+	bool getDetectionItem(const uint32_t aId, DetectionEntry& e) noexcept;
 	bool moveDetectionItem(const uint32_t aId, int pos);
-	void setItemEnabled(const uint32_t aId, bool enabled) throw();
+	void setItemEnabled(const uint32_t aId, bool enabled) noexcept;
 
-	const DetectionItems& getProfiles() throw() {
+	const DetectionItems& getProfiles() noexcept {
 		Lock l(cs);
 		return det;
 	}
 
-	const DetectionItems& getProfiles(StringMap& p) throw() {
+	const DetectionItems& getProfiles(StringMap& p) noexcept {
       Lock l(cs);
       // don't override other params
       for(StringMapIter i = params.begin(); i != params.end(); ++i)
@@ -60,7 +60,7 @@ public:
       return det;
    }
 
-	StringMap& getParams() throw() {
+	StringMap& getParams() noexcept {
 		Lock l(cs);
 		return params;
 	}

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@
 #include "SettingsManager.h"
 #include "FinishedManager.h"
 #include "ADLSearch.h"
-#include "UPnPManager.h"
+#include "MappingManager.h"
 #include "ConnectivityManager.h"
 
 #include "StringTokenizer.h"
@@ -90,7 +90,7 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	FinishedManager::newInstance();
 	ADLSearchManager::newInstance();
 	ConnectivityManager::newInstance();
-	UPnPManager::newInstance();
+	MappingManager::newInstance();
 	DebugManager::newInstance();
 	DetectionManager::newInstance();	
 	PopupManager::newInstance();
@@ -105,6 +105,7 @@ void startup(void (*f)(void*, const tstring&), void* p) {
 	}
 
 	FavoriteManager::getInstance()->load();
+
 	CryptoManager::getInstance()->loadCertificates();
 	DetectionManager::getInstance()->load();
 	WebServerManager::newInstance();
@@ -126,13 +127,12 @@ void shutdown() {
 	TimerManager::getInstance()->shutdown();
 	HashManager::getInstance()->shutdown();
 	ConnectionManager::getInstance()->shutdown();
-	UPnPManager::getInstance()->close();
+	MappingManager::getInstance()->close();
 	BufferedSocket::waitShutdown();
 	
 	QueueManager::getInstance()->saveQueue(true);
 	SettingsManager::getInstance()->save();
-	DHT::deleteInstance();
-	UPnPManager::deleteInstance();
+	MappingManager::deleteInstance();
 	ConnectivityManager::deleteInstance();
 	DebugManager::deleteInstance();
 	WebServerManager::deleteInstance();
@@ -155,6 +155,8 @@ void shutdown() {
 	SettingsManager::deleteInstance();
 	TimerManager::deleteInstance();
 	ResourceManager::deleteInstance();
+
+	DHT::deleteInstance();
 
 #ifdef _WIN32
 	::WSACleanup();

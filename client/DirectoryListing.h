@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(DIRECTORY_LISTING_H)
-#define DIRECTORY_LISTING_H
+#ifndef DCPLUSPLUS_DCPP_DIRECTORY_LISTING_H
+#define DCPLUSPLUS_DCPP_DIRECTORY_LISTING_H
 
-#include "User.h"
+#include "forward.h"
+#include "noexcept.h"
+
+#include "HintedUser.h"
 #include "FastAlloc.h"
-
 #include "MerkleTree.h"
 #include "Streams.h"
 #include "QueueItem.h"
+#include "UserInfoBase.h"
 
 namespace dcpp {
 	
@@ -47,7 +50,7 @@ public:
 		typedef vector<Ptr> List;
 		typedef List::const_iterator Iter;
 		
-		File(Directory* aDir, const string& aName, int64_t aSize, const string& aTTH) throw() : 
+		File(Directory* aDir, const string& aName, int64_t aSize, const TTHValue& aTTH) noexcept : 
 			name(aName), size(aSize), parent(aDir), tthRoot(aTTH), adls(false)
 		{
 		}
@@ -70,7 +73,7 @@ public:
 		GETSET(bool, adls, Adls);
 	};
 
-	class Directory : public FastAlloc<Directory> {
+	class Directory : public FastAlloc<Directory>, boost::noncopyable {
 	public:
 		typedef Directory* Ptr;
 		struct DirSort {
@@ -89,10 +92,7 @@ public:
 		Directory(Directory* aParent, const string& aName, bool _adls, bool aComplete) 
 			: name(aName), parent(aParent), adls(_adls), complete(aComplete) { }
 		
-		virtual ~Directory() {
-			for_each(directories.begin(), directories.end(), DeleteFunction());
-			for_each(files.begin(), files.end(), DeleteFunction());
-		}
+		virtual ~Directory();
 
 		size_t getTotalFileCount(bool adls = false);		
 		int64_t getTotalSize(bool adls = false);
@@ -114,10 +114,6 @@ public:
 		GETSET(Directory*, parent, Parent);		
 		GETSET(bool, adls, Adls);		
 		GETSET(bool, complete, Complete);
-
-	private:
-		Directory(const Directory&);
-		Directory& operator=(const Directory&);
 	};
 
 	class AdlDirectory : public Directory {
@@ -130,7 +126,7 @@ public:
 	DirectoryListing(const HintedUser& aUser);
 	~DirectoryListing();
 	
-	void loadFile(const string& name) throw(Exception);
+	void loadFile(const string& name);
 
 	string updateXML(const std::string&);
 	string loadXML(InputStream& xml, bool updating);

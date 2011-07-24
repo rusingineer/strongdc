@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "UploadManager.h"
+
+#include <cmath>
 
 #include "ConnectionManager.h"
 #include "LogManager.h"
@@ -38,19 +38,17 @@
 #include "FinishedManager.h"
 #include "SharedFileStream.h"
 
-#include <cmath>
-
 namespace dcpp {
 
 static const string UPLOAD_AREA = "Uploads";
 
-UploadManager::UploadManager() throw() : running(0), extra(0), lastGrant(0), lastFreeSlots(-1),
+UploadManager::UploadManager() noexcept : running(0), extra(0), lastGrant(0), lastFreeSlots(-1),
 	m_iHighSpeedStartTick(0), isFireball(false), isFileServer(false), extraPartial(0) {	
 	ClientManager::getInstance()->addListener(this);
 	TimerManager::getInstance()->addListener(this);
 }
 
-UploadManager::~UploadManager() throw() {
+UploadManager::~UploadManager() {
 	TimerManager::getInstance()->removeListener(this);
 	ClientManager::getInstance()->removeListener(this);
 	{
@@ -192,7 +190,7 @@ bool UploadManager::prepareFile(UserConnection& aSource, const string& aType, co
 
 					partial = true;
 					type = Transfer::TYPE_FILE;
-					goto ok;
+					goto ok; // TODO: get rid of goto
 				} catch(const Exception&) {
 					delete is;
 				}
@@ -343,7 +341,6 @@ void UploadManager::reserveSlot(const HintedUser& aUser, uint64_t aTime) {
 		Lock l(cs);
 		reservedSlots[aUser] = GET_TICK() + aTime*1000;
 	}
-	
 	if(aUser.user->isOnline())
 	{
 		string token;
@@ -366,7 +363,7 @@ void UploadManager::unreserveSlot(const UserPtr& aUser) {
 		reservedSlots.erase(uis);
 }
 
-void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) throw() {
+void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, const string& aFile, int64_t aResume) noexcept {
 	if(aSource->getState() != UserConnection::STATE_GET) {
 		dcdebug("UM::onGet Bad state, ignoring\n");
 		return;
@@ -379,7 +376,7 @@ void UploadManager::on(UserConnectionListener::Get, UserConnection* aSource, con
 	}
 }
 
-void UploadManager::on(UserConnectionListener::Send, UserConnection* aSource) throw() {
+void UploadManager::on(UserConnectionListener::Send, UserConnection* aSource) noexcept {
 	if(aSource->getState() != UserConnection::STATE_SEND) {
 		dcdebug("UM::onSend Bad state, ignoring\n");
 		return;
@@ -395,7 +392,7 @@ void UploadManager::on(UserConnectionListener::Send, UserConnection* aSource) th
 	fire(UploadManagerListener::Starting(), u);
 }
 
-void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcCommand& c) throw() {
+void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcCommand& c) noexcept {
 	if(aSource->getState() != UserConnection::STATE_GET) {
 		dcdebug("UM::onGET Bad state, ignoring\n");
 		return;
@@ -431,7 +428,7 @@ void UploadManager::on(AdcCommand::GET, UserConnection* aSource, const AdcComman
 	}
 }
 
-void UploadManager::on(UserConnectionListener::BytesSent, UserConnection* aSource, size_t aBytes, size_t aActual) throw() {
+void UploadManager::on(UserConnectionListener::BytesSent, UserConnection* aSource, size_t aBytes, size_t aActual) noexcept {
 	dcassert(aSource->getState() == UserConnection::STATE_RUNNING);
 	Upload* u = aSource->getUpload();
 	dcassert(u != NULL);
@@ -439,7 +436,7 @@ void UploadManager::on(UserConnectionListener::BytesSent, UserConnection* aSourc
 	u->tick();
 }
 
-void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) throw() {
+void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, const string& aError) noexcept {
 	Upload* u = aSource->getUpload();
 
 	if(u) {
@@ -452,7 +449,7 @@ void UploadManager::on(UserConnectionListener::Failed, UserConnection* aSource, 
 	removeConnection(aSource);
 }
 
-void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSource) throw() {
+void UploadManager::on(UserConnectionListener::TransmitDone, UserConnection* aSource) noexcept {
 	dcassert(aSource->getState() == UserConnection::STATE_RUNNING);
 	Upload* u = aSource->getUpload();
 	dcassert(u != NULL);
@@ -565,7 +562,7 @@ void UploadManager::notifyQueuedUsers() {
 	}
 }
 
-void UploadManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Minute, uint64_t aTick) noexcept {
 	UserList disconnects;
 	{
 		Lock l(cs);
@@ -621,12 +618,12 @@ void UploadManager::on(TimerManagerListener::Minute, uint64_t aTick) throw() {
 	}
 }
 
-void UploadManager::on(GetListLength, UserConnection* conn) throw() { 
+void UploadManager::on(GetListLength, UserConnection* conn) noexcept { 
 	conn->error("GetListLength not supported");
 	conn->disconnect(false);
 }
 
-void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcCommand& c) throw() {
+void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcCommand& c) noexcept {
 	if(aSource->getState() != UserConnection::STATE_GET) {
 		dcdebug("UM::onSend Bad state, ignoring\n");
 		return;
@@ -652,7 +649,7 @@ void UploadManager::on(AdcCommand::GFI, UserConnection* aSource, const AdcComman
 }
 
 // TimerManagerListener
-void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
+void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) noexcept {
 	{
 		Lock l(cs);
 		UploadList ticks;
@@ -711,7 +708,7 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
 	}
 }
 
-void UploadManager::on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw() {
+void UploadManager::on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) noexcept {
 	if(!aUser->isOnline()) {
 		Lock l(cs);
 		clearUserFiles(aUser);

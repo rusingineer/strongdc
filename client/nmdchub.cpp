@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "NmdcHub.h"
 
 #include "ResourceManager.h"
@@ -28,6 +26,7 @@
 #include "ShareManager.h"
 #include "CryptoManager.h"
 #include "ConnectionManager.h"
+#include "ThrottleManager.h"
 #include "version.h"
 
 #include "Socket.h"
@@ -37,8 +36,6 @@
 #include "QueueManager.h"
 #include "ZUtils.h"
 
-#include "ThrottleManager.h"
-
 namespace dcpp {
 
 NmdcHub::NmdcHub(const string& aHubURL, bool secure) : Client(aHubURL, '|', secure), supportFlags(0),
@@ -46,7 +43,7 @@ NmdcHub::NmdcHub(const string& aHubURL, bool secure) : Client(aHubURL, '|', secu
 {
 }
 
-NmdcHub::~NmdcHub() throw() {
+NmdcHub::~NmdcHub() {
 	clearUsers();
 }
 
@@ -133,7 +130,7 @@ void NmdcHub::putUser(const string& aNick) {
 		ou = i->second;
 		users.erase(i);
 
-	availableBytes -= ou->getIdentity().getBytesShared();
+		availableBytes -= ou->getIdentity().getBytesShared();
 	}
 	ClientManager::getInstance()->putOffline(ou);
 	ou->dec();
@@ -192,7 +189,7 @@ void NmdcHub::updateFromTag(Identity& id, const string& tag) {
 	id.set("TA", '<' + tag + '>');
 }
 
-void NmdcHub::onLine(const string& aLine) throw() {
+void NmdcHub::onLine(const string& aLine) noexcept {
 	if(aLine.length() == 0)
 		return;
 
@@ -233,6 +230,7 @@ void NmdcHub::onLine(const string& aLine) throw() {
 		}
 
 		ChatMessage chatMessage = { unescape(message), findUser(nick) };
+
 		if(!chatMessage.from) {
 			OnlineUserPtr o = &getUser(nick);
 			// Assume that messages from unknown users come from the hub
@@ -768,8 +766,8 @@ void NmdcHub::onLine(const string& aLine) throw() {
 				v.push_back(&ou);
 			}
 
-			updateCounts(false);
 			fire(ClientListener::UsersUpdated(), this, v);
+			updateCounts(false);
 
 			// Special...to avoid op's complaining that their count is not correctly
 			// updated when they log in (they'll be counted as registered first...)
@@ -838,10 +836,16 @@ void NmdcHub::onLine(const string& aLine) throw() {
 	} else if(cmd == "BadPass") {
 		setPassword(Util::emptyString);
 	} else if(cmd == "ZOn") {
-		sock->setMode(BufferedSocket::MODE_ZPIPE);
+		try {
+			sock->setMode(BufferedSocket::MODE_ZPIPE);
+		} catch (const Exception& e) {
+			dcdebug("NmdcHub::onLine %s failed with error: %s\n", cmd.c_str(), e.getError().c_str());
+		}
+
 	} else if(cmd == "HubTopic") {
 		fire(ClientListener::HubTopic(), this, param);
 	} else {
+		dcassert(cmd[0] == '$');
 		dcdebug("NmdcHub::onLine Unknown command %s\n", aLine.c_str());
 	} 
 }
@@ -1056,8 +1060,12 @@ void NmdcHub::clearFlooders(uint64_t aTick) {
 	}
 }
 
-void NmdcHub::on(Connected) throw() {
+void NmdcHub::on(Connected) noexcept {
 	Client::on(Connected());
+
+	if(state != STATE_PROTOCOL) {
+		return;
+	}
 
 	supportFlags = 0;
 	lastMyInfo.clear();
@@ -1065,18 +1073,18 @@ void NmdcHub::on(Connected) throw() {
 	lastUpdate = 0;
 }
 
-void NmdcHub::on(Line, const string& aLine) throw() {
+void NmdcHub::on(Line, const string& aLine) noexcept {
 	Client::on(Line(), aLine);
 	onLine(aLine);
 }
 
-void NmdcHub::on(Failed, const string& aLine) throw() {
+void NmdcHub::on(Failed, const string& aLine) noexcept {
 	clearUsers();
 	Client::on(Failed(), aLine);
 	updateCounts(true);	
 }
 
-void NmdcHub::on(Second, uint64_t aTick) throw() {
+void NmdcHub::on(Second, uint64_t aTick) noexcept {
 	Client::on(Second(), aTick);
 
 	if(state == STATE_NORMAL && (aTick > (getLastActivity() + 120*1000)) ) {

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "DownloadManager.h"
 
 #include "ResourceManager.h"
@@ -48,7 +46,7 @@ DownloadManager::DownloadManager() {
 	TimerManager::getInstance()->addListener(this);
 }
 
-DownloadManager::~DownloadManager() throw() {
+DownloadManager::~DownloadManager() {
 	TimerManager::getInstance()->removeListener(this);
 	while(true) {
 		{
@@ -60,7 +58,7 @@ DownloadManager::~DownloadManager() throw() {
 	}
 }
 
-void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) throw() {
+void DownloadManager::on(TimerManagerListener::Second, uint64_t aTick) noexcept {
 	typedef vector<pair<string, UserPtr> > TargetList;
 	TargetList dropTargets;
 	
@@ -193,7 +191,7 @@ void DownloadManager::checkDownloads(UserConnection* aConn) {
 	aConn->send(d->getCommand(aConn->isSet(UserConnection::FLAG_SUPPORTS_ZLIB_GET)));
 }
 
-void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcCommand& cmd) throw() {
+void DownloadManager::on(AdcCommand::SND, UserConnection* aSource, const AdcCommand& cmd) noexcept {
 	if(aSource->getState() != UserConnection::STATE_SND) {
 		dcdebug("DM::onFileLength Bad state, ignoring\n");
 		return;
@@ -290,7 +288,7 @@ void DownloadManager::startData(UserConnection* aSource, int64_t start, int64_t 
 	}
 }	
 
-void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, const uint8_t* aData, size_t aLen) throw() {
+void DownloadManager::on(UserConnectionListener::Data, UserConnection* aSource, const uint8_t* aData, size_t aLen) noexcept {
 	Download* d = aSource->getDownload();
 	dcassert(d != NULL);
 
@@ -371,7 +369,7 @@ int64_t DownloadManager::getRunningAverage() {
 	return avg;
 }
 
-void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSource, string param) throw() {
+void DownloadManager::on(UserConnectionListener::MaxedOut, UserConnection* aSource, string param) noexcept {
 	noSlots(aSource, param);
 }
 
@@ -456,7 +454,7 @@ void DownloadManager::on(UserConnectionListener::ListLength, UserConnection* aSo
 	ClientManager::getInstance()->setListLength(aSource->getUser(), aListLength);
 }
 
-void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnection* aSource) throw() {
+void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnection* aSource) noexcept {
 	if(!aSource->getDownload()) {
 		aSource->disconnect(true);
 		return;
@@ -465,7 +463,7 @@ void DownloadManager::on(UserConnectionListener::FileNotAvailable, UserConnectio
 }
 
 /** @todo Handle errors better */
-void DownloadManager::on(AdcCommand::STA, UserConnection* aSource, const AdcCommand& cmd) throw() {
+void DownloadManager::on(AdcCommand::STA, UserConnection* aSource, const AdcCommand& cmd) noexcept {
 	if(cmd.getParameters().size() < 2) {
 		aSource->disconnect();
 		return;
@@ -499,7 +497,7 @@ void DownloadManager::on(AdcCommand::STA, UserConnection* aSource, const AdcComm
 	aSource->disconnect();
 }
 
-void DownloadManager::on(UserConnectionListener::Updated, UserConnection* aSource) throw() {
+void DownloadManager::on(UserConnectionListener::Updated, UserConnection* aSource) noexcept {
 	{
 		Lock l(cs);
 		UserConnectionList::iterator i = find(idlers.begin(), idlers.end(), aSource);
@@ -532,6 +530,7 @@ void DownloadManager::fileNotAvailable(UserConnection* aSource) {
 	QueueManager::getInstance()->removeSource(d->getPath(), aSource->getUser(), (Flags::MaskType)(d->getType() == Transfer::TYPE_TREE ? QueueItem::Source::FLAG_NO_TREE : QueueItem::Source::FLAG_FILE_NOT_AVAILABLE), false);
 
 	QueueManager::getInstance()->putDownload(d, false);
+
 	checkDownloads(aSource);
 }
 

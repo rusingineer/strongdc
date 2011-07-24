@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,9 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "SettingsManager.h"
-#include "ResourceManager.h"
 
+#include "ResourceManager.h"
 #include "SimpleXML.h"
 #include "Util.h"
 #include "File.h"
@@ -62,7 +60,7 @@ const string SettingsManager::settingTags[] =
 	"MainFrameVisible", "SearchFrameVisible", "QueueFrameVisible", "HubFrameVisible", "UploadQueueFrameVisible", 
 	"EmoticonsFile", "TLSPrivateKeyFile", "TLSCertificateFile", "TLSTrustedCertificatesPath",
 	"FinishedVisible", "FinishedULVisible", "DirectoryListingFrameVisible",
-	"RecentFrameOrder", "RecentFrameWidths", "ToolbarSettings", "DHTKey",
+	"RecentFrameOrder", "RecentFrameWidths", "ToolbarSettings", "DHTKey", "Mapper",
 	"SENTRY", 
 	// Ints
 	"IncomingConnections", "InPort", "Slots", "AutoFollow", "ClearSearch",
@@ -676,9 +674,9 @@ void SettingsManager::load(string const& aFileName)
 	}
 
 	if(SETTING(INCOMING_CONNECTIONS) == INCOMING_DIRECT) {
-		set(TCP_PORT, (int)Util::rand(1025, 32000));
-		set(UDP_PORT, (int)Util::rand(1025, 32000));
-		set(TLS_PORT, (int)Util::rand(1025, 32000));
+		set(TCP_PORT, (int)Util::rand(10000, 32000));
+		set(UDP_PORT, (int)Util::rand(10000, 32000));
+		set(TLS_PORT, (int)Util::rand(10000, 32000));
 	}
 
 	if(SETTING(DHT_KEY).length() != 39 || CID(SETTING(DHT_KEY)).isZero())

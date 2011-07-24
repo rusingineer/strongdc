@@ -29,8 +29,6 @@ using namespace dht;
 
 #ifdef _WIN32
 
-#define STRICT
-#define WIN32_LEAN_AND_MEAN
 #define _WTL_NO_CSTRING
 
 #include <winsock2.h>

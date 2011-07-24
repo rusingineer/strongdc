@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2010 Big Muscle, http://strongdc.sf.net
+ * Copyright (C) 2009-2011 Big Muscle, http://strongdc.sf.net
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,17 +105,17 @@ namespace dht
 		friend class Singleton<DHT>;
 		friend class SearchManager;
 		
-		void handle(AdcCommand::INF, const Node::Ptr& node, AdcCommand& c) throw();	// user's info
-		void handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) throw();	// incoming search request
-		void handle(AdcCommand::RES, const Node::Ptr& node, AdcCommand& c) throw();	// incoming search result
-		void handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) throw();	// incoming publish request
-		void handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) throw();	// connection request
-		void handle(AdcCommand::RCM, const Node::Ptr& node, AdcCommand& c) throw();	// reverse connection request
-		void handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) throw();	// status message
-		void handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) throw();	// partial file request
-		void handle(AdcCommand::MSG, const Node::Ptr& node, AdcCommand& c) throw(); // private message
-		void handle(AdcCommand::GET, const Node::Ptr& node, AdcCommand& c) throw();
-		void handle(AdcCommand::SND, const Node::Ptr& node, AdcCommand& c) throw();
+		void handle(AdcCommand::INF, const Node::Ptr& node, AdcCommand& c) noexcept;	// user's info
+		void handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) noexcept;	// incoming search request
+		void handle(AdcCommand::RES, const Node::Ptr& node, AdcCommand& c) noexcept;	// incoming search result
+		void handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) noexcept;	// incoming publish request
+		void handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) noexcept;	// connection request
+		void handle(AdcCommand::RCM, const Node::Ptr& node, AdcCommand& c) noexcept;	// reverse connection request
+		void handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) noexcept;	// status message
+		void handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) noexcept;	// partial file request
+		void handle(AdcCommand::MSG, const Node::Ptr& node, AdcCommand& c) noexcept; // private message
+		void handle(AdcCommand::GET, const Node::Ptr& node, AdcCommand& c) noexcept;
+		void handle(AdcCommand::SND, const Node::Ptr& node, AdcCommand& c) noexcept;
 			
 		/** Unsupported command */
 		template<typename T> void handle(T, const Node::Ptr&user, AdcCommand&) { }

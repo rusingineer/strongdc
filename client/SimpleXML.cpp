@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "SimpleXML.h"
 
 namespace dcpp {
@@ -141,7 +139,7 @@ void SimpleXML::Tag::toXML(int indent, OutputStream* f) {
 	}
 }
 
-bool SimpleXML::findChild(const string& aName) throw() {
+bool SimpleXML::findChild(const string& aName) noexcept {
 	dcassert(current != NULL);
 	
 	if(found && currentChild != current->children.end())
@@ -157,7 +155,7 @@ bool SimpleXML::findChild(const string& aName) throw() {
 	return false;
 }
 
-void SimpleXML::addTag(const string& aName, const string& aData /* = "" */) throw(SimpleXMLException) {
+void SimpleXML::addTag(const string& aName, const string& aData /* = "" */) {
 	if(aName.empty()) {
 		throw SimpleXMLException("Empty tag names not allowed");
 	}
@@ -170,20 +168,20 @@ void SimpleXML::addTag(const string& aName, const string& aData /* = "" */) thro
 	}
 }
 
-void SimpleXML::addAttrib(const string& aName, const string& aData) throw(SimpleXMLException) {
+void SimpleXML::addAttrib(const string& aName, const string& aData) {
 	if(current == &root)
 		throw SimpleXMLException("No tag is currently selected");
 
 	current->attribs.push_back(make_pair(aName, aData));
 }
 
-void SimpleXML::addChildAttrib(const string& aName, const string& aData) throw(SimpleXMLException) {
+void SimpleXML::addChildAttrib(const string& aName, const string& aData) {
 	checkChildSelected();
 
 	(*currentChild)->attribs.push_back(make_pair(aName, aData));
 }
 
-void SimpleXML::fromXML(const string& aXML) throw(SimpleXMLException) {
+void SimpleXML::fromXML(const string& aXML) {
 	if(!root.children.empty()) {
 		delete root.children[0];
 		root.children.clear();

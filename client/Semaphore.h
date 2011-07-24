@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(SEMAPHORE_H)
-#define SEMAPHORE_H
+#ifndef DCPLUSPLUS_DCPP_SEMAPHORE_H
+#define DCPLUSPLUS_DCPP_SEMAPHORE_H
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include "w.h"
+#else
+#include <errno.h>
+#include <semaphore.h>
 #include <sys/time.h>
 #endif
+
+#include "noexcept.h"
 
 namespace dcpp {
 
@@ -29,18 +35,18 @@ class Semaphore
 {
 #ifdef _WIN32
 public:
-	Semaphore() throw() {
+	Semaphore() noexcept {
 		h = CreateSemaphore(NULL, 0, MAXLONG, NULL);
 	}
 
-	void signal() throw() {
+	void signal() noexcept {
 		ReleaseSemaphore(h, 1, NULL);
 	}
 
-	bool wait() throw() { return WaitForSingleObject(h, INFINITE) == WAIT_OBJECT_0; }
-	bool wait(uint32_t millis) throw() { return WaitForSingleObject(h, millis) == WAIT_OBJECT_0; }
+	bool wait() noexcept { return WaitForSingleObject(h, INFINITE) == WAIT_OBJECT_0; }
+	bool wait(uint32_t millis) noexcept { return WaitForSingleObject(h, millis) == WAIT_OBJECT_0; }
 
-	~Semaphore() throw() {
+	~Semaphore() {
 		CloseHandle(h);
 	}
 
@@ -48,47 +54,48 @@ private:
 	HANDLE h;
 #else
 public:
-	Semaphore() throw() : count(0) { pthread_cond_init(&cond, NULL); }
-	~Semaphore() throw() { pthread_cond_destroy(&cond); }
-	void signal() throw() { 
-		Lock l(cs);
-		count++;
-		pthread_cond_signal(&cond);
+	Semaphore() noexcept { 
+		sem_init(&semaphore, 0, 0); 
+	}
+	
+	~Semaphore() {
+		sem_destroy(&semaphore); 
 	}
 
-	bool wait() throw() { 
-		Lock l(cs);
-		while (count == 0) {
-			pthread_cond_wait(&cond, &cs.getMutex());
-		}
-		count--;
+	void signal() noexcept { 
+		sem_post(&semaphore); 
+	}
+
+	bool wait() noexcept { 
+		int retval = 0;
+		do {
+			retval = sem_wait(&semaphore);
+		} while (retval != 0);
+
 		return true;
 	}
-	bool wait(uint32_t millis) throw() { 
-		Lock l(cs);
-		if(count == 0) {
-			timeval timev;
-			timespec t;
-			gettimeofday(&timev, NULL);
-			millis+=timev.tv_usec/1000;
-			t.tv_sec = timev.tv_sec + (millis/1000);
-			t.tv_nsec = (millis%1000)*1000*1000;
-			int ret;
-			do {
-				ret = pthread_cond_timedwait(&cond, &cs.getMutex(), &t);
-			} while (ret==0 && count==0);
-			if(ret != 0) {
-				return false;
-			}
+
+	bool wait(uint32_t millis) noexcept { 
+		timeval timev;
+		timespec t;
+		gettimeofday(&timev, NULL);
+		millis+=timev.tv_usec/1000;
+		t.tv_sec = timev.tv_sec + (millis/1000);
+		t.tv_nsec = (millis%1000)*1000*1000;
+		int ret;
+		do {
+			ret = sem_timedwait(&semaphore, &t);
+		} while (ret != 0 && errno == EINTR);
+
+		if(ret != 0) {
+			return false;
 		}
-		count--;
+
 		return true;
 	}
 
 private:
-	pthread_cond_t cond;
-	CriticalSection cs;
-	int count;
+	sem_t semaphore;
 #endif
 	Semaphore(const Semaphore&);
 	Semaphore& operator=(const Semaphore&);
@@ -97,7 +104,7 @@ private:
 
 } // namespace dcpp
 
-#endif // !defined(SEMAPHORE_H)
+#endif // DCPLUSPLUS_DCPP_SEMAPHORE_H
 
 /**
  * @file

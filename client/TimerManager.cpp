@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,6 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "TimerManager.h"
 
 #include <boost/date_time/posix_time/ptime.hpp>
@@ -32,7 +30,7 @@ TimerManager::TimerManager() {
 	mtx.lock();
 }
 
-TimerManager::~TimerManager() throw() {
+TimerManager::~TimerManager() {
 	dcassert(listeners.size() == 0);
 }
 
@@ -46,6 +44,7 @@ int TimerManager::run() {
 
 	ptime now = microsec_clock::universal_time();
 	ptime nextSecond = now + seconds(1);
+
 	while(!mtx.timed_lock(nextSecond)) {
 		uint64_t t = getTick();
 		now = microsec_clock::universal_time();

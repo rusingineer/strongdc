@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2010 Big Muscle, http://strongdc.sf.net
+ * Copyright (C) 2009-2011 Big Muscle, http://strongdc.sf.net
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@
 #include "../client/ClientManager.h"
 #include "../client/HttpConnection.h"
 #include "../client/LogManager.h"
+
+#include "../zlib/zlib.h"
 
 namespace dht
 {
@@ -61,13 +63,13 @@ namespace dht
 		}
 	}
 	
-	void BootstrapManager::on(HttpConnectionListener::Data, HttpConnection*, const uint8_t* buf, size_t len) throw()
+	void BootstrapManager::on(HttpConnectionListener::Data, HttpConnection*, const uint8_t* buf, size_t len) noexcept
 	{
 		nodesXML += string((const char*)buf, len);
 	}
 
 	#define BUFSIZE 16384
-	void BootstrapManager::on(HttpConnectionListener::Complete, HttpConnection*, string const&, bool /*fromCoral*/) throw()
+	void BootstrapManager::on(HttpConnectionListener::Complete, HttpConnection*, string const&, bool /*fromCoral*/) noexcept
 	{
 		if(!nodesXML.empty())
 		{
@@ -116,7 +118,7 @@ namespace dht
 		}
 	}
 
-	void BootstrapManager::on(HttpConnectionListener::Failed, HttpConnection*, const string& aLine) throw()
+	void BootstrapManager::on(HttpConnectionListener::Failed, HttpConnection*, const string& aLine) noexcept
 	{
 		LogManager::getInstance()->message("DHT bootstrap error: " + aLine);
 	}

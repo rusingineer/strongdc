@@ -105,7 +105,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;$(SolutionDir)\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -149,7 +149,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;$(SolutionDir)\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -197,7 +197,7 @@
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;$(SolutionDir)\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -264,7 +264,7 @@
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;$(SolutionDir)\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -320,11 +320,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>HAVE_NATUPNP_H;</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;$(SolutionDir)\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
     <ClCompile>
       <PreprocessorDefinitions>HAVE_NATUPNP_H;</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\boost;$(SolutionDir)\openssl\include;$(SolutionDir)\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -458,8 +460,8 @@
     <ClCompile Include="windows\UpdateDlg.cpp" />
     <ClCompile Include="windows\UploadPage.cpp" />
     <ClCompile Include="windows\UploadQueueFrame.cpp" />
-    <ClCompile Include="windows\UPnP_COM.cpp" />
-    <ClCompile Include="windows\UPnP_MiniUPnPc.cpp" />
+    <ClCompile Include="windows\Mapper_WinUPnP.cpp" />
+    <ClCompile Include="windows\Mapper_MiniUPnPc.cpp" />
     <ClCompile Include="windows\UserListColours.cpp" />
     <ClCompile Include="windows\UsersFrame.cpp" />
     <ClCompile Include="windows\WindowsPage.cpp" />
@@ -545,8 +547,8 @@
     <ClInclude Include="windows\UpdateDlg.h" />
     <ClInclude Include="windows\UploadPage.h" />
     <ClInclude Include="windows\UploadQueueFrame.h" />
-    <ClInclude Include="windows\UPnP_COM.h" />
-    <ClInclude Include="windows\UPnP_MiniUPnPc.h" />
+    <ClInclude Include="windows\Mapper_WinUPnP.h" />
+    <ClInclude Include="windows\Mapper_MiniUPnPc.h" />
     <ClInclude Include="windows\UserListColours.h" />
     <ClInclude Include="windows\UsersFrame.h" />
     <ClInclude Include="windows\Winamp.h" />

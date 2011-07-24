@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(Z_UTILS_H)
-#define Z_UTILS_H
+#ifndef DCPLUSPLUS_DCPP_Z_UTILS_H
+#define DCPLUSPLUS_DCPP_Z_UTILS_H
 
-#ifdef _WIN32
-#include "../zlib/zlib.h"
-#else
 #include <zlib.h>
-#endif
 
 namespace dcpp {
 

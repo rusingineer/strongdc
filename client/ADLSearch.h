@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,7 +140,7 @@ public:
 	GETSET(bool, sentRaw, SentRaw);
 
 	// @remarks Used to add ADLSearch directories to an existing DirectoryListing
-	void matchListing(DirectoryListing& /*aDirList*/) throw();
+	void matchListing(DirectoryListing& /*aDirList*/) noexcept;
 
 private:
 	// @internal
@@ -157,7 +157,7 @@ private:
 	// Finalize destination directories
 	void finalizeDestinationDirectories(DestDirList& destDirVector, DirectoryListing::Directory* root);
 
-	string getConfigFile() { return Util::getPath(Util::PATH_USER_CONFIG) + "ADLSearch.xml"; }
+	static string getConfigFile();
 };
 
 } // namespace dcpp

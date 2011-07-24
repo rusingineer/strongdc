@@ -77,10 +77,10 @@ private:
 	void reload();
 	void reloadFromHttp();
 
-	void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) throw() {
+	void on(HttpConnectionListener::Data, HttpConnection* /*conn*/, const uint8_t* buf, size_t len) noexcept {
 		downBuf.append((char*)buf, len);
 	}
-	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/, bool /*fromCoral*/) throw() {
+	void on(HttpConnectionListener::Complete, HttpConnection* conn, string const& /*aLine*/, bool /*fromCoral*/) noexcept {
 		conn->removeListener(this);
 		if(!downBuf.empty()) {
 			string fname = Util::getPath(Util::PATH_USER_CONFIG) + "Profiles.xml";
@@ -94,7 +94,7 @@ private:
 		}
 		::EnableWindow(GetDlgItem(IDC_UPDATE), true);
 	}
-	void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) throw() {
+	void on(HttpConnectionListener::Failed, HttpConnection* conn, const string& aLine) noexcept {
 		conn->removeListener(this);
 		{
 			string msg = "Client profiles download failed.\r\n" + aLine;

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2009-2010 Big Muscle
+ * Copyright (C) 2009-2011 Big Muscle
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,10 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
+#include "ThrottleManager.h"
 
 #include "DownloadManager.h"
 #include "Socket.h"
-#include "ThrottleManager.h"
 #include "TimerManager.h"
 #include "UploadManager.h"
 
@@ -140,7 +139,7 @@ namespace dcpp
 	}
 
 	// TimerManagerListener
-	void ThrottleManager::on(TimerManagerListener::Second, uint64_t /*aTick*/) throw()
+	void ThrottleManager::on(TimerManagerListener::Second, uint64_t /*aTick*/) noexcept
 	{
 		if(!BOOLSETTING(THROTTLE_ENABLE))
 		{

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -156,8 +156,8 @@ private:
 	void notifyQueuedUsers();
 
 	friend class Singleton<UploadManager>;
-	UploadManager() throw();
-	~UploadManager() throw();
+	UploadManager() noexcept;
+	~UploadManager();
 
 	bool getAutoSlot();
 	void removeConnection(UserConnection* aConn);
@@ -165,22 +165,22 @@ private:
 	void logUpload(const Upload* u);
 
 	// ClientManagerListener
-	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) throw();
+	void on(ClientManagerListener::UserDisconnected, const UserPtr& aUser) noexcept;
 	
 	// TimerManagerListener
-	void on(Second, uint64_t aTick) throw();
-	void on(Minute, uint64_t aTick) throw();
+	void on(Second, uint64_t aTick) noexcept;
+	void on(Minute, uint64_t aTick) noexcept;
 
 	// UserConnectionListener
-	void on(BytesSent, UserConnection*, size_t, size_t) throw();
-	void on(Failed, UserConnection*, const string&) throw();
-	void on(Get, UserConnection*, const string&, int64_t) throw();
-	void on(Send, UserConnection*) throw();
-	void on(GetListLength, UserConnection* conn) throw();
-	void on(TransmitDone, UserConnection*) throw();
+	void on(BytesSent, UserConnection*, size_t, size_t) noexcept;
+	void on(Failed, UserConnection*, const string&) noexcept;
+	void on(Get, UserConnection*, const string&, int64_t) noexcept;
+	void on(Send, UserConnection*) noexcept;
+	void on(GetListLength, UserConnection* conn) noexcept;
+	void on(TransmitDone, UserConnection*) noexcept;
 	
-	void on(AdcCommand::GET, UserConnection*, const AdcCommand&) throw();
-	void on(AdcCommand::GFI, UserConnection*, const AdcCommand&) throw();
+	void on(AdcCommand::GET, UserConnection*, const AdcCommand&) noexcept;
+	void on(AdcCommand::GFI, UserConnection*, const AdcCommand&) noexcept;
 
 	bool prepareFile(UserConnection& aSource, const string& aType, const string& aFile, int64_t aResume, int64_t& aBytes, bool listRecursive = false);
 };

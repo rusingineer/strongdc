@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2010 Big Muscle, http://strongdc.sf.net
+ * Copyright (C) 2009-2011 Big Muscle, http://strongdc.sf.net
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ namespace dht
 		~UDPSocket(void);
 		
 		/** Disconnects UDP socket */
-		void disconnect() throw();
+		void disconnect() noexcept;
 		
 		/** Starts listening to UDP socket */
 		void listen() throw(SocketException);

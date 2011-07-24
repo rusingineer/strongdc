@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2010 Big Muscle, http://strongdc.sf.net
+ * Copyright (C) 2009-2011 Big Muscle, http://strongdc.sf.net
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,8 +49,8 @@ namespace dht
 		uint64_t lastBootstrap;
 		
 		// TimerManagerListener
-		void on(TimerManagerListener::Second, uint64_t aTick) throw();	
-		void on(TimerManagerListener::Minute, uint64_t aTick) throw();
+		void on(TimerManagerListener::Second, uint64_t aTick) noexcept;	
+		void on(TimerManagerListener::Minute, uint64_t aTick) noexcept;
 	};
 
 }

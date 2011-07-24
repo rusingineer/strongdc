@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,9 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "SearchManager.h"
-#include "UploadManager.h"
 
+#include "UploadManager.h"
 #include "ClientManager.h"
 #include "ShareManager.h"
 #include "SearchResult.h"
@@ -54,7 +52,7 @@ SearchManager::SearchManager() :
 
 }
 
-SearchManager::~SearchManager() throw() {
+SearchManager::~SearchManager() {
 	if(socket.get()) {
 		stop = true;
 		socket->disconnect();
@@ -82,8 +80,7 @@ uint64_t SearchManager::search(StringList& who, const string& aName, int64_t aSi
 	return ClientManager::getInstance()->search(who, aSizeMode, aSize, aTypeMode, normalizeWhitespace(aName), aToken, aExtList, aOwner);
 }
 
-void SearchManager::listen() throw(SocketException) {
-
+void SearchManager::listen() {
 	disconnect();
 
 	try {
@@ -91,11 +88,7 @@ void SearchManager::listen() throw(SocketException) {
 		socket->create(Socket::TYPE_UDP);
 		socket->setBlocking(true);
 		socket->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
-		if (BOOLSETTING(AUTO_DETECT_CONNECTION)) {
-			port = socket->bind(0, Util::emptyString);
-		} else {
-			port = socket->bind(static_cast<uint16_t>(SETTING(UDP_PORT)), SETTING(BIND_ADDRESS));
-		}
+		port = socket->bind(static_cast<uint16_t>(SETTING(UDP_PORT)), SETTING(BIND_ADDRESS));
 		start();
 	} catch(...) {
 		socket.reset();
@@ -103,7 +96,7 @@ void SearchManager::listen() throw(SocketException) {
 	}
 }
 
-void SearchManager::disconnect() throw() {
+void SearchManager::disconnect() noexcept {
 	if(socket.get()) {
 		stop = true;
 		queue.shutdown();

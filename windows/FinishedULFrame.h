@@ -42,7 +42,7 @@ public:
 		
 private:
 
-	void on(AddedUl, FinishedItem* entry) throw() {
+	void on(AddedUl, FinishedItem* entry) noexcept {
 		PostMessage(WM_SPEAKER, SPEAK_ADD_LINE, (WPARAM)entry);
 	}
 };

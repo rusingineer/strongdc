@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@ public:
 	typedef X<1> Save;
 	typedef X<2> SearchTypesChanged;
 
-	virtual void on(Load, SimpleXML&) throw() { }
-	virtual void on(Save, SimpleXML&) throw() { }
-	virtual void on(SearchTypesChanged) throw() { }
+	virtual void on(Load, SimpleXML&) noexcept { }
+	virtual void on(Save, SimpleXML&) noexcept { }
+	virtual void on(SearchTypesChanged) noexcept { }
 };
 
 class SettingsManager : public Singleton<SettingsManager>, public Speaker<SettingsManagerListener>
@@ -76,7 +76,7 @@ public:
 		MAINFRAME_VISIBLE, SEARCHFRAME_VISIBLE, QUEUEFRAME_VISIBLE, HUBFRAME_VISIBLE, UPLOADQUEUEFRAME_VISIBLE, 
 		EMOTICONS_FILE, TLS_PRIVATE_KEY_FILE, TLS_CERTIFICATE_FILE, TLS_TRUSTED_CERTIFICATES_PATH,
 		FINISHED_VISIBLE, FINISHED_UL_VISIBLE, DIRECTORYLISTINGFRAME_VISIBLE,
-		RECENTFRAME_ORDER, RECENTFRAME_WIDTHS, TOOLBAR_SETTINGS, DHT_KEY,
+		RECENTFRAME_ORDER, RECENTFRAME_WIDTHS, TOOLBAR_SETTINGS, DHT_KEY, MAPPER,
 		STR_LAST };
 
 	enum IntSetting { INT_FIRST = STR_LAST + 1,
@@ -255,6 +255,8 @@ public:
 
 	bool isDefault(int aSet) { return !isSet[aSet]; }
 
+	void unset(size_t key) { isSet[key] = false; }
+
 	void load() {
 		Util::migrate(getConfigFile());
 		load(getConfigFile());
@@ -282,7 +284,7 @@ public:
 private:
 	friend class Singleton<SettingsManager>;
 	SettingsManager();
-	~SettingsManager() throw() { }
+	~SettingsManager() { }
 
 	static const string settingTags[SETTINGS_LAST+1];
 

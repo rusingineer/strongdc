@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined(STRING_SEARCH_H)
-#define STRING_SEARCH_H
+#ifndef DCPLUSPLUS_DCPP_STRING_SEARCH_H
+#define DCPLUSPLUS_DCPP_STRING_SEARCH_H
 
 #include "Text.h"
+
+#include "noexcept.h"
 
 namespace dcpp {
 
@@ -34,10 +36,10 @@ class StringSearch {
 public:
 	typedef vector<StringSearch> List;
 
-	explicit StringSearch(const string& aPattern) throw() : pattern(Text::toLower(aPattern)) {
+	explicit StringSearch(const string& aPattern) noexcept : pattern(Text::toLower(aPattern)) {
 		initDelta1();
 	}
-	StringSearch(const StringSearch& rhs) throw() : pattern(rhs.pattern) { 
+	StringSearch(const StringSearch& rhs) noexcept : pattern(rhs.pattern) { 
 		memcpy(delta1, rhs.delta1, sizeof(delta1));
 	}
 	const StringSearch& operator=(const StringSearch& rhs) {
@@ -56,7 +58,7 @@ public:
 	const string& getPattern() const { return pattern; }
 
 	/** Match a text against the pattern */
-	bool match(const string& aText) const throw() {
+	bool match(const string& aText) const noexcept {
 
 		// Lower-case representation of UTF-8 string, since we no longer have that 1 char = 1 byte...
 		string lower;
@@ -113,7 +115,7 @@ private:
 
 } // namespace dcpp
 
-#endif // !defined(STRING_SEARCH_H)
+#endif // DCPLUSPLUS_DCPP_STRING_SEARCH_H
 
 /**
  * @file

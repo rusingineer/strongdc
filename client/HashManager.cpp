@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2001-2010 Jacek Sieka, arnetheduck on gmail point com
+ * Copyright (C) 2001-2011 Jacek Sieka, arnetheduck on gmail point com
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,8 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
 #include "HashManager.h"
+
 #include "ResourceManager.h"
 #include "SimpleXML.h"
 #include "LogManager.h"
@@ -46,7 +45,7 @@ bool HashManager::checkTTH(const string& aFileName, int64_t aSize, uint32_t aTim
 	return true;
 }
 
-TTHValue HashManager::getTTH(const string& aFileName, int64_t aSize) throw(HashException) {
+TTHValue HashManager::getTTH(const string& aFileName, int64_t aSize) {
 	Lock l(cs);
 	const TTHValue* tth = store.getTTH(aFileName);
 	if (tth == NULL) {
@@ -108,7 +107,7 @@ void HashManager::HashStore::addFile(const string& aFileName, uint64_t aTimeStam
 	dirty = true;
 }
 
-void HashManager::HashStore::addTree(const TigerTree& tt) throw() {
+void HashManager::HashStore::addTree(const TigerTree& tt) noexcept {
 	if (treeIndex.find(tt.getRoot()) == treeIndex.end()) {
 		try {
 			File f(getDataFile(), File::READ | File::WRITE, File::OPEN);
@@ -121,7 +120,7 @@ void HashManager::HashStore::addTree(const TigerTree& tt) throw() {
 	}
 }
 
-int64_t HashManager::HashStore::saveTree(File& f, const TigerTree& tt) throw(FileException) {
+int64_t HashManager::HashStore::saveTree(File& f, const TigerTree& tt) {
 	if (tt.getLeaves().size() == 1)
 		return SMALL_TREE;
 
@@ -336,6 +335,9 @@ void HashManager::HashStore::save() {
 		}
 	}
 }
+
+string HashManager::HashStore::getIndexFile() { return Util::getPath(Util::PATH_USER_CONFIG) + "HashIndex.xml"; }
+string HashManager::HashStore::getDataFile() { return Util::getPath(Util::PATH_USER_CONFIG) + "HashData.dat"; }
 
 class HashLoader: public SimpleXMLReader::CallBack {
 public:

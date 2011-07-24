@@ -31,9 +31,9 @@ namespace dcpp {
 class TraceManager : public Singleton<TraceManager>
 {
 public:
-	void CDECL trace_print(const char* format, ...) throw();
-	void CDECL trace_start(const char* format, ...) throw();
-	void CDECL trace_end(const char* format, ...) throw();
+	void CDECL trace_print(const char* format, ...) noexcept;
+	void CDECL trace_start(const char* format, ...) noexcept;
+	void CDECL trace_end(const char* format, ...) noexcept;
 
 private:
 
