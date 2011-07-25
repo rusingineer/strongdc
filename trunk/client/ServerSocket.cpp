@@ -17,11 +17,8 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
-#include "DCPlusPlus.h"
-
 #include "ServerSocket.h"
+
 #include "SettingsManager.h"
 
 namespace dcpp {

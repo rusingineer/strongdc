@@ -17,12 +17,9 @@
  */
 
 #include "stdinc.h"
-#include "DCPlusPlus.h"
-
-#include "DCPlusPlus.h"
+#include "DetectionManager.h"
 
 #include "File.h"
-#include "DetectionManager.h"
 #include "FilteredFile.h"
 #include "BZUtils.h"
 
