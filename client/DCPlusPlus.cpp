@@ -134,6 +134,7 @@ void shutdown() {
 	SettingsManager::getInstance()->save();
 	MappingManager::deleteInstance();
 	ConnectivityManager::deleteInstance();
+	DHT::deleteInstance();
 	DebugManager::deleteInstance();
 	WebServerManager::deleteInstance();
 	DetectionManager::deleteInstance();
@@ -155,8 +156,6 @@ void shutdown() {
 	SettingsManager::deleteInstance();
 	TimerManager::deleteInstance();
 	ResourceManager::deleteInstance();
-
-	DHT::deleteInstance();
 
 #ifdef _WIN32
 	::WSACleanup();

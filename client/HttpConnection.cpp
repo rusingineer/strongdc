@@ -64,6 +64,9 @@ void HttpConnection::downloadFile(const string& aUrl) {
 		file = currentUrl;
 	}
 
+	if(!query.empty())
+		file += '?' + query;
+
 	if(BOOLSETTING(CORAL) && coralizeState != CST_NOCORALIZE) {
 		if(server.length() > CORAL_SUFFIX.length() && server.compare(server.length() - CORAL_SUFFIX.length(), CORAL_SUFFIX.length(), CORAL_SUFFIX) !=0) {
 			server += CORAL_SUFFIX;

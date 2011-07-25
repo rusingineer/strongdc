@@ -123,7 +123,8 @@ void ConnectivityManager::setup(bool settingsChanged) {
 void ConnectivityManager::mappingFinished(const string& mapper) {
 	if(BOOLSETTING(AUTO_DETECT_CONNECTION)) {
 		if(mapper.empty()) {
-			disconnect();
+			//StrongDC++: don't disconnect when mapping fails else DHT and active mode in favorite hubs won't work
+			//disconnect();
 			SettingsManager::getInstance()->set(SettingsManager::INCOMING_CONNECTIONS, SettingsManager::INCOMING_FIREWALL_PASSIVE);
 			SettingsManager::getInstance()->set(SettingsManager::ALLOW_NAT_TRAVERSAL, true);
 			log("Automatic setup of active mode has failed. You may want to set up your connection manually for better connectivity");
