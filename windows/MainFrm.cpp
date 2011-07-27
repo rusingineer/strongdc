@@ -314,7 +314,7 @@ LRESULT MainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/,
 	try {
 		ConnectivityManager::getInstance()->setup(true);
 	} catch (const Exception& e) {
-		// TODO showPortsError(e.getError());
+		//showPortsError(e.getError());
 	}
 	
 	normalicon.hIcon = (HICON)::LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
