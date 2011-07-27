@@ -98,10 +98,6 @@ public:
 	void remove(FinishedItemPtr item, bool upload = false);
 	void removeAll(bool upload = false);
 
-	/** Get file full path by tth to share */
-	bool getTarget(const string& aTTH, string& target);
-	bool handlePartialRequest(const TTHValue& tth, vector<uint16_t>& outPartialInfo);
-
 private:
 	friend class Singleton<FinishedManager>;
 	

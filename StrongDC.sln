@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StrongDC", "StrongDC.vcxproj", "{E82610AA-B6FD-4813-B5B9-E717CBD0F23B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{51015502-C27C-43CF-9FA4-12AB9DB5D36E} = {51015502-C27C-43CF-9FA4-12AB9DB5D36E}
+		{CA89FE2E-D443-3548-B538-3090827F009F} = {CA89FE2E-D443-3548-B538-3090827F009F}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bzip2", "bzip2.vcxproj", "{8B162F1B-5D6C-41C1-8A80-858B379DE07D}"
@@ -10,6 +11,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client", "client.vcxproj", "{F8D0E5FE-BABD-4FC8-B3FE-B48978D23FEB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{51015502-C27C-43CF-9FA4-12AB9DB5D36E} = {51015502-C27C-43CF-9FA4-12AB9DB5D36E}
+		{CA89FE2E-D443-3548-B538-3090827F009F} = {CA89FE2E-D443-3548-B538-3090827F009F}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "zlib.vcxproj", "{DFBBE42A-45F4-4188-89C2-17F5DFE50673}"
@@ -21,6 +23,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dht", "dht\dht.vcxproj", "{47AB24A7-9FAB-4F6F-B411-01C9FF54E22D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "miniupnpc", "miniupnpc\miniupnpc.vcxproj", "{51015502-C27C-43CF-9FA4-12AB9DB5D36E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "natpmp", "natpmp\natpmp.vcxproj", "{CA89FE2E-D443-3548-B538-3090827F009F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -94,6 +98,14 @@ Global
 		{51015502-C27C-43CF-9FA4-12AB9DB5D36E}.Release|Win32.Build.0 = Release|Win32
 		{51015502-C27C-43CF-9FA4-12AB9DB5D36E}.Release|x64.ActiveCfg = Release|x64
 		{51015502-C27C-43CF-9FA4-12AB9DB5D36E}.Release|x64.Build.0 = Release|x64
+		{CA89FE2E-D443-3548-B538-3090827F009F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CA89FE2E-D443-3548-B538-3090827F009F}.Debug|Win32.Build.0 = Debug|Win32
+		{CA89FE2E-D443-3548-B538-3090827F009F}.Debug|x64.ActiveCfg = Debug|x64
+		{CA89FE2E-D443-3548-B538-3090827F009F}.Debug|x64.Build.0 = Debug|x64
+		{CA89FE2E-D443-3548-B538-3090827F009F}.Release|Win32.ActiveCfg = Release|Win32
+		{CA89FE2E-D443-3548-B538-3090827F009F}.Release|Win32.Build.0 = Release|Win32
+		{CA89FE2E-D443-3548-B538-3090827F009F}.Release|x64.ActiveCfg = Release|x64
+		{CA89FE2E-D443-3548-B538-3090827F009F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

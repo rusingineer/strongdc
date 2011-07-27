@@ -119,44 +119,6 @@ void FinishedManager::on(UploadManagerListener::Complete, const Upload* u) noexc
 	}
 }
 
-bool FinishedManager::getTarget(const string& aTTH, string& target) {
-	if(aTTH.empty()) 
-		return false;
-
-	{
-		Lock l(cs);
-
-		for(FinishedItemList::const_iterator i = downloads.begin(); i != downloads.end(); i++)
-		{
-			if((*i)->getTTH() == aTTH)
-			{
-				target = (*i)->getTarget();
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-bool FinishedManager::handlePartialRequest(const TTHValue& tth, vector<uint16_t>& outPartialInfo)
-{
-	string target;
-	if(!getTarget(tth.toBase32(), target))
-		return false;
-
-	int64_t fileSize = File::getSize(target);
-
-	if(fileSize < PARTIAL_SHARE_MIN_SIZE)
-		return false;
-
-	uint16_t len = TigerTree::calcBlocks(fileSize);
-	outPartialInfo.push_back(0);
-	outPartialInfo.push_back(len);
-
-	return true;
-}
-
 } // namespace dcpp
 
 /**

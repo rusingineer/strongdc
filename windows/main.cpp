@@ -32,8 +32,10 @@
 #include "../client/DCPlusPlus.h"
 #include "SingleInstance.h"
 #include "WinUtil.h"
-#include "Mapper_WinUPnP.h"
+
+#include "Mapper_NATPMP.h"
 #include "Mapper_MiniUPnPc.h"
+#include "Mapper_WinUPnP.h"
 
 #include "../client/MerkleTree.h"
 #include "../client/MappingManager.h"
@@ -378,6 +380,7 @@ static int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 		SetProcessDefaultLayout(LAYOUT_RTL);
 	}
 
+	MappingManager::getInstance()->addMapper<Mapper_NATPMP>();
 	MappingManager::getInstance()->addMapper<Mapper_MiniUPnPc>();
 	MappingManager::getInstance()->addMapper<Mapper_WinUPnP>();
 
@@ -456,7 +459,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	}
 	
 	// For SHBrowseForFolder, UPnP_COM
-	HRESULT hRes = ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED); 
+	HRESULT hRes = ::CoInitializeEx(NULL, COINIT_MULTITHREADED); 
 #ifdef _DEBUG
 	EXTENDEDTRACEINITIALIZE(Util::getPath(Util::PATH_RESOURCES).c_str());
 #endif
