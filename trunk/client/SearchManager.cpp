@@ -462,23 +462,17 @@ void SearchManager::respond(const AdcCommand& adc, const CID& from, bool isUdpAc
 			return;
 			
 		PartsInfo partialInfo;
-		if(!QueueManager::getInstance()->handlePartialSearch(TTHValue(tth), partialInfo)) {
-			// if not found, try to find in finished list
-			if(!FinishedManager::getInstance()->handlePartialRequest(TTHValue(tth), partialInfo)) {
-				return;
-			}
+		if(QueueManager::getInstance()->handlePartialSearch(TTHValue(tth), partialInfo)) {
+			AdcCommand cmd = toPSR(true, Util::emptyString, hubIpPort, tth, partialInfo);
+			ClientManager::getInstance()->send(cmd, from);
 		}
-		
-		AdcCommand cmd = toPSR(true, Util::emptyString, hubIpPort, tth, partialInfo);
-		ClientManager::getInstance()->send(cmd, from);
-		return;
-	}
-
-	for(SearchResultList::const_iterator i = results.begin(); i != results.end(); ++i) {
-		AdcCommand cmd = (*i)->toRES(AdcCommand::TYPE_UDP);
-		if(!token.empty())
-			cmd.addParam("TO", token);
-		ClientManager::getInstance()->send(cmd, from);
+	} else {
+		for(SearchResultList::const_iterator i = results.begin(); i != results.end(); ++i) {
+			AdcCommand cmd = (*i)->toRES(AdcCommand::TYPE_UDP);
+			if(!token.empty())
+				cmd.addParam("TO", token);
+			ClientManager::getInstance()->send(cmd, from);
+		}
 	}
 }
 /*

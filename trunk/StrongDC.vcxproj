@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -334,9 +334,6 @@
     <None Include="res\arrows.bmp" />
     <None Include="res\bitmap1.bmp" />
     <None Include="res\CDM.ico" />
-    <None Include="res\CZDCPlusPlus-about.ico" />
-    <None Include="res\CZDCPlusPlus-XP.ico" />
-    <None Include="res\CZDCPlusPlus.ico" />
     <None Include="res\Directory.ico" />
     <None Include="res\emoticon.bmp" />
     <None Include="res\fav.bmp" />
@@ -424,6 +421,7 @@
     <ClCompile Include="windows\MagnetDlg.cpp" />
     <ClCompile Include="windows\main.cpp" />
     <ClCompile Include="windows\MainFrm.cpp" />
+    <ClCompile Include="windows\Mapper_NATPMP.cpp" />
     <ClCompile Include="windows\NetworkPage.cpp" />
     <ClCompile Include="windows\NotepadFrame.cpp" />
     <ClCompile Include="windows\OMenu.cpp" />
@@ -509,6 +507,7 @@
     <ClInclude Include="windows\LogPage.h" />
     <ClInclude Include="windows\MagnetDlg.h" />
     <ClInclude Include="windows\MainFrm.h" />
+    <ClInclude Include="windows\Mapper_NATPMP.h" />
     <ClInclude Include="windows\NetworkPage.h" />
     <ClInclude Include="windows\NotepadFrame.h" />
     <ClInclude Include="windows\OMenu.h" />
@@ -579,6 +578,9 @@
     <ProjectReference Include="miniupnpc\miniupnpc.vcxproj">
       <Project>{51015502-c27c-43cf-9fa4-12ab9db5d36e}</Project>
     </ProjectReference>
+    <ProjectReference Include="natpmp\natpmp.vcxproj">
+      <Project></Project>
+    </ProjectReference>    
     <ProjectReference Include="zlib.vcxproj">
       <Project>{dfbbe42a-45f4-4188-89c2-17f5dfe50673}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

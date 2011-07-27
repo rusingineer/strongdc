@@ -34,7 +34,6 @@
 #include "NmdcHub.h"
 
 #include "QueueManager.h"
-#include "FinishedManager.h"
 
 #include "../dht/dht.h"
 
@@ -516,23 +515,18 @@ void ClientManager::on(NmdcSearch, Client* aClient, const string& aSeeker, int a
 	} else if(!isPassive && (aFileType == SearchManager::TYPE_TTH) && (aString.compare(0, 4, "TTH:") == 0)) {
 		PartsInfo partialInfo;
 		TTHValue aTTH(aString.substr(4));
-		if(!QueueManager::getInstance()->handlePartialSearch(aTTH, partialInfo)) {
-			// if not found, try to find in finished list
-			if(!FinishedManager::getInstance()->handlePartialRequest(aTTH, partialInfo)) {
-				return;
+		if(QueueManager::getInstance()->handlePartialSearch(aTTH, partialInfo)) {
+			string ip, file, proto, query, fragment;
+			uint16_t port = 0;
+			Util::decodeUrl(aSeeker, proto, ip, port, file, query, fragment);
+		
+			try {
+				AdcCommand cmd = SearchManager::getInstance()->toPSR(true, aClient->getMyNick(), aClient->getIpPort(), aTTH.toBase32(), partialInfo);
+				Socket s;
+				s.writeTo(Socket::resolve(ip), port, cmd.toString(ClientManager::getInstance()->getMe()->getCID()));
+			} catch(...) {
+				dcdebug("Partial search caught error\n");		
 			}
-		}
-		
-		string ip, file, proto, query, fragment;
-		uint16_t port = 0;
-		Util::decodeUrl(aSeeker, proto, ip, port, file, query, fragment);
-		
-		try {
-			AdcCommand cmd = SearchManager::getInstance()->toPSR(true, aClient->getMyNick(), aClient->getIpPort(), aTTH.toBase32(), partialInfo);
-			Socket s;
-			s.writeTo(Socket::resolve(ip), port, cmd.toString(ClientManager::getInstance()->getMe()->getCID()));
-		} catch(...) {
-			dcdebug("Partial search caught error\n");		
 		}
 	}
 }

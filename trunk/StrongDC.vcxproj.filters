@@ -31,15 +31,6 @@
     <None Include="res\CDM.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\CZDCPlusPlus-about.ico">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\CZDCPlusPlus-XP.ico">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="res\CZDCPlusPlus.ico">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="res\Directory.ico">
       <Filter>Resource Files</Filter>
     </None>
@@ -404,6 +395,9 @@
     <ClCompile Include="windows\Mapper_MiniUPnPc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="windows\Mapper_NATPMP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windows\AboutDlg.h">
@@ -662,6 +656,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="windows\Mapper_WinUPnP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\Mapper_NATPMP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
