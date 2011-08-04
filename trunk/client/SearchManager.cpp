@@ -115,13 +115,13 @@ void SearchManager::disconnect() noexcept {
 int SearchManager::run() {
 	boost::scoped_array<uint8_t> buf(new uint8_t[BUFSIZE]);
 	int len;
-	sockaddr_in remoteAddr = { 0 };
+	Socket::addr remoteAddr = { 0 };
 
 	queue.start();
 	while(!stop) {
 		try {
 			while( (len = socket->read(&buf[0], BUFSIZE, remoteAddr)) > 0) {
-				onData(&buf[0], len, inet_ntoa(remoteAddr.sin_addr));
+				onData(&buf[0], len, Socket::resolveName(remoteAddr));
 			}
 		} catch(const SocketException& e) {
 			dcdebug("SearchManager::run Error: %s\n", e.getError().c_str());
