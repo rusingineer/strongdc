@@ -845,7 +845,6 @@ void NmdcHub::onLine(const string& aLine) noexcept {
 	} else if(cmd == "HubTopic") {
 		fire(ClientListener::HubTopic(), this, param);
 	} else {
-		dcassert(cmd[0] == '$');
 		dcdebug("NmdcHub::onLine Unknown command %s\n", aLine.c_str());
 	} 
 }

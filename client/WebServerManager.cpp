@@ -45,30 +45,33 @@ WebServerManager::~WebServerManager(void){
 }
 
 void WebServerManager::Start(){
-	if(started) return;
-	Lock l(cs);
-	started = true;
+	try {
+		if(started) return;
+		Lock l(cs);
+		started = true;
 
-	socket.listen((short)SETTING(WEBSERVER_PORT));
-	socket.addListener(this);
-	fire(WebServerListener::Setup());
+		socket.listen((short)SETTING(WEBSERVER_PORT));
+		socket.addListener(this);
+		fire(WebServerListener::Setup());
 
-	page404 = new WebPageInfo(PAGE_404,"");
-	pages["/"] = new WebPageInfo(INDEX, "");
-	pages["/index.htm"] = new WebPageInfo(INDEX, "");	
-	pages["/dlqueue.html"] = new WebPageInfo(DOWNLOAD_QUEUE, "Download Queue");
-	pages["/dlfinished.html"] = new WebPageInfo(DOWNLOAD_FINISHED, "Finished Downloads");
-	pages["/ulqueue.html"] = new WebPageInfo(UPLOAD_QUEUE, "Upload Queue");
-	pages["/ulfinished.html"] = new WebPageInfo(UPLOAD_FINISHED, "Finished Uploads");
-	pages["/weblog.html"] = new WebPageInfo(LOG, "Logs");
-	pages["/syslog.html"] = new WebPageInfo(SYSLOG, "System Logs");
-	pages["/search.html"] = new WebPageInfo(SEARCH, "Search");
-	pages["/logout.html"] = new WebPageInfo(LOGOUT, "Logout");
+		page404 = new WebPageInfo(PAGE_404,"");
+		pages["/"] = new WebPageInfo(INDEX, "");
+		pages["/index.htm"] = new WebPageInfo(INDEX, "");	
+		pages["/dlqueue.html"] = new WebPageInfo(DOWNLOAD_QUEUE, "Download Queue");
+		pages["/dlfinished.html"] = new WebPageInfo(DOWNLOAD_FINISHED, "Finished Downloads");
+		pages["/ulqueue.html"] = new WebPageInfo(UPLOAD_QUEUE, "Upload Queue");
+		pages["/ulfinished.html"] = new WebPageInfo(UPLOAD_FINISHED, "Finished Uploads");
+		pages["/weblog.html"] = new WebPageInfo(LOG, "Logs");
+		pages["/syslog.html"] = new WebPageInfo(SYSLOG, "System Logs");
+		pages["/search.html"] = new WebPageInfo(SEARCH, "Search");
+		pages["/logout.html"] = new WebPageInfo(LOGOUT, "Logout");
 
-#ifdef _DEBUG  
-	//AllocConsole();
-	//freopen("con:","w",stdout);
-#endif
+	#ifdef _DEBUG  
+		//AllocConsole();
+		//freopen("con:","w",stdout);
+	#endif
+	} catch(const SocketException&) {
+	}
 }
 
 void WebServerManager::Stop() {
