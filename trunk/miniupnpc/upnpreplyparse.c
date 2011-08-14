@@ -1,7 +1,7 @@
-/* $Id: upnpreplyparse.c,v 1.10 2008/02/21 13:05:27 nanard Exp $ */
+/* $Id: upnpreplyparse.c,v 1.11 2011/02/07 16:17:06 nanard Exp $ */
 /* MiniUPnP project
  * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2006 Thomas Bernard 
+ * (c) 2006-2011 Thomas Bernard 
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -27,6 +27,22 @@ NameValueParserGetData(void * d, const char * datas, int l)
 {
     struct NameValueParserData * data = (struct NameValueParserData *)d;
     struct NameValue * nv;
+	if(strcmp(data->curelt, "NewPortListing") == 0)
+	{
+		/* specific case for NewPortListing which is a XML Document */
+		data->portListing = malloc(l + 1);
+		if(!data->portListing)
+		{
+			/* malloc error */
+			return;
+		}
+		memcpy(data->portListing, datas, l);
+		data->portListing[l] = '\0';
+		data->portListingLength = l;
+	}
+	else
+	{
+		/* standard case. Limited to 63 chars strings */
     nv = malloc(sizeof(struct NameValue));
     if(l>63)
         l = 63;
@@ -36,6 +52,7 @@ NameValueParserGetData(void * d, const char * datas, int l)
     nv->value[l] = '\0';
     LIST_INSERT_HEAD( &(data->head), nv, entries);
 }
+}
 
 void
 ParseNameValue(const char * buffer, int bufsize,
@@ -43,6 +60,8 @@ ParseNameValue(const char * buffer, int bufsize,
 {
     struct xmlparser parser;
     LIST_INIT(&(data->head));
+	data->portListing = NULL;
+	data->portListingLength = 0;
     /* init xmlparser object */
     parser.xmlstart = buffer;
     parser.xmlsize = bufsize;
@@ -58,6 +77,12 @@ void
 ClearNameValueList(struct NameValueParserData * pdata)
 {
     struct NameValue * nv;
+	if(pdata->portListing)
+	{
+		free(pdata->portListing);
+		pdata->portListing = NULL;
+		pdata->portListingLength = 0;
+	}
     while((nv = pdata->head.lh_first) != NULL)
     {
         LIST_REMOVE(nv, entries);
