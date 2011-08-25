@@ -431,7 +431,7 @@ public:
 	static wstring::size_type findSubString(const wstring& aString, const wstring& aSubString, wstring::size_type start = 0) noexcept;
 
 	
-	static const string& getIpCountry (const string& IP);
+	static const string getIpCountry (const string& IP);
 
 	static bool getAway() { return away; }
 	static void setAway(bool aAway);
@@ -461,7 +461,6 @@ private:
 	typedef map<uint32_t, uint16_t> CountryList;
 	typedef CountryList::iterator CountryIter;
 	static CountryList countries;
-	static StringList countryNames;
 
 	static void loadBootConfig();
 };

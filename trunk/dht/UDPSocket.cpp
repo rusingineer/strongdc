@@ -89,7 +89,7 @@ namespace dht
 			socket->create(Socket::TYPE_UDP);
 			socket->setSocketOpt(SO_REUSEADDR, 1);
 			socket->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
-			port = socket->bind(static_cast<uint16_t>(SETTING(DHT_PORT)), SETTING(BIND_ADDRESS));
+			port = socket->bind(static_cast<uint16_t>(SETTING(DHT_PORT)), Socket::getBindAddress());
 		
 			start();
 		}
@@ -238,7 +238,7 @@ namespace dht
 						socket->create(Socket::TYPE_UDP);
 						socket->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
 						socket->setSocketOpt(SO_REUSEADDR, 1);
-						socket->bind(port, SETTING(BIND_ADDRESS));
+						socket->bind(port, Socket::getBindAddress());
 						if(failed)
 						{
 							LogManager::getInstance()->message("DHT enabled again"); // TODO: translate

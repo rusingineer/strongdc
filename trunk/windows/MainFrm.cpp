@@ -706,7 +706,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 	int lastConn = SETTING(INCOMING_CONNECTIONS);
 	bool lastDHTConn = BOOLSETTING(USE_DHT);
 	string lastMapper = SETTING(MAPPER);
-	string lastBind = SETTING(BIND_ADDRESS);
+	string lastBind = SETTING(BIND_INTERFACE);
 
 	bool lastSortFavUsersFirst = BOOLSETTING(SORT_FAVUSERS_FIRST);
 
@@ -719,7 +719,7 @@ LRESULT MainFrame::OnFileSettings(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWn
 
 		try {
 			ConnectivityManager::getInstance()->setup(SETTING(INCOMING_CONNECTIONS) != lastConn || SETTING(TCP_PORT) != lastTCP || SETTING(UDP_PORT) != lastUDP || SETTING(TLS_PORT) != lastTLS ||
-				SETTING(DHT_PORT) != lastDHT || BOOLSETTING(USE_DHT) != lastDHTConn || SETTING(MAPPER) != lastMapper || SETTING(BIND_ADDRESS) != lastBind);
+				SETTING(DHT_PORT) != lastDHT || BOOLSETTING(USE_DHT) != lastDHTConn || SETTING(MAPPER) != lastMapper || SETTING(BIND_INTERFACE) != lastBind);
 		} catch (const Exception& e) {
 			// TODO: showPortsError(e.getError());
 		}
