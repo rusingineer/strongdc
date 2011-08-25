@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -571,16 +571,13 @@
       <Project>{47ab24a7-9fab-4f6f-b411-01c9ff54e22d}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="MakeDefs\MakeDefs.vcxproj">
-      <Project>{aef82786-9da2-4cdf-8602-02643cafc727}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="miniupnpc\miniupnpc.vcxproj">
       <Project>{51015502-c27c-43cf-9fa4-12ab9db5d36e}</Project>
     </ProjectReference>
     <ProjectReference Include="natpmp\natpmp.vcxproj">
-      <Project></Project>
-    </ProjectReference>    
+      <Project>
+      </Project>
+    </ProjectReference>
     <ProjectReference Include="zlib.vcxproj">
       <Project>{dfbbe42a-45f4-4188-89c2-17f5dfe50673}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

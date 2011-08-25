@@ -26,14 +26,20 @@
 #include <atlcrack.h>
 #include "PropPage.h"
 
+#include <IPHlpApi.h>
+#pragma comment(lib, "iphlpapi.lib")
+
 class NetworkPage : public CPropertyPage<IDD_NETWORKPAGE>, public PropPage
 {
 public:
-	NetworkPage(SettingsManager *s) : PropPage(s) {
+	NetworkPage(SettingsManager *s) : PropPage(s), adapterInfo(NULL) {
 		SetTitle(CTSTRING(SETTINGS_NETWORK));
 		m_psp.dwFlags |= PSP_RTLREADING;
 	}
-	~NetworkPage() { }
+	~NetworkPage() { 
+		if(adapterInfo)
+			HeapFree(GetProcessHeap(), 0, adapterInfo);
+	}
 
 	BEGIN_MSG_MAP(NetworkPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, onInitDialog)
@@ -62,6 +68,8 @@ private:
 
 	void fixControls();
 	void getAddresses();
+
+	IP_ADAPTER_ADDRESSES* adapterInfo;
 };
 
 #endif // !defined(NETWORK_PAGE_H)

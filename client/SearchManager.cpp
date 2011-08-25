@@ -88,7 +88,7 @@ void SearchManager::listen() {
 		socket->create(Socket::TYPE_UDP);
 		socket->setBlocking(true);
 		socket->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
-		port = socket->bind(static_cast<uint16_t>(SETTING(UDP_PORT)), SETTING(BIND_ADDRESS));
+		port = socket->bind(static_cast<uint16_t>(SETTING(UDP_PORT)), Socket::getBindAddress());
 		start();
 	} catch(...) {
 		socket.reset();
@@ -134,7 +134,7 @@ int SearchManager::run() {
 				socket->create(Socket::TYPE_UDP);
 				socket->setBlocking(true);
 				socket->setSocketOpt(SO_RCVBUF, SETTING(SOCKET_IN_BUFFER));
-				socket->bind(port, SETTING(BIND_ADDRESS));
+				socket->bind(port, Socket::getBindAddress());
 				if(failed) {
 					LogManager::getInstance()->message("Search enabled again"); // TODO: translate
 					failed = false;

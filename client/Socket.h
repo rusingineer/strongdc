@@ -198,6 +198,7 @@ public:
 	static void socksUpdated();
 	static string getRemoteHost(const string& aIp);
 	static string resolveName(const addr& serv_addr, uint16_t* port = NULL);
+	static string getBindAddress();
 	
 	GETSET(string, ip, Ip);
 	GETSET(uint16_t, port, Port);
