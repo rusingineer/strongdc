@@ -70,6 +70,7 @@ public:
 	static const string UCM0_SUPPORT;
 	static const string BLO0_SUPPORT;
 	static const string DHT0_SUPPORT;
+	static const string ZLIF_SUPPORT;
 
 private:
 	friend class ClientManager;
@@ -115,7 +116,7 @@ private:
 	OnlineUser* findUser(const CID& cid) const;
 	
 	// just a workaround
-	OnlineUserPtr AdcHub::findUser(const string& aNick) const { 
+	OnlineUserPtr findUser(const string& aNick) const { 
 	   Lock l(cs); 
 	   for(SIDMap::const_iterator i = users.begin(); i != users.end(); ++i) { 
 		  if(i->second->getIdentity().getNick() == aNick) { 
@@ -145,6 +146,7 @@ private:
 	void handle(AdcCommand::NAT, AdcCommand& c) noexcept;
 	void handle(AdcCommand::RNT, AdcCommand& c) noexcept;
 	void handle(AdcCommand::PSR, AdcCommand& c) noexcept;
+	void handle(AdcCommand::ZON, AdcCommand& c) noexcept;
 
 	template<typename T> void handle(T, AdcCommand&) { }
 

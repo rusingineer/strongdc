@@ -348,6 +348,7 @@
     <ClInclude Include="client\MerkleTree.h" />
     <ClInclude Include="client\NmdcHub.h" />
     <ClInclude Include="client\noexcept.h" />
+    <ClInclude Include="client\OnlineUser.h" />
     <ClInclude Include="client\Pointer.h" />
     <ClInclude Include="client\QueueItem.h" />
     <ClInclude Include="client\QueueManager.h" />
