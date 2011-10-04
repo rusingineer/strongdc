@@ -237,11 +237,11 @@ void UploadQueueFrame::LoadAll() {
 	ctrlQueued.SetRedraw(FALSE);	
 	
 	// Load queue
-	UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getUploadQueue();
-	for(UploadQueueItem::SlotQueue::const_iterator uit = users.begin(); uit != users.end(); ++uit) {
+	auto users = UploadManager::getInstance()->getUploadQueue();
+	for(auto uit = users.cbegin(); uit != users.cend(); ++uit) {
 		//ctrlQueued.InsertItem(TVIF_PARAM | TVIF_TEXT, (Text::toT(uit->first->getFirstNick()) + _T(" - ") + WinUtil::getHubNames(uit->first).first).c_str(), 
 		//	0, 0, 0, 0, (LPARAM)(new UserItem(uit->first)), rootItem, TVI_LAST);
-		for(UploadQueueItem::List::const_iterator i = uit->second.begin(); i != uit->second.end(); ++i) {
+		for(auto i = uit->files.cbegin(); i != uit->files.cend(); ++i) {
 			AddFile(*i);
 		}
 	}
@@ -283,14 +283,14 @@ LRESULT UploadQueueFrame::onItemChanged(int /*idCtrl*/, LPNMHDR /* pnmh */, BOOL
 
 	while(userNode) {
 		ctrlList.DeleteAllItems();
-		UserItem *u = reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
-		if(u) {
-			UploadQueueItem::SlotQueue users = UploadManager::getInstance()->getUploadQueue();
-			UploadQueueItem::SlotQueue::const_iterator it = find_if(users.begin(), users.end(), CompareFirst<UserPtr, UploadQueueItem::List>(u->u));
+		UserItem* ui = reinterpret_cast<UserItem *>(ctrlQueued.GetItemData(userNode));
+		if(ui) {
+			auto users = UploadManager::getInstance()->getUploadQueue();
+			auto it = find_if(users.begin(), users.end(), [&](const UserPtr& u) { return u == ui->u; });
 			if(it != users.end()) {
 				ctrlList.SetRedraw(FALSE);
 				ctrlQueued.SetRedraw(FALSE);
-				for(UploadQueueItem::List::const_iterator i = it->second.begin(); i != it->second.end(); ++i) {
+				for(auto i = it->files.cbegin(); i != it->files.cend(); ++i) {
 					AddFile(*i);
 				}
 				ctrlList.resort();

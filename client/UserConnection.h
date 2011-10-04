@@ -113,16 +113,12 @@ public:
 	void error(const string& aError) { send("$Error " + aError + '|'); }
 	void listLen(const string& aLength) { send("$ListLen " + aLength + '|'); }
 	
-	void maxedOut(size_t qPos = 0) {
-		bool sendPos = qPos > 0;
-
+	void maxedOut(size_t queue_position) {
 		if(isSet(FLAG_NMDC)) {
-			send("$MaxedOut" + (sendPos ? (" " + Util::toString(qPos)) : Util::emptyString) + "|");
+			send("$MaxedOut " + Util::toString(queue_position) + "|");
 		} else {
 			AdcCommand cmd(AdcCommand::SEV_RECOVERABLE, AdcCommand::ERROR_SLOTS_FULL, "Slots full");
-			if(sendPos) {
-				cmd.addParam("QP", Util::toString(qPos));
-			}
+			cmd.addParam("QP", Util::toString(queue_position));
 			send(cmd);
 		}
 	}

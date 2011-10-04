@@ -889,8 +889,7 @@ void NmdcHub::myInfo(bool alwaysSend) {
 	
 	reloadSettings(false);
 	
-	char StatusMode = Identity::NORMAL;
-
+	char status = Identity::NORMAL;
 	char modeChar = '?';
 	if(SETTING(OUTGOING_CONNECTIONS) == SettingsManager::OUTGOING_SOCKS5)
 		modeChar = '5';
@@ -920,27 +919,27 @@ void NmdcHub::myInfo(bool alwaysSend) {
 		version = VERSIONSTRING;
 #endif
 		if(Util::getAway()) {
-			StatusMode |= Identity::AWAY;
+			status |= Identity::AWAY;
 		}
-		if (UploadManager::getInstance()->getFileServerStatus()) {
-			StatusMode |= Identity::SERVER;
+		if (UploadManager::getInstance()->getIsFileServer()) {
+			status |= Identity::SERVER;
 		}
-		if (UploadManager::getInstance()->getFireballStatus()) {
-			StatusMode |= Identity::FIREBALL;
+		if (UploadManager::getInstance()->getIsFireball()) {
+			status |= Identity::FIREBALL;
 		}
 		if(BOOLSETTING(ALLOW_NAT_TRAVERSAL) && !isActive()) {
-			StatusMode |= Identity::NAT;
+			status |= Identity::NAT;
 		}
 	}
 	
 	if (CryptoManager::getInstance()->TLSOk()) {
-		StatusMode |= Identity::TLS;
+		status |= Identity::TLS;
 	}	
 
 	char myInfo[256];
 	snprintf(myInfo, sizeof(myInfo), "$MyINFO $ALL %s %s<%s V:%s,M:%c,H:%s,S:%d>$ $%s%c$%s$", fromUtf8(getCurrentNick()).c_str(),
 		fromUtf8(escape(getCurrentDescription())).c_str(), dc.c_str(), version.c_str(), modeChar, getCounts().c_str(), 
-		UploadManager::getInstance()->getSlots(), uploadSpeed.c_str(), StatusMode, fromUtf8(escape(SETTING(EMAIL))).c_str());
+		UploadManager::getInstance()->getSlots(), uploadSpeed.c_str(), status, fromUtf8(escape(SETTING(EMAIL))).c_str());
 
 	int64_t newBytesShared = ShareManager::getInstance()->getShareSize();
 	if (strcmp(myInfo, lastMyInfo.c_str()) != 0 || alwaysSend || (newBytesShared != lastBytesShared && lastUpdate + 15*60*1000 < GET_TICK())) {

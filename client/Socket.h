@@ -199,6 +199,7 @@ public:
 	static string getRemoteHost(const string& aIp);
 	static string resolveName(const addr& serv_addr, uint16_t* port = NULL);
 	static string getBindAddress();
+	static uint16_t getFamily() { return family; }
 	
 	GETSET(string, ip, Ip);
 	GETSET(uint16_t, port, Port);

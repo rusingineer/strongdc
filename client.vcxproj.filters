@@ -502,6 +502,9 @@
     <ClInclude Include="client\typedefs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="client\OnlineUser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="client\version.h.template">

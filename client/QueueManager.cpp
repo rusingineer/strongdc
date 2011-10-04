@@ -1735,7 +1735,7 @@ void QueueManager::saveQueue(bool force) noexcept {
 		ff.close();
 
 		File::deleteFile(getQueueFile() + ".bak");
-		CopyFile(Text::toT(getQueueFile()).c_str(), Text::toT(getQueueFile() + ".bak").c_str(), FALSE);
+		File::copyFile(getQueueFile(), getQueueFile() + ".bak");
 		File::deleteFile(getQueueFile());
 		File::renameFile(getQueueFile() + ".tmp", getQueueFile());
 
@@ -1903,6 +1903,10 @@ void QueueManager::on(SearchManagerListener::SR, const SearchResultPtr& sr) noex
 
 			// Size compare to avoid popular spoof
 			if(qi->getSize() == sr->getSize() && !qi->isSource(sr->getUser())) {
+				
+				if(qi->isFinished())
+					break;	// don't add sources to already finished files
+				
 				try {
 					users = qi->countOnlineUsers();
 					if(!BOOLSETTING(AUTO_SEARCH_AUTO_MATCH) || (users >= (size_t)SETTING(MAX_AUTO_MATCH_SOURCES)))
@@ -2140,6 +2144,10 @@ bool QueueManager::handlePartialSearch(const TTHValue& tth, PartsInfo& _outParts
 			return false;
 		}
 
+		// don't share when file does not exist
+		if(!Util::fileExists(qi->isFinished() ? qi->getTarget() : qi->getTempTarget()))
+			return false;
+
 		int64_t blockSize = HashManager::getInstance()->getBlockSize(qi->getTTH());
 		if(blockSize == 0)
 			blockSize = qi->getSize();
@@ -2157,9 +2165,13 @@ void QueueManager::FileQueue::findPFSSources(PFSSourceList& sl)
 	uint64_t now = GET_TICK();
 
 	for(auto i = queue.begin(); i != queue.end(); ++i) {
-		const QueueItem* q = i->second;
+		QueueItem* q = i->second;
 
 		if(q->getSize() < PARTIAL_SHARE_MIN_SIZE) continue;
+
+		// don't share when file does not exist
+		if(!Util::fileExists(q->isFinished() ? q->getTarget() : q->getTempTarget()))
+			continue;
 
 		const QueueItem::SourceList& sources = q->getSources();
 		const QueueItem::SourceList& badSources = q->getBadSources();
@@ -2199,6 +2211,11 @@ TTHValue* QueueManager::FileQueue::findPFSPubTTH()
 	for(auto i = queue.begin(); i != queue.end(); i++)
 	{
 		QueueItemPtr qi = i->second;
+
+		// don't share when file does not exist
+		if(!Util::fileExists(qi->isFinished() ? qi->getTarget() : qi->getTempTarget()))
+			continue;
+
 		if(qi && qi->getSize() >= PARTIAL_SHARE_MIN_SIZE && now >= qi->getNextPublishingTime() && qi->getPriority() > QueueItem::PAUSED)
 		{
 			if(cand == NULL || cand->getNextPublishingTime() > qi->getNextPublishingTime() || (cand->getNextPublishingTime() == qi->getNextPublishingTime() && cand->getPriority() < qi->getPriority()) )
