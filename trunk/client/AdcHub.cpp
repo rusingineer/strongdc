@@ -51,6 +51,7 @@ const string AdcHub::TIGR_SUPPORT("ADTIGR");
 const string AdcHub::UCM0_SUPPORT("ADUCM0");
 const string AdcHub::BLO0_SUPPORT("ADBLO0");
 const string AdcHub::DHT0_SUPPORT("ADDHT0");
+const string AdcHub::ZLIF_SUPPORT("ADZLIF");
 
 const vector<StringList> AdcHub::searchExts;
 
@@ -357,6 +358,19 @@ void AdcHub::handle(AdcCommand::CTM, AdcCommand& c) noexcept {
 	}
 
 	ConnectionManager::getInstance()->adcConnect(*u, static_cast<uint16_t>(Util::toInt(port)), token, secure);
+}
+
+
+void AdcHub::handle(AdcCommand::ZON, AdcCommand& /*c*/) noexcept {
+	try 
+	{
+		sock->setMode(BufferedSocket::MODE_ZPIPE);
+		dcdebug("ZLIF mode enabled on hub: %s\n", this->getAddress().c_str());
+	}
+	catch (const Exception& e)
+	{
+		dcdebug("AdcHub::handleZON failed with error: %s\n", e.getError().c_str());
+	}
 }
 
 void AdcHub::handle(AdcCommand::RCM, AdcCommand& c) noexcept {
@@ -1112,6 +1126,9 @@ void AdcHub::on(Connected c) noexcept {
 	}
 	if(BOOLSETTING(USE_DHT))
 		cmd.addParam(DHT0_SUPPORT);
+
+	cmd.addParam(ZLIF_SUPPORT);
+
 	send(cmd);
 }
 

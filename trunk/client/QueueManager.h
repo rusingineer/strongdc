@@ -128,7 +128,7 @@ public:
 		return true;
 	}
 
-	bool isChunkDownloaded(const TTHValue& tth, int64_t startPos, int64_t& bytes, string& tempTarget) {
+	bool isChunkDownloaded(const TTHValue& tth, int64_t startPos, int64_t& bytes, string& target) {
 		Lock l(cs);
 		QueueItemList ql;
 		fileQueue.find(ql, tth);
@@ -137,7 +137,7 @@ public:
 
 		QueueItem* qi = ql.front();
 
-		tempTarget = qi->getTempTarget();
+		target = qi->isFinished() ? qi->getTarget() : qi->getTempTarget();
 
 		return qi->isChunkDownloaded(startPos, bytes);
 	}
