@@ -669,11 +669,11 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) noexcept {
 	}
 	
 	if(!isFireball) {
-		if(getRunningAverage() >= 102400) {
+		if(getRunningAverage() >= 1024 * 1024) {
 			if (fireballStartTick == 0) {
-				// >= 100 kB/s detected for the first time
+				// >= 1 MiB/s detected for the first time
 				fireballStartTick = aTick;
-			} else if ((aTick - fireballStartTick) > 60000) {
+			} else if ((aTick - fireballStartTick) > 60 * 1000) {
 				// fine, speed is over 100 kB/s for more than 60 seconds
 				isFireball = true;
 				ClientManager::getInstance()->infoUpdated();
@@ -684,9 +684,9 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) noexcept {
 		}
 
 		if(!isFireball && !isFileServer) {
-			if(	((time(NULL) - Util::getStartTime()) > 7200) && // > 2 hours uptime
-				(Socket::getTotalUp() > 209715200) && // > 200 MB uploaded
-				(ShareManager::getInstance()->getSharedSize() > 2147483648)) // > 2 GB shared
+			if(	((time(NULL) - Util::getStartTime()) > 10 * 24 * 60 * 60) && // > 10 days uptime
+				(Socket::getTotalUp() > 100 * 1024 * 1024 * 1024) && // > 100 GiB uploaded
+				(ShareManager::getInstance()->getSharedSize() > 1.5 * 1024 * 1024 * 1024)) // > 1.5 TiB shared
 			{ 
 				isFileServer = true;
 				ClientManager::getInstance()->infoUpdated();
