@@ -15,8 +15,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
- 
-#include "StdAfx.h"
+
+#include "stdafx.h"
 #include "Utils.h"
 
 #include "Constants.h"
@@ -36,17 +36,17 @@ namespace dht
 	CID Utils::getDistance(const CID& cid1, const CID& cid2)
 	{
 		uint8_t distance[CID::SIZE];
-		
+
 		for(int i = 0; i < CID::SIZE; i++)
 		{
 			distance[i] = cid1.data()[i] ^ cid2.data()[i];
 		}
-		
+
 		return CID(distance);
 	}
 
 	/*
-	 * Detect whether it is correct to use IP:port in DHT network 
+	 * Detect whether it is correct to use IP:port in DHT network
 	 */
 	bool Utils::isGoodIPPort(const string& ip, uint16_t port)
 	{
@@ -54,23 +54,23 @@ namespace dht
 		// ports below 1024 are known service ports, so they shouldn't be used for DHT else it could be used for attacks
 		if(ip.empty() || port < 1024)
 			return false;
-		
+
 		// don't allow private IPs
 		if(Util::isPrivateIp(ip))
 			return false;
-		
+
 		return true;
 	}
-	
+
 	/*
-	 * General flooding protection 
+	 * General flooding protection
 	 */
 	bool Utils::checkFlood(const string& ip, const AdcCommand& cmd)
 	{
 		// ignore empty commands
 		if(cmd.getParameters().empty())
 			return false;
-			
+
 		// there maximum allowed request packets from one IP per minute
 		// response packets are allowed only if request has been sent to the IP address
 		size_t maxAllowedPacketsPerMinute = 0;
@@ -85,14 +85,14 @@ namespace dht
 			case AdcCommand::CMD_RCM: maxAllowedPacketsPerMinute = 2; break;
 			case AdcCommand::CMD_GET: maxAllowedPacketsPerMinute = 2; break;
 			case AdcCommand::CMD_PSR: maxAllowedPacketsPerMinute = 3; break;
-			
+
 			// response packets
-			case AdcCommand::CMD_STA: 
-				return true; // STA can be response for more commands, but since it is for informative purposes only, there shouldn't be no way to abuse it		
-			
+			case AdcCommand::CMD_STA:
+				return true; // STA can be response for more commands, but since it is for informative purposes only, there shouldn't be no way to abuse it
+
 			case AdcCommand::CMD_SND: requestCmd = AdcCommand::CMD_GET;
 			case AdcCommand::CMD_RES: // default value of requestCmd
-				
+
 				Lock l(cs);
 				for(std::list<OutPacket>::iterator i = sentPackets.begin(); i != sentPackets.end(); i++)
 				{
@@ -102,24 +102,24 @@ namespace dht
 						return true;
 					}
 				}
-			
+
 				dcdebug("Received unwanted response from %s. Packet dropped.\n", ip.c_str());
 				return false;
 		}
-		
+
 		Lock l(cs);
 		std::unordered_multiset<uint32_t>& packetsPerIp = receivedPackets[ip];
 		packetsPerIp.insert(cmd.getCommand());
-		
+
 		if(packetsPerIp.count(cmd.getCommand()) > maxAllowedPacketsPerMinute)
 		{
 			dcdebug("Request flood detected (%d) from %s. Packet dropped.\n", packetsPerIp.count(cmd.getCommand()), ip.c_str());
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	/*
 	 * Removes tracked packets. Called once a minute.
 	 */
@@ -128,14 +128,14 @@ namespace dht
 		Lock l(cs);
 		receivedPackets.clear();
 	}
-	
+
 	/*
-	 * Stores outgoing request to avoid receiving invalid responses 
+	 * Stores outgoing request to avoid receiving invalid responses
 	 */
 	void Utils::trackOutgoingPacket(const string& ip, const AdcCommand& cmd)
 	{
 		Lock l(cs);
-		
+
 		uint64_t now = GET_TICK();
 		switch(cmd.getCommand())
 		{
@@ -150,7 +150,7 @@ namespace dht
 				sentPackets.push_back(p);
 				break;
 		}
-		
+
 		// clean up old items
 		// list is sorted by time, so the first unmatched item can break the loop
 		while(!sentPackets.empty())
@@ -162,14 +162,14 @@ namespace dht
 				break;
 		}
 	}
-	
+
 	/*
-	 * Generates UDP key for specified IP address 
+	 * Generates UDP key for specified IP address
 	 */
 	CID Utils::getUdpKey(const string& targetIp)
 	{
 		CID myUdpKey = CID(SETTING(DHT_KEY));
-		
+
 		TigerTree th;
 		th.update(myUdpKey.data(), sizeof(CID));
 		th.update(targetIp.c_str(), targetIp.size());

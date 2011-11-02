@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
- 
+
 #ifndef _KBUCKET_H
 #define _KBUCKET_H
 
@@ -35,6 +35,8 @@ namespace dht
 	{
 		string	ip;
 		CID		key;
+
+		bool isZero() const { return key.isZero() || ip.empty() || ip == "0.0.0.0"; }
 	};
 
 	struct Node :
@@ -42,76 +44,83 @@ namespace dht
 	{
 		typedef boost::intrusive_ptr<Node> Ptr;
 		typedef std::map<CID, Node::Ptr> Map;
-		
+
 		Node(const UserPtr& u);
-		~Node()	{ }
-		
+		~Node()	noexcept { }
+
 		uint8_t getType() const { return type; }
 		bool isIpVerified() const { return ipVerified; }
-		
+
 		bool isOnline() const { return online; }
 		void setOnline(bool _online) { online = _online; }
-		
+
 		void setAlive();
 		void setIpVerified(bool verified) { ipVerified = verified; }
 		void setTimeout(uint64_t now = GET_TICK());
 
-		CID getUdpKey() const;
-		void setUdpKey(const CID& _key);
-		const UDPKey& getUDPKey() const { return key; }
-		
+		void setUdpKey(const UDPKey& _key) { key = _key; }
+		UDPKey getUdpKey() const;
+
 	private:
-	
-		friend class KBucket;
+
+		friend class RoutingTable;
 
 		UDPKey		key;
-				
+
 		uint64_t	created;
 		uint64_t	expires;
 		uint8_t		type;
 		bool		ipVerified;
 		bool		online;	// getUser()->isOnline() returns true when node is online in any hub, we need info when he is online in DHT
 	};
-		
-	class KBucket
+
+	class RoutingTable
 	{
 	public:
-		KBucket(void);
-		~KBucket(void);
+		RoutingTable(int _level = 0, bool splitAllowed = true);
+		~RoutingTable(void);
 
 		typedef std::deque<Node::Ptr> NodeList;
-		
-		/** Creates new (or update existing) node which is NOT added to our routing table */
-		Node::Ptr createNode(const UserPtr& u, const string& ip, uint16_t port, bool update, bool isUdpKeyValid);
 
-		/** Adds node to routing table */
-		bool insert(const Node::Ptr& node);
-		
+		/** Creates new (or update existing) node which is NOT added to our routing table */
+		Node::Ptr addOrUpdate(const UserPtr& u, const string& ip, uint16_t port, const UDPKey& udpKey, bool update, bool isUdpKeyValid);
+
+		/** Returns nodes count in whole routing table */
+		static size_t getNodesCount() { return nodesCount; }
+
 		/** Finds "max" closest nodes and stores them to the list */
 		void getClosestNodes(const CID& cid, Node::Map& closest, unsigned int max, uint8_t maxType) const;
-		
-		/** Return list of all nodes in this bucket */
-		const NodeList& getNodes() const { return nodes; }
-		
-		/** Removes dead nodes */
-		bool checkExpiration(uint64_t currentTime);
-		
+
 		/** Loads existing nodes from disk */
 		void loadNodes(SimpleXML& xml);
-		
+
 		/** Save bootstrap nodes to disk */
-		void saveNodes(SimpleXML& xml);		
-		
+		void saveNodes(SimpleXML& xml);
+
+		void checkExpiration(uint64_t aTick);
+
 	private:
-	
-		/** List of nodes in this bucket */	
-		NodeList nodes;
-		
+
+		/** Left and right branches of the tree */
+		RoutingTable* zones[2];
+
+		/** The level of this zone */
+		int level;
+		bool splitAllowed;
+
+		/** List of nodes in this bucket */
+		NodeList* bucket;
+
 		/** List of known IPs in this bucket */
-		StringSet ipMap;
+		static StringSet ipMap;
+
+		static size_t nodesCount;
+
+		void split();
 		
+		uint64_t lastRandomLookup;
 	};
-	
+
 }
 
 #endif	// _KBUCKET_H

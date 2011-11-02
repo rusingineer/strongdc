@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
-#include "StdAfx.h"
+#include "stdafx.h"
 
 #include "DHT.h"
 #include "BootstrapManager.h"
@@ -36,7 +36,7 @@
 #include "../client/ShareManager.h"
 #include "../client/UploadManager.h"
 #include "../client/User.h"
-#include "../client/Version.h"
+#include "../client/version.h"
 
 namespace dht
 {
@@ -79,18 +79,19 @@ namespace dht
 			if(BOOLSETTING(UPDATE_IP))
 				SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, Util::emptyString);
 					
-			bucket = new KBucket();	
-				
 			BootstrapManager::newInstance();
 			SearchManager::newInstance();
 			TaskManager::newInstance();
 			ConnectionManager::newInstance();
 					
+			bucket = new RoutingTable();
+
 			loadData();	
+
+			TaskManager::getInstance()->start();
 		}
 			
 		socket.listen(); 
-		BootstrapManager::getInstance()->bootstrap(); 
 	}
 	
 	void DHT::stop(bool exiting) 
@@ -106,13 +107,13 @@ namespace dht
 
 			lastPacket = 0;
 
+			delete bucket;
+			bucket = NULL;
+
 			ConnectionManager::deleteInstance();		
 			TaskManager::deleteInstance();
 			SearchManager::deleteInstance();
 			BootstrapManager::deleteInstance();
-
-			delete bucket;
-			bucket = NULL;
 		}
 	}
 
@@ -146,14 +147,12 @@ namespace dht
 				
 			lastPacket = GET_TICK();	
 			
-			// don't add node here, because it may block verified nodes when table becomes full of unverified nodes
-			Node::Ptr node = createNode(CID(cid), ip, port, true, isUdpKeyValid);
-			
 			// all communication to this node will be encrypted with this key
-			string udpKey;
+			UDPKey key; string udpKey;
 			if(cmd.getParam("UK", 1, udpKey))
 			{
-				node->setUdpKey(CID(udpKey));
+				key.key = CID(udpKey);
+				key.ip = DHT::getInstance()->getLastExternalIP();
 			}
 			
 			// node is requiring FW check
@@ -161,21 +160,21 @@ namespace dht
 			if(cmd.getParam("FW", 1, internalUdpPort))
 			{
 				bool firewalled = (Util::toInt(internalUdpPort) != port);
-				if(firewalled)
-					node->getUser()->setFlag(User::PASSIVE);
+				/* TODO if(firewalled)
+					node->getUser()->setFlag(User::PASSIVE);*/
 				
 				// send him his external ip and port
 				AdcCommand cmd(AdcCommand::SEV_SUCCESS, AdcCommand::SUCCESS, !firewalled ? "UDP port opened" : "UDP port closed", AdcCommand::TYPE_UDP);
 				cmd.addParam("FC", "FWCHECK");
 				cmd.addParam("I4", ip);
 				cmd.addParam("U4", Util::toString(port));
-				send(cmd, ip, port, node->getUser()->getCID(), node->getUdpKey());
+				send(cmd, ip, port, CID(cid), key);
 			}							
 		
-#define C(n) case AdcCommand::CMD_##n: handle(AdcCommand::n(), node, cmd); break;
+#define C(n) case AdcCommand::CMD_##n: handle(AdcCommand::n(), ip, port, key, cmd); break;
 			switch(cmd.getCommand()) 
 			{
-				C(INF);	// user's info
+				case AdcCommand::CMD_INF: handle(AdcCommand::INF(), ip, port, key, isUdpKeyValid, cmd); break;	// user's info
 				C(SCH);	// search request
 				C(RES);	// response to SCH
 				C(PUB);	// request to publish file
@@ -185,7 +184,7 @@ namespace dht
 				C(PSR);	// partial file request
 				C(MSG);	// private message
 				C(GET); // get some data
-				C(SND); // response to GET
+				case AdcCommand::CMD_SND: handle(AdcCommand::SND(), ip, port, key, isUdpKeyValid, cmd); break; // response to GET
 				
 			default: 
 				dcdebug("Unknown ADC command: %.50s\n", aLine.c_str());
@@ -203,12 +202,12 @@ namespace dht
 	/*
 	 * Sends command to ip and port 
 	 */
-	void DHT::send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const CID& udpKey)
+	void DHT::send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const UDPKey& udpKey)
 	{
 		{
 			// FW check
 			Lock l(fwCheckCs);
-			if(requestFWCheck && (firewalledWanted.size() + firewalledChecks.size() < FW_RESPONSES))
+			if(requestFWCheck/* && (firewalledWanted.size() + firewalledChecks.size() < FW_RESPONSES)*/)
 			{
 				if(firewalledWanted.count(ip) == 0)	// only when not requested from this node yet
 				{
@@ -219,46 +218,26 @@ namespace dht
 		}
 		socket.send(cmd, ip, port, targetCID, udpKey);
 	}
-	
+
 	/*
-	 * Creates new (or update existing) node which is NOT added to our routing table 
+	 * Adds node to routing table
 	 */
-	Node::Ptr DHT::createNode(const CID& cid, const string& ip, uint16_t port, bool update, bool isUdpKeyValid)
+	Node::Ptr DHT::addNode(const CID& cid, const string& ip, uint16_t port, const UDPKey& udpKey, bool update, bool isUdpKeyValid)
 	{
 		// create user as offline (only TCP connected users will be online)
 		UserPtr u = ClientManager::getInstance()->getUser(cid);
+		Node::Ptr node;
 
-		Lock l(cs);
-		return bucket->createNode(u, ip, port, update, isUdpKeyValid);
-	}
-
-	/*
-	 * Adds node to routing table 
-	 */
-	bool DHT::addNode(const Node::Ptr& node, bool makeOnline)
-	{
-		bool isAcceptable = true;
-		if(!node->isOnline())
 		{
-			{
-				Lock l(cs);
-				isAcceptable = bucket->insert(node); // insert node to our routing table
-			}
-
-			if(makeOnline)
-			{
-				// put him online so we can make a connection with him
-				node->inc();
-				node->setOnline(true);
-				ClientManager::getInstance()->putOnline(node.get());
-			}
+			Lock l(cs);
+			node = bucket->addOrUpdate(u, ip, port, udpKey, update, isUdpKeyValid);
 		}
 
-		return isAcceptable;
+		return node;
 	}
 
 	/*
-	 * Finds "max" closest nodes and stores them to the list 
+	 * Finds "max" closest nodes and stores them to the list
 	 */
 	void DHT::getClosestNodes(const CID& cid, std::map<CID, Node::Ptr>& closest, unsigned int max, uint8_t maxType)
 	{
@@ -267,35 +246,27 @@ namespace dht
 	}
 
 	/*
-	 * Removes dead nodes 
+	 * Removes dead nodes
 	 */
 	void DHT::checkExpiration(uint64_t aTick)
 	{
-		{
-			Lock l(cs);
-			if(bucket->checkExpiration(aTick))
-				setDirty();
-		}
-
-		{
-			Lock l(fwCheckCs);			
-			firewalledWanted.clear();
-		}
+		Lock l(fwCheckCs);
+		firewalledWanted.clear();
 	}
-	
+
 	/*
-	 * Finds the file in the network 
+	 * Finds the file in the network
 	 */
 	void DHT::findFile(const string& tth, const string& token)
 	{
 		if(isConnected())
 			SearchManager::getInstance()->findFile(tth, token);
 	}
-	
+
 	/*
-	 * Sends our info to specified ip:port 
+	 * Sends our info to specified ip:port
 	 */
-	void DHT::info(const string& ip, uint16_t port, uint32_t type, const CID& targetCID, const CID& udpKey)
+	void DHT::info(const string& ip, uint16_t port, uint32_t type, const CID& targetCID, const UDPKey& udpKey)
 	{
 		// TODO: what info is needed?
 		AdcCommand cmd(AdcCommand::CMD_INF, AdcCommand::TYPE_UDP);
@@ -304,20 +275,20 @@ namespace dht
 #define VER VERSIONSTRING SVNVERSION
 #else
 #define VER VERSIONSTRING
-#endif		
+#endif
 
 		cmd.addParam("TY", Util::toString(type));
 		cmd.addParam("AP", "StrgDC++");
 		cmd.addParam("VE", VER);
 		cmd.addParam("NI", SETTING(NICK));
 		cmd.addParam("SL", Util::toString(UploadManager::getInstance()->getSlots()));
-			
+
 		if (SETTING(THROTTLE_ENABLE) && SETTING(MAX_UPLOAD_SPEED_LIMIT) != 0) {
 			cmd.addParam("US", Util::toString(SETTING(MAX_UPLOAD_SPEED_LIMIT)*1024));
 		} else {
 			cmd.addParam("US", Util::toString((long)(Util::toDouble(SETTING(UPLOAD_SPEED))*1024*1024/8)));
 		}
-			
+
 		string su;
 		if(CryptoManager::getInstance()->TLSOk())
 			su += ADCS_FEATURE ",";
@@ -325,30 +296,30 @@ namespace dht
 		// TCP status according to global status
 		if(ClientManager::getInstance()->isActive(Util::emptyString))
 			su += TCP4_FEATURE ",";
-			
+
 		// UDP status according to UDP status check
 		if(!isFirewalled())
 			su += UDP4_FEATURE ",";
-			
+
 		if(!su.empty()) {
 			su.erase(su.size() - 1);
 		}
 		cmd.addParam("SU", su);
-			
+
 		send(cmd, ip, port, targetCID, udpKey);
 	}
-	
+
 	/*
-	 * Sends Connect To Me request to online node 
+	 * Sends Connect To Me request to online node
 	 */
 	void DHT::connect(const OnlineUser& ou, const string& token)
 	{
 		// this is DHT's node, so we can cast ou to Node
 		ConnectionManager::getInstance()->connect((Node*)&ou, token);
 	}
-	
+
 	/*
-	 * Sends private message to online node 
+	 * Sends private message to online node
 	 */
 	void DHT::privateMessage(const OnlineUserPtr& /*ou*/, const string& /*aMessage*/, bool /*thirdPerson*/)
 	{
@@ -356,12 +327,12 @@ namespace dht
 		//cmd.addParam(aMessage);
 		//if(thirdPerson)
 		//	cmd.addParam("ME", "1");
-		//	
+		//
 		//send(cmd, ou.getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(ou.getIdentity().getUdpPort())));
-	}	
-	
+	}
+
 	/*
-	 * Loads network information from XML file 
+	 * Loads network information from XML file
 	 */
 	void DHT::loadData()
 	{
@@ -370,13 +341,13 @@ namespace dht
 			dcpp::File f(Util::getPath(Util::PATH_USER_CONFIG) + DHT_FILE, dcpp::File::READ, dcpp::File::OPEN);
 			SimpleXML xml;
 			xml.fromXML(f.read());
-			
+
 			xml.stepIn();
-			
+
 			// load nodes; when file is older than 7 days, bootstrap from database later
 			if(f.getLastModified() > time(NULL) - 7 * 24 * 60 * 60)
 				bucket->loadNodes(xml);
-			
+
 			// load indexes
 			IndexManager::getInstance()->loadIndexes(xml);
 			xml.stepOut();
@@ -388,27 +359,29 @@ namespace dht
 	}
 
 	/*
-	 * Finds "max" closest nodes and stores them to the list 
+	 * Finds "max" closest nodes and stores them to the list
 	 */
 	void DHT::saveData()
 	{
 		if(!dirty)
 			return;
-			
-		Lock l(cs);
-		
+
 		SimpleXML xml;
 		xml.addTag("DHT");
 		xml.stepIn();
-		
-		// save nodes
-		bucket->saveNodes(xml);	
-		
+
+		{
+			Lock l(cs);
+
+			// save nodes
+			bucket->saveNodes(xml);
+		}
+
 		// save foreign published files
 		IndexManager::getInstance()->saveIndexes(xml);
-		
+
 		xml.stepOut();
-		
+
 		try
 		{
 			dcpp::File file(Util::getPath(Util::PATH_USER_CONFIG) + DHT_FILE + ".tmp", dcpp::File::WRITE, dcpp::File::CREATE | dcpp::File::TRUNCATE);
@@ -423,18 +396,20 @@ namespace dht
 		catch(const FileException&)
 		{
 		}
-	}	
+	}
 
 	/*
 	 * Message processing
 	 */
 
 	// user's info
-	void DHT::handle(AdcCommand::INF, const Node::Ptr& node, AdcCommand& c) noexcept
+	void DHT::handle(AdcCommand::INF, const string& ip, uint16_t port, const UDPKey& udpKey, bool isUdpKeyValid, AdcCommand& c) noexcept
 	{
-		string ip = node->getIdentity().getIp();
-		string udpPort = node->getIdentity().getUdpPort();
-		
+		CID cid = CID(c.getParam(0));
+
+		// add node to our routing table and put him online
+		Node::Ptr node = addNode(cid, ip, port, udpKey, true, isUdpKeyValid);
+
 		InfType it = NONE;
 		for(StringIterC i = c.getParameters().begin() + 1; i != c.getParameters().end(); ++i)
 		{
@@ -447,83 +422,112 @@ namespace dht
 			else if((parameter_name != "I4") && (parameter_name != "U4") && (parameter_name != "UK")) // avoid IP+port spoofing + don't store key into map
 				node->getIdentity().set(i->c_str(), i->substr(2));
 		}
-		
+
 		if(node->getIdentity().supports(ADCS_FEATURE))
 		{
 			node->getUser()->setFlag(User::TLS);
-		}		
-		
+		}
+
 		if(!node->getIdentity().get("US").empty()) {
 			node->getIdentity().setConnection(Util::formatBytes(node->getIdentity().get("US")) + "/s");
 		}
-		
-		// add node to our routing table and put him online
-		addNode(node, true);
-		
+
+		if(((it & CONNECTION) == CONNECTION) && !node->isOnline())	// only when connection is required
+		{
+			// put him online so we can make a connection with him
+			node->inc();
+			node->setOnline(true);
+			ClientManager::getInstance()->putOnline(node.get());
+
+			// FIXME: if node has not been added into the routing table (for whatever reason), we should take some action
+			// to avoid having him online forever (bringing memory leak for such nodes)
+		}
+
 		// do we wait for any search results from this user?
-		SearchManager::getInstance()->processSearchResults(node->getUser(), Util::toInt(node->getIdentity().get("SL")));		
-		
-		if(it & PING)
+		SearchManager::getInstance()->processSearchResults(node->getUser(), Util::toInt(node->getIdentity().get("SL")));
+
+		if((it & PING) == PING)
 		{
 			// remove ping flag to avoid ping-pong-ping-pong-ping...
-			info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(udpPort)), it & ~PING, node->getUser()->getCID(), node->getUdpKey());
+			info(ip, port, it & ~PING, cid, udpKey);
 		}
 	}
-	
+
 	// incoming search request
-	void DHT::handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) noexcept
+	void DHT::handle(AdcCommand::SCH, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept
 	{
-		SearchManager::getInstance()->processSearchRequest(node, c);
+		SearchManager::getInstance()->processSearchRequest(ip, port, udpKey, c);
 	}
-	
+
 	// incoming search result
-	void DHT::handle(AdcCommand::RES, const Node::Ptr& node, AdcCommand& c) noexcept
+	void DHT::handle(AdcCommand::RES, const string& /*ip*/, uint16_t /*port*/, const UDPKey& /*udpKey*/, AdcCommand& c) noexcept
 	{
-		SearchManager::getInstance()->processSearchResult(node, c);
+		SearchManager::getInstance()->processSearchResult(c);
 	}
-	
+
 	// incoming publish request
-	void DHT::handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) noexcept
+	void DHT::handle(AdcCommand::PUB, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept
 	{
 		if(!isFirewalled()) // we should index this entry only if our UDP port is opened
-			IndexManager::getInstance()->processPublishSourceRequest(node, c);
+			IndexManager::getInstance()->processPublishSourceRequest(ip, port, udpKey, c);
 	}
-	
+
 	// connection request
-	void DHT::handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) noexcept
+	void DHT::handle(AdcCommand::CTM, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept
 	{
-		ConnectionManager::getInstance()->connectToMe(node, c);
+		CID cid = CID(c.getParam(0));
+
+		// connection allowed with online nodes only, so try to get them directly from ClientManager
+		OnlineUserPtr node = ClientManager::getInstance()->findDHTNode(cid);
+		if(node != NULL)
+			ConnectionManager::getInstance()->connectToMe((Node*)node.get(), c);
+		else
+		{
+			// node is not online
+			// this can happen if we restarted our client (we are online for him, but he is offline for us)
+			DHT::getInstance()->info(ip, port, DHT::PING | DHT::CONNECTION, cid, udpKey);
+		}
 	}
-	
+
 	// reverse connection request
-	void DHT::handle(AdcCommand::RCM, const Node::Ptr& node, AdcCommand& c) noexcept
+	void DHT::handle(AdcCommand::RCM, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept
 	{
-		ConnectionManager::getInstance()->revConnectToMe(node, c);
+		CID cid = CID(c.getParam(0));
+
+		// connection allowed with online nodes only, so try to get them directly from ClientManager
+		OnlineUserPtr node = ClientManager::getInstance()->findDHTNode(cid);
+		if(node != NULL)
+			ConnectionManager::getInstance()->revConnectToMe((Node*)node.get(), c);
+		else
+		{
+			// node is not online
+			// this can happen if we restarted our client (we are online for him, but he is offline for us)
+			DHT::getInstance()->info(ip, port, DHT::PING | DHT::CONNECTION, cid, udpKey);
+		}
 	}
-	
+
 	// status message
-	void DHT::handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) noexcept
+	void DHT::handle(AdcCommand::STA, const string& fromIP, uint16_t /*port*/, const UDPKey& /*udpKey*/, AdcCommand& c) noexcept
 	{
 		if(c.getParameters().size() < 3)
 			return;
-			
-		string fromIP = node->getIdentity().getIp();
+
 		int code = Util::toInt(c.getParam(1).substr(1));
-		
+
 		if(code == 0)
 		{
 			string resTo;
 			if(!c.getParam("FC", 2, resTo))
 				return;
-				
+
 			if(resTo == "PUB")
 			{
-#ifdef _DEBUG			
+/*#ifdef _DEBUG
 				// don't do anything
 				string tth;
 				if(!c.getParam("TR", 1, tth))
 					return;
-					
+
 				try
 				{
 					string fileName = Util::getFileName(ShareManager::getInstance()->toVirtual(TTHValue(tth)));
@@ -533,28 +537,28 @@ namespace dht
 				{
 					// published non-shared file??? Maybe partial file
 					LogManager::getInstance()->message("DHT (" + fromIP + "): Partial file published: " + tth);
-					
+
 				}
-#endif
+#endif*/
 			}
 			else if(resTo == "FWCHECK")
 			{
 				Lock l(fwCheckCs);
 				if(!firewalledWanted.count(fromIP))
 					return; // we didn't requested firewall check from this node
-					
+
 				firewalledWanted.erase(fromIP);
 				if(firewalledChecks.count(fromIP))
-					return; // already received firewall check from this node		
-			
+					return; // already received firewall check from this node
+
 				string externalIP;
 				string externalUdpPort;
 				if(!c.getParam("I4", 1, externalIP) || !c.getParam("U4", 1, externalUdpPort))
 					return;	// no IP and port in response
-					
+
 				firewalledChecks.insert(std::make_pair(fromIP, std::make_pair(externalIP, static_cast<uint16_t>(Util::toInt(externalUdpPort)))));
-				
-				if(firewalledChecks.size() == FW_RESPONSES)
+
+				if(firewalledChecks.size() >= FW_RESPONSES)
 				{
 					// when we received more firewalled statuses, we will be firewalled
 					int fw = 0;	string lastIP;
@@ -562,18 +566,18 @@ namespace dht
 					{
 						string ip = i->second.first;
 						uint16_t udpPort = i->second.second;
-						
+
 						if(udpPort != getPort())
 							fw++;
 						else
 							fw--;
-							
+
 						if(lastIP.empty())
 						{
 							externalIP = ip;
 							lastIP = ip;
 						}
-						
+
 						//If the last check matches this one, reset our current IP.
 						//If the last check does not match, wait for our next incoming IP.
 						//This happens for one reason.. a client responsed with a bad IP.
@@ -597,17 +601,17 @@ namespace dht
 							
 						firewalled = false;
 					}
-					
+
 					if(BOOLSETTING(UPDATE_IP))
 						SettingsManager::getInstance()->set(SettingsManager::EXTERNAL_IP, externalIP);
-						
+
 					firewalledChecks.clear();
 					firewalledWanted.clear();
-					
+
 					lastExternalIP = externalIP;
 					requestFWCheck = false;
 				}
-			}	
+			}
 			return;
 		}
 
@@ -616,68 +620,79 @@ namespace dht
 		//if(!msg.empty())
 		//	LogManager::getInstance()->message("DHT (" + fromIP + "): " + msg);
 	}
-	
+
 	// partial file request
-	void DHT::handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) noexcept
+	void DHT::handle(AdcCommand::PSR, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept
 	{
+		CID cid = CID(c.getParam(0));
 		c.getParameters().erase(c.getParameters().begin());	 // remove CID from UDP command
-		dcpp::SearchManager::getInstance()->onPSR(c, node->getUser(), node->getIdentity().getIp());
+
+		// connection allowed with online nodes only, so try to get them directly from ClientManager
+		OnlineUserPtr node = ClientManager::getInstance()->findDHTNode(cid);
+		if(node != NULL)
+			 dcpp::SearchManager::getInstance()->onPSR(c, node->getUser(), ip);
+		else
+		{
+			// node is not online
+			// this can happen if we restarted our client (we are online for him, but he is offline for us)
+			DHT::getInstance()->info(ip, port, DHT::PING | DHT::CONNECTION, cid, udpKey);
+		}
 	}
 
 	// private message
-	void DHT::handle(AdcCommand::MSG, const Node::Ptr& /*node*/, AdcCommand& /*c*/) noexcept
+	void DHT::handle(AdcCommand::MSG, const string& /*ip*/, uint16_t /*port*/, const UDPKey& /*udpKey*/, AdcCommand& /*c*/) noexcept
 	{
 		// not implemented yet
 		//fire(ClientListener::PrivateMessage(), this, *node, to, node, c.getParam(0), c.hasFlag("ME", 1));
-		
+
 		//privateMessage(*node, "Sorry, private messages aren't supported yet!", false);
 	}
-	
-	void DHT::handle(AdcCommand::GET, const Node::Ptr& node, AdcCommand& c) noexcept
+
+	void DHT::handle(AdcCommand::GET, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept
 	{
 		if(c.getParam(1) == "nodes" && c.getParam(2) == "dht.xml")
 		{
 			AdcCommand cmd(AdcCommand::CMD_SND, AdcCommand::TYPE_UDP);
 			cmd.addParam(c.getParam(1));
 			cmd.addParam(c.getParam(2));
-			
+
 			SimpleXML xml;
 			xml.addTag("Nodes");
 			xml.stepIn();
-			
+
 			// get 20 random contacts
 			Node::Map nodes;
 			DHT::getInstance()->getClosestNodes(CID::generate(), nodes, 20, 2);
-				
+
 			// add nodelist in XML format
 			for(Node::Map::const_iterator i = nodes.begin(); i != nodes.end(); i++)
 			{
 				xml.addTag("Node");
 				xml.addChildAttrib("CID", i->second->getUser()->getCID().toBase32());
 				xml.addChildAttrib("I4", i->second->getIdentity().getIp());
-				xml.addChildAttrib("U4", i->second->getIdentity().getUdpPort());			
+				xml.addChildAttrib("U4", i->second->getIdentity().getUdpPort());
 			}
-			
+
 			xml.stepOut();
-				
+
 			string nodesXML;
 			StringOutputStream sos(nodesXML);
 			//sos.write(SimpleXML::utf8Header);
 			xml.toXML(&sos);
-				
+
 			cmd.addParam(Utils::compressXML(nodesXML));
-			
-			send(cmd, node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), node->getUser()->getCID(), node->getUdpKey());
+
+			send(cmd, ip, port, CID(c.getParam(0)), udpKey);
 		}
 	}
-	
-	void DHT::handle(AdcCommand::SND, const Node::Ptr& node, AdcCommand& c) noexcept
+
+	void DHT::handle(AdcCommand::SND, const string& ip, uint16_t port, const UDPKey& udpKey, bool isUdpKeyValid, AdcCommand& c) noexcept
 	{
 		if(c.getParam(1) == "nodes" && c.getParam(2) == "dht.xml")
 		{
 			// add node to our routing table
-			if(node->isIpVerified())
-				addNode(node, false);
+			if(isUdpKeyValid)
+				addNode(CID(c.getParam(0)), ip, port, udpKey, false, true);
 
 			try
 			{
@@ -700,24 +715,23 @@ namespace dht
 
 					const string& i4	= xml.getChildAttrib("I4");
 					uint16_t u4			= static_cast<uint16_t>(xml.getIntChildAttrib("U4"));
-						
+
 					// don't bother with private IPs
 					if(!Utils::isGoodIPPort(i4, u4))
 						continue;
 
 					// create verified node, it's not big risk here and allows faster bootstrapping
-					// if this node already exists in our routing table, don't update it's ip/port for security reasons
-					Node::Ptr node = DHT::getInstance()->createNode(cid, i4, u4, false, true);
-					DHT::getInstance()->addNode(node, false);
+					// if this node already exists in our routing table, don't update its ip/port for security reasons
+					addNode(cid, i4, u4, UDPKey(), false, true);
 				}
-										
+
 				xml.stepOut();
 			}
 			catch(const SimpleXMLException&)
 			{
 				// malformed node list
-			}						
-		}	
+			}
+		}
 	}
-	
+
 }

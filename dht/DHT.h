@@ -40,7 +40,7 @@ namespace dht
 		DHT(void);
 		~DHT(void);
 		
-		enum InfType { NONE = 0, PING = 1, MAKE_ONLINE = 2 };
+		enum InfType { NONE = 0, PING = 1, CONNECTION = 2 };
 		
 		/** ClientBase derived functions */
 		const string& getHubUrl() const { return NetworkName; }
@@ -57,16 +57,13 @@ namespace dht
 		void dispatch(const string& aLine, const string& ip, uint16_t port, bool isUdpKeyValid);
 		
 		/** Sends command to ip and port */
-		void send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const CID& udpKey);
+		void send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const UDPKey& udpKey);
 		
-		/** Creates new (or update existing) node which is NOT added to our routing table */
-		Node::Ptr createNode(const CID& cid, const string& ip, uint16_t port, bool update, bool isUdpKeyValid);
-
 		/** Adds node to routing table */
-		bool addNode(const Node::Ptr& node, bool makeOnline);
+		Node::Ptr addNode(const CID& cid, const string& ip, uint16_t port, const UDPKey& udpKey, bool update, bool isUdpKeyValid);
 		
 		/** Returns counts of nodes available in k-buckets */
-		size_t getNodesCount() { Lock l(cs); return bucket->getNodes().size(); }
+		size_t getNodesCount() { return RoutingTable::getNodesCount(); }
 		
 		/** Removes dead nodes */
 		void checkExpiration(uint64_t aTick);
@@ -75,7 +72,7 @@ namespace dht
 		void findFile(const string& tth, const string& token = Util::toString(Util::rand()));
 		
 		/** Sends our info to specified ip:port */
-		void info(const string& ip, uint16_t port, uint32_t type, const CID& targetCID, const CID& udpKey);
+		void info(const string& ip, uint16_t port, uint32_t type, const CID& targetCID, const UDPKey& udpKey);
 		
 		/** Sends Connect To Me request to online node */
 		void connect(const OnlineUser& ou, const string& token);
@@ -97,25 +94,28 @@ namespace dht
 		
 		/** Returns our IP got from the last firewall check */
 		string getLastExternalIP() const { return lastExternalIP; }
+		void setLastExternalIP(const string& ip) { lastExternalIP = ip; }
 		
 		void setRequestFWCheck() { Lock l(cs); requestFWCheck = true; firewalledWanted.clear(); firewalledChecks.clear(); }
+
+		void lock(const function<void()>& f) noexcept { Lock l(cs); f(); } ;
 				
 	private:
 		/** Classes that can access to my private members */
 		friend class Singleton<DHT>;
 		friend class SearchManager;
 		
-		void handle(AdcCommand::INF, const Node::Ptr& node, AdcCommand& c) noexcept;	// user's info
-		void handle(AdcCommand::SCH, const Node::Ptr& node, AdcCommand& c) noexcept;	// incoming search request
-		void handle(AdcCommand::RES, const Node::Ptr& node, AdcCommand& c) noexcept;	// incoming search result
-		void handle(AdcCommand::PUB, const Node::Ptr& node, AdcCommand& c) noexcept;	// incoming publish request
-		void handle(AdcCommand::CTM, const Node::Ptr& node, AdcCommand& c) noexcept;	// connection request
-		void handle(AdcCommand::RCM, const Node::Ptr& node, AdcCommand& c) noexcept;	// reverse connection request
-		void handle(AdcCommand::STA, const Node::Ptr& node, AdcCommand& c) noexcept;	// status message
-		void handle(AdcCommand::PSR, const Node::Ptr& node, AdcCommand& c) noexcept;	// partial file request
-		void handle(AdcCommand::MSG, const Node::Ptr& node, AdcCommand& c) noexcept; // private message
-		void handle(AdcCommand::GET, const Node::Ptr& node, AdcCommand& c) noexcept;
-		void handle(AdcCommand::SND, const Node::Ptr& node, AdcCommand& c) noexcept;
+		void handle(AdcCommand::INF, const string& ip, uint16_t port, const UDPKey& udpKey, bool isUdpKeyValid, AdcCommand& c) noexcept;	// user's info
+		void handle(AdcCommand::SCH, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept;	// incoming search request
+		void handle(AdcCommand::RES, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept;	// incoming search result
+		void handle(AdcCommand::PUB, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept;	// incoming publish request
+		void handle(AdcCommand::CTM, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept;	// connection request
+		void handle(AdcCommand::RCM, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept;	// reverse connection request
+		void handle(AdcCommand::STA, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept;	// status message
+		void handle(AdcCommand::PSR, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept;	// partial file request
+		void handle(AdcCommand::MSG, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept; // private message
+		void handle(AdcCommand::GET, const string& ip, uint16_t port, const UDPKey& udpKey, AdcCommand& c) noexcept;
+		void handle(AdcCommand::SND, const string& ip, uint16_t port, const UDPKey& udpKey, bool isUdpKeyValid, AdcCommand& c) noexcept;
 			
 		/** Unsupported command */
 		template<typename T> void handle(T, const Node::Ptr&user, AdcCommand&) { }
@@ -124,7 +124,7 @@ namespace dht
 		UDPSocket	socket;
 		
 		/** Routing table */
-		KBucket*	bucket;
+		RoutingTable*	bucket;
 		
 		/** Lock to routing table */
 		CriticalSection	cs;

@@ -76,10 +76,10 @@ namespace dht
 		void findStore(const string& tth, int64_t size, bool partial);		
 		
 		/** Process incoming search request */
-		void processSearchRequest(const Node::Ptr& node, const AdcCommand& cmd);
+		void processSearchRequest(const string& ip, uint16_t port, const UDPKey& udpKey, const AdcCommand& cmd);
 
 		/** Process incoming search result */
-		void processSearchResult(const Node::Ptr& node, const AdcCommand& cmd);
+		void processSearchResult(const AdcCommand& cmd);
 		
 		/** Processes all running searches and removes long-time ones */
 		void processSearches();

@@ -16,12 +16,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "StdAfx.h"
+#include "stdafx.h"
 
 #include "Constants.h"
 #include "ConnectionManager.h"
 #include "DHT.h"
 
+#include "../client/AdcCommand.h"
 #include "../client/ConnectionManager.h"
 #include "../client/CryptoManager.h"
 
@@ -51,7 +52,7 @@ namespace dht
 		{
 			// do handshake at first
 			DHT::getInstance()->info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())), 
-				DHT::PING | DHT::MAKE_ONLINE, node->getUser()->getCID(), node->getUdpKey());
+				DHT::PING | DHT::CONNECTION, node->getUser()->getCID(), node->getUdpKey());
 			return;
 		}
 		
@@ -78,15 +79,6 @@ namespace dht
 	 */
 	void ConnectionManager::connectToMe(const Node::Ptr& node, const AdcCommand& cmd)
 	{
-		// don't allow connection if we didn't proceed a handshake
-		if(!node->isOnline())
-		{
-			// do handshake at first
-			DHT::getInstance()->info(node->getIdentity().getIp(), static_cast<uint16_t>(Util::toInt(node->getIdentity().getUdpPort())),
-				DHT::PING | DHT::MAKE_ONLINE, node->getUser()->getCID(), node->getUdpKey());
-			return;
-		}
-	
 		const string& protocol = cmd.getParam(1);
 		const string& port = cmd.getParam(2);
 		const string& token = cmd.getParam(3);
@@ -127,10 +119,6 @@ namespace dht
 	 */
 	void ConnectionManager::revConnectToMe(const Node::Ptr& node, const AdcCommand& cmd)
 	{
-		// don't allow connection if we didn't proceed a handshake
-		//if(!node->isOnline())
-		//	return;
-
 		// this is valid for active-passive connections only
 		if(!ClientManager::getInstance()->isActive())
 			return;

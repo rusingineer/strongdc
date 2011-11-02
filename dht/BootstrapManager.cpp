@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "BootstrapManager.h"
 
 #include "Constants.h"
@@ -125,6 +125,7 @@ namespace dht
 	
 	void BootstrapManager::addBootstrapNode(const string& ip, uint16_t udpPort, const CID& targetCID, const UDPKey& udpKey)
 	{
+		Lock l(cs);
 		BootstrapNode node = { ip, udpPort, targetCID, udpKey };
 		bootstrapNodes.push_back(node);
 	}
@@ -140,16 +141,13 @@ namespace dht
 			cmd.addParam("dht.xml");
 			
 			const BootstrapNode& node = bootstrapNodes.front();
-
-			CID key;
-			// if our external IP changed from the last time, we can't encrypt packet with this key
-			// this won't probably work now
-			if(DHT::getInstance()->getLastExternalIP() == node.udpKey.ip)
-				key = node.udpKey.key;
-
-			DHT::getInstance()->send(cmd, node.ip, node.udpPort, node.cid, key);
+			DHT::getInstance()->send(cmd, node.ip, node.udpPort, node.cid, node.udpKey);
 			
 			bootstrapNodes.pop_front();
+		}
+		else
+		{
+			BootstrapManager::getInstance()->bootstrap();
 		}
 	}
 	

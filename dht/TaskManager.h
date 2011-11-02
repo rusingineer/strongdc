@@ -19,6 +19,8 @@
 #ifndef _TASKMANAGER_H
 #define _TASKMANAGER_H
 
+#include "KBucket.h"
+
 #include "../client/Singleton.h"
 #include "../client/TimerManager.h"
 
@@ -32,6 +34,11 @@ namespace dht
 		TaskManager(void);
 		~TaskManager(void);
 		
+		void start();
+
+		void addZone(RoutingTable* zone) { Lock l(cs); zones.push_back(zone); }
+		void removeZone(RoutingTable* zone) { Lock l(cs); zones.erase(remove(zones.begin(), zones.end(), zone), zones.end()); }
+
 	private:
 	
 		/** Time of publishing next file in queue */
@@ -47,6 +54,9 @@ namespace dht
 		uint64_t nextFirewallCheck;
 		
 		uint64_t lastBootstrap;
+
+		std::vector<RoutingTable*> zones;
+		CriticalSection	cs;
 		
 		// TimerManagerListener
 		void on(TimerManagerListener::Second, uint64_t aTick) noexcept;	

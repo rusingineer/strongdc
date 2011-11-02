@@ -685,8 +685,8 @@ void UploadManager::on(TimerManagerListener::Second, uint64_t aTick) noexcept {
 
 		if(!isFireball && !isFileServer) {
 			if(	((time(NULL) - Util::getStartTime()) > 10 * 24 * 60 * 60) && // > 10 days uptime
-				(Socket::getTotalUp() > 100 * 1024 * 1024 * 1024) && // > 100 GiB uploaded
-				(ShareManager::getInstance()->getSharedSize() > 1.5 * 1024 * 1024 * 1024)) // > 1.5 TiB shared
+				(Socket::getTotalUp() > 100ULL * 1024 * 1024 * 1024) && // > 100 GiB uploaded
+				(ShareManager::getInstance()->getSharedSize() > 1.5 * 1024 * 1024 * 1024 * 1024)) // > 1.5 TiB shared
 			{ 
 				isFileServer = true;
 				ClientManager::getInstance()->infoUpdated();
