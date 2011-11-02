@@ -52,10 +52,10 @@ bool Mapper_MiniUPnPc::init() {
 		url = urls.controlURL;
 		service = data.first.servicetype;
 		device = data.CIF.friendlyName;
-	}
 
-	FreeUPNPUrls(&urls);
-	freeUPNPDevlist(devices);
+		FreeUPNPUrls(&urls);
+		freeUPNPDevlist(devices);
+	}
 
 	return initialized;
 }

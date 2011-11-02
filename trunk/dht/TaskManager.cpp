@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-#include "StdAfx.h"
+#include "stdafx.h"
 
 #include "BootstrapManager.h"
 #include "DHT.h"
@@ -31,21 +31,31 @@
 namespace dht
 {
 
-	TaskManager::TaskManager(void) :
-		nextPublishTime(GET_TICK()), nextSearchTime(GET_TICK()), nextSelfLookup(GET_TICK() + 3*60*1000),
-		nextFirewallCheck(GET_TICK() + FWCHECK_TIME), lastBootstrap(0)
+	TaskManager::TaskManager(void)
 	{
-		TimerManager::getInstance()->addListener(this);
 	}
 
 	TaskManager::~TaskManager(void)
 	{
 		TimerManager::getInstance()->removeListener(this);
 	}
-	
+
+	void TaskManager::start()
+	{
+		uint64_t tick = GET_TICK();
+
+		nextPublishTime = tick;
+		nextSearchTime = tick;
+		nextSelfLookup = tick + 3*60*1000,
+		nextFirewallCheck = tick + FWCHECK_TIME, 
+		lastBootstrap = 0;
+
+		TimerManager::getInstance()->addListener(this);
+	}
+
 	// TimerManagerListener
 	void TaskManager::on(TimerManagerListener::Second, uint64_t aTick) noexcept
-	{	
+	{
 		if(DHT::getInstance()->isConnected() && DHT::getInstance()->getNodesCount() >= K)
 		{
 			if(!DHT::getInstance()->isFirewalled() && IndexManager::getInstance()->getPublish() && aTick >= nextPublishTime)
@@ -57,43 +67,53 @@ namespace dht
 		}
 		else
 		{
-			if(aTick - lastBootstrap > 15000 || (DHT::getInstance()->getNodesCount() == 0 && aTick - lastBootstrap >= 2000))
+			if(aTick - lastBootstrap > 15000 || (DHT::getInstance()->getNodesCount() < 2 * K && aTick - lastBootstrap >= 2000))
 			{
 				// bootstrap if we doesn't know any remote node
 				BootstrapManager::getInstance()->process();
 				lastBootstrap = aTick;
 			}
 		}
-		
+
 		if(aTick >= nextSearchTime)
 		{
 			SearchManager::getInstance()->processSearches();
 			nextSearchTime = aTick + SEARCH_PROCESSTIME;
 		}
-		
+
 		if(aTick >= nextSelfLookup)
 		{
 			// find myself in the network
 			SearchManager::getInstance()->findNode(ClientManager::getInstance()->getMe()->getCID());
 			nextSelfLookup = aTick + SELF_LOOKUP_TIMER;
 		}
-		
+
 		if(aTick >= nextFirewallCheck)
 		{
 			DHT::getInstance()->setRequestFWCheck();
 			nextFirewallCheck = aTick + FWCHECK_TIME;
 		}
 	}
-	
+
 	void TaskManager::on(TimerManagerListener::Minute, uint64_t aTick) noexcept
 	{
 		Utils::cleanFlood();
-		
-		// remove dead nodes
+
+		std::vector<RoutingTable*> tmp;
+
+		{
+			Lock l(cs);
+			tmp = zones;
+		}
+
+		for(auto i = tmp.begin(); i != tmp.end(); ++i)// remove dead nodes
+		{
+			// there can be a race condition and zone can already be split now (i.e. zone->bucket == NULL)
+			DHT::getInstance()->lock([&]() { (*i)->checkExpiration(aTick); });
+		}
+
 		DHT::getInstance()->checkExpiration(aTick);
 		IndexManager::getInstance()->checkExpiration(aTick);
-		
-		DHT::getInstance()->saveData();
 	}
-	
+
 }

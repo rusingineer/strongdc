@@ -23,7 +23,7 @@
 #define DCVERSIONSTRING "0.785"
 #define VERSION_URL "http://strongdc.sourceforge.net/download/version.xml"
 
-#define SVNVERSION "svn579"
+#define SVNVERSION "svn580"
 
 #ifdef _WIN64
 # define CONFIGURATION_TYPE "x86-64"

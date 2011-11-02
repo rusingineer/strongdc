@@ -43,6 +43,7 @@ namespace dht
 #define SEARCHFILE_LIFETIME			45*1000	// 45 seconds			// how long to try searching for file
 #define SEARCHSTOREFILE_LIFETIME	20*1000	// 20 seconds			// how long to try publishing a file
 #define SELF_LOOKUP_TIMER			4*60*60*1000	// 4 hours		// how often to search for self node
+#define RANDOM_LOOKUP				60*60*1000	// 1 hour			// how often to lookup for random nodes in empty buckets
 
 #define K							10								// maximum nodes in one bucket
 

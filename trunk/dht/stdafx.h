@@ -13,7 +13,6 @@ namespace dht
 {
 	using namespace dcpp;
 	using namespace std;
-	using namespace std::tr1;	
 }
 
 // TODO: reference additional headers your program requires here

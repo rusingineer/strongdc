@@ -19,6 +19,8 @@
 #ifndef _UDPSOCKET_H
 #define _UDPSOCKET_H
 
+#include "KBucket.h"
+
 #include "../client/AdcCommand.h"
 #include "../client/CID.h"
 #include "../client/FastAlloc.h"
@@ -33,7 +35,7 @@ namespace dht
 		FastAlloc<Packet>
 	{
 		/** Public constructor */
-		Packet(const string& ip_, uint16_t port_, const std::string& data_, const CID& _targetCID, const CID& _udpKey) : 
+		Packet(const string& ip_, uint16_t port_, const std::string& data_, const CID& _targetCID, const UDPKey& _udpKey) : 
 			ip(ip_), port(port_), data(data_), targetCID(_targetCID), udpKey(_udpKey)
 		{
 		}
@@ -51,7 +53,7 @@ namespace dht
 		CID targetCID;
 
 		/** Key to encrypt packet */
-		CID udpKey;
+		UDPKey udpKey;
 			
 	};
 	
@@ -72,7 +74,7 @@ namespace dht
 		uint16_t getPort() const { return port;	}
 		
 		/** Sends command to ip and port */
-		void send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const CID& udpKey);
+		void send(AdcCommand& cmd, const string& ip, uint16_t port, const CID& targetCID, const UDPKey& udpKey);
 				
 	private:
 	
@@ -109,7 +111,7 @@ namespace dht
 		void checkOutgoing(uint64_t& timer) throw(SocketException);
 
 		void compressPacket(const string& data, uint8_t* destBuf, unsigned long& destSize);
-		void encryptPacket(const CID& targetCID, const CID& udpKey, uint8_t* destBuf, unsigned long& destSize);
+		void encryptPacket(const CID& targetCID, const UDPKey& udpKey, uint8_t* destBuf, unsigned long& destSize);
 
 		bool decompressPacket(uint8_t* destBuf, unsigned long& destLen, const uint8_t* buf, size_t len);
 		bool decryptPacket(uint8_t* buf, int& len, const string& remoteIp, bool& isUdpKeyValid);
