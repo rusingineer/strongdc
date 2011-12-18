@@ -1066,7 +1066,7 @@ Download* QueueManager::getDownload(UserConnection& aSource, string& aMessage) n
 		}
 	}
 	
-	Download* d = new Download(aSource, *q, q->isSet(QueueItem::FLAG_PARTIAL_LIST) ? q->getTempTarget() : q->getTarget());
+	Download* d = new Download(aSource, *q, q->getTarget());
 	
 	userQueue.addDownload(q, d);	
 
@@ -1265,7 +1265,7 @@ void QueueManager::putDownload(Download* aDownload, bool finished, bool reportFi
 		aDownload->setFile(0);
 
 		if(aDownload->getType() == Transfer::TYPE_PARTIAL_LIST) {
-			QueueItem* q = fileQueue.find(getListPath(aDownload->getHintedUser()));
+			QueueItem* q = fileQueue.find(aDownload->getPath());
 			if(q) {
 				if(!aDownload->getPFS().empty()) {
 					if( (q->isSet(QueueItem::FLAG_DIRECTORY_DOWNLOAD) && directories.find(aDownload->getUser()) != directories.end()) ||
