@@ -125,13 +125,14 @@ void BufferedSocket::threadConnect(const string& aAddr, uint16_t aPort, uint16_t
 	while (GET_TICK() < endTime) {
 		dcdebug("threadConnect attempt to addr \"%s\"\n", aAddr.c_str());
 		try {
-			setOptions();
 			if(proxy) {
 				sock->socksConnect(aAddr, aPort, LONG_TIMEOUT);
 			} else {
 				sock->connect(aAddr, aPort);
 			}
 	
+			setOptions();
+
 			bool connSucceeded;
 			while(!(connSucceeded = sock->waitConnected(POLL_TIMEOUT)) && endTime >= GET_TICK()) {
 				if(disconnecting) return;
