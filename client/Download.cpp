@@ -87,7 +87,7 @@ AdcCommand Download::getCommand(bool zlib) const {
 	cmd.addParam(Transfer::names[getType()]);
 
 	if(getType() == TYPE_PARTIAL_LIST) { 
-		cmd.addParam(Util::toAdcFile(getPath()));
+		cmd.addParam(Util::toAdcFile(getTempTarget()));
 	} else if(getType() == TYPE_FULL_LIST) {
 		if(isSet(Download::FLAG_XML_BZ_LIST)) {
 			cmd.addParam(USER_LIST_NAME_BZ);
