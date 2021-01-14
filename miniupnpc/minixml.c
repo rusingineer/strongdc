@@ -1,10 +1,11 @@
-/* $Id: minixml.c,v 1.9 2011/02/07 13:44:57 nanard Exp $ */
-/* minixml.c : the minimum size a xml parser can be ! */
+/* $Id: minixml.c,v 1.12 2017/12/12 11:17:40 nanard Exp $ */
+/* vim: tabstop=4 shiftwidth=4 noexpandtab
+ * minixml.c : the minimum size a xml parser can be ! */
 /* Project : miniupnp
  * webpage: http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
  * Author : Thomas Bernard
 
-Copyright (c) 2005-2011, Thomas BERNARD 
+Copyright (c) 2005-2017, Thomas BERNARD
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -113,7 +114,20 @@ static void parseelt(struct xmlparser * p)
 	const char * elementname;
 	while(p->xml < (p->xmlend - 1))
 	{
-		if((p->xml)[0]=='<' && (p->xml)[1]!='?')
+		if((p->xml + 4) <= p->xmlend && (0 == memcmp(p->xml, "<!--", 4)))
+		{
+			p->xml += 3;
+			/* ignore comments */
+			do
+			{
+				p->xml++;
+				if ((p->xml + 3) >= p->xmlend)
+					return;
+			}
+			while(memcmp(p->xml, "-->", 3) != 0);
+			p->xml += 3;
+		}
+		else if((p->xml)[0]=='<' && (p->xml)[1]!='?')
 		{
 			i = 0; elementname = ++p->xml;
 			while( !IS_WHITE_SPACE(*p->xml)
@@ -148,8 +162,9 @@ static void parseelt(struct xmlparser * p)
 						if (p->xml >= p->xmlend)
 							return;
 					}
-					if(memcmp(p->xml, "<![CDATA[", 9) == 0)
-					{ 
+					/* CDATA are at least 9 + 3 characters long : <![CDATA[ ]]> */
+					if((p->xmlend >= (p->xml + (9 + 3))) && (memcmp(p->xml, "<![CDATA[", 9) == 0))
+					{
 						/* CDATA handling */
 						p->xml += 9;
 						data = p->xml;
@@ -164,21 +179,21 @@ static void parseelt(struct xmlparser * p)
 							p->datafunc(p->data, data, i);
 						while(*p->xml!='<')
 						{
-						p->xml++;
-						if (p->xml >= p->xmlend)
-							return;
-					}
+							p->xml++;
+							if (p->xml >= p->xmlend)
+								return;
+						}
 					}
 					else
 					{
-					while(*p->xml!='<')
-					{
-						i++; p->xml++;
+						while(*p->xml!='<')
+						{
+							i++; p->xml++;
 							if ((p->xml + 1) >= p->xmlend)
-							return;
-					}
+								return;
+						}
 						if(i>0 && p->datafunc && *(p->xml + 1) == '/')
-						p->datafunc(p->data, data, i);
+							p->datafunc(p->data, data, i);
 					}
 				}
 			}
