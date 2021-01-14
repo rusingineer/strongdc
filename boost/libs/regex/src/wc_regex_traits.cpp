@@ -22,6 +22,7 @@
 #include <boost/detail/workaround.hpp>
 #include <memory>
 #include <string>
+#include "internals.hpp"
 
 #if defined(_DLL_CPPLIB) && !defined(_M_CEE_PURE) && defined(_NATIVE_WCHAR_T_DEFINED) \
    && !(defined(__SGI_STL_PORT) || defined(_STLPORT_VERSION) || defined(__STD_RWCOMPILER_H__) || defined(_RWSTD_VER))\
@@ -70,7 +71,7 @@ template BOOST_REGEX_STDLIB_DECL bool __cdecl operator>(
 #include <boost/regex/config.hpp>
 #include <boost/detail/workaround.hpp>
 
-#if !BOOST_WORKAROUND(__BORLANDC__, < 0x560)
+#if !BOOST_WORKAROUND(BOOST_BORLANDC, < 0x560)
 
 #include <boost/regex/v4/c_regex_traits.hpp>
 #ifndef BOOST_NO_WREGEX
@@ -93,6 +94,19 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::t
    std::wstring result(s, L' ');
    while(s < (r = std::wcsxfrm(&*result.begin(), src.c_str(), s)))
    {
+#if defined(_CPPLIB_VER)
+      //
+      // A bug in VC11 and 12 causes the program to hang if we pass a null-string
+      // to std::strxfrm, but only for certain locales :-(
+      // Probably effects Intel and Clang or any compiler using the VC std library (Dinkumware).
+      //
+      if(r == INT_MAX)
+      {
+         result.erase();
+         result.insert(result.begin(), static_cast<wchar_t>(0));
+         return result;
+      }
+#endif
       result.append(r - s + 3, L' ');
       s = result.size();
    }
@@ -103,7 +117,7 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::t
 c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::transform_primary(const wchar_t* p1, const wchar_t* p2) 
 {
    static wchar_t s_delim;
-   static const int s_collate_type = ::boost::re_detail::find_sort_syntax(static_cast<const c_regex_traits<wchar_t>*>(0), &s_delim);
+   static const int s_collate_type = ::boost::BOOST_REGEX_DETAIL_NS::find_sort_syntax(static_cast<const c_regex_traits<wchar_t>*>(0), &s_delim);
    std::wstring result;
    //
    // What we do here depends upon the format of the sort key returned by
@@ -111,8 +125,8 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::t
    //
    switch(s_collate_type)
    {
-   case ::boost::re_detail::sort_C:
-   case ::boost::re_detail::sort_unknown:
+   case ::boost::BOOST_REGEX_DETAIL_NS::sort_C:
+   case ::boost::BOOST_REGEX_DETAIL_NS::sort_unknown:
       // the best we can do is translate to lower case, then get a regular sort key:
       {
          result.assign(p1, p2);
@@ -121,14 +135,14 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::t
          result = c_regex_traits<wchar_t>::transform(&*result.begin(), &*result.begin() + result.size());
          break;
       }
-   case ::boost::re_detail::sort_fixed:
+   case ::boost::BOOST_REGEX_DETAIL_NS::sort_fixed:
       {
          // get a regular sort key, and then truncate it:
          result = c_regex_traits<wchar_t>::transform(&*result.begin(), &*result.begin() + result.size());
          result.erase(s_delim);
          break;
       }
-   case ::boost::re_detail::sort_delim:
+   case ::boost::BOOST_REGEX_DETAIL_NS::sort_delim:
          // get a regular sort key, and then truncate everything after the delim:
          result = c_regex_traits<wchar_t>::transform(&*result.begin(), &*result.begin() + result.size());
          if(result.size() && (result[0] == s_delim))
@@ -146,26 +160,6 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::t
       result = std::wstring(1, char(0));
    return result;
 }
-
-enum
-{
-   char_class_space=1<<0, 
-   char_class_print=1<<1, 
-   char_class_cntrl=1<<2, 
-   char_class_upper=1<<3, 
-   char_class_lower=1<<4,
-   char_class_alpha=1<<5, 
-   char_class_digit=1<<6, 
-   char_class_punct=1<<7, 
-   char_class_xdigit=1<<8,
-   char_class_alnum=char_class_alpha|char_class_digit, 
-   char_class_graph=char_class_alnum|char_class_punct,
-   char_class_blank=1<<9,
-   char_class_word=1<<10,
-   char_class_unicode=1<<11,
-   char_class_horizontal=1<<12,
-   char_class_vertical=1<<13
-};
 
 c_regex_traits<wchar_t>::char_class_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_classname(const wchar_t* p1, const wchar_t* p2) 
 {
@@ -195,13 +189,13 @@ c_regex_traits<wchar_t>::char_class_type BOOST_REGEX_CALL c_regex_traits<wchar_t
       char_class_xdigit,
    };
 
-   int idx = ::boost::re_detail::get_default_class_id(p1, p2);
+   int idx = ::boost::BOOST_REGEX_DETAIL_NS::get_default_class_id(p1, p2);
    if(idx < 0)
    {
       std::wstring s(p1, p2);
       for(std::wstring::size_type i = 0; i < s.size(); ++i)
          s[i] = (std::towlower)(s[i]);
-      idx = ::boost::re_detail::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
+      idx = ::boost::BOOST_REGEX_DETAIL_NS::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
    }
    BOOST_ASSERT(idx+1 < static_cast<int>(sizeof(masks) / sizeof(masks[0])));
    return masks[idx+1];
@@ -219,18 +213,18 @@ bool BOOST_REGEX_CALL c_regex_traits<wchar_t>::isctype(wchar_t c, char_class_typ
       || ((mask & char_class_digit) && (std::iswdigit)(c))
       || ((mask & char_class_punct) && (std::iswpunct)(c))
       || ((mask & char_class_xdigit) && (std::iswxdigit)(c))
-      || ((mask & char_class_blank) && (std::iswspace)(c) && !::boost::re_detail::is_separator(c))
+      || ((mask & char_class_blank) && (std::iswspace)(c) && !::boost::BOOST_REGEX_DETAIL_NS::is_separator(c))
       || ((mask & char_class_word) && (c == '_'))
       || ((mask & char_class_unicode) && (c & ~static_cast<wchar_t>(0xff)))
-      || ((mask & char_class_vertical) && (::boost::re_detail::is_separator(c) || (c == L'\v')))
-      || ((mask & char_class_horizontal) && (std::iswspace)(c) && !::boost::re_detail::is_separator(c) && (c != L'\v'));
+      || ((mask & char_class_vertical) && (::boost::BOOST_REGEX_DETAIL_NS::is_separator(c) || (c == L'\v')))
+      || ((mask & char_class_horizontal) && (std::iswspace)(c) && !::boost::BOOST_REGEX_DETAIL_NS::is_separator(c) && (c != L'\v'));
 }
 
 c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_collatename(const wchar_t* p1, const wchar_t* p2) 
 {
 #if !defined(BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS)\
                && !BOOST_WORKAROUND(BOOST_MSVC, < 1300)\
-               && !BOOST_WORKAROUND(__BORLANDC__, <= 0x0551)
+               && !BOOST_WORKAROUND(BOOST_BORLANDC, <= 0x0551)
    std::string name(p1, p2);
 #else
    std::string name;
@@ -238,10 +232,10 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::l
    while(p0 != p2)
       name.append(1, char(*p0++));
 #endif
-   name = ::boost::re_detail::lookup_default_collate_name(name);
+   name = ::boost::BOOST_REGEX_DETAIL_NS::lookup_default_collate_name(name);
 #if !defined(BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS)\
                && !BOOST_WORKAROUND(BOOST_MSVC, < 1300)\
-               && !BOOST_WORKAROUND(__BORLANDC__, <= 0x0551)
+               && !BOOST_WORKAROUND(BOOST_BORLANDC, <= 0x0551)
    if(name.size())
       return string_type(name.begin(), name.end());
 #else
@@ -263,7 +257,7 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::l
 
 int BOOST_REGEX_CALL c_regex_traits<wchar_t>::value(wchar_t c, int radix) 
 {
-#ifdef __BORLANDC__
+#ifdef BOOST_BORLANDC
    // workaround for broken wcstol:
    if((std::iswxdigit)(c) == 0)
       return -1;
@@ -316,5 +310,5 @@ int BOOST_REGEX_CALL c_regex_traits<unsigned short>::value(unsigned short c, int
 
 #endif // BOOST_NO_WREGEX
 
-#endif // __BORLANDC__
+#endif // BOOST_BORLANDC
 

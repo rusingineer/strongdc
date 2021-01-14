@@ -104,7 +104,11 @@ namespace boost{ namespace math{ namespace tr1{ extern "C"{
 #  include <boost/config/auto_link.hpp>
 #endif
 
-#ifndef FLT_EVAL_METHOD
+#if !(defined(BOOST_INTEL) && defined(__APPLE__)) && !(defined(__FLT_EVAL_METHOD__) && !defined(__cplusplus))
+#if !defined(FLT_EVAL_METHOD)
+typedef float float_t;
+typedef double double_t;
+#elif FLT_EVAL_METHOD == -1
 typedef float float_t;
 typedef double double_t;
 #elif FLT_EVAL_METHOD == 0
@@ -116,6 +120,7 @@ typedef double double_t;
 #else
 typedef long double float_t;
 typedef long double double_t;
+#endif
 #endif
 
 // C99 Functions:
@@ -668,7 +673,7 @@ inline long double nexttoward BOOST_PREVENT_MACRO_SUBSTITUTION(long double x, lo
 { return boost::math::tr1::nexttowardl BOOST_PREVENT_MACRO_SUBSTITUTION(x, y); }
 template <class T1, class T2>
 inline typename tools::promote_args<T1, T2>::type nexttoward BOOST_PREVENT_MACRO_SUBSTITUTION(T1 x, T2 y)
-{ return boost::math::tr1::nexttoward BOOST_PREVENT_MACRO_SUBSTITUTION(static_cast<typename tools::promote_args<T1, T2>::type>(x), static_cast<long double>(y)); }
+{ return static_cast<typename tools::promote_args<T1, T2>::type>(boost::math::tr1::nexttoward BOOST_PREVENT_MACRO_SUBSTITUTION(static_cast<typename tools::promote_args<T1, T2>::type>(x), static_cast<long double>(y))); }
 #if 0
 double remainder BOOST_PREVENT_MACRO_SUBSTITUTION(double x, double y);
 float remainderf BOOST_PREVENT_MACRO_SUBSTITUTION(float x, float y);

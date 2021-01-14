@@ -3,12 +3,12 @@
  * Copyright (c) 2004
  * John Maddock
  *
- * Use, modification and distribution are subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution are subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
- 
+
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         regex_traits_defaults.hpp
@@ -30,12 +30,16 @@
 #pragma warning(pop)
 #endif
 
+#include <boost/regex/config.hpp>
+
 #ifndef BOOST_REGEX_SYNTAX_TYPE_HPP
 #include <boost/regex/v4/syntax_type.hpp>
 #endif
 #ifndef BOOST_REGEX_ERROR_TYPE_HPP
 #include <boost/regex/v4/error_type.hpp>
 #endif
+#include <boost/type_traits/make_unsigned.hpp>
+#include <boost/utility/enable_if.hpp>
 
 #ifdef BOOST_NO_STDC_NAMESPACE
 namespace std{
@@ -43,7 +47,7 @@ namespace std{
 }
 #endif
 
-namespace boost{ namespace re_detail{
+namespace boost{ namespace BOOST_REGEX_DETAIL_NS{
 
 
 //
@@ -51,7 +55,10 @@ namespace boost{ namespace re_detail{
 //
 template <class charT>
 inline bool is_extended(charT c)
-{ return c > 256; }
+{
+   typedef typename make_unsigned<charT>::type unsigned_type; 
+   return (sizeof(charT) > 1) && (static_cast<unsigned_type>(c) >= 256u); 
+}
 inline bool is_extended(char)
 { return false; }
 
@@ -85,7 +92,7 @@ inline bool is_combining<unsigned char>(unsigned char)
    return false;
 }
 #if !defined(__hpux) && !defined(__WINSCW__) // can't use WCHAR_MAX/MIN in pp-directives
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
 template<>
 inline bool is_combining<wchar_t>(wchar_t c)
 {
@@ -115,11 +122,11 @@ template <class charT>
 inline bool is_separator(charT c)
 {
    return BOOST_REGEX_MAKE_BOOL(
-      (c == static_cast<charT>('\n')) 
-      || (c == static_cast<charT>('\r')) 
-      || (c == static_cast<charT>('\f')) 
-      || (static_cast<boost::uint16_t>(c) == 0x2028u) 
-      || (static_cast<boost::uint16_t>(c) == 0x2029u) 
+      (c == static_cast<charT>('\n'))
+      || (c == static_cast<charT>('\r'))
+      || (c == static_cast<charT>('\f'))
+      || (static_cast<boost::uint16_t>(c) == 0x2028u)
+      || (static_cast<boost::uint16_t>(c) == 0x2029u)
       || (static_cast<boost::uint16_t>(c) == 0x85u));
 }
 template <>
@@ -134,7 +141,7 @@ inline bool is_separator<char>(char c)
 BOOST_REGEX_DECL std::string BOOST_REGEX_CALL lookup_default_collate_name(const std::string& name);
 
 //
-// get the state_id of a character clasification, the individual
+// get the state_id of a character classification, the individual
 // traits classes then transform that state_id into a bitmask:
 //
 template <class charT>
@@ -153,7 +160,7 @@ struct character_pointer_range
       // calling std::equal, but there is no other algorithm available:
       // not even a non-standard MS one.  So forward to unchecked_equal
       // in the MS case.
-      return ((p2 - p1) == (r.p2 - r.p1)) && re_detail::equal(p1, p2, r.p1);
+      return ((p2 - p1) == (r.p2 - r.p1)) && BOOST_REGEX_DETAIL_NS::equal(p1, p2, r.p1);
    }
 };
 template <class charT>
@@ -177,7 +184,7 @@ int get_default_class_id(const charT* p1, const charT* p2)
       'x', 'd', 'i', 'g', 'i', 't',
    };
 
-   static const character_pointer_range<charT> ranges[21] = 
+   static const character_pointer_range<charT> ranges[21] =
    {
       {data+0, data+5,}, // alnum
       {data+5, data+10,}, // alpha
@@ -201,9 +208,9 @@ int get_default_class_id(const charT* p1, const charT* p2)
       {data+63, data+67,}, // word
       {data+67, data+73,}, // xdigit
    };
-   static const character_pointer_range<charT>* ranges_begin = ranges;
-   static const character_pointer_range<charT>* ranges_end = ranges + (sizeof(ranges)/sizeof(ranges[0]));
-   
+   const character_pointer_range<charT>* ranges_begin = ranges;
+   const character_pointer_range<charT>* ranges_end = ranges + (sizeof(ranges)/sizeof(ranges[0]));
+
    character_pointer_range<charT> t = { p1, p2, };
    const character_pointer_range<charT>* p = std::lower_bound(ranges_begin, ranges_end, t);
    if((p != ranges_end) && (t == *p))
@@ -234,7 +241,7 @@ inline std::ptrdiff_t global_length<char>(const char* p)
 template<>
 inline std::ptrdiff_t global_length<wchar_t>(const wchar_t* p)
 {
-   return (std::wcslen)(p);
+   return (std::ptrdiff_t)(std::wcslen)(p);
 }
 #endif
 template <class charT>
@@ -298,13 +305,14 @@ int global_value(charT c)
    return -1;
 }
 template <class charT, class traits>
-int global_toi(const charT*& p1, const charT* p2, int radix, const traits& t)
+boost::intmax_t global_toi(const charT*& p1, const charT* p2, int radix, const traits& t)
 {
    (void)t; // warning suppression
-   int next_value = t.value(*p1, radix);
+   boost::intmax_t limit = (std::numeric_limits<boost::intmax_t>::max)() / radix;
+   boost::intmax_t next_value = t.value(*p1, radix);
    if((p1 == p2) || (next_value < 0) || (next_value >= radix))
       return -1;
-   int result = 0;
+   boost::intmax_t result = 0;
    while(p1 != p2)
    {
       next_value = t.value(*p1, radix);
@@ -313,48 +321,50 @@ int global_toi(const charT*& p1, const charT* p2, int radix, const traits& t)
       result *= radix;
       result += next_value;
       ++p1;
+      if (result > limit)
+         return -1;
    }
    return result;
 }
 
 template <class charT>
-inline const charT* get_escape_R_string()
+inline typename boost::enable_if_c<(sizeof(charT) > 1), const charT*>::type get_escape_R_string()
 {
 #ifdef BOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable:4309 4245)
 #endif
-   static const charT e1[] = { '(', '?', '>', '\x0D', '\x0A', '?', 
-      '|', '[', '\x0A', '\x0B', '\x0C', '\x85', '\\', 'x', '{', '2', '0', '2', '8', '}', 
-                '\\', 'x', '{', '2', '0', '2', '9', '}', ']', ')', '\0' };
-   static const charT e2[] = { '(', '?', '>', '\x0D', '\x0A', '?', 
-      '|', '[', '\x0A', '\x0B', '\x0C', '\x85', ']', ')', '\0' };
+   static const charT e1[] = { '(', '?', '-', 'x', ':', '(', '?', '>', '\x0D', '\x0A', '?',
+      '|', '[', '\x0A', '\x0B', '\x0C', static_cast<charT>(0x85), static_cast<charT>(0x2028),
+      static_cast<charT>(0x2029), ']', ')', ')', '\0' };
+   static const charT e2[] = { '(', '?', '-', 'x', ':', '(', '?', '>', '\x0D', '\x0A', '?',
+      '|', '[', '\x0A', '\x0B', '\x0C', static_cast<charT>(0x85), ']', ')', ')', '\0' };
 
    charT c = static_cast<charT>(0x2029u);
    bool b = (static_cast<unsigned>(c) == 0x2029u);
-   
+
    return (b ? e1 : e2);
 #ifdef BOOST_MSVC
 #  pragma warning(pop)
 #endif
 }
 
-template <>
-inline const char* get_escape_R_string<char>()
+template <class charT>
+inline typename boost::disable_if_c<(sizeof(charT) > 1), const charT*>::type get_escape_R_string()
 {
 #ifdef BOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable:4309)
 #endif
-   static const char e2[] = { '(', '?', '>', '\x0D', '\x0A', '?', 
-      '|', '[', '\x0A', '\x0B', '\x0C', '\x85', ']', ')', '\0' };
+   static const charT e2[] = { '(', '?', '-', 'x', ':', '(', '?', '>', '\x0D', '\x0A', '?',
+      '|', '[', '\x0A', '\x0B', '\x0C', '\x85', ']', ')', ')', '\0' };
    return e2;
 #ifdef BOOST_MSVC
 #  pragma warning(pop)
 #endif
 }
 
-} // re_detail
+} // BOOST_REGEX_DETAIL_NS
 } // boost
 
 #ifdef BOOST_MSVC

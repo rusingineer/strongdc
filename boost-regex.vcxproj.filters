@@ -75,9 +75,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="boost\libs\thread\win32\timeconv.inl">
-      <Filter>Header Files</Filter>
-    </None>
-  </ItemGroup>
 </Project>

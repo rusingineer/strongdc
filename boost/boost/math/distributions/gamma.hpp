@@ -12,6 +12,7 @@
 
 #include <boost/math/distributions/fwd.hpp>
 #include <boost/math/special_functions/gamma.hpp>
+#include <boost/math/special_functions/digamma.hpp>
 #include <boost/math/distributions/detail/common_error_handling.hpp>
 #include <boost/math/distributions/complement.hpp>
 
@@ -73,11 +74,11 @@ public:
    typedef RealType value_type;
    typedef Policy policy_type;
 
-   gamma_distribution(RealType shape, RealType scale = 1)
-      : m_shape(shape), m_scale(scale)
+   gamma_distribution(RealType l_shape, RealType l_scale = 1)
+      : m_shape(l_shape), m_scale(l_scale)
    {
       RealType result;
-      detail::check_gamma("boost::math::gamma_distribution<%1%>::gamma_distribution", scale, shape, &result, Policy());
+      detail::check_gamma("boost::math::gamma_distribution<%1%>::gamma_distribution", l_scale, l_shape, &result, Policy());
    }
 
    RealType shape()const
@@ -334,6 +335,15 @@ template <class RealType, class Policy>
 inline RealType kurtosis(const gamma_distribution<RealType, Policy>& dist)
 {
    return kurtosis_excess(dist) + 3;
+}
+
+template <class RealType, class Policy>
+inline RealType entropy(const gamma_distribution<RealType, Policy>& dist)
+{
+   RealType k = dist.shape();
+   RealType theta = dist.scale();
+   using std::log;
+   return k + log(theta) + lgamma(k) + (1-k)*digamma(k);
 }
 
 } // namespace math

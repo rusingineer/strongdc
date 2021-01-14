@@ -71,7 +71,7 @@
 // (like others including the poisson, negative binomial & Bernoulli)
 // is strictly defined as a discrete function: only integral values of k are envisaged.
 // However because of the method of calculation using a continuous gamma function,
-// it is convenient to treat it as if a continous function,
+// it is convenient to treat it as if a continuous function,
 // and permit non-integral values of k.
 // To enforce the strict mathematical model, users should use floor or ceil functions
 // on k outside this function to ensure that k is integral.
@@ -155,7 +155,7 @@ namespace boost
         template <class RealType, class Policy>
         inline bool check_dist_and_prob(const char* function, const RealType& N, RealType p, RealType prob, RealType* result, const Policy& pol)
         {
-           if(check_dist(function, N, p, result, pol) && detail::check_probability(function, prob, result, pol) == false)
+           if((check_dist(function, N, p, result, pol) && detail::check_probability(function, prob, result, pol)) == false)
               return false;
            return true;
         }
@@ -196,7 +196,7 @@ namespace boost
          }
 
       template <class RealType, class Policy>
-      RealType quantile_imp(const binomial_distribution<RealType, Policy>& dist, const RealType& p, const RealType& q)
+      RealType quantile_imp(const binomial_distribution<RealType, Policy>& dist, const RealType& p, const RealType& q, bool comp)
       { // Quantile or Percent Point Binomial function.
         // Return the number of expected successes k,
         // for a given probability p.
@@ -233,6 +233,10 @@ namespace boost
         { // p <= pdf(dist, 0) == cdf(dist, 0)
           return 0; // So the only reasonable result is zero.
         } // And root finder would fail otherwise.
+        if(success_fraction == 1)
+        {  // our formulae break down in this case:
+           return p > 0.5f ? trials : 0;
+        }
 
         // Solve for quantile numerically:
         //
@@ -260,8 +264,8 @@ namespace boost
         boost::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
         return detail::inverse_discrete_quantile(
             dist,
-            p,
-            q,
+            comp ? q : p,
+            comp,
             guess,
             factor,
             RealType(1),
@@ -649,13 +653,13 @@ namespace boost
       template <class RealType, class Policy>
       inline RealType quantile(const binomial_distribution<RealType, Policy>& dist, const RealType& p)
       {
-         return binomial_detail::quantile_imp(dist, p, RealType(1-p));
+         return binomial_detail::quantile_imp(dist, p, RealType(1-p), false);
       } // quantile
 
       template <class RealType, class Policy>
       RealType quantile(const complemented2_type<binomial_distribution<RealType, Policy>, RealType>& c)
       {
-         return binomial_detail::quantile_imp(c.dist, RealType(1-c.param), c.param);
+         return binomial_detail::quantile_imp(c.dist, RealType(1-c.param), c.param, true);
       } // quantile
 
       template <class RealType, class Policy>
@@ -675,7 +679,7 @@ namespace boost
         // Metrika  (Metrika)  ISSN 0026-1335   CODEN MTRKA8
         // 1993, vol. 40, no3-4, pp. 185-189 (4 ref.)
 
-        // Bounds for median and 50 percetage point of binomial and negative binomial distribution
+        // Bounds for median and 50 percentage point of binomial and negative binomial distribution
         // Metrika, ISSN   0026-1335 (Print) 1435-926X (Online)
         // Volume 41, Number 1 / December, 1994, DOI   10.1007/BF01895303
          BOOST_MATH_STD_USING // ADL of std functions.

@@ -6,11 +6,12 @@
  * Boost Software License, Version 1.0. (See accompanying
  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
- * $Date: 2011-07-07 00:57:37 -0400 (Thu, 07 Jul 2011) $
+ * $Date$
  */
 
 #include "boost/date_time/iso_format.hpp"
 #include "boost/date_time/compiler_config.hpp"
+#include <boost/io/ios_state.hpp>
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -51,10 +52,13 @@ namespace date_time {
         }
         case month_as_integer: 
         { 
+          boost::io::basic_ios_fill_saver<charT> ifs(os);
           os << std::setw(2) << std::setfill(os.widen('0')) << month.as_number();
           break;
         }
-     
+        default:
+          break;
+          
       }
       return os;
     } // format_month

@@ -141,7 +141,7 @@ public:
    RR const& operator+()const
    { return *this; }
 
-   // RR compatibity:
+   // RR compatibility:
    const ::NTL::ZZ& mantissa() const
    { return m_value.mantissa(); }
    long exponent() const
@@ -763,6 +763,17 @@ namespace ntl{
          NTL::RR::precision());
    }
 
+   inline RR atan2(RR y, RR x)
+   {
+      if(x > 0)
+         return atan(y / x);
+      if(x < 0)
+      {
+         return y < 0 ? atan(y / x) - boost::math::constants::pi<RR>() : atan(y / x) + boost::math::constants::pi<RR>();
+      }
+      return y < 0 ? -boost::math::constants::half_pi<RR>() : boost::math::constants::half_pi<RR>() ;
+   }
+
    inline RR sinh(RR z)
    {
       return (expm1(z.value()) - expm1(-z.value())) / 2;
@@ -827,7 +838,7 @@ namespace ntl{
 namespace detail{
 
 template <class Policy>
-ntl::RR digamma_imp(ntl::RR x, const mpl::int_<0>* , const Policy& pol)
+ntl::RR digamma_imp(ntl::RR x, const boost::integral_constant<int, 0>* , const Policy& pol)
 {
    //
    // This handles reflection of negative arguments, and all our

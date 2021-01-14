@@ -18,6 +18,7 @@
 
 #define BOOST_REGEX_SOURCE
 #include <boost/config.hpp>
+#include <boost/assert.hpp>
 
 #ifdef BOOST_HAS_THREADS
 
@@ -27,7 +28,9 @@
 #ifndef NOMINMAX
 #  define NOMINMAX
 #endif
-#define WIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 #include <boost/static_assert.hpp>
 #endif
@@ -54,8 +57,8 @@ void scoped_static_mutex_lock::lock()
 {
    if(0 == m_have_lock)
    {
-      pthread_mutex_lock(&(m_mutex.m_mutex));
-      m_have_lock = true;
+      // Client code will throw if this fails:
+      m_have_lock = (pthread_mutex_lock(&(m_mutex.m_mutex)) == 0);
    }
 }
 
@@ -63,7 +66,10 @@ void scoped_static_mutex_lock::unlock()
 {
    if(m_have_lock)
    {
-      pthread_mutex_unlock(&(m_mutex.m_mutex));
+      // If this fails there's nothing we can do except assert,
+      // exceptions are out of the question as this code is called
+      // from the lock's destructor:
+      BOOST_VERIFY(pthread_mutex_unlock(&(m_mutex.m_mutex)) == 0);
       m_have_lock = false;
    }
 }
@@ -157,7 +163,7 @@ void scoped_static_mutex_lock::lock()
    {
        boost::call_once(static_mutex::m_once,&static_mutex::init);
       if(0 == m_plock)
-         m_plock = new boost::recursive_mutex::scoped_lock(*static_mutex::m_pmutex, boost::defer_lock);
+         m_plock = new boost::unique_lock<boost::recursive_mutex>(*static_mutex::m_pmutex, boost::defer_lock);
       m_plock->lock();
       m_have_lock = true;
    }

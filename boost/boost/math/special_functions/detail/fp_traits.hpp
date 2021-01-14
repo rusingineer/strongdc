@@ -21,10 +21,11 @@ With these techniques, the code could be simplified.
 #endif
 
 #include <cstring>
+#include <limits>
 
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/detail/endian.hpp>
+#include <boost/predef/other/endian.h>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
 
@@ -51,9 +52,9 @@ With these techniques, the code could be simplified.
          && (_GLIBCXX_USE_C99_FP_MACROS_DYNAMIC != 0))
 #     ifdef _STLP_VENDOR_CSTD
 #        if _STLPORT_VERSION >= 0x520
-#           define BOOST_FPCLASSIFY_PREFIX ::__std_alias:: 
+#           define BOOST_FPCLASSIFY_PREFIX ::__std_alias::
 #        else
-#           define BOOST_FPCLASSIFY_PREFIX ::_STLP_VENDOR_CSTD:: 
+#           define BOOST_FPCLASSIFY_PREFIX ::_STLP_VENDOR_CSTD::
 #        endif
 #     else
 #        define BOOST_FPCLASSIFY_PREFIX ::std::
@@ -84,7 +85,7 @@ namespace detail {
 
 //------------------------------------------------------------------------------
 
-/* 
+/*
 The following classes are used to tag the different methods that are used
 for floating point classification
 */
@@ -101,11 +102,11 @@ struct ieee_copy_leading_bits_tag : public ieee_tag {};
 // These helper functions are used only when numeric_limits<>
 // members are not compile time constants:
 //
-inline bool is_generic_tag_false(const generic_tag<false>&)
+inline bool is_generic_tag_false(const generic_tag<false>*)
 {
    return true;
 }
-inline bool is_generic_tag_false(...)
+inline bool is_generic_tag_false(const void*)
 {
    return false;
 }
@@ -191,7 +192,7 @@ template<> struct fp_traits_non_native<float, single_precision>
 // ieee_tag version, double (64 bits) ----------------------------------------------
 
 #if defined(BOOST_NO_INT64_T) || defined(BOOST_NO_INCLASS_MEMBER_INITIALIZATION) \
-   || defined(__BORLANDC__) || defined(__CODEGEAR__)
+   || defined(BOOST_BORLANDC) || defined(__CODEGEAR__)
 
 template<> struct fp_traits_non_native<double, double_precision>
 {
@@ -216,9 +217,9 @@ template<> struct fp_traits_non_native<double, double_precision>
 
 private:
 
-#if defined(BOOST_BIG_ENDIAN)
+#if BOOST_ENDIAN_BIG_BYTE
     BOOST_STATIC_CONSTANT(int, offset_ = 0);
-#elif defined(BOOST_LITTLE_ENDIAN)
+#elif BOOST_ENDIAN_LITTLE_BYTE
     BOOST_STATIC_CONSTANT(int, offset_ = 4);
 #else
     BOOST_STATIC_ASSERT(false);
@@ -251,7 +252,7 @@ template<> struct fp_traits_non_native<double, double_precision>
 // long double (64 bits) -------------------------------------------------------
 
 #if defined(BOOST_NO_INT64_T) || defined(BOOST_NO_INCLASS_MEMBER_INITIALIZATION)\
-   || defined(__BORLANDC__) || defined(__CODEGEAR__)
+   || defined(BOOST_BORLANDC) || defined(__CODEGEAR__)
 
 template<> struct fp_traits_non_native<long double, double_precision>
 {
@@ -276,9 +277,9 @@ template<> struct fp_traits_non_native<long double, double_precision>
 
 private:
 
-#if defined(BOOST_BIG_ENDIAN)
+#if BOOST_ENDIAN_BIG_BYTE
     BOOST_STATIC_CONSTANT(int, offset_ = 0);
-#elif defined(BOOST_LITTLE_ENDIAN)
+#elif BOOST_ENDIAN_LITTLE_BYTE
     BOOST_STATIC_CONSTANT(int, offset_ = 4);
 #else
     BOOST_STATIC_ASSERT(false);
@@ -351,6 +352,13 @@ struct fp_traits_non_native<long double, extended_double_precision>
 // the Intel extended double precision format (80 bits) and
 // the IEEE extended double precision format with 15 exponent bits (128 bits).
 
+#elif defined(__GNUC__) && (LDBL_MANT_DIG == 106)
+
+//
+// Define nothing here and fall though to generic_tag:
+// We have GCC's "double double" in effect, and any attempt
+// to handle it via bit-fiddling is pretty much doomed to fail...
+//
 
 // long double (>64 bits), PowerPC ---------------------------------------------
 
@@ -383,9 +391,9 @@ struct fp_traits_non_native<long double, extended_double_precision>
 
 private:
 
-#if defined(BOOST_BIG_ENDIAN)
+#if BOOST_ENDIAN_BIG_BYTE
     BOOST_STATIC_CONSTANT(int, offset_ = 0);
-#elif defined(BOOST_LITTLE_ENDIAN)
+#elif BOOST_ENDIAN_LITTLE_BYTE
     BOOST_STATIC_CONSTANT(int, offset_ = 12);
 #else
     BOOST_STATIC_ASSERT(false);
@@ -464,9 +472,9 @@ struct fp_traits_non_native<long double, extended_double_precision>
 
 private:
 
-#if defined(BOOST_BIG_ENDIAN)
+#if BOOST_ENDIAN_BIG_BYTE
     BOOST_STATIC_CONSTANT(int, offset_ = 0);
-#elif defined(BOOST_LITTLE_ENDIAN)
+#elif BOOST_ENDIAN_LITTLE_BYTE
     BOOST_STATIC_CONSTANT(int, offset_ = 12);
 #else
     BOOST_STATIC_ASSERT(false);
@@ -546,7 +554,11 @@ struct select_native<long double>
    && !defined(__DECCXX)\
    && !defined(__osf__) \
    && !defined(__SGI_STL_PORT) && !defined(_STLPORT_VERSION)\
-   && !defined(BOOST_MATH_DISABLE_STD_FPCLASSIFY)
+   && !defined(__FAST_MATH__)\
+   && !defined(BOOST_MATH_DISABLE_STD_FPCLASSIFY)\
+   && !defined(BOOST_INTEL)\
+   && !defined(sun)\
+   && !defined(__VXWORKS__)
 #  define BOOST_MATH_USE_STD_FPCLASSIFY
 #endif
 

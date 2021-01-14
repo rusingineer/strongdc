@@ -50,7 +50,7 @@ RealType cdf_imp(const cauchy_distribution<RealType, Policy>& dist, const RealTy
    //
    // CDF = -atan(1/x)  ; x < 0
    //
-   // So the proceedure is to calculate the cdf for -fabs(x)
+   // So the procedure is to calculate the cdf for -fabs(x)
    // using the above formula, and then subtract from 1 when required
    // to get the result.
    //
@@ -98,7 +98,7 @@ RealType quantile_imp(
    // the value p may be the probability, or its complement if complement=true.
    //
    // The procedure first performs argument reduction on p to avoid error
-   // when calculating the tangent, then calulates the distance from the
+   // when calculating the tangent, then calculates the distance from the
    // mid-point of the distribution.  This is either added or subtracted
    // from the location parameter depending on whether `complement` is true.
    //
@@ -152,13 +152,13 @@ public:
    typedef RealType value_type;
    typedef Policy policy_type;
 
-   cauchy_distribution(RealType location = 0, RealType scale = 1)
-      : m_a(location), m_hg(scale)
+   cauchy_distribution(RealType l_location = 0, RealType l_scale = 1)
+      : m_a(l_location), m_hg(l_scale)
    {
     static const char* function = "boost::math::cauchy_distribution<%1%>::cauchy_distribution";
      RealType result;
-     detail::check_location(function, location, &result, Policy());
-     detail::check_scale(function, scale, &result, Policy());
+     detail::check_location(function, l_location, &result, Policy());
+     detail::check_scale(function, l_scale, &result, Policy());
    } // cauchy_distribution
 
    RealType location()const
@@ -180,15 +180,30 @@ typedef cauchy_distribution<double> cauchy;
 template <class RealType, class Policy>
 inline const std::pair<RealType, RealType> range(const cauchy_distribution<RealType, Policy>&)
 { // Range of permissible values for random variable x.
+  if (std::numeric_limits<RealType>::has_infinity)
+  { 
+     return std::pair<RealType, RealType>(-std::numeric_limits<RealType>::infinity(), std::numeric_limits<RealType>::infinity()); // - to + infinity.
+  }
+  else
+  { // Can only use max_value.
    using boost::math::tools::max_value;
-   return std::pair<RealType, RealType>(-max_value<RealType>(), max_value<RealType>()); // - to + infinity.
+   return std::pair<RealType, RealType>(-max_value<RealType>(), max_value<RealType>()); // - to + max.
+  }
 }
 
 template <class RealType, class Policy>
 inline const std::pair<RealType, RealType> support(const cauchy_distribution<RealType, Policy>& )
 { // Range of supported values for random variable x.
    // This is range where cdf rises from 0 to 1, and outside it, the pdf is zero.
-   return std::pair<RealType, RealType>(-tools::max_value<RealType>(), tools::max_value<RealType>()); // - to + infinity.
+  if (std::numeric_limits<RealType>::has_infinity)
+  { 
+     return std::pair<RealType, RealType>(-std::numeric_limits<RealType>::infinity(), std::numeric_limits<RealType>::infinity()); // - to + infinity.
+  }
+  else
+  { // Can only use max_value.
+     using boost::math::tools::max_value;
+     return std::pair<RealType, RealType>(-tools::max_value<RealType>(), max_value<RealType>()); // - to + max.
+  }
 }
 
 template <class RealType, class Policy>
@@ -330,6 +345,13 @@ inline RealType kurtosis_excess(const cauchy_distribution<RealType, Policy>& /*d
       "The Cauchy distribution does not have a kurtosis: "
       "the only possible return value is %1%.",
       std::numeric_limits<RealType>::quiet_NaN(), Policy());
+}
+
+template <class RealType, class Policy>
+inline RealType entropy(const cauchy_distribution<RealType, Policy> & dist)
+{
+   using std::log;
+   return log(2*constants::two_pi<RealType>()*dist.scale());
 }
 
 } // namespace math

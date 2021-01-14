@@ -5,7 +5,7 @@
  * Subject to the Boost Software License, Version 1.0. 
  * (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  * Author: Jeff Garland, Bart Garst
- * $Date: 2011-07-07 00:57:37 -0400 (Thu, 07 Jul 2011) $
+ * $Date$
  */
 
 #include <map>
@@ -21,6 +21,7 @@
 #include <boost/date_time/time_zone_names.hpp>
 #include <boost/date_time/time_zone_base.hpp>
 #include <boost/date_time/time_parsing.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace boost {
   namespace date_time {
@@ -170,8 +171,9 @@ namespace boost {
       /*! May throw bad_field_count exceptions */
       void load_from_stream(std::istream &in)
       {
-        std::string  buff;
+        std::string buff;
         while( std::getline(in, buff)) {
+          boost::trim_right(buff);
           parse_string(buff);
         }
       }
@@ -180,7 +182,6 @@ namespace boost {
       /*! May throw data_not_accessible, or bad_field_count exceptions */
       void load_from_file(const std::string& pathspec)
       {
-        string_type in_str;
         std::string  buff;
         
         std::ifstream ifs(pathspec.c_str());
@@ -244,7 +245,6 @@ namespace boost {
       //! parses rule specs for transition day rules
       rule_type* parse_rules(const string_type& sr, const string_type& er) const
       {
-        using namespace gregorian;
         // start and end rule are of the same type, 
         // both are included here for readability
         typedef typename rule_type::start_rule start_rule;
@@ -261,8 +261,12 @@ namespace boost {
         e_wn = get_week_num(e_nth);
         
         
-        return new rule_type(start_rule(s_wn, s_d, s_m),
-                             end_rule(e_wn, e_d, e_m));
+        return new rule_type(start_rule(s_wn,
+                                        static_cast<unsigned short>(s_d),
+                                        static_cast<unsigned short>(s_m)),
+                             end_rule(e_wn,
+                                      static_cast<unsigned short>(e_d),
+                                      static_cast<unsigned short>(e_m)));
       }
       //! helper function for parse_rules()
       week_num get_week_num(int nth) const
@@ -301,7 +305,15 @@ namespace boost {
         const char_type sep_char[] = { ';', '\0'};
         char_separator_type sep(sep_char);
         tokenizer tokens(rule, sep); // 3 fields
-        
+
+        if ( std::distance ( tokens.begin(), tokens.end ()) != 3 ) {
+          std::ostringstream msg;
+          msg << "Expecting 3 fields, got " 
+              << std::distance ( tokens.begin(), tokens.end ()) 
+              << " fields in line: " << rule;
+          boost::throw_exception(bad_field_count(msg.str()));
+        }
+
         tokenizer_iterator tok_iter = tokens.begin(); 
         nth = std::atoi(tok_iter->c_str()); ++tok_iter;
         d   = std::atoi(tok_iter->c_str()); ++tok_iter;

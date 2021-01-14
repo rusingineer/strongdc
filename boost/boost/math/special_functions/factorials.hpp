@@ -10,15 +10,14 @@
 #pragma once
 #endif
 
-#include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/math_fwd.hpp>
+#include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/detail/unchecked_factorial.hpp>
 #include <boost/array.hpp>
 #ifdef BOOST_MSVC
 #pragma warning(push) // Temporary until lexical cast fixed.
 #pragma warning(disable: 4127 4701)
 #endif
-#include <boost/lexical_cast.hpp>
 #ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
@@ -142,9 +141,21 @@ T rising_factorial_imp(T x, int n, const Policy& pol)
    }
    if(n == 0)
       return 1;
+   if(x == 0)
+   {
+      if(n < 0)
+         return -boost::math::tgamma_delta_ratio(x + 1, static_cast<T>(-n), pol);
+      else
+         return 0;
+   }
+   if((x < 1) && (x + n < 0))
+   {
+      T val = boost::math::tgamma_delta_ratio(1 - x, static_cast<T>(-n), pol);
+      return (n & 1) ? T(-val) : val;
+   }
    //
    // We don't optimise this for small n, because
-   // tgamma_delta_ratio is alreay optimised for that
+   // tgamma_delta_ratio is already optimised for that
    // use case:
    //
    return 1 / boost::math::tgamma_delta_ratio(x, static_cast<T>(n), pol);
@@ -167,7 +178,24 @@ inline T falling_factorial_imp(T x, unsigned n, const Policy& pol)
    }
    if(n == 0)
       return 1;
-   if(x < n-1)
+   if(x < 0.5f)
+   {
+      //
+      // 1 + x below will throw away digits, so split up calculation:
+      //
+      if(n > max_factorial<T>::value - 2)
+      {
+         // If the two end of the range are far apart we have a ratio of two very large
+         // numbers, split the calculation up into two blocks:
+         T t1 = x * boost::math::falling_factorial(x - 1, max_factorial<T>::value - 2, pol);
+         T t2 = boost::math::falling_factorial(x - max_factorial<T>::value + 1, n - max_factorial<T>::value + 1, pol);
+         if(tools::max_value<T>() / fabs(t1) < fabs(t2))
+            return boost::math::sign(t1) * boost::math::sign(t2) * policies::raise_overflow_error<T>("boost::math::falling_factorial<%1%>", 0, pol);
+         return t1 * t2;
+      }
+      return x * boost::math::falling_factorial(x - 1, n - 1, pol);
+   }
+   if(x <= n - 1)
    {
       //
       // x+1-n will be negative and tgamma_delta_ratio won't
@@ -189,7 +217,7 @@ inline T falling_factorial_imp(T x, unsigned n, const Policy& pol)
    // Simple case: just the ratio of two
    // (positive argument) gamma functions.
    // Note that we don't optimise this for small n,
-   // because tgamma_delta_ratio is alreay optimised
+   // because tgamma_delta_ratio is already optimised
    // for that use case:
    //
    return boost::math::tgamma_delta_ratio(x + 1, -static_cast<T>(n), pol);

@@ -6,10 +6,10 @@
 #ifndef BOOST_MATH_TUPLE_HPP_INCLUDED
 #  define BOOST_MATH_TUPLE_HPP_INCLUDED
 #  include <boost/config.hpp>
+#  include <boost/detail/workaround.hpp>
+#  include <boost/math/tools/cxx03_warn.hpp>
 
-#include <boost/tr1/detail/config.hpp>  // for BOOST_HAS_TR1_TUPLE
-
-#ifndef BOOST_NO_0X_HDR_TUPLE
+#if !defined(BOOST_NO_CXX11_HDR_TUPLE) && !BOOST_WORKAROUND(BOOST_GCC_VERSION, < 40500)
 
 #include <tuple>
 
@@ -29,27 +29,7 @@ using ::std::tuple_element;
 
 }}
 
-#elif defined(BOOST_HAS_TR1_TUPLE)
-
-#include <tuple>
-
-namespace boost{ namespace math{
-
-using ::std::tr1::tuple;
-
-// [6.1.3.2] Tuple creation functions
-using ::std::tr1::ignore;
-using ::std::tr1::make_tuple;
-using ::std::tr1::tie;
-using ::std::tr1::get;
-
-// [6.1.3.3] Tuple helper classes
-using ::std::tr1::tuple_size;
-using ::std::tr1::tuple_element;
-
-}}
-
-#elif (defined(__BORLANDC__) && (__BORLANDC__ <= 0x600)) || (defined(_MSC_VER) && (_MSC_VER < 1310)) || defined(__IBMCPP__)
+#elif (defined(BOOST_BORLANDC) && (BOOST_BORLANDC <= 0x600)) || defined(__IBMCPP__)
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
@@ -77,7 +57,7 @@ struct tuple_element
    typedef typename boost::tuples::element<I,T>::type type;
 };
 
-#if !BOOST_WORKAROUND(__BORLANDC__, < 0x0582)
+#if !BOOST_WORKAROUND(BOOST_BORLANDC, < 0x0582)
 // [6.1.3.4] Element access
 using ::boost::get;
 #endif

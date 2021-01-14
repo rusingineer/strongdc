@@ -21,8 +21,9 @@
 
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
+#include "internals.hpp"
 
-#if !BOOST_WORKAROUND(__BORLANDC__, < 0x560)
+#if !BOOST_WORKAROUND(BOOST_BORLANDC, < 0x560)
 
 #include <boost/regex/v4/c_regex_traits.hpp>
 #include <boost/regex/v4/primary_transform.hpp>
@@ -53,6 +54,19 @@ c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transfo
    std::string src(p1, p2);
    while(s < (r = std::strxfrm(&*result.begin(), src.c_str(), s)))
    {
+#if defined(_CPPLIB_VER)
+      //
+      // A bug in VC11 and 12 causes the program to hang if we pass a null-string
+      // to std::strxfrm, but only for certain locales :-(
+      // Probably effects Intel and Clang or any compiler using the VC std library (Dinkumware).
+      //
+      if(r == INT_MAX)
+      {
+         result.erase();
+         result.insert(result.begin(), static_cast<char>(0));
+         return result;
+      }
+#endif
       result.append(r - s + 3, ' ');
       s = result.size();
    }
@@ -63,7 +77,7 @@ c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transfo
 c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transform_primary(const char* p1, const char* p2)
 {
    static char s_delim;
-   static const int s_collate_type = ::boost::re_detail::find_sort_syntax(static_cast<c_regex_traits<char>*>(0), &s_delim);
+   static const int s_collate_type = ::boost::BOOST_REGEX_DETAIL_NS::find_sort_syntax(static_cast<c_regex_traits<char>*>(0), &s_delim);
    std::string result;
    //
    // What we do here depends upon the format of the sort key returned by
@@ -71,8 +85,8 @@ c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transfo
    //
    switch(s_collate_type)
    {
-   case ::boost::re_detail::sort_C:
-   case ::boost::re_detail::sort_unknown:
+   case ::boost::BOOST_REGEX_DETAIL_NS::sort_C:
+   case ::boost::BOOST_REGEX_DETAIL_NS::sort_unknown:
       // the best we can do is translate to lower case, then get a regular sort key:
       {
          result.assign(p1, p2);
@@ -81,14 +95,14 @@ c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transfo
          result = transform(&*result.begin(), &*result.begin() + result.size());
          break;
       }
-   case ::boost::re_detail::sort_fixed:
+   case ::boost::BOOST_REGEX_DETAIL_NS::sort_fixed:
       {
          // get a regular sort key, and then truncate it:
          result = transform(p1, p2);
          result.erase(s_delim);
          break;
       }
-   case ::boost::re_detail::sort_delim:
+   case ::boost::BOOST_REGEX_DETAIL_NS::sort_delim:
          // get a regular sort key, and then truncate everything after the delim:
          result = transform(p1, p2);
          if(result.size() && (result[0] == s_delim))
@@ -106,26 +120,6 @@ c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transfo
       result = std::string(1, char(0));
    return result;
 }
-
-enum
-{
-   char_class_space=1<<0, 
-   char_class_print=1<<1, 
-   char_class_cntrl=1<<2, 
-   char_class_upper=1<<3, 
-   char_class_lower=1<<4,
-   char_class_alpha=1<<5, 
-   char_class_digit=1<<6, 
-   char_class_punct=1<<7, 
-   char_class_xdigit=1<<8,
-   char_class_alnum=char_class_alpha|char_class_digit, 
-   char_class_graph=char_class_alnum|char_class_punct,
-   char_class_blank=1<<9,
-   char_class_word=1<<10,
-   char_class_unicode=1<<11,
-   char_class_horizontal=1<<12,
-   char_class_vertical=1<<13
-};
 
 c_regex_traits<char>::char_class_type BOOST_REGEX_CALL c_regex_traits<char>::lookup_classname(const char* p1, const char* p2)
 {
@@ -155,15 +149,15 @@ c_regex_traits<char>::char_class_type BOOST_REGEX_CALL c_regex_traits<char>::loo
       char_class_xdigit,
    };
 
-   int idx = ::boost::re_detail::get_default_class_id(p1, p2);
+   int idx = ::boost::BOOST_REGEX_DETAIL_NS::get_default_class_id(p1, p2);
    if(idx < 0)
    {
       std::string s(p1, p2);
       for(std::string::size_type i = 0; i < s.size(); ++i)
          s[i] = static_cast<char>((std::tolower)(static_cast<unsigned char>(s[i])));
-      idx = ::boost::re_detail::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
+      idx = ::boost::BOOST_REGEX_DETAIL_NS::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
    }
-   BOOST_ASSERT(std::size_t(idx+1) < sizeof(masks) / sizeof(masks[0]));
+   BOOST_ASSERT(std::size_t(idx) + 1u < sizeof(masks) / sizeof(masks[0]));
    return masks[idx+1];
 }
 
@@ -179,16 +173,16 @@ bool BOOST_REGEX_CALL c_regex_traits<char>::isctype(char c, char_class_type mask
       || ((mask & char_class_digit) && (std::isdigit)(static_cast<unsigned char>(c)))
       || ((mask & char_class_punct) && (std::ispunct)(static_cast<unsigned char>(c)))
       || ((mask & char_class_xdigit) && (std::isxdigit)(static_cast<unsigned char>(c)))
-      || ((mask & char_class_blank) && (std::isspace)(static_cast<unsigned char>(c)) && !::boost::re_detail::is_separator(c))
+      || ((mask & char_class_blank) && (std::isspace)(static_cast<unsigned char>(c)) && !::boost::BOOST_REGEX_DETAIL_NS::is_separator(c))
       || ((mask & char_class_word) && (c == '_'))
-      || ((mask & char_class_vertical) && (::boost::re_detail::is_separator(c) || (c == '\v')))
-      || ((mask & char_class_horizontal) && (std::isspace)(static_cast<unsigned char>(c)) && !::boost::re_detail::is_separator(c) && (c != '\v'));
+      || ((mask & char_class_vertical) && (::boost::BOOST_REGEX_DETAIL_NS::is_separator(c) || (c == '\v')))
+      || ((mask & char_class_horizontal) && (std::isspace)(static_cast<unsigned char>(c)) && !::boost::BOOST_REGEX_DETAIL_NS::is_separator(c) && (c != '\v'));
 }
 
 c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::lookup_collatename(const char* p1, const char* p2)
 {
    std::string s(p1, p2);
-   s = ::boost::re_detail::lookup_default_collate_name(s);
+   s = ::boost::BOOST_REGEX_DETAIL_NS::lookup_default_collate_name(s);
    if(s.empty() && (p2-p1 == 1))
       s.append(1, *p1);
    return s;

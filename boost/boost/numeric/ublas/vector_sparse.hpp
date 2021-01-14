@@ -13,6 +13,31 @@
 #ifndef _BOOST_UBLAS_VECTOR_SPARSE_
 #define _BOOST_UBLAS_VECTOR_SPARSE_
 
+#include <boost/config.hpp>
+
+// In debug mode, MSCV enables iterator debugging, which additional checks are
+// executed for consistency. So, when two iterators are compared, it is tested
+// that they point to elements of the same container. If the check fails, then
+// the program is aborted.
+//
+// When matrices MVOV are traversed by column and then by row, the previous
+// check fails.
+//
+// MVOV::iterator2 iter2 = mvov.begin2();
+// for (; iter2 != mvov.end() ; iter2++) {
+//    MVOV::iterator1 iter1 = iter2.begin();
+//    .....
+// }
+//
+// These additional checks in iterators are disabled in this file, but their
+// status are restored at the end of file.
+// https://msdn.microsoft.com/en-us/library/hh697468.aspx
+#ifdef BOOST_MSVC
+#define _BACKUP_ITERATOR_DEBUG_LEVEL _ITERATOR_DEBUG_LEVEL
+#undef _ITERATOR_DEBUG_LEVEL
+#define _ITERATOR_DEBUG_LEVEL 0
+#endif
+
 #include <boost/numeric/ublas/storage_sparse.hpp>
 #include <boost/numeric/ublas/vector_expression.hpp>
 #include <boost/numeric/ublas/detail/vector_assign.hpp>
@@ -372,7 +397,7 @@ namespace boost { namespace numeric { namespace ublas {
 
         // Reserving
         BOOST_UBLAS_INLINE
-        void reserve (size_type non_zeros = 0, bool preserve = true) {
+				void reserve (size_type non_zeros, bool /*preserve*/ = true) {
             detail::map_reserve (data (), restrict_capacity (non_zeros));
         }
 
@@ -649,8 +674,16 @@ namespace boost { namespace numeric { namespace ublas {
             return const_iterator (*this, data ().begin ());
         }
         BOOST_UBLAS_INLINE
+        const_iterator cbegin () const {
+            return begin ();
+        }
+        BOOST_UBLAS_INLINE
         const_iterator end () const {
             return const_iterator (*this, data ().end ());
+        }
+        BOOST_UBLAS_INLINE
+        const_iterator cend () const {
+            return end ();
         }
 
         class iterator:
@@ -737,8 +770,16 @@ namespace boost { namespace numeric { namespace ublas {
             return const_reverse_iterator (end ());
         }
         BOOST_UBLAS_INLINE
+        const_reverse_iterator crbegin () const {
+            return rbegin ();
+        }
+        BOOST_UBLAS_INLINE
         const_reverse_iterator rend () const {
             return const_reverse_iterator (begin ());
+        }
+        BOOST_UBLAS_INLINE
+        const_reverse_iterator crend () const {
+            return rend ();
         }
         BOOST_UBLAS_INLINE
         reverse_iterator rbegin () {
@@ -1261,8 +1302,16 @@ namespace boost { namespace numeric { namespace ublas {
             return find (0);
         }
         BOOST_UBLAS_INLINE
+        const_iterator cbegin () const {
+            return begin ();
+        }
+        BOOST_UBLAS_INLINE
         const_iterator end () const {
             return find (size_);
+        }
+        BOOST_UBLAS_INLINE
+        const_iterator cend () const {
+            return end ();
         }
 
         class iterator:
@@ -1349,8 +1398,16 @@ namespace boost { namespace numeric { namespace ublas {
             return const_reverse_iterator (end ());
         }
         BOOST_UBLAS_INLINE
+        const_reverse_iterator crbegin () const {
+            return rbegin ();
+        }
+        BOOST_UBLAS_INLINE
         const_reverse_iterator rend () const {
             return const_reverse_iterator (begin ());
+        }
+        BOOST_UBLAS_INLINE
+        const_reverse_iterator crend () const {
+            return rend ();
         }
         BOOST_UBLAS_INLINE
         reverse_iterator rbegin () {
@@ -1801,16 +1858,63 @@ namespace boost { namespace numeric { namespace ublas {
             v1.swap (v2);
         }
 
+        // replacement if STL lower bound algorithm for use of inplace_merge
+        size_type lower_bound (size_type beg, size_type end, size_type target) const {
+            while (end > beg) {
+                size_type mid = (beg + end) / 2;
+                if (index_data_[mid] < index_data_[target]) {
+                    beg = mid + 1;
+                } else {
+                    end = mid;
+                }
+            }
+            return beg;
+        }
+
+        // specialized replacement of STL inplace_merge to avoid compilation
+        // problems with respect to the array_triple iterator
+        void inplace_merge (size_type beg, size_type mid, size_type end) const {
+            size_type len_lef = mid - beg;
+            size_type len_rig = end - mid;
+
+            if (len_lef == 1 && len_rig == 1) {
+                if (index_data_[mid] < index_data_[beg]) {
+                    std::swap(index_data_[beg], index_data_[mid]);
+                    std::swap(value_data_[beg], value_data_[mid]);
+                }
+            } else if (len_lef > 0 && len_rig > 0) {
+                size_type lef_mid, rig_mid;
+                if (len_lef >= len_rig) {
+                    lef_mid = (beg + mid) / 2;
+                    rig_mid = lower_bound(mid, end, lef_mid);
+                } else {
+                    rig_mid = (mid + end) / 2;
+                    lef_mid = lower_bound(beg, mid, rig_mid);
+                }
+                std::rotate(&index_data_[0] + lef_mid, &index_data_[0] + mid, &index_data_[0] + rig_mid);
+                std::rotate(&value_data_[0] + lef_mid, &value_data_[0] + mid, &value_data_[0] + rig_mid);
+
+                size_type new_mid = lef_mid + rig_mid - mid;
+                inplace_merge(beg, lef_mid, new_mid);
+                inplace_merge(new_mid, rig_mid, end);
+            }
+        }
+
         // Sorting and summation of duplicates
         BOOST_UBLAS_INLINE
         void sort () const {
             if (! sorted_ && filled_ > 0) {
                 typedef index_pair_array<index_array_type, value_array_type> array_pair;
                 array_pair ipa (filled_, index_data_, value_data_);
+#ifndef BOOST_UBLAS_COO_ALWAYS_DO_FULL_SORT
                 const typename array_pair::iterator iunsorted = ipa.begin () + sorted_filled_;
                 // sort new elements and merge
                 std::sort (iunsorted, ipa.end ());
-                std::inplace_merge (ipa.begin (), iunsorted, ipa.end ());
+                inplace_merge(0, sorted_filled_, filled_);
+#else
+                const typename array_pair::iterator iunsorted = ipa.begin ();
+                std::sort (iunsorted, ipa.end ());
+#endif
 
                 // sum duplicates with += and remove
                 size_type filled = 0;
@@ -1960,8 +2064,16 @@ namespace boost { namespace numeric { namespace ublas {
             return find (0);
         }
         BOOST_UBLAS_INLINE
+        const_iterator cbegin () const {
+            return begin();
+        }
+        BOOST_UBLAS_INLINE
         const_iterator end () const {
             return find (size_);
+        }
+        BOOST_UBLAS_INLINE
+        const_iterator cend () const {
+            return end();
         }
 
         class iterator:
@@ -2048,8 +2160,16 @@ namespace boost { namespace numeric { namespace ublas {
             return const_reverse_iterator (end ());
         }
         BOOST_UBLAS_INLINE
+        const_reverse_iterator crbegin () const {
+            return rbegin ();
+        }
+        BOOST_UBLAS_INLINE
         const_reverse_iterator rend () const {
             return const_reverse_iterator (begin ());
+        }
+        BOOST_UBLAS_INLINE
+        const_reverse_iterator crend () const {
+            return rend ();
         }
         BOOST_UBLAS_INLINE
         reverse_iterator rbegin () {
@@ -2116,5 +2236,11 @@ namespace boost { namespace numeric { namespace ublas {
     const typename coordinate_vector<T, IB, IA, TA>::value_type coordinate_vector<T, IB, IA, TA>::zero_ = value_type/*zero*/();
 
 }}}
+
+#ifdef BOOST_MSVC
+#undef _ITERATOR_DEBUG_LEVEL
+#define _ITERATOR_DEBUG_LEVEL _BACKUP_ITERATOR_DEBUG_LEVEL
+#undef _BACKUP_ITERATOR_DEBUG_LEVEL
+#endif
 
 #endif

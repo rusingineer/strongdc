@@ -1,7 +1,8 @@
 /*=============================================================================
-    Copyright (c) 2001-2006 Joel de Guzman
+    Copyright (c) 2001-2011 Joel de Guzman
     Copyright (c) 2007 Dan Marsden
     Copyright (c) 2009 Christopher Schmidt
+    Copyright (c) 2018 Kohei Takahashi
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying 
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -9,23 +10,21 @@
 #if !defined(FUSION_FIND_IF_05052005_1107)
 #define FUSION_FIND_IF_05052005_1107
 
-#include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/or.hpp>
-#include <boost/mpl/lambda.hpp>
+#include <boost/fusion/support/config.hpp>
 #include <boost/mpl/apply.hpp>
+#include <boost/mpl/eval_if.hpp>
 #include <boost/mpl/identity.hpp>
+#include <boost/mpl/or.hpp>
+#include <boost/fusion/iterator/advance.hpp>
+#include <boost/fusion/iterator/distance.hpp>
 #include <boost/fusion/iterator/equal_to.hpp>
 #include <boost/fusion/iterator/next.hpp>
 #include <boost/fusion/sequence/intrinsic/begin.hpp>
-#include <boost/fusion/iterator/advance.hpp>
-#include <boost/fusion/iterator/distance.hpp>
+#include <boost/fusion/sequence/intrinsic/end.hpp>
 #include <boost/fusion/support/category_of.hpp>
-#include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/identity.hpp>
+#include <boost/core/enable_if.hpp>
 
-namespace boost { namespace fusion { 
-    struct random_access_traversal_tag;
-namespace detail
+namespace boost { namespace fusion { namespace detail
 {
     template <typename Iterator, typename Pred>
     struct apply_filter
@@ -178,12 +177,13 @@ namespace detail
             choose_find_if<
                 First
               , Last
-              , typename mpl::lambda<Pred>::type
-              , is_base_of<random_access_traversal_tag, typename traits::category_of<First>::type>::value
+              , Pred
+              , traits::is_random_access<First>::value
             >::type
         type;
 
         template <typename Iterator>
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         static type
         recursive_call(Iterator const& iter, mpl::true_)
         {
@@ -191,6 +191,7 @@ namespace detail
         }
 
         template <typename Iterator>
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         static type
         recursive_call(Iterator const& iter, mpl::false_)
         {
@@ -198,6 +199,7 @@ namespace detail
         }
 
         template <typename Iterator>
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         static type
         recursive_call(Iterator const& iter)
         {
@@ -205,27 +207,44 @@ namespace detail
             return recursive_call(iter, found());
         }
 
-        template <typename Iterator, typename Tag>
-        static type
-        choose_call(Iterator const& iter, Tag)
+        template <typename Iterator>
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
+        static typename boost::disable_if<traits::is_random_access<Iterator>, type>::type
+        iter_call(Iterator const& iter)
         {
             return recursive_call(iter);
         }
 
         template <typename Iterator>
-        static type
-        choose_call(Iterator const& iter, random_access_traversal_tag)
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
+        static typename boost::enable_if<traits::is_random_access<Iterator>, type>::type
+        iter_call(Iterator const& iter)
         {
             typedef typename result_of::distance<Iterator, type>::type N;
             return fusion::advance<N>(iter);
         }
 
-        template <typename Iterator>
+        template <typename Sequence>
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         static type
-        call(Iterator const& iter)
+        call(Sequence& seq)
         {
-            return choose_call(iter, typename traits::category_of<Iterator>::type());
+            return iter_call(fusion::begin(seq));
         }
+    };
+
+    template <typename Sequence, typename Pred>
+    struct result_of_find_if
+    {
+        typedef
+            static_find_if<
+                typename result_of::begin<Sequence>::type
+              , typename result_of::end<Sequence>::type
+              , Pred
+            >
+        filter;
+
+        typedef typename filter::type type;
     };
 }}}
 

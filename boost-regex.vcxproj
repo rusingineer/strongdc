@@ -179,17 +179,14 @@
     <ClCompile Include="boost\libs\regex\src\regex_traits_defaults.cpp" />
     <ClCompile Include="boost\libs\regex\src\static_mutex.cpp" />
     <ClCompile Include="boost\libs\thread\win32\thread.cpp" />
-    <ClCompile Include="boost\libs\thread\win32\tss_dll.cpp" />
-    <ClCompile Include="boost\libs\thread\tss_null.cpp" />
-    <ClCompile Include="boost\libs\thread\win32\tss_pe.cpp" />
+    <ClCompile Include="boost\libs\thread\src\win32\tss_dll.cpp" />
+    <ClCompile Include="boost\libs\thread\src\tss_null.cpp" />
+    <ClCompile Include="boost\libs\thread\src\win32\tss_pe.cpp" />
     <ClCompile Include="boost\libs\regex\src\usinstances.cpp" />
     <ClCompile Include="boost\libs\regex\src\w32_regex_traits.cpp" />
     <ClCompile Include="boost\libs\regex\src\wc_regex_traits.cpp" />
     <ClCompile Include="boost\libs\regex\src\wide_posix_api.cpp" />
     <ClCompile Include="boost\libs\regex\src\winstances.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="boost\libs\thread\win32\timeconv.inl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="zlib.vcxproj">

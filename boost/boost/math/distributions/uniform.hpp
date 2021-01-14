@@ -116,11 +116,11 @@ namespace boost{ namespace math
     typedef RealType value_type;
     typedef Policy policy_type;
 
-    uniform_distribution(RealType lower = 0, RealType upper = 1) // Constructor.
-      : m_lower(lower), m_upper(upper) // Default is standard uniform distribution.
+    uniform_distribution(RealType l_lower = 0, RealType l_upper = 1) // Constructor.
+      : m_lower(l_lower), m_upper(l_upper) // Default is standard uniform distribution.
     {
       RealType result;
-      detail::check_uniform("boost::math::uniform_distribution<%1%>::uniform_distribution", lower, upper, &result, Policy());
+      detail::check_uniform("boost::math::uniform_distribution<%1%>::uniform_distribution", l_lower, l_upper, &result, Policy());
     }
     // Accessor functions.
     RealType lower()const
@@ -248,11 +248,11 @@ namespace boost{ namespace math
     }
     if (x < lower)
     {
-      return 0;
+      return 1;
     }
     if (x > upper)
     {
-      return 1;
+      return 0;
     }
     return (upper - x) / (upper - lower);
   } // RealType cdf(const complemented2_type<uniform_distribution<RealType, Policy>, RealType>& c)
@@ -269,15 +269,18 @@ namespace boost{ namespace math
       return result;
     }
     if(false == detail::check_probability("boost::math::quantile(const uniform_distribution<%1%>&, %1%)", q, &result, Policy()))
-      if(q == 0)
-      {
-        return lower;
-      }
-      if(q == 1)
-      {
-        return upper;
-      }
-      return -q * (upper - lower) + upper;
+    {
+       return result;
+    }
+    if(q == 0)
+    {
+       return upper;
+    }
+    if(q == 1)
+    {
+       return lower;
+    }
+    return -q * (upper - lower) + upper;
   } // RealType quantile(const complemented2_type<uniform_distribution<RealType, Policy>, RealType>& c)
 
   template <class RealType, class Policy>
@@ -363,6 +366,13 @@ namespace boost{ namespace math
   inline RealType kurtosis(const uniform_distribution<RealType, Policy>& dist)
   {
     return kurtosis_excess(dist) + 3;
+  }
+
+  template <class RealType, class Policy>
+  inline RealType entropy(const uniform_distribution<RealType, Policy>& dist)
+  {
+    using std::log;
+    return log(dist.upper() - dist.lower());
   }
 
 } // namespace math

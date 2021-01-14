@@ -18,10 +18,12 @@
 #pragma once
 #endif
 
+#include <boost/math/special_functions/math_fwd.hpp>
 #include <boost/math/special_functions/ellint_rf.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/policies/error_handling.hpp>
 #include <boost/math/tools/workaround.hpp>
+#include <boost/math/special_functions/round.hpp>
 
 // Elliptic integrals (complete and incomplete) of the first kind
 // Carlson, Numerische Mathematik, vol 33, 1 (1979)
@@ -48,12 +50,6 @@ T ellint_f_imp(T phi, T k, const Policy& pol)
     BOOST_MATH_INSTRUMENT_VARIABLE(phi);
     BOOST_MATH_INSTRUMENT_VARIABLE(k);
     BOOST_MATH_INSTRUMENT_VARIABLE(function);
-
-    if (abs(k) > 1)
-    {
-       return policies::raise_domain_error<T>(function,
-            "Got k = %1%, function requires |k| <= 1", k, pol);
-    }
 
     bool invert = false;
     if(phi < 0)
@@ -88,23 +84,41 @@ T ellint_f_imp(T phi, T k, const Policy& pol)
        // so rewritten to use fmod instead:
        //
        BOOST_MATH_INSTRUMENT_CODE("pi/2 = " << constants::pi<T>() / 2);
-       T rphi = boost::math::tools::fmod_workaround(phi, T(constants::pi<T>() / 2));
+       T rphi = boost::math::tools::fmod_workaround(phi, T(constants::half_pi<T>()));
        BOOST_MATH_INSTRUMENT_VARIABLE(rphi);
-       T m = floor((2 * phi) / constants::pi<T>());
+       T m = boost::math::round((phi - rphi) / constants::half_pi<T>());
        BOOST_MATH_INSTRUMENT_VARIABLE(m);
        int s = 1;
        if(boost::math::tools::fmod_workaround(m, T(2)) > 0.5)
        {
           m += 1;
           s = -1;
-          rphi = constants::pi<T>() / 2 - rphi;
+          rphi = constants::half_pi<T>() - rphi;
           BOOST_MATH_INSTRUMENT_VARIABLE(rphi);
        }
        T sinp = sin(rphi);
+       sinp *= sinp;
+       if (sinp * k * k >= 1)
+       {
+          return policies::raise_domain_error<T>(function,
+             "Got k^2 * sin^2(phi) = %1%, but the function requires this < 1", sinp * k * k, pol);
+       }
        T cosp = cos(rphi);
+       cosp *= cosp;
        BOOST_MATH_INSTRUMENT_VARIABLE(sinp);
        BOOST_MATH_INSTRUMENT_VARIABLE(cosp);
-       result = s * sinp * ellint_rf_imp(T(cosp * cosp), T(1 - k * k * sinp * sinp), T(1), pol);
+       if(sinp > tools::min_value<T>())
+       {
+          BOOST_ASSERT(rphi != 0); // precondition, can't be true if sin(rphi) != 0.
+          //
+          // Use http://dlmf.nist.gov/19.25#E5, note that
+          // c-1 simplifies to cot^2(rphi) which avoid cancellation:
+          //
+          T c = 1 / sinp;
+          result = static_cast<T>(s * ellint_rf_imp(T(cosp / sinp), T(c - k * k), c, pol));
+       }
+       else
+          result = s * sin(rphi);
        BOOST_MATH_INSTRUMENT_VARIABLE(result);
        if(m != 0)
        {
@@ -143,7 +157,7 @@ T ellint_k_imp(T k, const Policy& pol)
 }
 
 template <typename T, typename Policy>
-inline typename tools::promote_args<T>::type ellint_1(T k, const Policy& pol, const mpl::true_&)
+inline typename tools::promote_args<T>::type ellint_1(T k, const Policy& pol, const boost::true_type&)
 {
    typedef typename tools::promote_args<T>::type result_type;
    typedef typename policies::evaluation<result_type, Policy>::type value_type;
@@ -151,7 +165,7 @@ inline typename tools::promote_args<T>::type ellint_1(T k, const Policy& pol, co
 }
 
 template <class T1, class T2>
-inline typename tools::promote_args<T1, T2>::type ellint_1(T1 k, T2 phi, const mpl::false_&)
+inline typename tools::promote_args<T1, T2>::type ellint_1(T1 k, T2 phi, const boost::false_type&)
 {
    return boost::math::ellint_1(k, phi, policies::policy<>());
 }
